@@ -1,10 +1,3 @@
-/**
-* Template Name: Arsha
-* Updated: Sep 18 2023 with Bootstrap v5.3.2
-* Template URL: https://bootstrapmade.com/arsha-free-bootstrap-html-template-corporate/
-* Author: BootstrapMade.com
-* License: https://bootstrapmade.com/license/
-*/
 (function() {
   "use strict";
 
@@ -127,7 +120,7 @@
   }, true)
 
   /**
-   * Scrool with ofset on links with a class name .scrollto
+   * Scroll with offset on links with a class name .scrollto
    */
   on('click', '.scrollto', function(e) {
     if (select(this.hash)) {
@@ -145,7 +138,7 @@
   }, true)
 
   /**
-   * Scroll with ofset on page load with hash links in the url
+   * Scroll with offset on page load with hash links in the url
    */
   window.addEventListener('load', () => {
     if (window.location.hash) {
@@ -242,6 +235,16 @@
       clickable: true
     }
   });
+
+document.addEventListener('DOMContentLoaded', function() {
+    var privacyLink = document.getElementById('privacy-policy-link');
+    if (privacyLink) {
+        privacyLink.addEventListener('click', function() {
+            window.location.href = 'privacy.html';
+        });
+    }
+});
+
 
   /**
    * Animation on scroll

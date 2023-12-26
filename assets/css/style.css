@@ -1491,11 +1491,16 @@ section {
 
 .contact .php-email-form .error-message {
   display: none;
-  color: #fff;
-  background: #ed3c0d;
+  color: #18D26E;
+  background: #18D26E;
   text-align: left;
-  padding: 15px;
-  font-weight: 600;
+  padding: 0px;
+  font-weight: 6;
+
+  font-size: 0.1em; /* Smaller font size */
+  color: #18D26E; /* Less prominent color */
+  margin-top: 1px; /* Add some spacing if needed */
+}
 }
 
 .contact .php-email-form .error-message br+br {
@@ -1831,4 +1836,5 @@ section {
   #footer .credits {
     padding-top: 4px;
   }
+
 }

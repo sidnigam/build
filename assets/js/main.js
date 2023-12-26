@@ -245,6 +245,71 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+  /**
+   * Contact us response
+   */
+document.addEventListener("DOMContentLoaded", function() {
+  var form = document.getElementById('fs-frm');
+
+  form.addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    var loadingDiv = document.querySelector('.loading');
+    var errorMessageDiv = document.querySelector('.error-message');
+    var sentMessageDiv = document.querySelector('.sent-message');
+
+    loadingDiv.style.display = 'block'; // Show loading message
+
+    var data = new FormData(form);
+    var xhr = new XMLHttpRequest();
+    xhr.open(form.method, form.action, true);
+    xhr.setRequestHeader('Accept', 'application/json; charset=utf-8');
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState !== XMLHttpRequest.DONE) return;
+
+      loadingDiv.style.display = 'none'; // Hide loading message
+
+      try {
+        var response = JSON.parse(xhr.responseText);
+        if (response.ok) {
+          sentMessageDiv.style.display = 'block';
+          errorMessageDiv.style.display = 'none';
+        } else {
+          sentMessageDiv.style.display = 'none';
+          errorMessageDiv.innerText = 'An error occurred. Please try again.';
+          errorMessageDiv.style.display = 'block';
+        }
+      } catch (e) {
+        sentMessageDiv.style.display = 'none';
+        errorMessageDiv.innerText = 'An error occurred. Please try again.';
+        errorMessageDiv.style.display = 'block';
+      }
+    };
+
+    xhr.send(data);
+  });
+});
+
+//document.getElementById('fs-frm').addEventListener('submit', function(event) {
+//  event.preventDefault();
+//
+//  fetch(this.action, {
+//    method: 'POST',
+//    body: new FormData(this)
+//  })
+//  .then(response => response.json())
+//  .then(data => {
+//    if (data.ok) {
+//      window.location.href = data.next; // Redirects to the 'thank you' page
+//    } else {
+//      // Handle errors
+//    }
+//  })
+//  .catch(error => {
+//    // Handle network errors
+//  });
+//});
+
 
   /**
    * Animation on scroll

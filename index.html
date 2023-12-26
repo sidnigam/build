@@ -462,8 +462,22 @@
 
           </div>
 
+<!--            <form id="fs-frm" name="simple-contact-form" accept-charset="utf-8" action="https://formspree.io/f/xjvnbjvn" method="POST">-->
+<!--              <fieldset id="fs-frm-inputs">-->
+<!--                <label for="full-name">Full Name</label>-->
+<!--                <input type="text" name="name" id="full-name" placeholder="First and Last" required="">-->
+<!--                <label for="email-address">Email Address</label>-->
+<!--                <input type="email" name="_replyto" id="email-address" placeholder="email@domain.tld" required="">-->
+<!--                <label for="message">Message</label>-->
+<!--                <textarea rows="5" name="message" id="message" placeholder="Please include a short description of what you'd like to chat about." required=""></textarea>-->
+<!--                <input type="hidden" name="_subject" id="email-subject" value="Contact Form Submission">-->
+<!--              <div data-lastpass-icon-root="true" style="position: relative !important; height: 0px !important; width: 0px !important; float: left !important;"></div></fieldset>-->
+<!--              <input type="submit" value="Submit">-->
+<!--            </form>-->
+
+<!--            <form action="forms/contact.php" method="post" role="form" class="php-email-form">-->
           <div class="col-lg-7 mt-5 mt-lg-0 d-flex align-items-stretch">
-            <form action="forms/contact.php" method="post" role="form" class="php-email-form">
+            <form id="fs-frm" name="simple-contact-form" class="php-email-form" accept-charset="utf-8" action="https://formspree.io/f/xjvnbjvn" method="POST">
               <div class="row">
                 <div class="form-group col-md-6">
                   <label for="name">Your Name</label>
@@ -484,9 +498,11 @@
               </div>
               <div class="my-3">
                 <div class="loading">Loading</div>
-                <div class="error-message"></div>
-                <div class="sent-message">Your message has been sent. Thank you!</div>
+                <div class="error-message">Your message has been sent. Thank you!</div>
+                <div class="sent-message">Your message has been sent. Thanks!</div>
               </div>
+              <div class="error-message" id="error-message">Something went wrong, please try again later.</div>
+              <div class="sent-message" id="sent-message">Your message has been sent. Thank you!</div>
               <div class="text-center"><button type="submit">Send Message</button></div>
             </form>
           </div>

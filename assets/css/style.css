@@ -24,7 +24,31 @@ h5,
 h6 {
   font-family: "Jost", sans-serif;
 }
-
+/* Icons */
+.ri-cloud-line, .ri-shield-check-line, .ri-rocket-line { 
+    color: #2AA2EF; 
+    margin-right: 8px;
+  }
+  
+  /* Badges */
+  .certifications .badges span {
+    display: inline-block;
+    padding: 6px 12px;
+    margin: 5px;
+    border-radius: 20px;
+    font-size: 0.9em;
+  }
+  .aws-badge { background: #FF9900; color: #fff; }
+  .azure-badge { background: #0078D4; color: #fff; }
+  .security-badge { background: #4CAF50; color: #fff; }
+  
+  /* Success Stories */
+  .success-item {
+    background: #f8f9fa;
+    padding: 15px;
+    border-left: 3px solid #2AA2EF;
+    margin: 10px 0;
+  }
 /*--------------------------------------------------------------
 # Preloader
 --------------------------------------------------------------*/
@@ -1501,7 +1525,7 @@ section {
   color: #18D26E; /* Less prominent color */
   margin-top: 1px; /* Add some spacing if needed */
 }
-}
+
 
 .contact .php-email-form .error-message br+br {
   margin-top: 25px;
@@ -1838,3 +1862,4 @@ section {
   }
 
 }
+

@@ -8,12 +8,11 @@
   <meta name="description" content="Boston small businesses are getting left behind by AI. Nimbus helps local businesses adopt AI tools and cut cloud costs — starting at $299/month. No tech team required.">
   <meta name="keywords" content="AI for small business Boston, cloud consulting Boston, small business AI tools, AI adoption Boston MA, affordable cloud consulting">
 
-  <!-- Favicons -->
   <link href="assets/img/favicon.png" rel="icon">
   <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Jost:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+  <!-- Fonts: Outfit + Work Sans -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Vendor CSS -->
   <link href="assets/vendor/aos/aos.css" rel="stylesheet">
@@ -21,278 +20,565 @@
   <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
   <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
 
-  <!-- Main CSS -->
-  <link href="assets/css/style.css" rel="stylesheet">
-
   <style>
-    * { cursor: auto !important; }
+    *, *::before, *::after { box-sizing: border-box; cursor: auto !important; }
 
-    /* ── SMB page overrides ── */
     :root {
-      --smb-accent: #3b82f6;
-      --smb-accent-dark: #1d4ed8;
-      --smb-green: #10b981;
-      --smb-bg: #0a0f1e;
-      --smb-surface: #111827;
-      --smb-border: rgba(255,255,255,0.08);
+      --c-primary:   #0EA5E9;
+      --c-primary-d: #0284C7;
+      --c-cta:       #F97316;
+      --c-cta-d:     #EA6C0A;
+      --c-text:      #0C4A6E;
+      --c-muted:     #475569;
+      --c-subtle:    #94a3b8;
+      --c-bg:        #F0F9FF;
+      --c-white:     #ffffff;
+      --c-surface:   #E0F2FE;
+      --c-border:    #BAE6FD;
+      --c-green:     #10b981;
+      --shadow-sm:   0 1px 3px rgba(14,165,233,0.08), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:   0 4px 16px rgba(14,165,233,0.12), 0 2px 6px rgba(0,0,0,0.06);
+      --shadow-lg:   0 12px 40px rgba(14,165,233,0.16), 0 4px 12px rgba(0,0,0,0.08);
+      --radius:      12px;
+      --transition:  all 0.2s ease;
     }
 
-    body { background: var(--smb-bg); color: #e2e8f0; font-family: 'Open Sans', sans-serif; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Work Sans', sans-serif;
+      background: var(--c-bg);
+      color: var(--c-text);
+      font-size: 16px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+    h1,h2,h3,h4,h5 { font-family: 'Outfit', sans-serif; color: var(--c-text); }
 
-    /* Nav */
+    /* ── Nav ── */
     .smb-nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 999;
-      background: rgba(10,15,30,0.92); backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--smb-border);
-      padding: 14px 0;
+      background: rgba(255,255,255,0.92);
+      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--c-border);
+      padding: 12px 0;
+      box-shadow: var(--shadow-sm);
     }
     .smb-nav .container { display: flex; align-items: center; justify-content: space-between; }
-    .smb-nav-logo { font-size: 1.2rem; font-weight: 700; color: #fff; text-decoration: none; }
-    .smb-nav-logo span { color: var(--smb-accent); }
-    .smb-nav-links { display: flex; gap: 24px; align-items: center; }
-    .smb-nav-links a { color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color .2s; }
-    .smb-nav-links a:hover { color: #fff; }
+    .smb-nav-logo { font-family: 'Outfit', sans-serif; font-size: 1.2rem; font-weight: 800; color: var(--c-text); text-decoration: none; }
+    .smb-nav-logo span { color: var(--c-primary); }
+    .smb-nav-links { display: flex; gap: 28px; align-items: center; }
+    .smb-nav-links a { color: var(--c-muted); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: var(--transition); }
+    .smb-nav-links a:hover { color: var(--c-primary); }
     .smb-nav-cta {
-      background: var(--smb-accent); color: #fff !important; padding: 8px 18px;
-      border-radius: 6px; font-weight: 600; font-size: 0.85rem !important;
-      transition: background .2s !important;
+      background: var(--c-cta) !important; color: #fff !important;
+      padding: 9px 20px; border-radius: 8px; font-weight: 700 !important;
+      font-size: 0.88rem !important; box-shadow: 0 2px 8px rgba(249,115,22,0.3);
+      transition: var(--transition) !important;
     }
-    .smb-nav-cta:hover { background: var(--smb-accent-dark) !important; }
+    .smb-nav-cta:hover { background: var(--c-cta-d) !important; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(249,115,22,0.4) !important; }
 
-    /* Hero */
+    /* ── Hero ── */
     .smb-hero {
-      min-height: 100vh; display: flex; align-items: center;
+      min-height: 100vh;
       padding: 120px 0 80px;
-      background: radial-gradient(ellipse at 20% 50%, rgba(59,130,246,0.12) 0%, transparent 60%),
-                  radial-gradient(ellipse at 80% 20%, rgba(16,185,129,0.08) 0%, transparent 50%),
-                  var(--smb-bg);
+      background:
+        radial-gradient(ellipse at 5% 60%, rgba(14,165,233,0.08) 0%, transparent 55%),
+        radial-gradient(ellipse at 95% 10%, rgba(14,165,233,0.06) 0%, transparent 50%),
+        linear-gradient(180deg, #F0F9FF 0%, #ffffff 100%);
+      position: relative; overflow: hidden;
+    }
+    .smb-hero::before {
+      content: '';
+      position: absolute; bottom: -1px; left: 0; right: 0; height: 80px;
+      background: linear-gradient(to bottom, transparent, #ffffff);
+      pointer-events: none;
     }
     .smb-hero-badge {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3);
-      color: #93c5fd; padding: 6px 14px; border-radius: 100px;
-      font-size: 0.8rem; font-weight: 600; letter-spacing: .05em;
-      text-transform: uppercase; margin-bottom: 24px;
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #E0F2FE; border: 1px solid var(--c-border);
+      color: var(--c-primary-d); padding: 5px 14px;
+      border-radius: 100px; font-size: 0.8rem; font-weight: 600;
+      letter-spacing: .04em; text-transform: uppercase; margin-bottom: 20px;
     }
-    .smb-hero-badge i { color: var(--smb-accent); }
     .smb-hero h1 {
-      font-size: clamp(2rem, 5vw, 3.4rem); font-weight: 800; line-height: 1.15;
-      color: #fff; margin-bottom: 20px;
+      font-size: clamp(2rem, 4.5vw, 3.2rem);
+      font-weight: 800; line-height: 1.15;
+      color: var(--c-text); margin-bottom: 20px;
     }
-    .smb-hero h1 em { font-style: normal; color: var(--smb-accent); }
+    .smb-hero h1 em { font-style: normal; color: var(--c-primary); }
     .smb-hero p.lead {
-      font-size: 1.15rem; color: #94a3b8; line-height: 1.7;
-      max-width: 560px; margin-bottom: 36px;
+      font-size: 1.1rem; color: var(--c-muted); line-height: 1.75;
+      max-width: 520px; margin-bottom: 36px;
     }
-    .smb-hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
-    .btn-smb-primary {
+    .smb-hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 48px; }
+    .btn-primary-cta {
       display: inline-flex; align-items: center; gap: 8px;
-      background: var(--smb-accent); color: #fff; padding: 14px 28px;
-      border-radius: 8px; font-weight: 700; font-size: 1rem;
-      text-decoration: none; transition: background .2s, transform .2s;
+      background: var(--c-cta); color: #fff;
+      padding: 14px 28px; border-radius: 10px;
+      font-weight: 700; font-size: 1rem; text-decoration: none;
+      box-shadow: 0 4px 14px rgba(249,115,22,0.35);
+      transition: var(--transition); cursor: pointer !important;
     }
-    .btn-smb-primary:hover { background: var(--smb-accent-dark); color: #fff; transform: translateY(-2px); }
-    .btn-smb-outline {
+    .btn-primary-cta:hover { background: var(--c-cta-d); color: #fff; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(249,115,22,0.45); }
+    .btn-outline-cta {
       display: inline-flex; align-items: center; gap: 8px;
-      border: 1px solid rgba(255,255,255,0.2); color: #e2e8f0; padding: 14px 28px;
-      border-radius: 8px; font-weight: 600; font-size: 1rem;
-      text-decoration: none; transition: border-color .2s, background .2s;
+      border: 2px solid var(--c-border); color: var(--c-text);
+      padding: 13px 24px; border-radius: 10px;
+      font-weight: 600; font-size: 1rem; text-decoration: none;
+      transition: var(--transition); cursor: pointer !important;
+      background: var(--c-white);
     }
-    .btn-smb-outline:hover { border-color: var(--smb-accent); color: #fff; background: rgba(59,130,246,0.08); }
-    .smb-hero-stats { display: flex; gap: 36px; margin-top: 48px; flex-wrap: wrap; }
-    .smb-stat { text-align: left; }
-    .smb-stat-num { font-size: 1.8rem; font-weight: 800; color: #fff; line-height: 1; }
-    .smb-stat-num span { color: var(--smb-accent); }
-    .smb-stat-label { font-size: 0.8rem; color: #64748b; margin-top: 4px; }
+    .btn-outline-cta:hover { border-color: var(--c-primary); color: var(--c-primary); background: #E0F2FE; }
+    .smb-hero-stats { display: flex; gap: 32px; flex-wrap: wrap; }
+    .smb-stat { border-left: 3px solid var(--c-border); padding-left: 16px; }
+    .smb-stat-num { font-family: 'Outfit', sans-serif; font-size: 1.9rem; font-weight: 800; color: var(--c-text); line-height: 1; }
+    .smb-stat-num span { color: var(--c-primary); }
+    .smb-stat-label { font-size: 0.78rem; color: var(--c-subtle); margin-top: 3px; font-weight: 500; }
+    .smb-hero-img-wrap {
+      position: relative; display: flex; align-items: center; justify-content: center;
+    }
+    .smb-hero-img-wrap img {
+      width: 100%; max-width: 520px;
+      filter: drop-shadow(0 20px 50px rgba(14,165,233,0.2));
+      animation: heroFloat 4s ease-in-out infinite;
+    }
+    @keyframes heroFloat {
+      0%,100% { transform: translateY(0px); }
+      50%      { transform: translateY(-12px); }
+    }
+    .hero-badge-float {
+      position: absolute; background: var(--c-white);
+      border-radius: 12px; padding: 10px 16px;
+      box-shadow: var(--shadow-md); border: 1px solid var(--c-border);
+      display: flex; align-items: center; gap: 10px;
+      font-size: 0.82rem; font-weight: 600; color: var(--c-text);
+      white-space: nowrap;
+    }
+    .hero-badge-float .badge-dot {
+      width: 32px; height: 32px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; flex-shrink: 0;
+    }
+    .badge-float-tl { top: 15%; left: -5%; animation: badgeFloat1 3.5s ease-in-out infinite; }
+    .badge-float-br { bottom: 20%; right: -5%; animation: badgeFloat2 4s ease-in-out infinite; }
+    @keyframes badgeFloat1 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    @keyframes badgeFloat2 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(8px)} }
 
-    /* Section base */
-    .smb-section { padding: 80px 0; }
+    /* ── Section base ── */
+    section { padding: 80px 0; }
     .smb-section-title { text-align: center; margin-bottom: 56px; }
-    .smb-section-title h2 { font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 800; color: #fff; margin-bottom: 12px; }
-    .smb-section-title p { color: #94a3b8; font-size: 1.05rem; max-width: 560px; margin: 0 auto; }
-    .smb-section-title .section-tag {
-      display: inline-block; background: rgba(59,130,246,0.1);
-      border: 1px solid rgba(59,130,246,0.25); color: #93c5fd;
-      padding: 4px 12px; border-radius: 100px; font-size: 0.75rem;
-      font-weight: 600; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 14px;
+    .smb-section-title h2 {
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      font-weight: 800; color: var(--c-text); margin-bottom: 12px;
+    }
+    .smb-section-title p { color: var(--c-muted); font-size: 1.05rem; max-width: 540px; margin: 0 auto; }
+    .section-tag {
+      display: inline-block; background: #E0F2FE;
+      border: 1px solid var(--c-border); color: var(--c-primary-d);
+      padding: 4px 14px; border-radius: 100px;
+      font-size: 0.75rem; font-weight: 700;
+      letter-spacing: .06em; text-transform: uppercase; margin-bottom: 14px;
     }
 
-    /* Pain points */
-    .pain-section { background: var(--smb-surface); }
+    /* ── Pain cards ── */
+    .pain-section { background: #fff; }
     .pain-card {
-      background: rgba(255,255,255,0.03); border: 1px solid var(--smb-border);
-      border-radius: 14px; padding: 32px; height: 100%;
-      transition: border-color .2s, transform .2s;
+      background: var(--c-white); border: 1.5px solid var(--c-border);
+      border-radius: 16px; padding: 32px; height: 100%;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition); cursor: default;
     }
-    .pain-card:hover { border-color: rgba(59,130,246,0.4); transform: translateY(-4px); }
+    .pain-card:hover { border-color: var(--c-primary); box-shadow: var(--shadow-md); transform: translateY(-4px); }
     .pain-icon {
       width: 52px; height: 52px; border-radius: 12px;
-      background: rgba(59,130,246,0.1); display: flex; align-items: center;
-      justify-content: center; font-size: 1.4rem; color: var(--smb-accent); margin-bottom: 18px;
+      background: #E0F2FE; display: flex; align-items: center;
+      justify-content: center; font-size: 1.4rem;
+      color: var(--c-primary); margin-bottom: 18px;
     }
-    .pain-card h4 { color: #fff; font-size: 1.05rem; font-weight: 700; margin-bottom: 10px; }
-    .pain-card p { color: #94a3b8; font-size: 0.9rem; line-height: 1.7; margin: 0; }
+    .pain-card h4 { font-size: 1.05rem; font-weight: 700; margin-bottom: 10px; color: var(--c-text); }
+    .pain-card p { color: var(--c-muted); font-size: 0.92rem; line-height: 1.7; margin: 0; }
 
-    /* AI Use Cases */
+    /* ── AI use case grid ── */
+    .ai-uses-section { background: var(--c-bg); }
     .ai-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
     .ai-card {
-      background: var(--smb-surface); border: 1px solid var(--smb-border);
-      border-radius: 12px; padding: 24px; transition: border-color .2s, transform .2s;
+      background: var(--c-white); border: 1.5px solid var(--c-border);
+      border-radius: 14px; padding: 26px;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition); cursor: default;
     }
-    .ai-card:hover { border-color: rgba(16,185,129,0.4); transform: translateY(-3px); }
+    .ai-card:hover { border-color: var(--c-green); box-shadow: 0 6px 20px rgba(16,185,129,0.1); transform: translateY(-3px); }
     .ai-card-icon {
       width: 44px; height: 44px; border-radius: 10px;
-      background: rgba(16,185,129,0.1); display: flex; align-items: center;
-      justify-content: center; font-size: 1.2rem; color: var(--smb-green); margin-bottom: 14px;
+      background: rgba(16,185,129,0.1); display: flex;
+      align-items: center; justify-content: center;
+      font-size: 1.2rem; color: var(--c-green); margin-bottom: 14px;
     }
-    .ai-card h5 { color: #fff; font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; }
-    .ai-card p { color: #64748b; font-size: 0.85rem; line-height: 1.6; margin: 0; }
-    .ai-card ul { color: #64748b; font-size: 0.85rem; line-height: 1.8; margin: 0; padding-left: 16px; }
+    .ai-card h5 { font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; color: var(--c-text); }
+    .ai-card ul { color: var(--c-muted); font-size: 0.85rem; line-height: 1.9; margin: 0; padding-left: 16px; }
 
-    /* Checklist */
-    .checklist-section { background: var(--smb-surface); }
+    /* ── Checklist ── */
+    .checklist-section { background: #fff; }
     .checklist-box {
-      background: rgba(255,255,255,0.02); border: 1px solid var(--smb-border);
-      border-radius: 16px; padding: 40px;
+      background: var(--c-white); border: 1.5px solid var(--c-border);
+      border-radius: 18px; padding: 40px; box-shadow: var(--shadow-md);
     }
     .checklist-item {
       display: flex; align-items: flex-start; gap: 14px;
-      padding: 14px 0; border-bottom: 1px solid var(--smb-border);
+      padding: 13px 0; border-bottom: 1px solid #F1F5F9;
     }
     .checklist-item:last-of-type { border-bottom: none; }
     .checklist-item input[type="checkbox"] {
-      width: 20px; height: 20px; min-width: 20px; margin-top: 2px;
-      accent-color: var(--smb-accent);
+      width: 20px; height: 20px; min-width: 20px;
+      margin-top: 2px; accent-color: var(--c-primary); cursor: pointer !important;
     }
-    .checklist-item label { color: #cbd5e1; font-size: 0.95rem; line-height: 1.5; }
+    .checklist-item label { color: var(--c-muted); font-size: 0.95rem; line-height: 1.6; cursor: pointer !important; }
     .checklist-result {
-      margin-top: 28px; padding: 20px 24px; border-radius: 10px;
-      display: none; font-weight: 600; font-size: 0.95rem;
+      margin-top: 24px; padding: 20px 24px;
+      border-radius: 12px; display: none; font-weight: 600; font-size: 0.95rem;
     }
-    .checklist-result.low { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: #6ee7b7; }
-    .checklist-result.mid { background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); color: #fcd34d; }
-    .checklist-result.high { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
-    .checklist-score { font-size: 1.5rem; font-weight: 800; margin-bottom: 4px; }
+    .checklist-result.low  { background: rgba(16,185,129,0.08); border: 1.5px solid rgba(16,185,129,0.25); color: #065f46; }
+    .checklist-result.mid  { background: rgba(245,158,11,0.08); border: 1.5px solid rgba(245,158,11,0.25); color: #92400e; }
+    .checklist-result.high { background: rgba(239,68,68,0.08);  border: 1.5px solid rgba(239,68,68,0.25);  color: #991b1b; }
+    .checklist-score { font-size: 1.4rem; font-weight: 800; margin-bottom: 4px; }
+    .btn-score {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 24px; width: 100%; background: var(--c-primary); color: #fff;
+      border: none; border-radius: 10px; padding: 13px;
+      font-size: 0.95rem; font-weight: 700; cursor: pointer !important;
+      transition: var(--transition);
+    }
+    .btn-score:hover { background: var(--c-primary-d); transform: translateY(-1px); }
 
-    /* Pricing */
-    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; max-width: 900px; margin: 0 auto; }
-    .smb-price-card {
-      background: var(--smb-surface); border: 1px solid var(--smb-border);
-      border-radius: 16px; padding: 36px; position: relative; transition: transform .2s;
+    /* ── Pricing ── */
+    .pricing-section { background: var(--c-bg); }
+    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; max-width: 860px; margin: 0 auto; }
+    .price-card {
+      background: var(--c-white); border: 1.5px solid var(--c-border);
+      border-radius: 18px; padding: 36px; position: relative;
+      box-shadow: var(--shadow-sm); transition: var(--transition);
     }
-    .smb-price-card:hover { transform: translateY(-4px); }
-    .smb-price-card.featured { border-color: var(--smb-accent); background: rgba(59,130,246,0.05); }
-    .smb-price-badge {
-      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-      background: var(--smb-accent); color: #fff; padding: 4px 16px;
+    .price-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+    .price-card.featured { border-color: var(--c-primary); box-shadow: 0 0 0 4px rgba(14,165,233,0.08), var(--shadow-md); }
+    .price-badge {
+      position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
+      background: var(--c-primary); color: #fff; padding: 4px 18px;
       border-radius: 100px; font-size: 0.75rem; font-weight: 700; white-space: nowrap;
     }
-    .smb-price-name { color: #94a3b8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; }
-    .smb-price-amount { font-size: 2.4rem; font-weight: 800; color: #fff; line-height: 1; margin-bottom: 4px; }
-    .smb-price-amount span { font-size: 1rem; color: #64748b; font-weight: 400; }
-    .smb-price-desc { color: #64748b; font-size: 0.85rem; margin-bottom: 24px; }
-    .smb-price-features { list-style: none; padding: 0; margin: 0 0 28px; }
-    .smb-price-features li {
+    .price-name { color: var(--c-subtle); font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px; }
+    .price-amount { font-family: 'Outfit', sans-serif; font-size: 2.6rem; font-weight: 800; color: var(--c-text); line-height: 1; margin-bottom: 4px; }
+    .price-amount span { font-size: 1rem; color: var(--c-subtle); font-weight: 400; }
+    .price-desc { color: var(--c-muted); font-size: 0.85rem; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #F1F5F9; }
+    .price-features { list-style: none; padding: 0; margin: 0 0 28px; }
+    .price-features li {
       display: flex; align-items: flex-start; gap: 10px;
-      color: #cbd5e1; font-size: 0.9rem; padding: 7px 0;
-      border-bottom: 1px solid var(--smb-border);
+      color: var(--c-muted); font-size: 0.9rem; padding: 7px 0;
     }
-    .smb-price-features li:last-child { border-bottom: none; }
-    .smb-price-features li i { color: var(--smb-green); font-size: 1rem; margin-top: 2px; flex-shrink: 0; }
-    .btn-smb-price {
-      display: block; text-align: center; padding: 12px;
-      border-radius: 8px; font-weight: 700; font-size: 0.95rem;
-      text-decoration: none; transition: background .2s, transform .2s;
+    .price-features li i { color: var(--c-green); font-size: 1rem; margin-top: 2px; flex-shrink: 0; }
+    .btn-price {
+      display: block; text-align: center; padding: 13px;
+      border-radius: 10px; font-weight: 700; font-size: 0.95rem;
+      text-decoration: none; transition: var(--transition); cursor: pointer !important;
     }
-    .btn-smb-price-primary { background: var(--smb-accent); color: #fff; }
-    .btn-smb-price-primary:hover { background: var(--smb-accent-dark); color: #fff; }
-    .btn-smb-price-outline { border: 1px solid rgba(255,255,255,0.15); color: #e2e8f0; }
-    .btn-smb-price-outline:hover { border-color: var(--smb-accent); color: #fff; }
+    .btn-price-primary { background: var(--c-cta); color: #fff; box-shadow: 0 3px 10px rgba(249,115,22,0.3); }
+    .btn-price-primary:hover { background: var(--c-cta-d); color: #fff; transform: translateY(-1px); }
+    .btn-price-outline { border: 2px solid var(--c-border); color: var(--c-text); }
+    .btn-price-outline:hover { border-color: var(--c-primary); color: var(--c-primary); background: #E0F2FE; }
 
-    /* Contact form */
-    .smb-contact-section { background: var(--smb-surface); }
+    /* ── Contact form ── */
+    .contact-section { background: #fff; }
     .smb-form-wrap {
-      background: rgba(255,255,255,0.02); border: 1px solid var(--smb-border);
-      border-radius: 16px; padding: 40px;
+      background: var(--c-white); border: 1.5px solid var(--c-border);
+      border-radius: 18px; padding: 44px; box-shadow: var(--shadow-md);
     }
-    .smb-form-wrap label { color: #94a3b8; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; display: block; }
+    .smb-form-wrap label {
+      display: block; color: var(--c-text); font-size: 0.85rem;
+      font-weight: 600; margin-bottom: 6px;
+    }
     .smb-form-wrap input,
-    .smb-form-wrap textarea,
-    .smb-form-wrap select {
-      width: 100%; background: rgba(255,255,255,0.04);
-      border: 1px solid var(--smb-border); border-radius: 8px;
-      color: #e2e8f0; padding: 12px 14px; font-size: 0.95rem;
-      outline: none; transition: border-color .2s;
+    .smb-form-wrap textarea {
+      width: 100%; background: var(--c-bg);
+      border: 1.5px solid var(--c-border); border-radius: 9px;
+      color: var(--c-text); padding: 11px 14px; font-size: 0.95rem;
+      font-family: 'Work Sans', sans-serif;
+      outline: none; transition: var(--transition);
     }
     .smb-form-wrap input:focus,
-    .smb-form-wrap textarea:focus { border-color: var(--smb-accent); }
+    .smb-form-wrap textarea:focus { border-color: var(--c-primary); background: var(--c-white); box-shadow: 0 0 0 3px rgba(14,165,233,0.1); }
     .smb-form-wrap input::placeholder,
-    .smb-form-wrap textarea::placeholder { color: #475569; }
-    .btn-smb-submit {
-      width: 100%; background: var(--smb-accent); color: #fff;
-      border: none; border-radius: 8px; padding: 14px;
-      font-size: 1rem; font-weight: 700; display: flex;
-      align-items: center; justify-content: center; gap: 8px;
-      transition: background .2s; margin-top: 8px;
+    .smb-form-wrap textarea::placeholder { color: #94a3b8; }
+    .field-error {
+      display: none; color: #dc2626; font-size: 0.8rem;
+      margin-top: 5px; font-weight: 500;
     }
-    .btn-smb-submit:hover { background: var(--smb-accent-dark); }
-    .form-success {
-      display: none; text-align: center; padding: 32px 20px;
-      color: #6ee7b7;
+    .field-error.visible { display: block; }
+    .input-invalid { border-color: #fca5a5 !important; background: #fff5f5 !important; }
+    .form-msg {
+      display: none; padding: 12px 16px; border-radius: 9px;
+      font-size: 0.9rem; font-weight: 500; margin-bottom: 14px;
     }
-    .form-success i { font-size: 2.5rem; margin-bottom: 12px; display: block; }
+    .form-msg.error { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; display: block; }
+    .form-msg.sending { background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; display: block; }
+    .btn-form-submit {
+      width: 100%; background: var(--c-cta); color: #fff; border: none;
+      border-radius: 10px; padding: 14px; font-size: 1rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: var(--transition); cursor: pointer !important;
+      box-shadow: 0 4px 14px rgba(249,115,22,0.3);
+    }
+    .btn-form-submit:hover:not(:disabled) { background: var(--c-cta-d); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(249,115,22,0.4); }
+    .btn-form-submit:disabled { opacity: 0.65; cursor: not-allowed !important; }
+    .form-success { display: none; text-align: center; padding: 40px 20px; }
+    .form-success i { font-size: 3rem; color: var(--c-green); display: block; margin-bottom: 14px; }
+    .form-success h4 { color: var(--c-text); margin-bottom: 8px; }
+    .form-success p { color: var(--c-muted); }
 
-    /* Footer */
+    /* ── Footer ── */
     .smb-footer {
-      background: #060a14; border-top: 1px solid var(--smb-border);
-      padding: 40px 0 24px; color: #475569; font-size: 0.85rem;
+      background: var(--c-text); color: rgba(255,255,255,0.55);
+      padding: 40px 0 24px; font-size: 0.85rem;
     }
-    .smb-footer a { color: #475569; text-decoration: none; }
-    .smb-footer a:hover { color: #94a3b8; }
     .smb-footer-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; }
-    .smb-footer-logo { font-size: 1.1rem; font-weight: 700; color: #fff; }
-    .smb-footer-logo span { color: var(--smb-accent); }
+    .smb-footer-logo { font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 800; color: #fff; }
+    .smb-footer-logo span { color: var(--c-primary); }
     .smb-footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
-    .smb-footer-bottom { border-top: 1px solid var(--smb-border); padding-top: 20px; text-align: center; }
+    .smb-footer-links a { color: rgba(255,255,255,0.55); text-decoration: none; transition: var(--transition); }
+    .smb-footer-links a:hover { color: #fff; }
+    .smb-footer-bottom { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; text-align: center; }
+
+    /* ── Cloud burst (popup) ── */
+    #clouds-field {
+      position: absolute; top: 0; left: 0; width: 100%;
+      pointer-events: none; z-index: 0; overflow: hidden;
+    }
+    .cloud-target {
+      position: absolute; pointer-events: all; cursor: pointer !important;
+      width: 54px; height: 36px; transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+    .cloud-target:hover { transform: scale(1.18) !important; opacity: 1 !important; }
+    .cloud-target::before,
+    .cloud-target::after {
+      content: ''; position: absolute;
+      background: rgba(14,165,233,0.35); border-radius: 50%;
+    }
+    .cloud-target::before { width: 28px; height: 28px; top: 4px; left: 10px; }
+    .cloud-target::after  { width: 54px; height: 22px; bottom: 0; left: 0; border-radius: 11px; }
+    .cloud-target.popped { pointer-events: none; animation: cloudPop 0.48s ease forwards !important; }
+    @keyframes cloudPop { 0%{transform:scale(1);opacity:1} 40%{transform:scale(1.5);opacity:0.7} 100%{transform:scale(0.2);opacity:0} }
+    @keyframes cloudDrift1 { 0%,100%{transform:translateY(0) translateX(0)} 33%{transform:translateY(-8px) translateX(3px)} 66%{transform:translateY(4px) translateX(-2px)} }
+    @keyframes cloudDrift2 { 0%,100%{transform:translateY(0) translateX(0)} 50%{transform:translateY(-6px) translateX(-4px)} }
+    @keyframes cloudDrift3 { 0%,100%{transform:translateY(0)} 40%{transform:translateY(7px)} 75%{transform:translateY(-5px)} }
+    .cloud-particle {
+      position: fixed; width: 8px; height: 8px; border-radius: 50%;
+      pointer-events: none; z-index: 9999;
+      animation: particleBurst 0.75s ease-out forwards;
+    }
+    @keyframes particleBurst { 0%{transform:translate(0,0) scale(1);opacity:1} 100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0} }
+    .cloud-ripple {
+      position: fixed; width: 20px; height: 20px; border-radius: 50%;
+      border: 2px solid rgba(14,165,233,0.6);
+      pointer-events: none; z-index: 9999; margin: -10px 0 0 -10px;
+      animation: rippleOut 0.7s ease-out forwards;
+    }
+    @keyframes rippleOut { 0%{transform:scale(1);opacity:0.8} 100%{transform:scale(4);opacity:0} }
+    /* modal */
+    .cloud-modal-overlay {
+      position: fixed; inset: 0; background: rgba(12,74,110,0.5);
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px); z-index: 10000;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+    }
+    .cloud-modal-overlay.open { opacity: 1; pointer-events: all; }
+    .cloud-modal-card {
+      background: var(--c-white); border-radius: 20px;
+      padding: 40px 36px 32px; width: 90%; max-width: 520px;
+      position: relative; box-shadow: var(--shadow-lg);
+      border: 1.5px solid var(--c-border);
+      transform: translateY(24px); transition: transform 0.3s ease;
+    }
+    .cloud-modal-overlay.open .cloud-modal-card { transform: translateY(0); }
+    .cloud-modal-accent {
+      position: absolute; top: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, var(--c-primary), #38bdf8); border-radius: 20px 20px 0 0;
+    }
+    .cloud-modal-close {
+      position: absolute; top: 14px; right: 14px;
+      background: #F1F5F9; border: none; border-radius: 8px;
+      width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+      color: var(--c-muted); cursor: pointer !important; transition: var(--transition);
+    }
+    .cloud-modal-close:hover { background: #E2E8F0; color: var(--c-text); }
+    .cloud-modal-icon { font-size: 2rem; color: var(--c-primary); margin-bottom: 12px; }
+    .cloud-modal-card h3 { font-family: 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 800; color: var(--c-text); margin-bottom: 8px; }
+    .cloud-modal-sub { color: var(--c-muted); font-size: 0.9rem; line-height: 1.65; margin-bottom: 20px; }
+    .cloud-modal-sub strong { color: var(--c-primary); }
+    .cloud-modal-success { text-align: center; padding: 16px 0; }
+    .cloud-modal-success h3 { color: var(--c-text); }
+    .cloud-modal-success p { color: var(--c-muted); }
+    .cms-icon-wrap { font-size: 2.5rem; color: var(--c-green); margin-bottom: 12px; }
+    /* cmf (popup form) */
+    .cmf { display: flex; flex-direction: column; gap: 14px; }
+    .cmf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .cmf-field { display: flex; flex-direction: column; gap: 5px; }
+    .cmf-field label { color: var(--c-text); font-size: 0.82rem; font-weight: 600; }
+    .cmf-field input {
+      background: var(--c-bg); border: 1.5px solid var(--c-border);
+      border-radius: 8px; color: var(--c-text); padding: 10px 12px; font-size: 0.9rem;
+      font-family: 'Work Sans', sans-serif; outline: none; transition: var(--transition);
+    }
+    .cmf-field input:focus { border-color: var(--c-primary); background: var(--c-white); box-shadow: 0 0 0 3px rgba(14,165,233,0.1); }
+    .cmf-field input::placeholder { color: #94a3b8; }
+    .cmf-field input.input-invalid { border-color: #fca5a5 !important; background: #fff5f5 !important; }
+    .cmf-field-error { display: none; color: #dc2626; font-size: 0.76rem; font-weight: 500; }
+    .cmf-field-error.visible { display: block; }
+    .cmf-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+    .cmf-chip { cursor: pointer !important; }
+    .cmf-chip input { display: none; }
+    .cmf-chip span {
+      display: block; padding: 6px 13px; border-radius: 100px;
+      border: 1.5px solid var(--c-border); color: var(--c-muted);
+      font-size: 0.8rem; font-weight: 500; cursor: pointer !important;
+      transition: var(--transition);
+    }
+    .cmf-chip:hover span { border-color: var(--c-primary); color: var(--c-primary); background: #E0F2FE; }
+    .cmf-chip input:checked + span { background: #E0F2FE; border-color: var(--c-primary); color: var(--c-primary-d); font-weight: 600; }
+    .cmf-submit {
+      background: var(--c-cta); color: #fff; border: none;
+      border-radius: 10px; padding: 13px; font-size: 0.95rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      cursor: pointer !important; transition: var(--transition);
+      box-shadow: 0 3px 10px rgba(249,115,22,0.3); margin-top: 4px;
+    }
+    .cmf-submit:hover:not(:disabled) { background: var(--c-cta-d); transform: translateY(-1px); }
+    .cmf-submit:disabled { opacity: 0.65; cursor: not-allowed !important; }
+    .cmf-form-msg {
+      display: none; padding: 10px 14px; border-radius: 8px;
+      font-size: 0.82rem; font-weight: 500;
+    }
+    .cmf-form-msg.error { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; display: block; }
+
+    /* ── Utility classes (replacing inline styles) ── */
+    .label-optional { font-weight: 400; color: #94a3b8; }
+    .badge-dot-blue { background: #E0F2FE; color: #0EA5E9; }
+    .badge-dot-green { background: #DCFCE7; color: #16a34a; }
+    .badge-meta { font-size: 0.72rem; color: #64748b; font-weight: 500; }
+    .badge-value { color: var(--c-text); }
+    .checklist-cta { margin-top: 12px; }
+    .checklist-cta a { font-weight: 700; text-decoration: underline; }
+    .pricing-note { text-align: center; color: var(--c-subtle); font-size: 0.85rem; margin-top: 22px; }
+    .pricing-note a { color: var(--c-primary); font-weight: 600; }
+    .cloud-modal-success-wrap { text-align: center; padding: 16px 0; }
+    .btn-form-submit-wrap { margin-top: 20px; }
 
     @media (max-width: 768px) {
       .smb-nav-links { display: none; }
-      .smb-hero-stats { gap: 20px; }
-      .checklist-box { padding: 24px; }
+      .smb-hero-img-wrap { margin-top: 40px; }
+      .hero-badge-float { display: none; }
+      .cmf-row { grid-template-columns: 1fr; }
       .smb-form-wrap { padding: 24px; }
+      .checklist-box { padding: 24px; }
+      .cloud-modal-card { padding: 32px 20px 24px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
     }
   </style>
 </head>
 
 <body>
 
+  <!-- Cloud burst field (sits under everything) -->
+  <div id="clouds-field" aria-hidden="true"></div>
+
+  <!-- Cloud burst modal -->
+  <div id="cloud-modal" class="cloud-modal-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="smb-cloud-modal-title">
+    <div class="cloud-modal-card">
+      <div class="cloud-modal-accent"></div>
+      <button type="button" class="cloud-modal-close" id="cloud-modal-close" aria-label="Close modal"><i class="bi bi-x-lg"></i></button>
+      <div id="cloud-modal-body">
+        <div class="cloud-modal-icon"><i class="bx bx-cloud-lightning"></i></div>
+        <h3 id="smb-cloud-modal-title">You have a keen eye.</h3>
+        <p class="cloud-modal-sub">You just popped 5 Nimbus clouds — and unlocked a <strong>free 30-minute consultation</strong> with Sid. Fill in your details and we'll be in touch within 24 hours.</p>
+        <div class="cmf-form-msg" id="cmf-msg"></div>
+        <form id="cloud-unlock-form" class="cmf" novalidate>
+          <input type="hidden" name="_replyto" value="sidnigam.work@gmail.com">
+          <input type="hidden" name="_subject" value="New Cloud Burst Claim — Nimbus SMB Boston">
+          <div class="cmf-row">
+            <div class="cmf-field">
+              <label for="cu-name">Full Name</label>
+              <input type="text" id="cu-name" name="name" placeholder="Jane Smith" required autocomplete="name">
+              <span class="cmf-field-error" id="cu-name-err">Please enter your name.</span>
+            </div>
+            <div class="cmf-field">
+              <label for="cu-email">Email</label>
+              <input type="email" id="cu-email" name="email" placeholder="jane@company.com" required autocomplete="email">
+              <span class="cmf-field-error" id="cu-email-err">Please enter a valid email address.</span>
+            </div>
+          </div>
+          <div class="cmf-row">
+            <div class="cmf-field">
+              <label for="cu-biz">Business Name</label>
+              <input type="text" id="cu-biz" name="business" placeholder="Acme Bakery" autocomplete="organization">
+            </div>
+            <div class="cmf-field">
+              <label for="cu-phone">Phone <span class="label-optional">(optional)</span></label>
+              <input type="tel" id="cu-phone" name="phone" placeholder="+1 (617) 000-0000" autocomplete="tel">
+            </div>
+          </div>
+          <div class="cmf-field">
+            <label>What are you looking for?</label>
+            <div class="cmf-chips">
+              <label class="cmf-chip"><input type="checkbox" name="service" value="ai"><span>AI Implementation</span></label>
+              <label class="cmf-chip"><input type="checkbox" name="service" value="cloud"><span>Cloud Costs</span></label>
+              <label class="cmf-chip"><input type="checkbox" name="service" value="automation"><span>Automation</span></label>
+              <label class="cmf-chip"><input type="checkbox" name="service" value="billing"><span>Billing & Collections</span></label>
+              <label class="cmf-chip"><input type="checkbox" name="service" value="outreach"><span>Outreach</span></label>
+              <label class="cmf-chip"><input type="checkbox" name="service" value="general"><span>Not Sure Yet</span></label>
+            </div>
+          </div>
+          <button type="submit" class="cmf-submit" id="cmf-submit-btn"><i class="bi bi-send"></i> Claim My Free Consultation</button>
+        </form>
+      </div>
+      <div id="cloud-modal-success" hidden class="cloud-modal-success-wrap">
+        <div class="cms-icon-wrap"><i class="bi bi-check-circle-fill"></i></div>
+        <h3>You're in!</h3>
+        <p class="cloud-modal-sub">Sid will reach out within 24 hours to schedule your free consultation. Keep an eye on your inbox.</p>
+      </div>
+    </div>
+  </div>
+
   <!-- Nav -->
-  <nav class="smb-nav">
+  <nav class="smb-nav" role="navigation" aria-label="Main navigation">
     <div class="container">
-      <a href="index.html" class="smb-nav-logo"><span>Nimbus</span> Tech Solutions</a>
+      <a href="index.html" class="smb-nav-logo" aria-label="Nimbus Tech Solutions home"><span>Nimbus</span> Tech Solutions</a>
       <div class="smb-nav-links">
         <a href="#why-ai">Why AI</a>
         <a href="#ai-uses">Use Cases</a>
-        <a href="#checklist">AI Checklist</a>
+        <a href="#checklist">AI Quiz</a>
         <a href="#pricing">Pricing</a>
         <a href="#contact" class="smb-nav-cta">Book Free Call</a>
       </div>
     </div>
   </nav>
 
-  <main>
+  <main id="main">
 
     <!-- ── Hero ── -->
-    <section class="smb-hero">
+    <section class="smb-hero" aria-labelledby="hero-heading">
       <div class="container">
         <div class="row align-items-center">
-          <div class="col-lg-7" data-aos="fade-up">
-            <div class="smb-hero-badge"><i class="bi bi-geo-alt-fill"></i> Serving Boston-Area Small Businesses</div>
-            <h1>Boston's Small Businesses Are Getting Left Behind by <em>AI.</em> We Fix That.</h1>
+          <div class="col-lg-6" data-aos="fade-right">
+            <div class="smb-hero-badge">
+              <i class="bi bi-geo-alt-fill"></i> Serving Boston-Area Small Businesses
+            </div>
+            <h1 id="hero-heading">Boston's Small Businesses Are Getting Left Behind by <em>AI.</em> We Fix That.</h1>
             <p class="lead">Your competitors are already using AI to work faster, spend less, and serve customers better. We help local Boston businesses adopt the right tools — without the tech overwhelm or the enterprise price tag.</p>
             <div class="smb-hero-actions">
-              <a href="#contact" class="btn-smb-primary"><i class="bi bi-calendar-check"></i> Book a Free Strategy Call</a>
-              <a href="#checklist" class="btn-smb-outline"><i class="bi bi-clipboard-check"></i> Take the AI Readiness Quiz</a>
+              <a href="#contact" class="btn-primary-cta"><i class="bi bi-calendar-check"></i> Book a Free Strategy Call</a>
+              <a href="#checklist" class="btn-outline-cta"><i class="bi bi-clipboard-check"></i> Take the AI Quiz</a>
             </div>
             <div class="smb-hero-stats">
               <div class="smb-stat">
@@ -305,7 +591,26 @@
               </div>
               <div class="smb-stat">
                 <div class="smb-stat-num"><span>0</span></div>
-                <div class="smb-stat-label">Tech team required</div>
+                <div class="smb-stat-label">Tech team needed</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6 mt-5 mt-lg-0" data-aos="fade-left" data-aos-delay="150">
+            <div class="smb-hero-img-wrap">
+              <img src="assets/img/hero-img.png" alt="Nimbus Tech Solutions — AI and cloud consulting for Boston small businesses" loading="eager">
+              <div class="hero-badge-float badge-float-tl">
+                <div class="badge-dot badge-dot-blue"><i class="bi bi-robot"></i></div>
+                <div>
+                  <div class="badge-meta">AI Automation</div>
+                  <div class="badge-value">Live in 2 weeks</div>
+                </div>
+              </div>
+              <div class="hero-badge-float badge-float-br">
+                <div class="badge-dot badge-dot-green"><i class="bi bi-graph-down-arrow"></i></div>
+                <div>
+                  <div class="badge-meta">Cloud Costs</div>
+                  <div class="badge-value">↓ 38% avg savings</div>
+                </div>
               </div>
             </div>
           </div>
@@ -314,7 +619,7 @@
     </section>
 
     <!-- ── Pain Points ── -->
-    <section id="why-ai" class="smb-section pain-section">
+    <section id="why-ai" class="pain-section">
       <div class="container">
         <div class="smb-section-title" data-aos="fade-up">
           <div class="section-tag">The Problem</div>
@@ -333,7 +638,7 @@
             <div class="pain-card">
               <div class="pain-icon"><i class="bi bi-robot"></i></div>
               <h4>"My competitors are using AI. I don't know where to start."</h4>
-              <p>AI isn't just for big companies anymore. We identify the exact tools that will save you time and money in your specific business — and we set them up for you.</p>
+              <p>AI isn't just for big companies anymore. We identify the exact tools that will save you time and money — and set them up for you.</p>
             </div>
           </div>
           <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
@@ -348,37 +653,34 @@
     </section>
 
     <!-- ── AI Use Cases ── -->
-    <section id="ai-uses" class="smb-section">
+    <section id="ai-uses" class="ai-uses-section">
       <div class="container">
         <div class="smb-section-title" data-aos="fade-up">
           <div class="section-tag">What AI Can Do For You</div>
           <h2>Real ways AI helps Boston small businesses today</h2>
-          <p>Not hype. Practical tools that save time, reduce costs, and help you grow.</p>
+          <p>Not hype — practical tools that save time, reduce costs, and help you grow.</p>
         </div>
         <div class="ai-grid" data-aos="fade-up" data-aos-delay="100">
-
           <div class="ai-card">
             <div class="ai-card-icon"><i class="bi bi-megaphone"></i></div>
             <h5>Customer Outreach</h5>
             <ul>
               <li>AI-drafted follow-up emails</li>
               <li>Personalized marketing campaigns</li>
-              <li>Automated lead nurturing sequences</li>
+              <li>Automated lead nurturing</li>
               <li>Social media content generation</li>
             </ul>
           </div>
-
           <div class="ai-card">
             <div class="ai-card-icon"><i class="bi bi-box-seam"></i></div>
             <h5>Sourcing & Procurement</h5>
             <ul>
               <li>Vendor comparison automation</li>
-              <li>AI-assisted purchase order drafting</li>
+              <li>AI-assisted purchase orders</li>
               <li>Inventory demand forecasting</li>
               <li>Supplier research & scoring</li>
             </ul>
           </div>
-
           <div class="ai-card">
             <div class="ai-card-icon"><i class="bi bi-receipt"></i></div>
             <h5>Billing & Collections</h5>
@@ -389,7 +691,6 @@
               <li>Cash flow forecasting</li>
             </ul>
           </div>
-
           <div class="ai-card">
             <div class="ai-card-icon"><i class="bi bi-gear-wide-connected"></i></div>
             <h5>Business Automation</h5>
@@ -400,18 +701,16 @@
               <li>Scheduling & calendar AI</li>
             </ul>
           </div>
-
           <div class="ai-card">
             <div class="ai-card-icon"><i class="bi bi-headset"></i></div>
             <h5>Customer Support</h5>
             <ul>
               <li>AI chat for FAQs & bookings</li>
               <li>Ticket routing & auto-replies</li>
-              <li>Sentiment analysis on reviews</li>
+              <li>Review sentiment analysis</li>
               <li>After-hours response handling</li>
             </ul>
           </div>
-
           <div class="ai-card">
             <div class="ai-card-icon"><i class="bi bi-bar-chart-line"></i></div>
             <h5>Reporting & Insights</h5>
@@ -422,13 +721,12 @@
               <li>Plain-English data summaries</li>
             </ul>
           </div>
-
         </div>
       </div>
     </section>
 
     <!-- ── AI Readiness Checklist ── -->
-    <section id="checklist" class="smb-section checklist-section">
+    <section id="checklist" class="checklist-section">
       <div class="container">
         <div class="smb-section-title" data-aos="fade-up">
           <div class="section-tag">Free AI Readiness Quiz</div>
@@ -438,7 +736,6 @@
         <div class="row justify-content-center">
           <div class="col-lg-8" data-aos="fade-up" data-aos-delay="100">
             <div class="checklist-box">
-
               <div class="checklist-item">
                 <input type="checkbox" id="c1" class="cl-check">
                 <label for="c1">My team spends more than 2 hours a week on repetitive tasks like data entry, copy-paste, or manual follow-ups.</label>
@@ -453,7 +750,7 @@
               </div>
               <div class="checklist-item">
                 <input type="checkbox" id="c4" class="cl-check">
-                <label for="c4">We're using tools like QuickBooks, Shopify, HubSpot, or similar — but they don't talk to each other.</label>
+                <label for="c4">We're using tools like QuickBooks, Shopify, or HubSpot — but they don't talk to each other.</label>
               </div>
               <div class="checklist-item">
                 <input type="checkbox" id="c5" class="cl-check">
@@ -461,7 +758,7 @@
               </div>
               <div class="checklist-item">
                 <input type="checkbox" id="c6" class="cl-check">
-                <label for="c6">We produce reports or summaries manually (copying data into spreadsheets or Word docs).</label>
+                <label for="c6">We produce reports manually — copying data into spreadsheets or Word docs.</label>
               </div>
               <div class="checklist-item">
                 <input type="checkbox" id="c7" class="cl-check">
@@ -471,15 +768,13 @@
                 <input type="checkbox" id="c8" class="cl-check">
                 <label for="c8">We're paying for software or cloud services but aren't sure we're getting full value from them.</label>
               </div>
-
-              <div id="checklist-result" class="checklist-result">
+              <div id="checklist-result" class="checklist-result" aria-live="polite">
                 <div class="checklist-score" id="checklist-score"></div>
                 <div id="checklist-message"></div>
-                <div id="checklist-cta" style="margin-top:14px;"></div>
+                <div id="checklist-cta" class="checklist-cta"></div>
               </div>
-
-              <button onclick="scoreChecklist()" style="margin-top:24px; background:var(--smb-accent); color:#fff; border:none; border-radius:8px; padding:12px 28px; font-weight:700; font-size:0.95rem; width:100%;">
-                <i class="bi bi-clipboard-check"></i> &nbsp;See My AI Readiness Score
+              <button type="button" class="btn-score" onclick="scoreChecklist()" aria-label="See my AI readiness score">
+                <i class="bi bi-clipboard-check"></i> See My AI Readiness Score
               </button>
             </div>
           </div>
@@ -488,7 +783,7 @@
     </section>
 
     <!-- ── Pricing ── -->
-    <section id="pricing" class="smb-section">
+    <section id="pricing" class="pricing-section">
       <div class="container">
         <div class="smb-section-title" data-aos="fade-up">
           <div class="section-tag">Simple Pricing</div>
@@ -496,43 +791,42 @@
           <p>Flat monthly plans built for small businesses. Cancel anytime.</p>
         </div>
         <div class="pricing-grid" data-aos="fade-up" data-aos-delay="100">
-
-          <div class="smb-price-card">
-            <div class="smb-price-name">Starter</div>
-            <div class="smb-price-amount">$299<span>/mo</span></div>
-            <div class="smb-price-desc">Best for solo operators & businesses just getting started with AI.</div>
-            <ul class="smb-price-features">
+          <div class="price-card">
+            <div class="price-name">Starter</div>
+            <div class="price-amount">$299<span>/mo</span></div>
+            <p class="price-desc">Best for solo operators and businesses just getting started with AI.</p>
+            <ul class="price-features">
               <li><i class="bi bi-check-circle-fill"></i> Cloud cost audit & cleanup</li>
               <li><i class="bi bi-check-circle-fill"></i> 1 AI workflow automation</li>
-              <li><i class="bi bi-check-circle-fill"></i> Monthly check-in call</li>
+              <li><i class="bi bi-check-circle-fill"></i> Monthly strategy check-in</li>
               <li><i class="bi bi-check-circle-fill"></i> Email support</li>
               <li><i class="bi bi-check-circle-fill"></i> No tech team needed</li>
             </ul>
-            <a href="#contact" class="btn-smb-price btn-smb-price-outline">Get Started</a>
+            <a href="#contact" class="btn-price btn-price-outline">Get Started</a>
           </div>
-
-          <div class="smb-price-card featured">
-            <div class="smb-price-badge">Most Popular</div>
-            <div class="smb-price-name">Growth</div>
-            <div class="smb-price-amount">$699<span>/mo</span></div>
-            <div class="smb-price-desc">Best for growing businesses ready to seriously leverage AI.</div>
-            <ul class="smb-price-features">
+          <div class="price-card featured">
+            <div class="price-badge">Most Popular</div>
+            <div class="price-name">Growth</div>
+            <div class="price-amount">$699<span>/mo</span></div>
+            <p class="price-desc">Best for growing businesses ready to seriously leverage AI.</p>
+            <ul class="price-features">
               <li><i class="bi bi-check-circle-fill"></i> Everything in Starter</li>
               <li><i class="bi bi-check-circle-fill"></i> Up to 3 AI workflow automations</li>
               <li><i class="bi bi-check-circle-fill"></i> Tool integrations (CRM, billing, etc.)</li>
               <li><i class="bi bi-check-circle-fill"></i> Bi-weekly strategy calls</li>
               <li><i class="bi bi-check-circle-fill"></i> Priority support</li>
             </ul>
-            <a href="#contact" class="btn-smb-price btn-smb-price-primary">Book a Free Call</a>
+            <a href="#contact" class="btn-price btn-price-primary">Book a Free Call</a>
           </div>
-
         </div>
-        <p style="text-align:center; color:#475569; font-size:0.85rem; margin-top:24px;">Need something custom? <a href="#contact" style="color:var(--smb-accent);">Let's talk.</a></p>
+        <p class="pricing-note">
+          Need something custom? <a href="#contact">Let's talk.</a>
+        </p>
       </div>
     </section>
 
     <!-- ── Contact ── -->
-    <section id="contact" class="smb-section smb-contact-section">
+    <section id="contact" class="contact-section">
       <div class="container">
         <div class="smb-section-title" data-aos="fade-up">
           <div class="section-tag">Free Strategy Call</div>
@@ -543,40 +837,44 @@
           <div class="col-lg-7" data-aos="fade-up" data-aos-delay="100">
             <div class="smb-form-wrap">
               <div id="smb-form-body">
-                <form id="smb-contact-form" action="https://formspree.io/f/xjvnbjvn" method="POST">
+                <div class="form-msg" id="smb-form-msg" role="alert"></div>
+                <form id="smb-contact-form" novalidate>
                   <input type="hidden" name="_replyto" value="sidnigam.work@gmail.com">
                   <input type="hidden" name="_subject" value="New SMB Strategy Call Request — Nimbus Boston">
                   <div class="row g-3">
                     <div class="col-md-6">
-                      <label>Your Name</label>
-                      <input type="text" name="name" placeholder="Jane Smith" required>
+                      <label for="smb-name">Your Name *</label>
+                      <input type="text" id="smb-name" name="name" placeholder="Jane Smith" required autocomplete="name">
+                      <span class="field-error" id="smb-name-err">Please enter your name.</span>
                     </div>
                     <div class="col-md-6">
-                      <label>Business Name</label>
-                      <input type="text" name="business" placeholder="Acme Bakery">
+                      <label for="smb-biz">Business Name</label>
+                      <input type="text" id="smb-biz" name="business" placeholder="Acme Bakery" autocomplete="organization">
                     </div>
                     <div class="col-md-6">
-                      <label>Email</label>
-                      <input type="email" name="email" placeholder="jane@yourbusiness.com" required>
+                      <label for="smb-email">Email *</label>
+                      <input type="email" id="smb-email" name="email" placeholder="jane@yourbusiness.com" required autocomplete="email">
+                      <span class="field-error" id="smb-email-err">Please enter a valid email address.</span>
                     </div>
                     <div class="col-md-6">
-                      <label>Phone (optional)</label>
-                      <input type="tel" name="phone" placeholder="+1 (617) 000-0000">
+                      <label for="smb-phone">Phone <span class="label-optional">(optional)</span></label>
+                      <input type="tel" id="smb-phone" name="phone" placeholder="+1 (617) 000-0000" autocomplete="tel">
                     </div>
                     <div class="col-12">
-                      <label>What's your biggest challenge right now?</label>
-                      <textarea name="message" rows="4" placeholder="e.g. We're wasting time on manual invoicing and want to automate it..." required></textarea>
+                      <label for="smb-message">What's your biggest challenge right now? *</label>
+                      <textarea id="smb-message" name="message" rows="4" placeholder="e.g. We're wasting time on manual invoicing and want to automate it..." required></textarea>
+                      <span class="field-error" id="smb-message-err">Please tell us a bit about your challenge.</span>
                     </div>
                   </div>
-                  <button type="submit" class="btn-smb-submit">
+                  <button type="submit" class="btn-form-submit btn-form-submit-wrap" id="smb-submit-btn">
                     <i class="bi bi-calendar-check"></i> Book My Free Strategy Call
                   </button>
                 </form>
               </div>
-              <div id="smb-form-success" class="form-success">
+              <div class="form-success" id="smb-form-success">
                 <i class="bi bi-check-circle-fill"></i>
-                <h4 style="color:#fff; margin-bottom:8px;">You're booked!</h4>
-                <p style="color:#94a3b8;">Sid will reach out within 24 hours to schedule your free strategy call. Keep an eye on your inbox.</p>
+                <h4>You're booked!</h4>
+                <p>Sid will reach out within 24 hours to schedule your free strategy call. Keep an eye on your inbox.</p>
               </div>
             </div>
           </div>
@@ -587,7 +885,7 @@
   </main>
 
   <!-- Footer -->
-  <footer class="smb-footer">
+  <footer class="smb-footer" role="contentinfo">
     <div class="container">
       <div class="smb-footer-top">
         <div class="smb-footer-logo"><span>Nimbus</span> Tech Solutions &nbsp;·&nbsp; Boston, MA</div>
@@ -608,56 +906,258 @@
   <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 
   <script>
-    AOS.init({ duration: 600, once: true });
+    AOS.init({ duration: 600, once: true, offset: 60 });
 
-    // Checklist scorer
+    // ── Helpers ──
+    var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    function setFieldError(inputEl, errEl, show) {
+      if (show) {
+        inputEl.classList.add('input-invalid');
+        errEl.classList.add('visible');
+      } else {
+        inputEl.classList.remove('input-invalid');
+        errEl.classList.remove('visible');
+      }
+    }
+
+    // ── Checklist scorer ──
     function scoreChecklist() {
       var checks = document.querySelectorAll('.cl-check');
       var count = 0;
       checks.forEach(function(c) { if (c.checked) count++; });
-
-      var result = document.getElementById('checklist-result');
-      var score  = document.getElementById('checklist-score');
-      var msg    = document.getElementById('checklist-message');
-      var cta    = document.getElementById('checklist-cta');
-
+      var result  = document.getElementById('checklist-result');
+      var scoreEl = document.getElementById('checklist-score');
+      var msgEl   = document.getElementById('checklist-message');
+      var ctaEl   = document.getElementById('checklist-cta');
       result.style.display = 'block';
       result.className = 'checklist-result';
-
       if (count <= 2) {
         result.classList.add('low');
-        score.textContent = count + '/8 — You\'re in good shape';
-        msg.textContent = 'Your business has a solid foundation. A quick audit could still surface easy wins — a free call costs nothing.';
+        scoreEl.textContent = count + '/8 — You\'re in good shape';
+        msgEl.textContent = 'Your business has a solid foundation. A quick audit could still surface easy wins — a free call costs nothing.';
       } else if (count <= 5) {
         result.classList.add('mid');
-        score.textContent = count + '/8 — Real opportunity here';
-        msg.textContent = 'You\'re losing hours and money to manual work that AI can handle today. Let\'s map out a plan.';
+        scoreEl.textContent = count + '/8 — Real opportunity here';
+        msgEl.textContent = 'You\'re losing hours and money to manual work that AI can handle today. Let\'s map out a plan.';
       } else {
         result.classList.add('high');
-        score.textContent = count + '/8 — AI could transform your business';
-        msg.textContent = 'You\'re leaving significant time and money on the table. The good news: most of this is fixable quickly. Let\'s talk.';
+        scoreEl.textContent = count + '/8 — AI could transform your business';
+        msgEl.textContent = 'You\'re leaving significant time and money on the table. Most of this is fixable quickly. Let\'s talk.';
       }
-
-      cta.innerHTML = '<a href="#contact" style="color:inherit; font-weight:700; text-decoration:underline;">→ Book your free strategy call</a>';
+      ctaEl.innerHTML = '<a href="#contact">→ Book your free strategy call</a>';
       result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    // Contact form
-    var smbForm = document.getElementById('smb-contact-form');
+    // ── Main contact form validation + submit ──
+    var smbForm   = document.getElementById('smb-contact-form');
+    var smbSubmit = document.getElementById('smb-submit-btn');
+    var smbMsg    = document.getElementById('smb-form-msg');
+
+    function validateSmbForm() {
+      var nameEl  = document.getElementById('smb-name');
+      var emailEl = document.getElementById('smb-email');
+      var msgEl2  = document.getElementById('smb-message');
+      var valid = true;
+
+      setFieldError(nameEl,  document.getElementById('smb-name-err'),    !nameEl.value.trim());
+      setFieldError(emailEl, document.getElementById('smb-email-err'),   !EMAIL_RE.test(emailEl.value.trim()));
+      setFieldError(msgEl2,  document.getElementById('smb-message-err'), !msgEl2.value.trim());
+
+      if (!nameEl.value.trim() || !EMAIL_RE.test(emailEl.value.trim()) || !msgEl2.value.trim()) valid = false;
+      return valid;
+    }
+
     if (smbForm) {
+      // Live validation on blur
+      ['smb-name','smb-email','smb-message'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('blur', function() {
+          if (id === 'smb-email') {
+            setFieldError(el, document.getElementById('smb-email-err'), !EMAIL_RE.test(el.value.trim()));
+          } else {
+            var errId = id === 'smb-name' ? 'smb-name-err' : 'smb-message-err';
+            setFieldError(el, document.getElementById(errId), !el.value.trim());
+          }
+        });
+        el.addEventListener('input', function() {
+          if (el.classList.contains('input-invalid')) {
+            if (id === 'smb-email') {
+              setFieldError(el, document.getElementById('smb-email-err'), !EMAIL_RE.test(el.value.trim()));
+            } else {
+              var errId = id === 'smb-name' ? 'smb-name-err' : 'smb-message-err';
+              setFieldError(el, document.getElementById(errId), !el.value.trim());
+            }
+          }
+        });
+      });
+
       smbForm.addEventListener('submit', function(e) {
         e.preventDefault();
+        if (!validateSmbForm()) return;
+
+        smbSubmit.disabled = true;
+        smbMsg.className = 'form-msg sending';
+        smbMsg.textContent = 'Sending your message…';
+
         var data = new FormData(smbForm);
-        fetch(smbForm.action, {
-          method: 'POST',
-          body: data,
+        fetch('https://formspree.io/f/xjvnbjvn', {
+          method: 'POST', body: data,
           headers: { 'Accept': 'application/json' }
-        }).then(function() {
-          document.getElementById('smb-form-body').style.display = 'none';
-          document.getElementById('smb-form-success').style.display = 'block';
+        }).then(function(res) {
+          if (res.ok) {
+            document.getElementById('smb-form-body').style.display = 'none';
+            document.getElementById('smb-form-success').style.display = 'block';
+          } else {
+            throw new Error('failed');
+          }
         }).catch(function() {
-          document.getElementById('smb-form-body').style.display = 'none';
-          document.getElementById('smb-form-success').style.display = 'block';
+          smbSubmit.disabled = false;
+          smbMsg.className = 'form-msg error';
+          smbMsg.textContent = 'Something went wrong. Please try again or email us directly.';
+        });
+      });
+    }
+
+    // ── Cloud burst ──
+    var PARTICLE_COLORS = ['#0EA5E9','#38BDF8','#BAE6FD','#F97316','#10b981'];
+    var poppedCount = 0, UNLOCK_AT = 5, modalShown = false;
+    var DRIFT_ANIMS  = ['cloudDrift1','cloudDrift2','cloudDrift3'];
+    var DRIFT_SPEEDS = [4.1,4.8,5.5,3.9,5.2,4.4,4.7,5.0,3.7,4.3];
+
+    function spawnParticles(cx, cy) {
+      for (var i = 0; i < 9; i++) {
+        var p = document.createElement('div');
+        p.className = 'cloud-particle';
+        var angle = (i / 9) * Math.PI * 2;
+        var dist  = 38 + Math.random() * 28;
+        p.style.left = cx + 'px'; p.style.top = cy + 'px';
+        p.style.background = PARTICLE_COLORS[i % PARTICLE_COLORS.length];
+        p.style.setProperty('--tx', (Math.cos(angle) * dist) + 'px');
+        p.style.setProperty('--ty', (Math.sin(angle) * dist) + 'px');
+        document.body.appendChild(p);
+        setTimeout(function() { p.remove(); }, 750);
+      }
+      var ripple = document.createElement('div');
+      ripple.className = 'cloud-ripple';
+      ripple.style.left = cx + 'px'; ripple.style.top = cy + 'px';
+      document.body.appendChild(ripple);
+      setTimeout(function() { ripple.remove(); }, 700);
+    }
+
+    function attachPopHandler(cloud) {
+      cloud.addEventListener('click', function() {
+        if (cloud.classList.contains('popped')) return;
+        cloud.classList.add('popped');
+        var rect = cloud.getBoundingClientRect();
+        spawnParticles(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        setTimeout(function() { cloud.remove(); }, 480);
+        poppedCount++;
+        if (poppedCount >= UNLOCK_AT && !modalShown) {
+          modalShown = true;
+          setTimeout(openCloudModal, 550);
+        }
+      });
+    }
+
+    window.addEventListener('load', function() {
+      var field = document.getElementById('clouds-field');
+      if (!field) return;
+      var pageH = document.body.scrollHeight;
+      field.style.height = pageH + 'px';
+      var TOTAL = 22;
+      var zones = [
+        [2, 10,  200, pageH * 0.25],
+        [2, 10,  pageH * 0.25, pageH * 0.55],
+        [2, 10,  pageH * 0.55, pageH * 0.9],
+        [88, 96, 200, pageH * 0.25],
+        [88, 96, pageH * 0.25, pageH * 0.55],
+        [88, 96, pageH * 0.55, pageH * 0.9],
+        [15, 82, pageH * 0.12, pageH * 0.22],
+        [15, 82, pageH * 0.32, pageH * 0.42],
+        [15, 82, pageH * 0.52, pageH * 0.62],
+        [15, 82, pageH * 0.72, pageH * 0.85],
+      ];
+      for (var i = 0; i < TOTAL; i++) {
+        var zone  = zones[i % zones.length];
+        var xPct  = zone[0] + Math.random() * (zone[1] - zone[0]);
+        var yPx   = zone[2] + Math.random() * (zone[3] - zone[2]);
+        var cloud = document.createElement('div');
+        cloud.className = 'cloud-target';
+        var scale = 0.55 + Math.random() * 0.65;
+        var opacity = 0.35 + Math.random() * 0.35;
+        cloud.style.left = xPct + '%';
+        cloud.style.top  = yPx  + 'px';
+        cloud.style.transform = 'scale(' + scale + ')';
+        cloud.style.opacity = opacity;
+        cloud.style.animation = DRIFT_ANIMS[i % 3] + ' ' + DRIFT_SPEEDS[i % 10] + 's ease-in-out ' + (Math.random() * 2).toFixed(2) + 's infinite';
+        field.appendChild(cloud);
+        attachPopHandler(cloud);
+      }
+    });
+
+    // Cloud modal
+    var modal    = document.getElementById('cloud-modal');
+    var modalBody= document.getElementById('cloud-modal-body');
+    var modalSucc= document.getElementById('cloud-modal-success');
+    var closeBtn = document.getElementById('cloud-modal-close');
+
+    function openCloudModal() {
+      if (!modal) return;
+      modal.setAttribute('aria-hidden', 'false');
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeCloudModal() {
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+    if (closeBtn) closeBtn.addEventListener('click', closeCloudModal);
+    if (modal) {
+      modal.addEventListener('click', function(e) { if (e.target === modal) closeCloudModal(); });
+      document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && modal.classList.contains('open')) closeCloudModal(); });
+    }
+
+    // Cloud modal form validation + submit
+    var cmfForm   = document.getElementById('cloud-unlock-form');
+    var cmfSubmit = document.getElementById('cmf-submit-btn');
+    var cmfMsg    = document.getElementById('cmf-msg');
+
+    function validateCmf() {
+      var nameEl  = document.getElementById('cu-name');
+      var emailEl = document.getElementById('cu-email');
+      var valid = true;
+      setFieldError(nameEl,  document.getElementById('cu-name-err'),  !nameEl.value.trim());
+      setFieldError(emailEl, document.getElementById('cu-email-err'), !EMAIL_RE.test(emailEl.value.trim()));
+      if (!nameEl.value.trim() || !EMAIL_RE.test(emailEl.value.trim())) valid = false;
+      return valid;
+    }
+
+    if (cmfForm) {
+      document.getElementById('cu-email').addEventListener('blur', function() {
+        setFieldError(this, document.getElementById('cu-email-err'), !EMAIL_RE.test(this.value.trim()));
+      });
+      document.getElementById('cu-name').addEventListener('blur', function() {
+        setFieldError(this, document.getElementById('cu-name-err'), !this.value.trim());
+      });
+
+      cmfForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (!validateCmf()) return;
+        cmfSubmit.disabled = true;
+        var data = new FormData(cmfForm);
+        fetch('https://formspree.io/f/xjvnbjvn', {
+          method: 'POST', body: data,
+          headers: { 'Accept': 'application/json' }
+        }).then(function(res) {
+          if (modalBody) modalBody.hidden = true;
+          if (modalSucc) modalSucc.hidden = false;
+        }).catch(function() {
+          cmfSubmit.disabled = false;
+          cmfMsg.className = 'cmf-form-msg error';
+          cmfMsg.textContent = 'Something went wrong. Please try again.';
         });
       });
     }

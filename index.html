@@ -50,7 +50,7 @@
     "name": "Nimbus Tech Solutions",
     "description": "Expert AWS, Azure and AI consulting for small and medium businesses. Cut cloud costs, deploy AI, and achieve compliance.",
     "url": "https://nimbustechsolutions.com",
-    "email": "sid.nigam@outlook.com",
+    "email": "sidnigam.work@gmail.com",
     "address": {
       "@type": "PostalAddress",
       "addressLocality": "Boston",
@@ -238,7 +238,9 @@
         <div class="cloud-modal-icon"><i class="bx bx-cloud-lightning"></i></div>
         <h3 id="cloud-modal-title">You have a keen eye.</h3>
         <p class="cloud-modal-sub">You just popped 5 Nimbus clouds — and unlocked a <strong>free 30-minute consultation</strong> with Sid. Fill in your details and we'll be in touch within 24 hours.</p>
-        <form id="cloud-unlock-form" class="cmf" novalidate>
+        <form id="cloud-unlock-form" class="cmf" novalidate action="https://formspree.io/f/xjvnbjvn" method="POST">
+          <input type="hidden" name="_replyto" value="sidnigam.work@gmail.com">
+          <input type="hidden" name="_subject" value="New Cloud Burst Consultation Claim — Nimbus">
           <div class="cmf-row">
             <div class="cmf-field">
               <label for="cu-name">Full Name</label>
@@ -1096,8 +1098,8 @@
             <a href="#contact" class="cta-btn-primary scrollto">
               <i class="bi bi-calendar-check"></i> Book Free Strategy Call
             </a>
-            <a href="mailto:sid.nigam@outlook.com" class="cta-btn-outline">
-              <i class="bi bi-envelope"></i> Email Directly
+            <a href="#contact" class="cta-btn-outline scrollto">
+              <i class="bi bi-envelope"></i> Send a Message
             </a>
           </div>
           <p class="cta-footnote">No sales pitch. No obligation. Just honest advice.</p>
@@ -1127,7 +1129,7 @@
                 <div class="cip-icon"><i class="bi bi-envelope"></i></div>
                 <div>
                   <h4>Email</h4>
-                  <p><a href="mailto:sid.nigam@outlook.com">sid.nigam@outlook.com</a></p>
+                  <p>Use the form to get in touch.</p>
                 </div>
               </div>
               <div class="cip-item">
@@ -1149,6 +1151,8 @@
 
           <div class="col-lg-7 d-flex align-items-stretch">
             <form id="fs-frm" name="simple-contact-form" class="contact-form" accept-charset="utf-8" action="https://formspree.io/f/xjvnbjvn" method="POST">
+              <input type="hidden" name="_replyto" value="sidnigam.work@gmail.com">
+              <input type="hidden" name="_subject" value="New Strategy Call Request — Nimbus">
               <div class="row g-3">
                 <div class="col-md-6">
                   <label for="name">Your Name</label>
@@ -1193,7 +1197,6 @@
               <h3><span class="logo-nimbus">Nimbus</span><span class="logo-tech"> Tech Solutions</span></h3>
               <p>From Code to Compliance — enterprise-grade Cloud &amp; AI for businesses of every size.</p>
               <p>Boston, MA 02111 &nbsp;·&nbsp; United States</p>
-              <p><strong>Email:</strong> sid.nigam@outlook.com</p>
             </div>
           </div>
 
@@ -1518,8 +1521,18 @@
     if (unlockForm) {
       unlockForm.addEventListener('submit', function (e) {
         e.preventDefault();
-        if (modalBody) modalBody.hidden = true;
-        if (modalSucc) modalSucc.hidden = false;
+        var data = new FormData(unlockForm);
+        fetch(unlockForm.action, {
+          method: 'POST',
+          body: data,
+          headers: { 'Accept': 'application/json' }
+        }).then(function (res) {
+          if (modalBody) modalBody.hidden = true;
+          if (modalSucc) modalSucc.hidden = false;
+        }).catch(function () {
+          if (modalBody) modalBody.hidden = true;
+          if (modalSucc) modalSucc.hidden = false;
+        });
       });
     }
 

@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>AI & Cloud for Boston Small Businesses — Nimbus Tech Solutions</title>
+  <meta name="description" content="Boston small businesses are getting left behind by AI. Nimbus helps local businesses adopt AI tools and cut cloud costs — starting at $299/month. No tech team required.">
+  <meta name="keywords" content="AI for small business Boston, cloud consulting Boston, small business AI tools, AI adoption Boston MA, affordable cloud consulting">
+
+  <!-- Favicons -->
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Jost:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+  <!-- Vendor CSS -->
+  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+
+  <!-- Main CSS -->
+  <link href="assets/css/style.css" rel="stylesheet">
+
+  <style>
+    * { cursor: auto !important; }
+
+    /* ── SMB page overrides ── */
+    :root {
+      --smb-accent: #3b82f6;
+      --smb-accent-dark: #1d4ed8;
+      --smb-green: #10b981;
+      --smb-bg: #0a0f1e;
+      --smb-surface: #111827;
+      --smb-border: rgba(255,255,255,0.08);
+    }
+
+    body { background: var(--smb-bg); color: #e2e8f0; font-family: 'Open Sans', sans-serif; }
+
+    /* Nav */
+    .smb-nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 999;
+      background: rgba(10,15,30,0.92); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--smb-border);
+      padding: 14px 0;
+    }
+    .smb-nav .container { display: flex; align-items: center; justify-content: space-between; }
+    .smb-nav-logo { font-size: 1.2rem; font-weight: 700; color: #fff; text-decoration: none; }
+    .smb-nav-logo span { color: var(--smb-accent); }
+    .smb-nav-links { display: flex; gap: 24px; align-items: center; }
+    .smb-nav-links a { color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color .2s; }
+    .smb-nav-links a:hover { color: #fff; }
+    .smb-nav-cta {
+      background: var(--smb-accent); color: #fff !important; padding: 8px 18px;
+      border-radius: 6px; font-weight: 600; font-size: 0.85rem !important;
+      transition: background .2s !important;
+    }
+    .smb-nav-cta:hover { background: var(--smb-accent-dark) !important; }
+
+    /* Hero */
+    .smb-hero {
+      min-height: 100vh; display: flex; align-items: center;
+      padding: 120px 0 80px;
+      background: radial-gradient(ellipse at 20% 50%, rgba(59,130,246,0.12) 0%, transparent 60%),
+                  radial-gradient(ellipse at 80% 20%, rgba(16,185,129,0.08) 0%, transparent 50%),
+                  var(--smb-bg);
+    }
+    .smb-hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3);
+      color: #93c5fd; padding: 6px 14px; border-radius: 100px;
+      font-size: 0.8rem; font-weight: 600; letter-spacing: .05em;
+      text-transform: uppercase; margin-bottom: 24px;
+    }
+    .smb-hero-badge i { color: var(--smb-accent); }
+    .smb-hero h1 {
+      font-size: clamp(2rem, 5vw, 3.4rem); font-weight: 800; line-height: 1.15;
+      color: #fff; margin-bottom: 20px;
+    }
+    .smb-hero h1 em { font-style: normal; color: var(--smb-accent); }
+    .smb-hero p.lead {
+      font-size: 1.15rem; color: #94a3b8; line-height: 1.7;
+      max-width: 560px; margin-bottom: 36px;
+    }
+    .smb-hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+    .btn-smb-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--smb-accent); color: #fff; padding: 14px 28px;
+      border-radius: 8px; font-weight: 700; font-size: 1rem;
+      text-decoration: none; transition: background .2s, transform .2s;
+    }
+    .btn-smb-primary:hover { background: var(--smb-accent-dark); color: #fff; transform: translateY(-2px); }
+    .btn-smb-outline {
+      display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid rgba(255,255,255,0.2); color: #e2e8f0; padding: 14px 28px;
+      border-radius: 8px; font-weight: 600; font-size: 1rem;
+      text-decoration: none; transition: border-color .2s, background .2s;
+    }
+    .btn-smb-outline:hover { border-color: var(--smb-accent); color: #fff; background: rgba(59,130,246,0.08); }
+    .smb-hero-stats { display: flex; gap: 36px; margin-top: 48px; flex-wrap: wrap; }
+    .smb-stat { text-align: left; }
+    .smb-stat-num { font-size: 1.8rem; font-weight: 800; color: #fff; line-height: 1; }
+    .smb-stat-num span { color: var(--smb-accent); }
+    .smb-stat-label { font-size: 0.8rem; color: #64748b; margin-top: 4px; }
+
+    /* Section base */
+    .smb-section { padding: 80px 0; }
+    .smb-section-title { text-align: center; margin-bottom: 56px; }
+    .smb-section-title h2 { font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 800; color: #fff; margin-bottom: 12px; }
+    .smb-section-title p { color: #94a3b8; font-size: 1.05rem; max-width: 560px; margin: 0 auto; }
+    .smb-section-title .section-tag {
+      display: inline-block; background: rgba(59,130,246,0.1);
+      border: 1px solid rgba(59,130,246,0.25); color: #93c5fd;
+      padding: 4px 12px; border-radius: 100px; font-size: 0.75rem;
+      font-weight: 600; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 14px;
+    }
+
+    /* Pain points */
+    .pain-section { background: var(--smb-surface); }
+    .pain-card {
+      background: rgba(255,255,255,0.03); border: 1px solid var(--smb-border);
+      border-radius: 14px; padding: 32px; height: 100%;
+      transition: border-color .2s, transform .2s;
+    }
+    .pain-card:hover { border-color: rgba(59,130,246,0.4); transform: translateY(-4px); }
+    .pain-icon {
+      width: 52px; height: 52px; border-radius: 12px;
+      background: rgba(59,130,246,0.1); display: flex; align-items: center;
+      justify-content: center; font-size: 1.4rem; color: var(--smb-accent); margin-bottom: 18px;
+    }
+    .pain-card h4 { color: #fff; font-size: 1.05rem; font-weight: 700; margin-bottom: 10px; }
+    .pain-card p { color: #94a3b8; font-size: 0.9rem; line-height: 1.7; margin: 0; }
+
+    /* AI Use Cases */
+    .ai-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+    .ai-card {
+      background: var(--smb-surface); border: 1px solid var(--smb-border);
+      border-radius: 12px; padding: 24px; transition: border-color .2s, transform .2s;
+    }
+    .ai-card:hover { border-color: rgba(16,185,129,0.4); transform: translateY(-3px); }
+    .ai-card-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      background: rgba(16,185,129,0.1); display: flex; align-items: center;
+      justify-content: center; font-size: 1.2rem; color: var(--smb-green); margin-bottom: 14px;
+    }
+    .ai-card h5 { color: #fff; font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; }
+    .ai-card p { color: #64748b; font-size: 0.85rem; line-height: 1.6; margin: 0; }
+    .ai-card ul { color: #64748b; font-size: 0.85rem; line-height: 1.8; margin: 0; padding-left: 16px; }
+
+    /* Checklist */
+    .checklist-section { background: var(--smb-surface); }
+    .checklist-box {
+      background: rgba(255,255,255,0.02); border: 1px solid var(--smb-border);
+      border-radius: 16px; padding: 40px;
+    }
+    .checklist-item {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 14px 0; border-bottom: 1px solid var(--smb-border);
+    }
+    .checklist-item:last-of-type { border-bottom: none; }
+    .checklist-item input[type="checkbox"] {
+      width: 20px; height: 20px; min-width: 20px; margin-top: 2px;
+      accent-color: var(--smb-accent);
+    }
+    .checklist-item label { color: #cbd5e1; font-size: 0.95rem; line-height: 1.5; }
+    .checklist-result {
+      margin-top: 28px; padding: 20px 24px; border-radius: 10px;
+      display: none; font-weight: 600; font-size: 0.95rem;
+    }
+    .checklist-result.low { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: #6ee7b7; }
+    .checklist-result.mid { background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); color: #fcd34d; }
+    .checklist-result.high { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+    .checklist-score { font-size: 1.5rem; font-weight: 800; margin-bottom: 4px; }
+
+    /* Pricing */
+    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; max-width: 900px; margin: 0 auto; }
+    .smb-price-card {
+      background: var(--smb-surface); border: 1px solid var(--smb-border);
+      border-radius: 16px; padding: 36px; position: relative; transition: transform .2s;
+    }
+    .smb-price-card:hover { transform: translateY(-4px); }
+    .smb-price-card.featured { border-color: var(--smb-accent); background: rgba(59,130,246,0.05); }
+    .smb-price-badge {
+      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      background: var(--smb-accent); color: #fff; padding: 4px 16px;
+      border-radius: 100px; font-size: 0.75rem; font-weight: 700; white-space: nowrap;
+    }
+    .smb-price-name { color: #94a3b8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; }
+    .smb-price-amount { font-size: 2.4rem; font-weight: 800; color: #fff; line-height: 1; margin-bottom: 4px; }
+    .smb-price-amount span { font-size: 1rem; color: #64748b; font-weight: 400; }
+    .smb-price-desc { color: #64748b; font-size: 0.85rem; margin-bottom: 24px; }
+    .smb-price-features { list-style: none; padding: 0; margin: 0 0 28px; }
+    .smb-price-features li {
+      display: flex; align-items: flex-start; gap: 10px;
+      color: #cbd5e1; font-size: 0.9rem; padding: 7px 0;
+      border-bottom: 1px solid var(--smb-border);
+    }
+    .smb-price-features li:last-child { border-bottom: none; }
+    .smb-price-features li i { color: var(--smb-green); font-size: 1rem; margin-top: 2px; flex-shrink: 0; }
+    .btn-smb-price {
+      display: block; text-align: center; padding: 12px;
+      border-radius: 8px; font-weight: 700; font-size: 0.95rem;
+      text-decoration: none; transition: background .2s, transform .2s;
+    }
+    .btn-smb-price-primary { background: var(--smb-accent); color: #fff; }
+    .btn-smb-price-primary:hover { background: var(--smb-accent-dark); color: #fff; }
+    .btn-smb-price-outline { border: 1px solid rgba(255,255,255,0.15); color: #e2e8f0; }
+    .btn-smb-price-outline:hover { border-color: var(--smb-accent); color: #fff; }
+
+    /* Contact form */
+    .smb-contact-section { background: var(--smb-surface); }
+    .smb-form-wrap {
+      background: rgba(255,255,255,0.02); border: 1px solid var(--smb-border);
+      border-radius: 16px; padding: 40px;
+    }
+    .smb-form-wrap label { color: #94a3b8; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; display: block; }
+    .smb-form-wrap input,
+    .smb-form-wrap textarea,
+    .smb-form-wrap select {
+      width: 100%; background: rgba(255,255,255,0.04);
+      border: 1px solid var(--smb-border); border-radius: 8px;
+      color: #e2e8f0; padding: 12px 14px; font-size: 0.95rem;
+      outline: none; transition: border-color .2s;
+    }
+    .smb-form-wrap input:focus,
+    .smb-form-wrap textarea:focus { border-color: var(--smb-accent); }
+    .smb-form-wrap input::placeholder,
+    .smb-form-wrap textarea::placeholder { color: #475569; }
+    .btn-smb-submit {
+      width: 100%; background: var(--smb-accent); color: #fff;
+      border: none; border-radius: 8px; padding: 14px;
+      font-size: 1rem; font-weight: 700; display: flex;
+      align-items: center; justify-content: center; gap: 8px;
+      transition: background .2s; margin-top: 8px;
+    }
+    .btn-smb-submit:hover { background: var(--smb-accent-dark); }
+    .form-success {
+      display: none; text-align: center; padding: 32px 20px;
+      color: #6ee7b7;
+    }
+    .form-success i { font-size: 2.5rem; margin-bottom: 12px; display: block; }
+
+    /* Footer */
+    .smb-footer {
+      background: #060a14; border-top: 1px solid var(--smb-border);
+      padding: 40px 0 24px; color: #475569; font-size: 0.85rem;
+    }
+    .smb-footer a { color: #475569; text-decoration: none; }
+    .smb-footer a:hover { color: #94a3b8; }
+    .smb-footer-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; }
+    .smb-footer-logo { font-size: 1.1rem; font-weight: 700; color: #fff; }
+    .smb-footer-logo span { color: var(--smb-accent); }
+    .smb-footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
+    .smb-footer-bottom { border-top: 1px solid var(--smb-border); padding-top: 20px; text-align: center; }
+
+    @media (max-width: 768px) {
+      .smb-nav-links { display: none; }
+      .smb-hero-stats { gap: 20px; }
+      .checklist-box { padding: 24px; }
+      .smb-form-wrap { padding: 24px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Nav -->
+  <nav class="smb-nav">
+    <div class="container">
+      <a href="index.html" class="smb-nav-logo"><span>Nimbus</span> Tech Solutions</a>
+      <div class="smb-nav-links">
+        <a href="#why-ai">Why AI</a>
+        <a href="#ai-uses">Use Cases</a>
+        <a href="#checklist">AI Checklist</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#contact" class="smb-nav-cta">Book Free Call</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- ── Hero ── -->
+    <section class="smb-hero">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-lg-7" data-aos="fade-up">
+            <div class="smb-hero-badge"><i class="bi bi-geo-alt-fill"></i> Serving Boston-Area Small Businesses</div>
+            <h1>Boston's Small Businesses Are Getting Left Behind by <em>AI.</em> We Fix That.</h1>
+            <p class="lead">Your competitors are already using AI to work faster, spend less, and serve customers better. We help local Boston businesses adopt the right tools — without the tech overwhelm or the enterprise price tag.</p>
+            <div class="smb-hero-actions">
+              <a href="#contact" class="btn-smb-primary"><i class="bi bi-calendar-check"></i> Book a Free Strategy Call</a>
+              <a href="#checklist" class="btn-smb-outline"><i class="bi bi-clipboard-check"></i> Take the AI Readiness Quiz</a>
+            </div>
+            <div class="smb-hero-stats">
+              <div class="smb-stat">
+                <div class="smb-stat-num">$<span>299</span></div>
+                <div class="smb-stat-label">Starting per month</div>
+              </div>
+              <div class="smb-stat">
+                <div class="smb-stat-num"><span>30</span>min</div>
+                <div class="smb-stat-label">Free strategy call</div>
+              </div>
+              <div class="smb-stat">
+                <div class="smb-stat-num"><span>0</span></div>
+                <div class="smb-stat-label">Tech team required</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Pain Points ── -->
+    <section id="why-ai" class="smb-section pain-section">
+      <div class="container">
+        <div class="smb-section-title" data-aos="fade-up">
+          <div class="section-tag">The Problem</div>
+          <h2>Sound familiar?</h2>
+          <p>Three challenges we hear from Boston small business owners every week.</p>
+        </div>
+        <div class="row g-4">
+          <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+            <div class="pain-card">
+              <div class="pain-icon"><i class="bi bi-graph-up-arrow"></i></div>
+              <h4>"My cloud bills keep growing and I don't know why."</h4>
+              <p>Most small businesses are overpaying for cloud tools they barely use. We audit your setup and cut the waste — fast.</p>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+            <div class="pain-card">
+              <div class="pain-icon"><i class="bi bi-robot"></i></div>
+              <h4>"My competitors are using AI. I don't know where to start."</h4>
+              <p>AI isn't just for big companies anymore. We identify the exact tools that will save you time and money in your specific business — and we set them up for you.</p>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+            <div class="pain-card">
+              <div class="pain-icon"><i class="bi bi-people"></i></div>
+              <h4>"I don't have a tech team and can't afford to hire one."</h4>
+              <p>You shouldn't need a CTO to stay competitive. We become your on-call tech partner — affordable, local, and focused on your outcomes.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── AI Use Cases ── -->
+    <section id="ai-uses" class="smb-section">
+      <div class="container">
+        <div class="smb-section-title" data-aos="fade-up">
+          <div class="section-tag">What AI Can Do For You</div>
+          <h2>Real ways AI helps Boston small businesses today</h2>
+          <p>Not hype. Practical tools that save time, reduce costs, and help you grow.</p>
+        </div>
+        <div class="ai-grid" data-aos="fade-up" data-aos-delay="100">
+
+          <div class="ai-card">
+            <div class="ai-card-icon"><i class="bi bi-megaphone"></i></div>
+            <h5>Customer Outreach</h5>
+            <ul>
+              <li>AI-drafted follow-up emails</li>
+              <li>Personalized marketing campaigns</li>
+              <li>Automated lead nurturing sequences</li>
+              <li>Social media content generation</li>
+            </ul>
+          </div>
+
+          <div class="ai-card">
+            <div class="ai-card-icon"><i class="bi bi-box-seam"></i></div>
+            <h5>Sourcing & Procurement</h5>
+            <ul>
+              <li>Vendor comparison automation</li>
+              <li>AI-assisted purchase order drafting</li>
+              <li>Inventory demand forecasting</li>
+              <li>Supplier research & scoring</li>
+            </ul>
+          </div>
+
+          <div class="ai-card">
+            <div class="ai-card-icon"><i class="bi bi-receipt"></i></div>
+            <h5>Billing & Collections</h5>
+            <ul>
+              <li>Automated payment reminders</li>
+              <li>Smart invoice follow-ups</li>
+              <li>Overdue account escalation</li>
+              <li>Cash flow forecasting</li>
+            </ul>
+          </div>
+
+          <div class="ai-card">
+            <div class="ai-card-icon"><i class="bi bi-gear-wide-connected"></i></div>
+            <h5>Business Automation</h5>
+            <ul>
+              <li>Repetitive task elimination</li>
+              <li>Workflow approvals & routing</li>
+              <li>CRM data entry automation</li>
+              <li>Scheduling & calendar AI</li>
+            </ul>
+          </div>
+
+          <div class="ai-card">
+            <div class="ai-card-icon"><i class="bi bi-headset"></i></div>
+            <h5>Customer Support</h5>
+            <ul>
+              <li>AI chat for FAQs & bookings</li>
+              <li>Ticket routing & auto-replies</li>
+              <li>Sentiment analysis on reviews</li>
+              <li>After-hours response handling</li>
+            </ul>
+          </div>
+
+          <div class="ai-card">
+            <div class="ai-card-icon"><i class="bi bi-bar-chart-line"></i></div>
+            <h5>Reporting & Insights</h5>
+            <ul>
+              <li>Auto-generated weekly reports</li>
+              <li>Sales trend identification</li>
+              <li>Customer behavior analysis</li>
+              <li>Plain-English data summaries</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ── AI Readiness Checklist ── -->
+    <section id="checklist" class="smb-section checklist-section">
+      <div class="container">
+        <div class="smb-section-title" data-aos="fade-up">
+          <div class="section-tag">Free AI Readiness Quiz</div>
+          <h2>Is your business ready for AI?</h2>
+          <p>Check every box that applies. We'll tell you where you stand and what to do next.</p>
+        </div>
+        <div class="row justify-content-center">
+          <div class="col-lg-8" data-aos="fade-up" data-aos-delay="100">
+            <div class="checklist-box">
+
+              <div class="checklist-item">
+                <input type="checkbox" id="c1" class="cl-check">
+                <label for="c1">My team spends more than 2 hours a week on repetitive tasks like data entry, copy-paste, or manual follow-ups.</label>
+              </div>
+              <div class="checklist-item">
+                <input type="checkbox" id="c2" class="cl-check">
+                <label for="c2">We miss follow-ups with leads or customers because there's no automated reminder system.</label>
+              </div>
+              <div class="checklist-item">
+                <input type="checkbox" id="c3" class="cl-check">
+                <label for="c3">We don't have a dedicated IT or tech person on staff.</label>
+              </div>
+              <div class="checklist-item">
+                <input type="checkbox" id="c4" class="cl-check">
+                <label for="c4">We're using tools like QuickBooks, Shopify, HubSpot, or similar — but they don't talk to each other.</label>
+              </div>
+              <div class="checklist-item">
+                <input type="checkbox" id="c5" class="cl-check">
+                <label for="c5">Chasing unpaid invoices or late payments takes meaningful time each month.</label>
+              </div>
+              <div class="checklist-item">
+                <input type="checkbox" id="c6" class="cl-check">
+                <label for="c6">We produce reports or summaries manually (copying data into spreadsheets or Word docs).</label>
+              </div>
+              <div class="checklist-item">
+                <input type="checkbox" id="c7" class="cl-check">
+                <label for="c7">We've heard of tools like ChatGPT or Zapier but haven't had time to figure out how they'd help us.</label>
+              </div>
+              <div class="checklist-item">
+                <input type="checkbox" id="c8" class="cl-check">
+                <label for="c8">We're paying for software or cloud services but aren't sure we're getting full value from them.</label>
+              </div>
+
+              <div id="checklist-result" class="checklist-result">
+                <div class="checklist-score" id="checklist-score"></div>
+                <div id="checklist-message"></div>
+                <div id="checklist-cta" style="margin-top:14px;"></div>
+              </div>
+
+              <button onclick="scoreChecklist()" style="margin-top:24px; background:var(--smb-accent); color:#fff; border:none; border-radius:8px; padding:12px 28px; font-weight:700; font-size:0.95rem; width:100%;">
+                <i class="bi bi-clipboard-check"></i> &nbsp;See My AI Readiness Score
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Pricing ── -->
+    <section id="pricing" class="smb-section">
+      <div class="container">
+        <div class="smb-section-title" data-aos="fade-up">
+          <div class="section-tag">Simple Pricing</div>
+          <h2>No surprises. No enterprise contracts.</h2>
+          <p>Flat monthly plans built for small businesses. Cancel anytime.</p>
+        </div>
+        <div class="pricing-grid" data-aos="fade-up" data-aos-delay="100">
+
+          <div class="smb-price-card">
+            <div class="smb-price-name">Starter</div>
+            <div class="smb-price-amount">$299<span>/mo</span></div>
+            <div class="smb-price-desc">Best for solo operators & businesses just getting started with AI.</div>
+            <ul class="smb-price-features">
+              <li><i class="bi bi-check-circle-fill"></i> Cloud cost audit & cleanup</li>
+              <li><i class="bi bi-check-circle-fill"></i> 1 AI workflow automation</li>
+              <li><i class="bi bi-check-circle-fill"></i> Monthly check-in call</li>
+              <li><i class="bi bi-check-circle-fill"></i> Email support</li>
+              <li><i class="bi bi-check-circle-fill"></i> No tech team needed</li>
+            </ul>
+            <a href="#contact" class="btn-smb-price btn-smb-price-outline">Get Started</a>
+          </div>
+
+          <div class="smb-price-card featured">
+            <div class="smb-price-badge">Most Popular</div>
+            <div class="smb-price-name">Growth</div>
+            <div class="smb-price-amount">$699<span>/mo</span></div>
+            <div class="smb-price-desc">Best for growing businesses ready to seriously leverage AI.</div>
+            <ul class="smb-price-features">
+              <li><i class="bi bi-check-circle-fill"></i> Everything in Starter</li>
+              <li><i class="bi bi-check-circle-fill"></i> Up to 3 AI workflow automations</li>
+              <li><i class="bi bi-check-circle-fill"></i> Tool integrations (CRM, billing, etc.)</li>
+              <li><i class="bi bi-check-circle-fill"></i> Bi-weekly strategy calls</li>
+              <li><i class="bi bi-check-circle-fill"></i> Priority support</li>
+            </ul>
+            <a href="#contact" class="btn-smb-price btn-smb-price-primary">Book a Free Call</a>
+          </div>
+
+        </div>
+        <p style="text-align:center; color:#475569; font-size:0.85rem; margin-top:24px;">Need something custom? <a href="#contact" style="color:var(--smb-accent);">Let's talk.</a></p>
+      </div>
+    </section>
+
+    <!-- ── Contact ── -->
+    <section id="contact" class="smb-section smb-contact-section">
+      <div class="container">
+        <div class="smb-section-title" data-aos="fade-up">
+          <div class="section-tag">Free Strategy Call</div>
+          <h2>Let's talk about your business.</h2>
+          <p>30 minutes. No sales pitch. We'll audit your setup, spot quick wins, and tell you exactly what AI can do for you — at no cost.</p>
+        </div>
+        <div class="row justify-content-center">
+          <div class="col-lg-7" data-aos="fade-up" data-aos-delay="100">
+            <div class="smb-form-wrap">
+              <div id="smb-form-body">
+                <form id="smb-contact-form" action="https://formspree.io/f/xjvnbjvn" method="POST">
+                  <input type="hidden" name="_replyto" value="sidnigam.work@gmail.com">
+                  <input type="hidden" name="_subject" value="New SMB Strategy Call Request — Nimbus Boston">
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label>Your Name</label>
+                      <input type="text" name="name" placeholder="Jane Smith" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label>Business Name</label>
+                      <input type="text" name="business" placeholder="Acme Bakery">
+                    </div>
+                    <div class="col-md-6">
+                      <label>Email</label>
+                      <input type="email" name="email" placeholder="jane@yourbusiness.com" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label>Phone (optional)</label>
+                      <input type="tel" name="phone" placeholder="+1 (617) 000-0000">
+                    </div>
+                    <div class="col-12">
+                      <label>What's your biggest challenge right now?</label>
+                      <textarea name="message" rows="4" placeholder="e.g. We're wasting time on manual invoicing and want to automate it..." required></textarea>
+                    </div>
+                  </div>
+                  <button type="submit" class="btn-smb-submit">
+                    <i class="bi bi-calendar-check"></i> Book My Free Strategy Call
+                  </button>
+                </form>
+              </div>
+              <div id="smb-form-success" class="form-success">
+                <i class="bi bi-check-circle-fill"></i>
+                <h4 style="color:#fff; margin-bottom:8px;">You're booked!</h4>
+                <p style="color:#94a3b8;">Sid will reach out within 24 hours to schedule your free strategy call. Keep an eye on your inbox.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="smb-footer">
+    <div class="container">
+      <div class="smb-footer-top">
+        <div class="smb-footer-logo"><span>Nimbus</span> Tech Solutions &nbsp;·&nbsp; Boston, MA</div>
+        <div class="smb-footer-links">
+          <a href="index.html">Enterprise Services</a>
+          <a href="privacy.html">Privacy Policy</a>
+          <a href="https://www.linkedin.com/in/sidnigam/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+        </div>
+      </div>
+      <div class="smb-footer-bottom">
+        &copy; <script>document.write(new Date().getFullYear())</script> Nimbus Tech Solutions. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <!-- Vendor JS -->
+  <script src="assets/vendor/aos/aos.js"></script>
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    AOS.init({ duration: 600, once: true });
+
+    // Checklist scorer
+    function scoreChecklist() {
+      var checks = document.querySelectorAll('.cl-check');
+      var count = 0;
+      checks.forEach(function(c) { if (c.checked) count++; });
+
+      var result = document.getElementById('checklist-result');
+      var score  = document.getElementById('checklist-score');
+      var msg    = document.getElementById('checklist-message');
+      var cta    = document.getElementById('checklist-cta');
+
+      result.style.display = 'block';
+      result.className = 'checklist-result';
+
+      if (count <= 2) {
+        result.classList.add('low');
+        score.textContent = count + '/8 — You\'re in good shape';
+        msg.textContent = 'Your business has a solid foundation. A quick audit could still surface easy wins — a free call costs nothing.';
+      } else if (count <= 5) {
+        result.classList.add('mid');
+        score.textContent = count + '/8 — Real opportunity here';
+        msg.textContent = 'You\'re losing hours and money to manual work that AI can handle today. Let\'s map out a plan.';
+      } else {
+        result.classList.add('high');
+        score.textContent = count + '/8 — AI could transform your business';
+        msg.textContent = 'You\'re leaving significant time and money on the table. The good news: most of this is fixable quickly. Let\'s talk.';
+      }
+
+      cta.innerHTML = '<a href="#contact" style="color:inherit; font-weight:700; text-decoration:underline;">→ Book your free strategy call</a>';
+      result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // Contact form
+    var smbForm = document.getElementById('smb-contact-form');
+    if (smbForm) {
+      smbForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var data = new FormData(smbForm);
+        fetch(smbForm.action, {
+          method: 'POST',
+          body: data,
+          headers: { 'Accept': 'application/json' }
+        }).then(function() {
+          document.getElementById('smb-form-body').style.display = 'none';
+          document.getElementById('smb-form-success').style.display = 'block';
+        }).catch(function() {
+          document.getElementById('smb-form-body').style.display = 'none';
+          document.getElementById('smb-form-success').style.display = 'block';
+        });
+      });
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>HIPAA on AWS: The Architecture Checklist That Passes Audits | Nimbus Tech Solutions</title>
+  <meta name="description" content="The exact AWS services, IAM policies, encryption settings, and CloudTrail configurations that our healthcare clients use to pass HIPAA audits on the first attempt.">
+  <link rel="canonical" href="https://nimbustechsolutions.com/blog/hipaa-aws-checklist.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://nimbustechsolutions.com/blog/hipaa-aws-checklist.html">
+  <meta property="og:title" content="HIPAA on AWS: The Architecture Checklist That Passes Audits | Nimbus Tech Solutions">
+  <meta property="og:description" content="The exact AWS services, IAM policies, and configurations that pass HIPAA audits on the first attempt.">
+  <meta property="og:image" content="https://nimbustechsolutions.com/assets/img/hero-img.png">
+  <meta property="article:author" content="Sid Nigam">
+  <meta property="article:published_time" content="2026-02-20">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="HIPAA on AWS: The Architecture Checklist That Passes Audits">
+  <meta name="twitter:description" content="The exact AWS configurations our healthcare clients use to pass HIPAA audits on the first attempt.">
+  <meta name="twitter:image" content="https://nimbustechsolutions.com/assets/img/hero-img.png">
+
+  <link href="../assets/img/favicon.png" rel="icon">
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="../assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="../assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="../assets/css/style.css" rel="stylesheet">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "HIPAA on AWS: The Architecture Checklist That Passes Audits",
+    "description": "The exact AWS services, IAM policies, encryption settings, and CloudTrail configurations that our healthcare clients use to pass HIPAA audits on the first attempt.",
+    "author": { "@type": "Person", "name": "Sid Nigam", "url": "https://www.linkedin.com/in/sidnigam/" },
+    "publisher": { "@type": "Organization", "name": "Nimbus Tech Solutions", "url": "https://nimbustechsolutions.com" },
+    "datePublished": "2026-02-20",
+    "url": "https://nimbustechsolutions.com/blog/hipaa-aws-checklist.html"
+  }
+  </script>
+</head>
+<body>
+
+  <header id="header" class="fixed-top">
+    <div class="container d-flex align-items-center">
+      <div class="logo me-auto">
+        <a href="../index.html">
+          <span class="logo-nimbus">Nimbus</span><span class="logo-tech"> Tech</span>
+        </a>
+      </div>
+      <nav id="navbar" class="navbar">
+        <ul>
+          <li><a class="nav-link" href="../index.html#about">About</a></li>
+          <li><a class="nav-link" href="../index.html#services">Services</a></li>
+          <li><a class="nav-link" href="../index.html#insights">Insights</a></li>
+          <li><a class="getstarted" href="../index.html#contact">Free Strategy Call</a></li>
+        </ul>
+        <i class="bi bi-list mobile-nav-toggle"></i>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" style="padding-top: 90px;">
+    <section class="blog-post-section" style="padding: 60px 0;">
+      <div class="container" style="max-width: 800px;">
+
+        <nav aria-label="breadcrumb" style="margin-bottom: 2rem;">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="../index.html">Home</a></li>
+            <li class="breadcrumb-item"><a href="../index.html#insights">Insights</a></li>
+            <li class="breadcrumb-item active">HIPAA on AWS</li>
+          </ol>
+        </nav>
+
+        <span class="blog-tag blog-tag-devsecops" style="display:inline-block; margin-bottom: 1rem;">Compliance</span>
+        <h1 style="font-size: 2.2rem; font-weight: 700; margin-bottom: 1rem;">HIPAA on AWS: The Architecture Checklist That Passes Audits</h1>
+        <p style="color: var(--text-muted, #888); margin-bottom: 2rem;">By <strong>Sid Nigam</strong> · February 20, 2026 · 8 min read</p>
+
+        <p>We've helped healthcare clients pass HIPAA audits on the first attempt — every time. The secret isn't complexity; it's knowing exactly which AWS controls auditors check and configuring them correctly from day one. Here's the checklist we use.</p>
+
+        <h2>1. Data Encryption (In Transit &amp; At Rest)</h2>
+        <ul>
+          <li>All S3 buckets: SSE-KMS with customer-managed keys, bucket policy denying non-HTTPS uploads</li>
+          <li>RDS: encryption at rest enabled at creation (cannot be added later without a snapshot restore)</li>
+          <li>EBS volumes: encrypted at account level via default encryption setting</li>
+          <li>All data in transit: TLS 1.2+ enforced via ALB listeners and security group rules</li>
+        </ul>
+
+        <h2>2. Network Isolation</h2>
+        <ul>
+          <li>PHI workloads in private subnets only — no public IP assignment</li>
+          <li>Separate VPC for production, with VPC Flow Logs enabled to CloudWatch</li>
+          <li>Security groups following least-privilege: no 0.0.0.0/0 inbound rules</li>
+          <li>AWS PrivateLink for all managed service access (S3, DynamoDB, SSM)</li>
+        </ul>
+
+        <h2>3. Access Control &amp; Identity</h2>
+        <ul>
+          <li>IAM roles with least-privilege policies — no wildcard (*) actions on PHI resources</li>
+          <li>MFA enforced for all IAM users via SCP at the Organization level</li>
+          <li>AWS SSO (IAM Identity Center) for human access — no long-lived access keys</li>
+          <li>AWS Secrets Manager for application credentials rotation (90-day rotation policy)</li>
+        </ul>
+
+        <h2>4. Audit Logging</h2>
+        <ul>
+          <li>CloudTrail: multi-region trail, S3 delivery to locked bucket (Object Lock), log validation enabled</li>
+          <li>S3 server access logging on all PHI buckets</li>
+          <li>CloudWatch Logs for application logs with 7-year retention for HIPAA</li>
+          <li>AWS Config with managed rules for continuous compliance checking</li>
+        </ul>
+
+        <h2>5. Incident Response</h2>
+        <ul>
+          <li>Amazon GuardDuty enabled across all accounts</li>
+          <li>AWS Security Hub with HIPAA standard enabled</li>
+          <li>SNS alerts on GuardDuty High/Critical findings to on-call team</li>
+          <li>Documented breach response runbook with &lt;60 minute detection-to-notification SLA</li>
+        </ul>
+
+        <h2>6. Business Associate Agreement (BAA)</h2>
+        <p>Before using any AWS service with PHI, sign a BAA with AWS. This is done through the AWS Artifact console. Only services covered under the BAA may process PHI — confirm the full list at <code>aws.amazon.com/compliance/hipaa-eligible-services-reference/</code>.</p>
+
+        <hr style="margin: 3rem 0;">
+        <div style="background: var(--bg-card, #f8f9fa); border-radius: 12px; padding: 2rem; text-align: center;">
+          <h3>Need a HIPAA-compliant AWS architecture?</h3>
+          <p>We design and build HIPAA/SOC2 architectures that pass audits on the first attempt. Book a free strategy call to discuss your requirements.</p>
+          <a href="../index.html#contact" class="btn-hero-primary" style="display:inline-block; margin-top: 1rem;">Book Free Strategy Call</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="footer">
+    <div class="footer-bottom">
+      <div class="container">
+        <span>&copy; 2026 Nimbus Tech Solutions. All rights reserved. &nbsp;·&nbsp; <a href="../index.html">Home</a> &nbsp;·&nbsp; <a href="../privacy.html">Privacy Policy</a></span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

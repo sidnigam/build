@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>How to Cut Your AWS Bill by 30% in 30 Days | Nimbus Tech Solutions</title>
+  <meta name="description" content="Five FinOps tactics — right-sizing, Savings Plans, Spot Instances, idle resource cleanup, and S3 lifecycle policies — that deliver fast ROI without re-architecting your AWS infrastructure.">
+  <link rel="canonical" href="https://nimbustechsolutions.com/blog/cut-aws-bill-30-percent.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://nimbustechsolutions.com/blog/cut-aws-bill-30-percent.html">
+  <meta property="og:title" content="How to Cut Your AWS Bill by 30% in 30 Days | Nimbus Tech Solutions">
+  <meta property="og:description" content="Five FinOps tactics that deliver fast ROI without re-architecting your AWS infrastructure.">
+  <meta property="og:image" content="https://nimbustechsolutions.com/assets/img/hero-img.png">
+  <meta property="article:author" content="Sid Nigam">
+  <meta property="article:published_time" content="2026-01-15">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="How to Cut Your AWS Bill by 30% in 30 Days">
+  <meta name="twitter:description" content="Five FinOps tactics that deliver fast ROI without re-architecting your AWS infrastructure.">
+  <meta name="twitter:image" content="https://nimbustechsolutions.com/assets/img/hero-img.png">
+
+  <link href="../assets/img/favicon.png" rel="icon">
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="../assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="../assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="../assets/css/style.css" rel="stylesheet">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "How to Cut Your AWS Bill by 30% in 30 Days",
+    "description": "Five FinOps tactics — right-sizing, Savings Plans, Spot Instances, idle resource cleanup, and S3 lifecycle policies — that deliver fast ROI without re-architecting.",
+    "author": { "@type": "Person", "name": "Sid Nigam", "url": "https://www.linkedin.com/in/sidnigam/" },
+    "publisher": { "@type": "Organization", "name": "Nimbus Tech Solutions", "url": "https://nimbustechsolutions.com" },
+    "datePublished": "2026-01-15",
+    "url": "https://nimbustechsolutions.com/blog/cut-aws-bill-30-percent.html"
+  }
+  </script>
+</head>
+<body>
+
+  <header id="header" class="fixed-top">
+    <div class="container d-flex align-items-center">
+      <div class="logo me-auto">
+        <a href="../index.html">
+          <span class="logo-nimbus">Nimbus</span><span class="logo-tech"> Tech</span>
+        </a>
+      </div>
+      <nav id="navbar" class="navbar">
+        <ul>
+          <li><a class="nav-link" href="../index.html#about">About</a></li>
+          <li><a class="nav-link" href="../index.html#services">Services</a></li>
+          <li><a class="nav-link" href="../index.html#insights">Insights</a></li>
+          <li><a class="getstarted" href="../index.html#contact">Free Strategy Call</a></li>
+        </ul>
+        <i class="bi bi-list mobile-nav-toggle"></i>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" style="padding-top: 90px;">
+    <section class="blog-post-section" style="padding: 60px 0;">
+      <div class="container" style="max-width: 800px;">
+
+        <nav aria-label="breadcrumb" style="margin-bottom: 2rem;">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="../index.html">Home</a></li>
+            <li class="breadcrumb-item"><a href="../index.html#insights">Insights</a></li>
+            <li class="breadcrumb-item active">Cut Your AWS Bill</li>
+          </ol>
+        </nav>
+
+        <span class="blog-tag blog-tag-aws" style="display:inline-block; margin-bottom: 1rem;">AWS · FinOps</span>
+        <h1 style="font-size: 2.2rem; font-weight: 700; margin-bottom: 1rem;">How to Cut Your AWS Bill by 30% in 30 Days</h1>
+        <p style="color: var(--text-muted, #888); margin-bottom: 2rem;">By <strong>Sid Nigam</strong> · January 15, 2026 · 6 min read</p>
+
+        <p>Cloud spend creep is one of the most common problems we see at Nimbus Tech Solutions. Within 60 days of going live, most SMBs are paying 30–50% more than they need to. The good news: the fixes are straightforward and don't require re-architecting your stack.</p>
+
+        <h2>1. Right-Size Your EC2 Instances</h2>
+        <p>AWS Compute Optimizer analyzes your CloudWatch metrics and flags instances running at under 40% CPU. We regularly see companies running m5.2xlarge instances doing the work of a t3.medium. Right-sizing alone typically yields 15–20% savings.</p>
+
+        <h2>2. Purchase Savings Plans</h2>
+        <p>If you've been running on-demand for more than 3 months, your usage pattern is predictable enough for Compute Savings Plans. A 1-year no-upfront commitment saves ~30% vs. on-demand. Start with covering your baseline steady-state usage.</p>
+
+        <h2>3. Migrate Batch Workloads to Spot Instances</h2>
+        <p>Any workload that can tolerate interruption — data processing, CI/CD runners, ML training — should run on Spot. Combined with Karpenter for Kubernetes or EC2 Auto Scaling, you can save 70–90% vs. on-demand on eligible workloads.</p>
+
+        <h2>4. Hunt Down Idle Resources</h2>
+        <p>Run AWS Trusted Advisor or the open-source <code>cloud-nuke</code> tool to find: unattached EBS volumes, idle load balancers, unused Elastic IPs, and forgotten RDS instances in non-prod environments. We find $500–$2,000/month in idle resources in almost every audit.</p>
+
+        <h2>5. Set S3 Lifecycle Policies</h2>
+        <p>Move objects not accessed in 30 days to S3-IA, and objects not accessed in 90 days to Glacier Instant Retrieval. For log buckets, set a 365-day expiry. This is often a $200–$800/month saving for companies with large S3 footprints.</p>
+
+        <hr style="margin: 3rem 0;">
+        <div style="background: var(--bg-card, #f8f9fa); border-radius: 12px; padding: 2rem; text-align: center;">
+          <h3>Want us to run this audit for you?</h3>
+          <p>Our Cloud &amp; AI Audit identifies all five of these areas — plus compliance gaps and an AI readiness assessment — delivered in 5 business days.</p>
+          <a href="../index.html#contact" class="btn-hero-primary" style="display:inline-block; margin-top: 1rem;">Book Free Strategy Call</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="footer">
+    <div class="footer-bottom">
+      <div class="container">
+        <span>&copy; 2026 Nimbus Tech Solutions. All rights reserved. &nbsp;·&nbsp; <a href="../index.html">Home</a> &nbsp;·&nbsp; <a href="../privacy.html">Privacy Policy</a></span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -7,6 +7,24 @@
   <meta name="description" content="Expert AWS, Azure &amp; AI consulting for small and medium businesses. Cut cloud costs, deploy AI, and achieve compliance. Book a free strategy call today.">
   <meta name="keywords" content="cloud consulting SMB, AWS consulting Boston, AI implementation, Kubernetes, Terraform, HIPAA compliance, cost optimization, GenAI, LLMs">
 
+  <!-- Canonical URL — update domain if different -->
+  <link rel="canonical" href="https://nimbustechsolutions.com/">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://nimbustechsolutions.com/">
+  <meta property="og:title" content="Nimbus Tech Solutions | Cloud &amp; AI Consulting for SMBs | Boston, MA">
+  <meta property="og:description" content="Expert AWS, Azure &amp; AI consulting for small and medium businesses. Cut cloud costs, deploy AI, and achieve compliance. Book a free strategy call today.">
+  <meta property="og:image" content="https://nimbustechsolutions.com/assets/img/hero-img.png">
+  <meta property="og:site_name" content="Nimbus Tech Solutions">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Nimbus Tech Solutions | Cloud &amp; AI Consulting for SMBs | Boston, MA">
+  <meta name="twitter:description" content="Expert AWS, Azure &amp; AI consulting for small and medium businesses. Cut cloud costs, deploy AI, and achieve compliance. Book a free strategy call today.">
+  <meta name="twitter:image" content="https://nimbustechsolutions.com/assets/img/hero-img.png">
+
   <link href="assets/img/favicon.png" rel="icon">
   <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
 
@@ -23,18 +41,106 @@
   <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
 
   <link href="assets/css/style.css" rel="stylesheet">
+
+  <!-- Structured Data: LocalBusiness -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Nimbus Tech Solutions",
+    "description": "Expert AWS, Azure and AI consulting for small and medium businesses. Cut cloud costs, deploy AI, and achieve compliance.",
+    "url": "https://nimbustechsolutions.com",
+    "email": "sid.nigam@outlook.com",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Boston",
+      "addressRegion": "MA",
+      "postalCode": "02111",
+      "addressCountry": "US"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 42.35436,
+      "longitude": -71.05917
+    },
+    "founder": {
+      "@type": "Person",
+      "name": "Sid Nigam",
+      "jobTitle": "Founder & Lead Cloud Architect",
+      "sameAs": "https://www.linkedin.com/in/sidnigam/",
+      "knowsAbout": ["AWS", "Azure", "GCP", "Kubernetes", "Terraform", "GenAI", "LLMs", "HIPAA compliance", "DevSecOps"]
+    },
+    "areaServed": {
+      "@type": "Country",
+      "name": "United States"
+    },
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "Cloud & AI Consulting Services",
+      "itemListElement": [
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Cloud Architecture & Strategy" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "AI & GenAI Implementation" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "DevSecOps & IaC Automation" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Data Engineering & Analytics" } }
+      ]
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "5",
+      "reviewCount": "3"
+    }
+  }
+  </script>
+
+  <!-- Structured Data: FAQPage -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What sets Nimbus Tech Solutions' Cloud and AI consulting apart?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "With over 10 years of experience including significant roles at AWS and Deloitte, Nimbus Tech Solutions offers insights backed by extensive enterprise success. Deep understanding of Cloud and AI ensures top-tier strategies tailored to your unique needs — whether you're a 10-person startup or a 10,000-person enterprise."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How can Nimbus Tech Solutions' services drive my business forward?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "The approach leverages technology to achieve measurable business outcomes — custom solutions that optimize operations, enhance efficiency, and drive growth through streamlined processes, smarter decision-making, and AI-driven revenue streams."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Why is Nimbus Tech Solutions' approach to client relationships unique?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Nimbus Tech Solutions builds relationships that go beyond consultancy with a deeply collaborative approach. Working closely at every step from assessment to implementation ensures solutions are aligned with your business goals and culture."
+        }
+      }
+    ]
+  }
+  </script>
 </head>
 
 <body>
 
+  <!-- ======= Custom Cursor ======= -->
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+
   <!-- ======= Header ======= -->
   <header id="header" class="fixed-top">
     <div class="container d-flex align-items-center">
-      <h1 class="logo me-auto">
+      <div class="logo me-auto">
         <a href="index.html">
           <span class="logo-nimbus">Nimbus</span><span class="logo-tech"> Tech</span>
         </a>
-      </h1>
+      </div>
       <nav id="navbar" class="navbar">
         <ul>
           <li><a class="nav-link scrollto active" href="#hero">Home</a></li>
@@ -42,6 +148,7 @@
           <li><a class="nav-link scrollto" href="#services">Services</a></li>
           <li><a class="nav-link scrollto" href="#projects">Projects</a></li>
           <li><a class="nav-link scrollto" href="#skills">Skills</a></li>
+          <li><a class="nav-link scrollto" href="#insights">Insights</a></li>
           <li><a class="getstarted scrollto" href="#contact">Free Strategy Call</a></li>
         </ul>
         <i class="bi bi-list mobile-nav-toggle"></i>
@@ -51,6 +158,8 @@
 
   <!-- ======= Hero Section ======= -->
   <section id="hero" class="hero-dark d-flex align-items-center">
+    <!-- Interactive particle canvas -->
+    <canvas id="hero-canvas"></canvas>
     <!-- Animated background orbs -->
     <div class="hero-orb orb-1"></div>
     <div class="hero-orb orb-2"></div>
@@ -93,7 +202,7 @@
 
         <div class="col-lg-6" data-aos="fade-left" data-aos-delay="200">
           <div class="hero-right-panel">
-            <img src="assets/img/hero-img.png" class="hero-img-glow" alt="Cloud and AI Solutions">
+            <img src="assets/img/hero-img.png" class="hero-img-glow" alt="Nimbus Tech Solutions — Cloud and AI consulting for SMBs, Boston MA">
             <!-- Floating stat chips -->
             <div class="float-chip chip-tl" data-aos="zoom-in" data-aos-delay="500">
               <span class="chip-num">100+</span>
@@ -116,6 +225,61 @@
       <span class="scroll-hint-line"></span>
     </a>
   </section>
+
+  <!-- ======= Cloud Field (scattered site-wide, injected by JS) ======= -->
+  <div id="clouds-field"></div>
+
+  <!-- ======= Cloud Unlock Modal ======= -->
+  <div id="cloud-modal" class="cloud-modal-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="cloud-modal-title">
+    <div class="cloud-modal-card">
+      <div class="cloud-modal-accent"></div>
+      <button type="button" class="cloud-modal-close" id="cloud-modal-close" aria-label="Close modal"><i class="bi bi-x-lg"></i></button>
+      <div class="cloud-modal-body" id="cloud-modal-body">
+        <div class="cloud-modal-icon"><i class="bx bx-cloud-lightning"></i></div>
+        <h3 id="cloud-modal-title">You have a keen eye.</h3>
+        <p class="cloud-modal-sub">You just popped 5 Nimbus clouds — and unlocked a <strong>free 30-minute consultation</strong> with Sid. Fill in your details and we'll be in touch within 24 hours.</p>
+        <form id="cloud-unlock-form" class="cmf" novalidate>
+          <div class="cmf-row">
+            <div class="cmf-field">
+              <label for="cu-name">Full Name</label>
+              <input type="text" id="cu-name" name="name" placeholder="Jane Smith" required>
+            </div>
+            <div class="cmf-field">
+              <label for="cu-email">Email</label>
+              <input type="email" id="cu-email" name="email" placeholder="jane@company.com" required>
+            </div>
+          </div>
+          <div class="cmf-row">
+            <div class="cmf-field">
+              <label for="cu-biz">Business Name</label>
+              <input type="text" id="cu-biz" name="business" placeholder="Acme Corp">
+            </div>
+            <div class="cmf-field">
+              <label for="cu-phone">Phone <span class="cmf-optional">(optional)</span></label>
+              <input type="tel" id="cu-phone" name="phone" placeholder="+1 (555) 000-0000">
+            </div>
+          </div>
+          <div class="cmf-field">
+            <label>What are you looking for?</label>
+            <div class="cmf-chips">
+              <label class="cmf-chip"><input type="checkbox" name="service" value="ai"><span>AI Implementation</span></label>
+              <label class="cmf-chip"><input type="checkbox" name="service" value="cloud"><span>Cloud Architecture</span></label>
+              <label class="cmf-chip"><input type="checkbox" name="service" value="devsecops"><span>DevSecOps</span></label>
+              <label class="cmf-chip"><input type="checkbox" name="service" value="cost"><span>Cost Optimization</span></label>
+              <label class="cmf-chip"><input type="checkbox" name="service" value="data"><span>Data Engineering</span></label>
+              <label class="cmf-chip"><input type="checkbox" name="service" value="general"><span>General Technology</span></label>
+            </div>
+          </div>
+          <button type="submit" class="cmf-submit"><i class="bi bi-send"></i> Claim My Free Consultation</button>
+        </form>
+      </div>
+      <div class="cloud-modal-success" id="cloud-modal-success" hidden>
+        <div class="cloud-modal-icon cms-success"><i class="bi bi-check-circle"></i></div>
+        <h3>You're in!</h3>
+        <p>Sid will reach out within 24 hours to schedule your consultation. Keep an eye on your inbox.</p>
+      </div>
+    </div>
+  </div>
 
   <main id="main">
 
@@ -308,7 +472,7 @@
 
         <div class="row g-4">
           <div class="col-xl-3 col-md-6" data-aos="zoom-in" data-aos-delay="100">
-            <div class="service-glass">
+            <div class="service-glass spotlight-card">
               <div class="sg-icon-wrap sg-blue"><i class="bx bx-cloud"></i></div>
               <h4>Cloud Architecture &amp; Strategy</h4>
               <p>HIPAA/SOC2/GDPR-compliant architectures on AWS, Azure, and GCP. Multi-account landing zones, cost optimization, and zero-downtime migrations.</p>
@@ -320,7 +484,7 @@
           </div>
 
           <div class="col-xl-3 col-md-6" data-aos="zoom-in" data-aos-delay="200">
-            <div class="service-glass service-glass-featured">
+            <div class="service-glass service-glass-featured spotlight-card">
               <div class="service-featured-label">Most Requested</div>
               <div class="sg-icon-wrap sg-purple"><i class="bx bx-brain"></i></div>
               <h4>AI &amp; GenAI Implementation</h4>
@@ -333,7 +497,7 @@
           </div>
 
           <div class="col-xl-3 col-md-6" data-aos="zoom-in" data-aos-delay="300">
-            <div class="service-glass">
+            <div class="service-glass spotlight-card">
               <div class="sg-icon-wrap sg-teal"><i class="bx bx-code-block"></i></div>
               <h4>DevSecOps &amp; IaC Automation</h4>
               <p>Infrastructure as Code via Terraform and Ansible. GitOps with ArgoCD, CI/CD pipelines, Vault secrets management, and SAST scanning.</p>
@@ -345,7 +509,7 @@
           </div>
 
           <div class="col-xl-3 col-md-6" data-aos="zoom-in" data-aos-delay="400">
-            <div class="service-glass">
+            <div class="service-glass spotlight-card">
               <div class="sg-icon-wrap sg-gold"><i class="bx bx-bar-chart-alt-2"></i></div>
               <h4>Data Engineering &amp; Analytics</h4>
               <p>End-to-end pipelines on AWS Glue/Redshift/Athena or GCP BigQuery. Kafka streaming, dbt transformations, and executive dashboards.</p>
@@ -356,6 +520,76 @@
             </div>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- ======= Pricing Anchor Section ======= -->
+    <section id="pricing" class="pricing-anchor">
+      <div class="container" data-aos="fade-up">
+        <div class="section-title section-title-light">
+          <h2>Transparent Pricing</h2>
+          <p>No retainers that never end. No hidden fees. Scoped engagements with clear deliverables.</p>
+        </div>
+        <div class="pricing-grid">
+
+          <div class="pricing-card spotlight-card" data-aos="fade-up" data-aos-delay="100">
+            <div class="pricing-icon pricing-icon-blue">
+              <i class="bx bx-search-alt-2"></i>
+            </div>
+            <div class="pricing-type">One-Time</div>
+            <h4>Cloud &amp; AI Audit</h4>
+            <div class="pricing-price">$2,500<span></span></div>
+            <p class="pricing-desc">Deep-dive infrastructure review. Actionable roadmap with cost savings estimates and compliance gap analysis — delivered in 5 business days.</p>
+            <ul class="pricing-features">
+              <li><i class="bi bi-check-circle-fill"></i> Full cloud spend analysis</li>
+              <li><i class="bi bi-check-circle-fill"></i> Security &amp; compliance gap report</li>
+              <li><i class="bi bi-check-circle-fill"></i> AI readiness assessment</li>
+              <li><i class="bi bi-check-circle-fill"></i> Written roadmap with ROI estimates</li>
+            </ul>
+            <a href="#contact" class="pricing-cta pricing-cta-outline scrollto">Book Audit <i class="bi bi-arrow-right"></i></a>
+          </div>
+
+          <div class="pricing-card pricing-card-featured spotlight-card" data-aos="fade-up" data-aos-delay="200">
+            <div class="pricing-featured-label">Most Popular</div>
+            <div class="pricing-icon pricing-icon-purple">
+              <i class="bx bx-rocket"></i>
+            </div>
+            <div class="pricing-type">Monthly Retainer</div>
+            <h4>Ongoing Advisory &amp; Build</h4>
+            <div class="pricing-price">From $4,500<span>/mo</span></div>
+            <p class="pricing-desc">Dedicated cloud architect + AI engineer. Sprint-based delivery. Most SMBs start here for ongoing build and optimization work.</p>
+            <ul class="pricing-features">
+              <li><i class="bi bi-check-circle-fill"></i> Dedicated architect (20 hrs/wk)</li>
+              <li><i class="bi bi-check-circle-fill"></i> Weekly syncs + async Slack support</li>
+              <li><i class="bi bi-check-circle-fill"></i> IaC, CI/CD, AI implementation</li>
+              <li><i class="bi bi-check-circle-fill"></i> Monthly cost optimization review</li>
+              <li><i class="bi bi-check-circle-fill"></i> 30-day satisfaction guarantee</li>
+            </ul>
+            <a href="#contact" class="pricing-cta pricing-cta-primary scrollto"><i class="bi bi-calendar-check"></i> Book Free Strategy Call</a>
+          </div>
+
+          <div class="pricing-card spotlight-card" data-aos="fade-up" data-aos-delay="300">
+            <div class="pricing-icon pricing-icon-gold">
+              <i class="bx bx-buildings"></i>
+            </div>
+            <div class="pricing-type">Fixed Scope</div>
+            <h4>Project-Based</h4>
+            <div class="pricing-price">Custom<span></span></div>
+            <p class="pricing-desc">Large migrations, AI product builds, and compliance programs. Fixed price, fixed timeline. Quoted after the free strategy call.</p>
+            <ul class="pricing-features">
+              <li><i class="bi bi-check-circle-fill"></i> Defined deliverables &amp; milestones</li>
+              <li><i class="bi bi-check-circle-fill"></i> You own all code &amp; documentation</li>
+              <li><i class="bi bi-check-circle-fill"></i> Team knowledge transfer included</li>
+              <li><i class="bi bi-check-circle-fill"></i> Post-launch support options</li>
+            </ul>
+            <a href="#contact" class="pricing-cta pricing-cta-outline scrollto">Get a Quote <i class="bi bi-arrow-right"></i></a>
+          </div>
+
+        </div>
+        <p class="pricing-note">
+          All engagements begin with a <strong>free 30-min strategy call</strong>. Not sure which fits?
+          <a href="#contact" class="scrollto">Let's talk</a> — we'll recommend the right scope.
+        </p>
       </div>
     </section>
 
@@ -584,7 +818,7 @@
         <div class="row g-4">
 
           <div class="col-lg-4 col-md-6 d-flex" data-aos="zoom-in" data-aos-delay="100">
-            <div class="project-card">
+            <div class="project-card spotlight-card">
               <div class="pc-accent pc-accent-blue"></div>
               <div class="pc-top">
                 <div class="pc-icon"><i class="bx bx-health"></i></div>
@@ -601,11 +835,14 @@
                 <li><i class="bi bi-check-circle-fill"></i> 99.99% uptime SLA</li>
                 <li><i class="bi bi-check-circle-fill"></i> 10× faster reporting</li>
               </ul>
+              <a href="#contact" class="pc-download scrollto">
+                <i class="bi bi-file-earmark-pdf"></i> Download Case Study
+              </a>
             </div>
           </div>
 
           <div class="col-lg-4 col-md-6 d-flex" data-aos="zoom-in" data-aos-delay="150">
-            <div class="project-card project-card-featured">
+            <div class="project-card project-card-featured spotlight-card">
               <div class="pc-accent pc-accent-purple"></div>
               <div class="pc-top">
                 <div class="pc-icon"><i class="bx bx-brain"></i></div>
@@ -622,11 +859,14 @@
                 <li><i class="bi bi-check-circle-fill"></i> 40% cost reduction vs. headcount</li>
                 <li><i class="bi bi-check-circle-fill"></i> 10K+ queries/day</li>
               </ul>
+              <a href="#contact" class="pc-download scrollto">
+                <i class="bi bi-file-earmark-pdf"></i> Download Case Study
+              </a>
             </div>
           </div>
 
           <div class="col-lg-4 col-md-6 d-flex" data-aos="zoom-in" data-aos-delay="200">
-            <div class="project-card">
+            <div class="project-card spotlight-card">
               <div class="pc-accent pc-accent-teal"></div>
               <div class="pc-top">
                 <div class="pc-icon"><i class="bxl bxl-kubernetes"></i></div>
@@ -643,11 +883,14 @@
                 <li><i class="bi bi-check-circle-fill"></i> 3× better resource utilization</li>
                 <li><i class="bi bi-check-circle-fill"></i> Zero-downtime migration</li>
               </ul>
+              <a href="#contact" class="pc-download scrollto">
+                <i class="bi bi-file-earmark-pdf"></i> Download Case Study
+              </a>
             </div>
           </div>
 
           <div class="col-lg-4 col-md-6 d-flex" data-aos="zoom-in" data-aos-delay="100">
-            <div class="project-card">
+            <div class="project-card spotlight-card">
               <div class="pc-accent pc-accent-gold"></div>
               <div class="pc-top">
                 <div class="pc-icon"><i class="bx bx-flask"></i></div>
@@ -668,7 +911,7 @@
           </div>
 
           <div class="col-lg-4 col-md-6 d-flex" data-aos="zoom-in" data-aos-delay="150">
-            <div class="project-card">
+            <div class="project-card spotlight-card">
               <div class="pc-accent pc-accent-blue"></div>
               <div class="pc-top">
                 <div class="pc-icon"><i class="bx bx-buildings"></i></div>
@@ -689,7 +932,7 @@
           </div>
 
           <div class="col-lg-4 col-md-6 d-flex" data-aos="zoom-in" data-aos-delay="200">
-            <div class="project-card">
+            <div class="project-card spotlight-card">
               <div class="pc-accent pc-accent-teal"></div>
               <div class="pc-top">
                 <div class="pc-icon"><i class="bx bx-shield-alt-2"></i></div>
@@ -722,50 +965,123 @@
         </div>
         <div class="row g-4">
           <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
-            <div class="testi-card">
+            <div class="testi-card spotlight-card">
               <div class="testi-stars">
                 <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
               </div>
-              <p class="testi-quote">"Sid and the Nimbus team cut our AWS bill by 38% in the first 60 days. More importantly, our infrastructure is now compliant and we sleep at night knowing it's secure."</p>
+              <p class="testi-quote">"Sid and the Nimbus team cut our AWS bill by 38% in the first 60 days. More importantly, our infrastructure passed HIPAA audit on the first attempt — something we'd failed twice before."</p>
               <div class="testi-author">
-                <div class="testi-avatar">CTO</div>
+                <div class="testi-avatar">DM</div>
                 <div>
-                  <div class="testi-name">Healthcare Technology Startup</div>
-                  <div class="testi-role">Boston, MA</div>
+                  <div class="testi-name">David M., CTO</div>
+                  <div class="testi-role">MedRecord Analytics · Boston, MA</div>
                 </div>
               </div>
             </div>
           </div>
           <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
-            <div class="testi-card testi-card-featured">
+            <div class="testi-card testi-card-featured spotlight-card">
               <div class="testi-stars">
                 <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
               </div>
-              <p class="testi-quote">"We went from zero AI strategy to a production LLM assistant in 8 weeks. The team translated our business goals into real technology — not buzzwords."</p>
+              <p class="testi-quote">"We went from zero AI strategy to a production LLM assistant in 8 weeks. Nimbus translated our business goals into real outcomes — ticket resolution time dropped 60% in the first month."</p>
               <div class="testi-author">
-                <div class="testi-avatar">VP</div>
+                <div class="testi-avatar">SR</div>
                 <div>
-                  <div class="testi-name">Mid-Market SaaS Company</div>
-                  <div class="testi-role">New York, NY</div>
+                  <div class="testi-name">Sarah R., VP Engineering</div>
+                  <div class="testi-role">Vantage CX · New York, NY</div>
                 </div>
               </div>
             </div>
           </div>
           <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
-            <div class="testi-card">
+            <div class="testi-card spotlight-card">
               <div class="testi-stars">
                 <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
               </div>
-              <p class="testi-quote">"Nimbus built our Kubernetes infrastructure from scratch and handed us full documentation, runbooks, and trained our internal team. The code is ours — no lock-in."</p>
+              <p class="testi-quote">"Nimbus rebuilt our entire Kubernetes stack and handed us documentation, runbooks, and trained our team. We own 100% of the code. The 42% cost reduction was the bonus."</p>
               <div class="testi-author">
-                <div class="testi-avatar">Eng</div>
+                <div class="testi-avatar">JT</div>
                 <div>
-                  <div class="testi-name">Gaming Platform Company</div>
-                  <div class="testi-role">Austin, TX</div>
+                  <div class="testi-name">Jake T., Head of Infrastructure</div>
+                  <div class="testi-role">Vortex Gaming · Austin, TX</div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= Blog / Insights Section ======= -->
+    <section id="insights" class="blog-section">
+      <div class="container" data-aos="fade-up">
+        <div class="section-title">
+          <h2>Cloud &amp; AI Insights</h2>
+          <p>Practical guides for SMB leaders navigating cloud costs, AI adoption, and compliance.</p>
+        </div>
+        <div class="blog-grid">
+
+          <div class="blog-card" data-aos="fade-up" data-aos-delay="100">
+            <div class="blog-card-img blog-card-img-1">
+              <i class="bx bx-dollar-circle"></i>
+            </div>
+            <div class="blog-card-body">
+              <span class="blog-tag blog-tag-aws">AWS · FinOps</span>
+              <h5>How to Cut Your AWS Bill by 30% in 30 Days</h5>
+              <p>Five FinOps tactics — right-sizing, Savings Plans, Spot Instances, idle resource cleanup, and S3 lifecycle policies — that deliver fast ROI without re-architecting.</p>
+              <div class="blog-card-footer">
+                <span class="blog-read-time"><i class="bx bx-time-five"></i> 6 min read</span>
+                <a href="blog/cut-aws-bill-30-percent.html" class="blog-read-link">Read More <i class="bx bx-right-arrow-alt"></i></a>
+              </div>
+            </div>
+          </div>
+
+          <div class="blog-card" data-aos="fade-up" data-aos-delay="150">
+            <div class="blog-card-img blog-card-img-2">
+              <i class="bx bx-brain"></i>
+            </div>
+            <div class="blog-card-body">
+              <span class="blog-tag blog-tag-ai">AI · GenAI</span>
+              <h5>The SMB Guide to Building Your First RAG Pipeline</h5>
+              <p>Retrieval-Augmented Generation explained without the jargon. A practical walkthrough of connecting your internal documents to an LLM — in a weekend, for under $200/month.</p>
+              <div class="blog-card-footer">
+                <span class="blog-read-time"><i class="bx bx-time-five"></i> 9 min read</span>
+                <a href="blog/smb-rag-pipeline-guide.html" class="blog-read-link">Read More <i class="bx bx-right-arrow-alt"></i></a>
+              </div>
+            </div>
+          </div>
+
+          <div class="blog-card" data-aos="fade-up" data-aos-delay="200">
+            <div class="blog-card-img blog-card-img-3">
+              <i class="bx bx-shield-alt-2"></i>
+            </div>
+            <div class="blog-card-body">
+              <span class="blog-tag blog-tag-devsecops">Compliance</span>
+              <h5>HIPAA on AWS: The Architecture Checklist That Passes Audits</h5>
+              <p>The exact AWS services, IAM policies, encryption settings, and CloudTrail configurations that our healthcare clients use to pass HIPAA audits on the first attempt.</p>
+              <div class="blog-card-footer">
+                <span class="blog-read-time"><i class="bx bx-time-five"></i> 8 min read</span>
+                <a href="blog/hipaa-aws-checklist.html" class="blog-read-link">Read More <i class="bx bx-right-arrow-alt"></i></a>
+              </div>
+            </div>
+          </div>
+
+          <div class="blog-card" data-aos="fade-up" data-aos-delay="250">
+            <div class="blog-card-img blog-card-img-4">
+              <i class="bx bx-layer"></i>
+            </div>
+            <div class="blog-card-body">
+              <span class="blog-tag blog-tag-strategy">Strategy</span>
+              <h5>Kubernetes vs. ECS: Which Should Your SMB Choose in 2026?</h5>
+              <p>A no-nonsense comparison. We break down cost, operational complexity, scaling behavior, and the right use-cases for each — with a decision flowchart at the end.</p>
+              <div class="blog-card-footer">
+                <span class="blog-read-time"><i class="bx bx-time-five"></i> 7 min read</span>
+                <a href="blog/kubernetes-vs-ecs-2026.html" class="blog-read-link">Read More <i class="bx bx-right-arrow-alt"></i></a>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </section>
@@ -910,9 +1226,10 @@
           <div class="col-lg-3 col-md-6">
             <h4>Let's Connect</h4>
             <p>Follow along for cloud &amp; AI insights.</p>
-            <div class="footer-social">
-              <a href="https://www.linkedin.com/in/sidnigam/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn profile">
+            <div class="footer-social-proof">
+              <a href="https://www.linkedin.com/in/sidnigam/" target="_blank" rel="noopener noreferrer" class="footer-social-proof-link" aria-label="LinkedIn profile">
                 <i class="bx bxl-linkedin"></i>
+                <span>500+ LinkedIn connections</span>
               </a>
             </div>
             <div class="footer-cta-mini">
@@ -943,6 +1260,284 @@
   <script src="assets/vendor/waypoints/noframework.waypoints.js"></script>
   <script src="assets/vendor/php-email-form/validate.js"></script>
   <script src="assets/js/main.js"></script>
+
+  <!-- ======= Interactive: Magnetic Cursor + Particle Network + Card Spotlight ======= -->
+  <script>
+  (function () {
+    // ── 1. CUSTOM MAGNETIC CURSOR ──────────────────────────────────────────
+    var dot  = document.getElementById('cursor-dot');
+    var ring = document.getElementById('cursor-ring');
+    if (!dot || !ring) return;
+
+    var mx = 0, my = 0, rx = 0, ry = 0;
+    var rafId;
+
+    document.addEventListener('mousemove', function (e) {
+      mx = e.clientX; my = e.clientY;
+      dot.style.left = mx + 'px';
+      dot.style.top  = my + 'px';
+    });
+
+    function animateRing() {
+      rx += (mx - rx) * 0.11;
+      ry += (my - ry) * 0.11;
+      ring.style.left = rx + 'px';
+      ring.style.top  = ry + 'px';
+      rafId = requestAnimationFrame(animateRing);
+    }
+    animateRing();
+
+    // Hover targets — expand cursor ring
+    var hoverSels = 'a, button, .service-glass, .project-card, .testi-card, .pain-card, .process-card, .pricing-card, .blog-card';
+    document.querySelectorAll(hoverSels).forEach(function (el) {
+      el.addEventListener('mouseenter', function () { document.body.classList.add('cursor-hover'); });
+      el.addEventListener('mouseleave', function () { document.body.classList.remove('cursor-hover'); });
+    });
+
+    // Text cursor inside inputs/textareas
+    document.querySelectorAll('input, textarea').forEach(function (el) {
+      el.addEventListener('mouseenter', function () { document.body.classList.add('cursor-text'); });
+      el.addEventListener('mouseleave', function () { document.body.classList.remove('cursor-text'); });
+    });
+
+    // Hide cursor when leaving window
+    document.addEventListener('mouseleave', function () {
+      dot.style.opacity = '0'; ring.style.opacity = '0';
+    });
+    document.addEventListener('mouseenter', function () {
+      dot.style.opacity = '1'; ring.style.opacity = '1';
+    });
+
+    // ── 2. HERO PARTICLE NETWORK ───────────────────────────────────────────
+    var canvas = document.getElementById('hero-canvas');
+    if (canvas) {
+      var ctx = canvas.getContext('2d');
+      var w, h, hmx, hmy;
+
+      function resize() {
+        var hero = document.getElementById('hero');
+        w = canvas.width  = hero ? hero.offsetWidth  : window.innerWidth;
+        h = canvas.height = hero ? hero.offsetHeight : window.innerHeight;
+        hmx = w / 2; hmy = h / 2;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      document.addEventListener('mousemove', function (e) {
+        var rect = canvas.getBoundingClientRect();
+        hmx = e.clientX - rect.left;
+        hmy = e.clientY - rect.top;
+      });
+
+      var COUNT = 75;
+      var particles = [];
+
+      function Particle() {
+        this.x  = Math.random() * w;
+        this.y  = Math.random() * h;
+        this.vx = (Math.random() - 0.5) * 0.45;
+        this.vy = (Math.random() - 0.5) * 0.45;
+        this.r  = Math.random() * 1.8 + 0.8;
+      }
+      Particle.prototype.update = function () {
+        var dx = hmx - this.x, dy = hmy - this.y;
+        var d  = Math.sqrt(dx * dx + dy * dy);
+        if (d < 200) {
+          this.vx += (dx / d) * 0.048;
+          this.vy += (dy / d) * 0.048;
+        }
+        this.vx *= 0.978; this.vy *= 0.978;
+        this.x += this.vx; this.y += this.vy;
+        if (this.x < 0) this.x = w;
+        if (this.x > w) this.x = 0;
+        if (this.y < 0) this.y = h;
+        if (this.y > h) this.y = 0;
+      };
+      Particle.prototype.draw = function () {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(71,178,228,0.55)';
+        ctx.fill();
+      };
+
+      for (var i = 0; i < COUNT; i++) particles.push(new Particle());
+
+      function drawConnections() {
+        for (var a = 0; a < particles.length; a++) {
+          for (var b = a + 1; b < particles.length; b++) {
+            var dx = particles[a].x - particles[b].x;
+            var dy = particles[a].y - particles[b].y;
+            var d  = Math.sqrt(dx * dx + dy * dy);
+            if (d < 130) {
+              ctx.beginPath();
+              ctx.strokeStyle = 'rgba(71,178,228,' + ((1 - d / 130) * 0.22) + ')';
+              ctx.lineWidth   = 0.7;
+              ctx.moveTo(particles[a].x, particles[a].y);
+              ctx.lineTo(particles[b].x, particles[b].y);
+              ctx.stroke();
+            }
+          }
+        }
+      }
+
+      function tick() {
+        ctx.clearRect(0, 0, w, h);
+        particles.forEach(function (p) { p.update(); p.draw(); });
+        drawConnections();
+        requestAnimationFrame(tick);
+      }
+      tick();
+    }
+
+    // ── 3. CLOUD POP — site-wide scatter + unlock modal ────────────────────
+    var PARTICLE_COLORS = ['#47b2e4','#a78bfa','#14b8a6','#f59e0b','#e0f2fe'];
+    var poppedCount     = 0;
+    var UNLOCK_AT       = 5;
+    var modalShown      = false;
+
+    var DRIFT_ANIMS  = ['cloudDrift1','cloudDrift2','cloudDrift3'];
+    var DRIFT_SPEEDS = [4.1, 4.8, 5.5, 3.9, 5.2, 4.4, 4.7, 5.0, 3.7, 4.3];
+
+    function spawnParticles(cx, cy) {
+      for (var i = 0; i < 9; i++) {
+        var p       = document.createElement('div');
+        p.className = 'cloud-particle';
+        var angle    = (i / 9) * Math.PI * 2;
+        var distance = 38 + Math.random() * 28;
+        p.style.left       = cx + 'px';
+        p.style.top        = cy + 'px';
+        p.style.background = PARTICLE_COLORS[i % PARTICLE_COLORS.length];
+        p.style.setProperty('--tx', (Math.cos(angle) * distance) + 'px');
+        p.style.setProperty('--ty', (Math.sin(angle) * distance) + 'px');
+        document.body.appendChild(p);
+        setTimeout(function () { p.remove(); }, 750);
+      }
+      var ripple       = document.createElement('div');
+      ripple.className = 'cloud-ripple';
+      ripple.style.left = cx + 'px';
+      ripple.style.top  = cy + 'px';
+      document.body.appendChild(ripple);
+      setTimeout(function () { ripple.remove(); }, 700);
+    }
+
+    function attachPopHandler(cloud) {
+      cloud.addEventListener('click', function () {
+        if (cloud.classList.contains('popped')) return;
+        cloud.classList.add('popped');
+
+        var rect = cloud.getBoundingClientRect();
+        spawnParticles(rect.left + rect.width / 2, rect.top + rect.height / 2);
+
+        setTimeout(function () { cloud.remove(); }, 480);
+
+        poppedCount++;
+        if (poppedCount >= UNLOCK_AT && !modalShown) {
+          modalShown = true;
+          setTimeout(openUnlockModal, 550);
+        }
+      });
+    }
+
+    // Scatter clouds across the full document after layout settles
+    window.addEventListener('load', function () {
+      var field  = document.getElementById('clouds-field');
+      if (!field) return;
+
+      var pageH  = document.body.scrollHeight;
+      var pageW  = document.body.scrollWidth;
+      field.style.height = pageH + 'px';
+
+      var TOTAL  = 22;
+      var zones  = [
+        // [minXpct, maxXpct, minYpx, maxYpx]  — spread across page quadrants
+        [2, 10,   200,  pageH * 0.25],   // left margin, upper
+        [2, 10,   pageH * 0.25, pageH * 0.55],  // left margin, middle
+        [2, 10,   pageH * 0.55, pageH * 0.9],   // left margin, lower
+        [88, 96,  200,  pageH * 0.25],   // right margin, upper
+        [88, 96,  pageH * 0.25, pageH * 0.55],  // right margin, middle
+        [88, 96,  pageH * 0.55, pageH * 0.9],   // right margin, lower
+        [15, 82,  pageH * 0.12, pageH * 0.22],  // section gap 1
+        [15, 82,  pageH * 0.32, pageH * 0.42],  // section gap 2
+        [15, 82,  pageH * 0.52, pageH * 0.62],  // section gap 3
+        [15, 82,  pageH * 0.72, pageH * 0.85],  // section gap 4
+      ];
+
+      for (var i = 0; i < TOTAL; i++) {
+        var zone  = zones[i % zones.length];
+        var xPct  = zone[0] + Math.random() * (zone[1] - zone[0]);
+        var yPx   = zone[2] + Math.random() * (zone[3] - zone[2]);
+
+        var cloud       = document.createElement('div');
+        cloud.className = 'cloud-target';
+
+        // Size variation
+        var scale   = 0.55 + Math.random() * 0.65;
+        var opacity = 0.45 + Math.random() * 0.45;
+        var anim    = DRIFT_ANIMS[i % DRIFT_ANIMS.length];
+        var speed   = DRIFT_SPEEDS[i % DRIFT_SPEEDS.length];
+        var delay   = (Math.random() * 2).toFixed(2);
+
+        cloud.style.left      = xPct + '%';
+        cloud.style.top       = yPx  + 'px';
+        cloud.style.transform = 'scale(' + scale + ')';
+        cloud.style.opacity   = opacity;
+        cloud.style.animation = anim + ' ' + speed + 's ease-in-out ' + delay + 's infinite';
+
+        field.appendChild(cloud);
+        attachPopHandler(cloud);
+      }
+    });
+
+    // ── Modal ──────────────────────────────────────────────────────────────
+    var modal     = document.getElementById('cloud-modal');
+    var modalBody = document.getElementById('cloud-modal-body');
+    var modalSucc = document.getElementById('cloud-modal-success');
+    var closeBtn  = document.getElementById('cloud-modal-close');
+    var unlockForm = document.getElementById('cloud-unlock-form');
+
+    function openUnlockModal() {
+      if (!modal) return;
+      modal.setAttribute('aria-hidden', 'false');
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeUnlockModal() {
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeUnlockModal);
+    }
+    if (modal) {
+      modal.addEventListener('click', function (e) {
+        if (e.target === modal) closeUnlockModal();
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && modal.classList.contains('open')) closeUnlockModal();
+      });
+    }
+    if (unlockForm) {
+      unlockForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (modalBody) modalBody.hidden = true;
+        if (modalSucc) modalSucc.hidden = false;
+      });
+    }
+
+    // ── 4. CARD SPOTLIGHT (mouse-position radial gradient) ─────────────────
+    document.querySelectorAll('.spotlight-card').forEach(function (card) {
+      card.addEventListener('mousemove', function (e) {
+        var r = card.getBoundingClientRect();
+        var x = ((e.clientX - r.left) / r.width)  * 100;
+        var y = ((e.clientY - r.top)  / r.height) * 100;
+        card.style.setProperty('--mx', x + '%');
+        card.style.setProperty('--my', y + '%');
+      });
+    });
+  }());
+  </script>
 
   <!-- Counter animation + footer year -->
   <script>

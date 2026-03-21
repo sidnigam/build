@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>The SMB Guide to Building Your First RAG Pipeline | Nimbus Tech Solutions</title>
+  <meta name="description" content="Retrieval-Augmented Generation explained without the jargon. A practical walkthrough of connecting your internal documents to an LLM — in a weekend, for under $200/month.">
+  <link rel="canonical" href="https://nimbustechsolutions.com/blog/smb-rag-pipeline-guide.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://nimbustechsolutions.com/blog/smb-rag-pipeline-guide.html">
+  <meta property="og:title" content="The SMB Guide to Building Your First RAG Pipeline | Nimbus Tech Solutions">
+  <meta property="og:description" content="Retrieval-Augmented Generation explained without the jargon. A practical walkthrough for under $200/month.">
+  <meta property="og:image" content="https://nimbustechsolutions.com/assets/img/hero-img.png">
+  <meta property="article:author" content="Sid Nigam">
+  <meta property="article:published_time" content="2026-02-03">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="The SMB Guide to Building Your First RAG Pipeline">
+  <meta name="twitter:description" content="Connect your internal documents to an LLM in a weekend, for under $200/month.">
+  <meta name="twitter:image" content="https://nimbustechsolutions.com/assets/img/hero-img.png">
+
+  <link href="../assets/img/favicon.png" rel="icon">
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="../assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="../assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="../assets/css/style.css" rel="stylesheet">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "The SMB Guide to Building Your First RAG Pipeline",
+    "description": "Retrieval-Augmented Generation explained without the jargon. A practical walkthrough of connecting your internal documents to an LLM — in a weekend, for under $200/month.",
+    "author": { "@type": "Person", "name": "Sid Nigam", "url": "https://www.linkedin.com/in/sidnigam/" },
+    "publisher": { "@type": "Organization", "name": "Nimbus Tech Solutions", "url": "https://nimbustechsolutions.com" },
+    "datePublished": "2026-02-03",
+    "url": "https://nimbustechsolutions.com/blog/smb-rag-pipeline-guide.html"
+  }
+  </script>
+</head>
+<body>
+
+  <header id="header" class="fixed-top">
+    <div class="container d-flex align-items-center">
+      <div class="logo me-auto">
+        <a href="../index.html">
+          <span class="logo-nimbus">Nimbus</span><span class="logo-tech"> Tech</span>
+        </a>
+      </div>
+      <nav id="navbar" class="navbar">
+        <ul>
+          <li><a class="nav-link" href="../index.html#about">About</a></li>
+          <li><a class="nav-link" href="../index.html#services">Services</a></li>
+          <li><a class="nav-link" href="../index.html#insights">Insights</a></li>
+          <li><a class="getstarted" href="../index.html#contact">Free Strategy Call</a></li>
+        </ul>
+        <i class="bi bi-list mobile-nav-toggle"></i>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" style="padding-top: 90px;">
+    <section class="blog-post-section" style="padding: 60px 0;">
+      <div class="container" style="max-width: 800px;">
+
+        <nav aria-label="breadcrumb" style="margin-bottom: 2rem;">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="../index.html">Home</a></li>
+            <li class="breadcrumb-item"><a href="../index.html#insights">Insights</a></li>
+            <li class="breadcrumb-item active">SMB RAG Pipeline Guide</li>
+          </ol>
+        </nav>
+
+        <span class="blog-tag blog-tag-ai" style="display:inline-block; margin-bottom: 1rem;">AI · GenAI</span>
+        <h1 style="font-size: 2.2rem; font-weight: 700; margin-bottom: 1rem;">The SMB Guide to Building Your First RAG Pipeline</h1>
+        <p style="color: var(--text-muted, #888); margin-bottom: 2rem;">By <strong>Sid Nigam</strong> · February 3, 2026 · 9 min read</p>
+
+        <p>Retrieval-Augmented Generation (RAG) is the most practical way for SMBs to add AI to their workflows without training a model from scratch. You connect your existing documents — PDFs, wikis, support tickets — to a large language model, and it answers questions using your actual data. Here's how to do it in a weekend for under $200/month.</p>
+
+        <h2>What is RAG and Why Does It Matter for SMBs?</h2>
+        <p>A standard LLM like GPT-4 knows the world up to its training cutoff but nothing about your company. RAG fixes this by retrieving relevant chunks of your internal documents at query time and injecting them into the prompt. The result: an AI assistant that actually knows your products, policies, and processes.</p>
+
+        <h2>The Stack (Under $200/Month)</h2>
+        <ul>
+          <li><strong>LLM:</strong> OpenAI GPT-4o-mini (~$0.15/1M input tokens)</li>
+          <li><strong>Embeddings:</strong> OpenAI text-embedding-3-small (~$0.02/1M tokens)</li>
+          <li><strong>Vector DB:</strong> pgvector on a $20/month Supabase instance (or Pinecone free tier)</li>
+          <li><strong>Orchestration:</strong> LangChain (open source)</li>
+          <li><strong>Hosting:</strong> AWS Lambda + API Gateway (~$5/month for moderate use)</li>
+        </ul>
+
+        <h2>Step 1 — Ingest Your Documents</h2>
+        <p>Use LangChain's document loaders to pull in your content (PDFs, Notion, Confluence, Google Docs). Chunk each document into ~500 token segments with 50-token overlap. Generate embeddings for each chunk and store them in pgvector with metadata (source, date, section).</p>
+
+        <h2>Step 2 — Build the Retrieval Layer</h2>
+        <p>At query time, embed the user's question, run a cosine similarity search against your vector store, and retrieve the top 5 most relevant chunks. Filter by metadata if needed (e.g., only search product docs, not HR policies).</p>
+
+        <h2>Step 3 — Construct the Prompt</h2>
+        <p>Inject the retrieved chunks into a system prompt along with instructions about tone, scope, and when to say "I don't know." This grounding step is what prevents hallucination — the model is constrained to answer from your documents.</p>
+
+        <h2>Step 4 — Add a Feedback Loop</h2>
+        <p>Log every query and response. Thumbs up/down from users feeds back into your evaluation pipeline. After 2 weeks, you'll have enough signal to identify gaps in your document coverage and prompt quality.</p>
+
+        <hr style="margin: 3rem 0;">
+        <div style="background: var(--bg-card, #f8f9fa); border-radius: 12px; padding: 2rem; text-align: center;">
+          <h3>Want a production RAG pipeline for your business?</h3>
+          <p>We've built RAG systems that handle 10,000+ queries/day. Book a free call and we'll scope out what's right for your use case.</p>
+          <a href="../index.html#contact" class="btn-hero-primary" style="display:inline-block; margin-top: 1rem;">Book Free Strategy Call</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="footer">
+    <div class="footer-bottom">
+      <div class="container">
+        <span>&copy; 2026 Nimbus Tech Solutions. All rights reserved. &nbsp;·&nbsp; <a href="../index.html">Home</a> &nbsp;·&nbsp; <a href="../privacy.html">Privacy Policy</a></span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

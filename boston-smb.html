@@ -350,7 +350,7 @@
     /* ── Cloud burst (popup) ── */
     #clouds-field {
       position: absolute; top: 0; left: 0; width: 100%;
-      pointer-events: none; z-index: 0; overflow: hidden;
+      pointer-events: none; z-index: 500; overflow: hidden;
     }
     .cloud-target {
       position: absolute; pointer-events: all; cursor: pointer !important;
@@ -471,6 +471,17 @@
     .pricing-note a { color: var(--c-primary); font-weight: 600; }
     .cloud-modal-success-wrap { text-align: center; padding: 16px 0; }
     .btn-form-submit-wrap { margin-top: 20px; }
+    /* Website & SEO section */
+    .seo-heading { font-family: 'Outfit', sans-serif; font-size: clamp(1.6rem,3vw,2.2rem); font-weight: 800; color: var(--c-text); margin-bottom: 16px; }
+    .seo-lead { color: var(--c-muted); font-size: 1.05rem; line-height: 1.75; margin-bottom: 28px; }
+    .seo-list { list-style: none; padding: 0; margin: 0 0 32px; display: flex; flex-direction: column; gap: 12px; }
+    .seo-list li { display: flex; align-items: flex-start; gap: 12px; color: var(--c-muted); font-size: 0.95rem; }
+    .seo-list li i { color: var(--c-green); margin-top: 3px; flex-shrink: 0; }
+    .seo-list li strong { color: var(--c-text); }
+    .seo-mini-card { text-align: center; padding: 28px 20px; }
+    .seo-mini-card .pain-icon { margin: 0 auto 14px; }
+    .seo-mini-card h4 { font-size: 0.95rem; margin-bottom: 6px; }
+    .seo-mini-card p { font-size: 0.82rem; }
 
     @media (max-width: 768px) {
       .smb-nav-links { display: none; }
@@ -702,16 +713,6 @@
             </ul>
           </div>
           <div class="ai-card">
-            <div class="ai-card-icon"><i class="bi bi-headset"></i></div>
-            <h5>Customer Support</h5>
-            <ul>
-              <li>AI chat for FAQs & bookings</li>
-              <li>Ticket routing & auto-replies</li>
-              <li>Review sentiment analysis</li>
-              <li>After-hours response handling</li>
-            </ul>
-          </div>
-          <div class="ai-card">
             <div class="ai-card-icon"><i class="bi bi-bar-chart-line"></i></div>
             <h5>Reporting & Insights</h5>
             <ul>
@@ -822,6 +823,58 @@
         <p class="pricing-note">
           Need something custom? <a href="#contact">Let's talk.</a>
         </p>
+      </div>
+    </section>
+
+    <!-- ── Website & SEO ── -->
+    <section class="smb-section pain-section">
+      <div class="container">
+        <div class="row align-items-center g-5">
+          <div class="col-lg-6" data-aos="fade-right">
+            <div class="section-tag">Websites &amp; Lead Generation</div>
+            <h2 class="seo-heading">A great website should work as hard as you do.</h2>
+            <p class="seo-lead">Most small business websites look outdated, rank nowhere on Google, and don't capture leads. We build fast, modern sites with built-in SEO and lead magnet funnels — so when someone finds you, they actually reach out.</p>
+            <ul class="seo-list">
+              <li><i class="bi bi-check-circle-fill"></i><span><strong>Local SEO</strong> — show up when Boston-area customers search for your services</span></li>
+              <li><i class="bi bi-check-circle-fill"></i><span><strong>Lead magnet funnels</strong> — free guides, checklists, or tools that capture emails and book calls</span></li>
+              <li><i class="bi bi-check-circle-fill"></i><span><strong>Performance-first builds</strong> — fast load times that Google rewards with higher rankings</span></li>
+              <li><i class="bi bi-check-circle-fill"></i><span><strong>AI-powered content</strong> — blog posts, landing pages, and FAQs that rank and convert</span></li>
+            </ul>
+            <a href="#contact" class="btn-primary-cta"><i class="bi bi-globe"></i> Get a Free Website Audit</a>
+          </div>
+          <div class="col-lg-6" data-aos="fade-left" data-aos-delay="100">
+            <div class="row g-3">
+              <div class="col-6">
+                <div class="pain-card seo-mini-card">
+                  <div class="pain-icon"><i class="bi bi-search"></i></div>
+                  <h4>Local SEO</h4>
+                  <p>Rank for searches like "best [service] in Boston"</p>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="pain-card seo-mini-card">
+                  <div class="pain-icon"><i class="bi bi-magnet"></i></div>
+                  <h4>Lead Magnets</h4>
+                  <p>Free tools &amp; guides that capture emails 24/7</p>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="pain-card seo-mini-card">
+                  <div class="pain-icon"><i class="bi bi-lightning-charge"></i></div>
+                  <h4>Fast Websites</h4>
+                  <p>Built to load in under 2 seconds on any device</p>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="pain-card seo-mini-card">
+                  <div class="pain-icon"><i class="bi bi-pencil-square"></i></div>
+                  <h4>AI Content</h4>
+                  <p>Blog posts &amp; pages that rank and bring leads</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 

@@ -1190,7 +1190,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   top: 0; left: 0;
   width: 100%;
   pointer-events: none;
-  z-index: 88;
+  z-index: 500;
   overflow: visible;
 }
 

@@ -8,6 +8,68 @@
   <meta name="description" content="Boston small businesses are getting left behind by AI. Nimbus helps local businesses adopt AI tools and cut cloud costs — starting at $299/month. No tech team required.">
   <meta name="keywords" content="AI for small business Boston, cloud consulting Boston, small business AI tools, AI adoption Boston MA, affordable cloud consulting">
 
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://nimbustechsolutions.com/boston-smb.html">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://nimbustechsolutions.com/boston-smb.html">
+  <meta property="og:title" content="AI &amp; Cloud for Boston Small Businesses — Nimbus Tech Solutions">
+  <meta property="og:description" content="Boston small businesses are getting left behind by AI. Nimbus helps local businesses adopt AI tools and cut cloud costs — starting at $299/month. No tech team required.">
+  <meta property="og:image" content="https://nimbustechsolutions.com/assets/img/hero-img.png">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AI &amp; Cloud for Boston Small Businesses — Nimbus Tech Solutions">
+  <meta name="twitter:description" content="Boston small businesses are getting left behind by AI. Nimbus helps local businesses adopt AI tools and cut cloud costs — starting at $299/month. No tech team required.">
+  <meta name="twitter:image" content="https://nimbustechsolutions.com/assets/img/hero-img.png">
+
+  <!-- Structured Data: LocalBusiness (SMB focus) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Nimbus Tech Solutions",
+    "description": "Nimbus helps Boston small businesses adopt AI tools and cut cloud costs — starting at $299/month. No tech team required.",
+    "url": "https://nimbustechsolutions.com/boston-smb.html",
+    "email": "sidnigam.work@gmail.com",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Boston",
+      "addressRegion": "MA",
+      "postalCode": "02111",
+      "addressCountry": "US"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 42.35436,
+      "longitude": -71.05917
+    },
+    "founder": {
+      "@type": "Person",
+      "name": "Sid Nigam",
+      "jobTitle": "Founder & Lead Cloud Architect",
+      "sameAs": "https://www.linkedin.com/in/sidnigam/"
+    },
+    "areaServed": {
+      "@type": "City",
+      "name": "Boston"
+    },
+    "priceRange": "$$",
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "SMB AI & Cloud Services",
+      "itemListElement": [
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "AI Implementation for Small Business" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Cloud Cost Optimization" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Business Automation" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Website &amp; SEO / Lead Generation" } }
+      ]
+    }
+  }
+  </script>
+
   <link href="assets/img/favicon.png" rel="icon">
   <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
 
@@ -471,6 +533,21 @@
     .pricing-note a { color: var(--c-primary); font-weight: 600; }
     .cloud-modal-success-wrap { text-align: center; padding: 16px 0; }
     .btn-form-submit-wrap { margin-top: 20px; }
+    /* ── Testimonials (SMB light style) ── */
+    .testimonials-smb-section { padding: 80px 0; background: var(--c-bg); }
+    .smb-testi-card { padding: 28px; }
+    .smb-testi-stars { color: #F97316; font-size: 0.9rem; margin-bottom: 14px; display: flex; gap: 3px; }
+    .smb-testi-quote { font-size: 0.97rem; line-height: 1.7; color: var(--c-muted); font-style: italic; margin-bottom: 20px; }
+    .smb-testi-author { display: flex; align-items: center; gap: 12px; }
+    .smb-testi-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--c-surface); border: 2px solid var(--c-border);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Outfit', sans-serif; font-weight: 700;
+      font-size: 0.8rem; color: var(--c-primary-d); flex-shrink: 0;
+    }
+    .smb-testi-role { font-size: 0.85rem; font-weight: 600; color: var(--c-text); }
+
     /* Website & SEO section */
     .seo-heading { font-family: 'Outfit', sans-serif; font-size: clamp(1.6rem,3vw,2.2rem); font-weight: 800; color: var(--c-text); margin-bottom: 16px; }
     .seo-lead { color: var(--c-muted); font-size: 1.05rem; line-height: 1.75; margin-bottom: 28px; }
@@ -483,8 +560,37 @@
     .seo-mini-card h4 { font-size: 0.95rem; margin-bottom: 6px; }
     .seo-mini-card p { font-size: 0.82rem; }
 
+    /* ── Hamburger ── */
+    .smb-hamburger {
+      display: none;
+      background: none; border: none; cursor: pointer;
+      color: var(--c-text); font-size: 1.5rem;
+      padding: 4px 6px; line-height: 1;
+    }
+    .smb-nav-mobile-menu {
+      display: none;
+      flex-direction: column;
+      background: #fff;
+      border-top: 1px solid var(--c-border);
+      padding: 12px 0;
+      position: absolute; top: 100%; left: 0; right: 0;
+      box-shadow: var(--shadow-md);
+    }
+    .smb-nav-mobile-menu a {
+      padding: 10px 24px;
+      color: var(--c-muted); text-decoration: none;
+      font-size: 0.95rem; font-weight: 500;
+    }
+    .smb-nav-mobile-menu a:hover { color: var(--c-primary); }
+    .smb-nav-mobile-menu .smb-nav-cta {
+      margin: 8px 24px 4px;
+      display: inline-block; width: auto;
+    }
+    .smb-nav-mobile-menu.open { display: flex; }
+
     @media (max-width: 768px) {
       .smb-nav-links { display: none; }
+      .smb-hamburger { display: block; }
       .smb-hero-img-wrap { margin-top: 40px; }
       .hero-badge-float { display: none; }
       .cmf-row { grid-template-columns: 1fr; }
@@ -572,6 +678,16 @@
         <a href="#pricing">Pricing</a>
         <a href="#contact" class="smb-nav-cta">Book Free Call</a>
       </div>
+      <button type="button" class="smb-hamburger" id="smb-hamburger" aria-label="Toggle menu" aria-expanded="false">
+        <i class="bi bi-list" id="smb-hamburger-icon"></i>
+      </button>
+    </div>
+    <div class="smb-nav-mobile-menu" id="smb-mobile-menu">
+      <a href="#why-ai">Why AI</a>
+      <a href="#ai-uses">Use Cases</a>
+      <a href="#checklist">AI Quiz</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#contact" class="smb-nav-cta">Book Free Call</a>
     </div>
   </nav>
 
@@ -878,6 +994,43 @@
       </div>
     </section>
 
+    <!-- ── Testimonials ── -->
+    <section class="testimonials-smb-section">
+      <div class="container">
+        <div class="smb-section-title" data-aos="fade-up">
+          <div class="section-tag">Client Stories</div>
+          <h2>Real results for real businesses.</h2>
+          <p>From Boston CTOs to local service businesses — here's what clients say.</p>
+        </div>
+        <div class="row g-4 justify-content-center">
+          <div class="col-lg-5 col-md-6" data-aos="fade-up" data-aos-delay="100">
+            <div class="pain-card smb-testi-card">
+              <div class="smb-testi-stars">
+                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+              </div>
+              <p class="smb-testi-quote">"Sid and the Nimbus team cut our AWS bill by 38% in the first 60 days. More importantly, our infrastructure passed HIPAA audit on the first attempt — something we'd failed twice before."</p>
+              <div class="smb-testi-author">
+                <div class="smb-testi-avatar">DM</div>
+                <div class="smb-testi-role">CTO · Boston, MA</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-5 col-md-6" data-aos="fade-up" data-aos-delay="200">
+            <div class="pain-card smb-testi-card">
+              <div class="smb-testi-stars">
+                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+              </div>
+              <p class="smb-testi-quote">"We went from zero AI strategy to a production LLM assistant in 8 weeks. Nimbus translated our business goals into real outcomes — ticket resolution time dropped 60% in the first month."</p>
+              <div class="smb-testi-author">
+                <div class="smb-testi-avatar">SR</div>
+                <div class="smb-testi-role">VP Engineering · New York, NY</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ── Contact ── -->
     <section id="contact" class="contact-section">
       <div class="container">
@@ -960,6 +1113,26 @@
 
   <script>
     AOS.init({ duration: 600, once: true, offset: 60 });
+
+    // ── Mobile hamburger menu ──
+    var hamburger   = document.getElementById('smb-hamburger');
+    var mobileMenu  = document.getElementById('smb-mobile-menu');
+    var hamburgerIcon = document.getElementById('smb-hamburger-icon');
+
+    if (hamburger && mobileMenu) {
+      hamburger.addEventListener('click', function () {
+        var isOpen = mobileMenu.classList.toggle('open');
+        hamburger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        hamburgerIcon.className = isOpen ? 'bi bi-x' : 'bi bi-list';
+      });
+      mobileMenu.querySelectorAll('a').forEach(function (link) {
+        link.addEventListener('click', function () {
+          mobileMenu.classList.remove('open');
+          hamburger.setAttribute('aria-expanded', 'false');
+          hamburgerIcon.className = 'bi bi-list';
+        });
+      });
+    }
 
     // ── Helpers ──
     var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

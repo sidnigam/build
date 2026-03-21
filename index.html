@@ -81,7 +81,8 @@
         { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Cloud Architecture & Strategy" } },
         { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "AI & GenAI Implementation" } },
         { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "DevSecOps & IaC Automation" } },
-        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Data Engineering & Analytics" } }
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Data Engineering & Analytics" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Website & SEO / Lead Generation" } }
       ]
     },
     "aggregateRating": {
@@ -149,6 +150,7 @@
           <li><a class="nav-link scrollto" href="#projects">Projects</a></li>
           <li><a class="nav-link scrollto" href="#skills">Skills</a></li>
           <li><a class="nav-link scrollto" href="#insights">Insights</a></li>
+          <li><a class="nav-link" href="boston-smb.html">Small Business</a></li>
           <li><a class="getstarted scrollto" href="#contact">Free Strategy Call</a></li>
         </ul>
         <i class="bi bi-list mobile-nav-toggle"></i>
@@ -245,10 +247,12 @@
             <div class="cmf-field">
               <label for="cu-name">Full Name</label>
               <input type="text" id="cu-name" name="name" placeholder="Jane Smith" required>
+              <span id="unlock-name-err" class="cmf-field-error">Please enter your name.</span>
             </div>
             <div class="cmf-field">
               <label for="cu-email">Email</label>
               <input type="email" id="cu-email" name="email" placeholder="jane@company.com" required>
+              <span id="unlock-email-err" class="cmf-field-error">Please enter a valid email address.</span>
             </div>
           </div>
           <div class="cmf-row">
@@ -1221,6 +1225,7 @@
               <li><i class="bx bx-chevron-right"></i><a href="#projects">Projects</a></li>
               <li><i class="bx bx-chevron-right"></i><a href="#skills">Skills</a></li>
               <li><i class="bx bx-chevron-right"></i><a href="#contact">Contact</a></li>
+              <li><i class="bx bx-chevron-right"></i><a href="boston-smb.html">For Small Businesses</a></li>
               <li><i class="bx bx-chevron-right"></i><a href="privacy.html">Privacy Policy</a></li>
             </ul>
           </div>
@@ -1232,6 +1237,7 @@
               <li><i class="bx bx-chevron-right"></i><a href="#services">AI &amp; GenAI Implementation</a></li>
               <li><i class="bx bx-chevron-right"></i><a href="#services">DevSecOps &amp; IaC Automation</a></li>
               <li><i class="bx bx-chevron-right"></i><a href="#services">Data Engineering &amp; Analytics</a></li>
+              <li><i class="bx bx-chevron-right"></i><a href="#services">Website &amp; SEO / Lead Generation</a></li>
             </ul>
           </div>
 
@@ -1270,7 +1276,6 @@
   <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
   <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
   <script src="assets/vendor/waypoints/noframework.waypoints.js"></script>
-  <script src="assets/vendor/php-email-form/validate.js"></script>
   <script src="assets/js/main.js"></script>
 
   <!-- ======= Interactive: Magnetic Cursor + Particle Network + Card Spotlight ======= -->
@@ -1531,8 +1536,40 @@
       });
     }
     if (unlockForm) {
+      var EMAIL_RE_MODAL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      function setModalFieldError(inputEl, errEl, show) {
+        if (show) {
+          inputEl.classList.add('is-invalid');
+          if (errEl) errEl.classList.add('visible');
+        } else {
+          inputEl.classList.remove('is-invalid');
+          if (errEl) errEl.classList.remove('visible');
+        }
+      }
+
+      function validateUnlockForm() {
+        var nameEl  = unlockForm.querySelector('[name="name"]');
+        var emailEl = unlockForm.querySelector('[name="email"]');
+        var nameErr  = document.getElementById('unlock-name-err');
+        var emailErr = document.getElementById('unlock-email-err');
+        var valid = true;
+        if (nameEl && !nameEl.value.trim()) {
+          setModalFieldError(nameEl, nameErr, true); valid = false;
+        } else if (nameEl) {
+          setModalFieldError(nameEl, nameErr, false);
+        }
+        if (emailEl && !EMAIL_RE_MODAL.test(emailEl.value.trim())) {
+          setModalFieldError(emailEl, emailErr, true); valid = false;
+        } else if (emailEl) {
+          setModalFieldError(emailEl, emailErr, false);
+        }
+        return valid;
+      }
+
       unlockForm.addEventListener('submit', function (e) {
         e.preventDefault();
+        if (!validateUnlockForm()) return;
         var data = new FormData(unlockForm);
         fetch(unlockForm.action, {
           method: 'POST',

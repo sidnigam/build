@@ -1370,6 +1370,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   color: #cbd5e1; letter-spacing: 0.03em;
 }
 .cmf-optional { font-weight: 400; color: #64748b; }
+.cmf-field-error { display: none; font-size: 0.78rem; color: #f87171; margin-top: 2px; }
+.cmf-field-error.visible { display: block; }
 .cmf-field input {
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(71,178,228,0.2);

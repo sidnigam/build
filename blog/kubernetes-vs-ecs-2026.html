@@ -38,7 +38,19 @@
     "url": "https://nimbustechsolutions.com/blog/kubernetes-vs-ecs-2026.html"
   }
   </script>
-  <style>* { cursor: auto !important; }</style>
+  <style>
+    * { cursor: auto !important; }
+    .blog-main { padding-top: 90px; }
+    .blog-section { padding: 60px 0; }
+    .blog-container { max-width: 800px; }
+    .blog-breadcrumb { margin-bottom: 2rem; }
+    .blog-tag-inline { display: inline-block; margin-bottom: 1rem; }
+    .blog-h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 1rem; }
+    .blog-byline { color: var(--text-muted, #888); margin-bottom: 2rem; }
+    .blog-divider { margin: 3rem 0; }
+    .blog-cta-box { background: var(--bg-card, #f8f9fa); border-radius: 12px; padding: 2rem; text-align: center; }
+    .blog-cta-btn { display: inline-block; margin-top: 1rem; }
+  </style>
 </head>
 <body>
 
@@ -61,11 +73,11 @@
     </div>
   </header>
 
-  <main id="main" style="padding-top: 90px;">
-    <section class="blog-post-section" style="padding: 60px 0;">
-      <div class="container" style="max-width: 800px;">
+  <main id="main" class="blog-main">
+    <section class="blog-post-section blog-section">
+      <div class="container blog-container">
 
-        <nav aria-label="breadcrumb" style="margin-bottom: 2rem;">
+        <nav aria-label="breadcrumb" class="blog-breadcrumb">
           <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="../index.html">Home</a></li>
             <li class="breadcrumb-item"><a href="../index.html#insights">Insights</a></li>
@@ -73,9 +85,9 @@
           </ol>
         </nav>
 
-        <span class="blog-tag blog-tag-strategy" style="display:inline-block; margin-bottom: 1rem;">Strategy</span>
-        <h1 style="font-size: 2.2rem; font-weight: 700; margin-bottom: 1rem;">Kubernetes vs. ECS: Which Should Your SMB Choose in 2026?</h1>
-        <p style="color: var(--text-muted, #888); margin-bottom: 2rem;">By <strong>Sid Nigam</strong> · March 1, 2026 · 7 min read</p>
+        <span class="blog-tag blog-tag-strategy blog-tag-inline">Strategy</span>
+        <h1 class="blog-h1">Kubernetes vs. ECS: Which Should Your SMB Choose in 2026?</h1>
+        <p class="blog-byline">By <strong>Sid Nigam</strong> · March 1, 2026 · 7 min read</p>
 
         <p>This is the question we get asked most often during architecture reviews. Both run containers. Both are battle-tested. But for an SMB, the wrong choice adds months of operational overhead and thousands in unnecessary spend. Here's how to decide.</p>
 
@@ -113,11 +125,11 @@
           <li>You anticipate needing advanced traffic management, canary releases, or complex autoscaling</li>
         </ul>
 
-        <hr style="margin: 3rem 0;">
-        <div style="background: var(--bg-card, #f8f9fa); border-radius: 12px; padding: 2rem; text-align: center;">
+        <hr class="blog-divider">
+        <div class="blog-cta-box">
           <h3>Not sure which is right for your stack?</h3>
           <p>We've built production systems on both and can make a recommendation after a 30-minute call. No sales pitch — just honest advice.</p>
-          <a href="../index.html#contact" class="btn-hero-primary" style="display:inline-block; margin-top: 1rem;">Book Free Strategy Call</a>
+          <a href="../index.html#contact" class="btn-hero-primary blog-cta-btn">Book Free Strategy Call</a>
         </div>
       </div>
     </section>

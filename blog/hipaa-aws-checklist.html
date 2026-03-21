@@ -38,7 +38,19 @@
     "url": "https://nimbustechsolutions.com/blog/hipaa-aws-checklist.html"
   }
   </script>
-  <style>* { cursor: auto !important; }</style>
+  <style>
+    * { cursor: auto !important; }
+    .blog-main { padding-top: 90px; }
+    .blog-section { padding: 60px 0; }
+    .blog-container { max-width: 800px; }
+    .blog-breadcrumb { margin-bottom: 2rem; }
+    .blog-tag-inline { display: inline-block; margin-bottom: 1rem; }
+    .blog-h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 1rem; }
+    .blog-byline { color: var(--text-muted, #888); margin-bottom: 2rem; }
+    .blog-divider { margin: 3rem 0; }
+    .blog-cta-box { background: var(--bg-card, #f8f9fa); border-radius: 12px; padding: 2rem; text-align: center; }
+    .blog-cta-btn { display: inline-block; margin-top: 1rem; }
+  </style>
 </head>
 <body>
 
@@ -61,11 +73,11 @@
     </div>
   </header>
 
-  <main id="main" style="padding-top: 90px;">
-    <section class="blog-post-section" style="padding: 60px 0;">
-      <div class="container" style="max-width: 800px;">
+  <main id="main" class="blog-main">
+    <section class="blog-post-section blog-section">
+      <div class="container blog-container">
 
-        <nav aria-label="breadcrumb" style="margin-bottom: 2rem;">
+        <nav aria-label="breadcrumb" class="blog-breadcrumb">
           <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="../index.html">Home</a></li>
             <li class="breadcrumb-item"><a href="../index.html#insights">Insights</a></li>
@@ -73,9 +85,9 @@
           </ol>
         </nav>
 
-        <span class="blog-tag blog-tag-devsecops" style="display:inline-block; margin-bottom: 1rem;">Compliance</span>
-        <h1 style="font-size: 2.2rem; font-weight: 700; margin-bottom: 1rem;">HIPAA on AWS: The Architecture Checklist That Passes Audits</h1>
-        <p style="color: var(--text-muted, #888); margin-bottom: 2rem;">By <strong>Sid Nigam</strong> · February 20, 2026 · 8 min read</p>
+        <span class="blog-tag blog-tag-devsecops blog-tag-inline">Compliance</span>
+        <h1 class="blog-h1">HIPAA on AWS: The Architecture Checklist That Passes Audits</h1>
+        <p class="blog-byline">By <strong>Sid Nigam</strong> · February 20, 2026 · 8 min read</p>
 
         <p>We've helped healthcare clients pass HIPAA audits on the first attempt — every time. The secret isn't complexity; it's knowing exactly which AWS controls auditors check and configuring them correctly from day one. Here's the checklist we use.</p>
 
@@ -122,11 +134,11 @@
         <h2>6. Business Associate Agreement (BAA)</h2>
         <p>Before using any AWS service with PHI, sign a BAA with AWS. This is done through the AWS Artifact console. Only services covered under the BAA may process PHI — confirm the full list at <code>aws.amazon.com/compliance/hipaa-eligible-services-reference/</code>.</p>
 
-        <hr style="margin: 3rem 0;">
-        <div style="background: var(--bg-card, #f8f9fa); border-radius: 12px; padding: 2rem; text-align: center;">
+        <hr class="blog-divider">
+        <div class="blog-cta-box">
           <h3>Need a HIPAA-compliant AWS architecture?</h3>
           <p>We design and build HIPAA/SOC2 architectures that pass audits on the first attempt. Book a free strategy call to discuss your requirements.</p>
-          <a href="../index.html#contact" class="btn-hero-primary" style="display:inline-block; margin-top: 1rem;">Book Free Strategy Call</a>
+          <a href="../index.html#contact" class="btn-hero-primary blog-cta-btn">Book Free Strategy Call</a>
         </div>
       </div>
     </section>

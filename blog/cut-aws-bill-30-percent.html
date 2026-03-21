@@ -38,7 +38,19 @@
     "url": "https://nimbustechsolutions.com/blog/cut-aws-bill-30-percent.html"
   }
   </script>
-  <style>* { cursor: auto !important; }</style>
+  <style>
+    * { cursor: auto !important; }
+    .blog-main { padding-top: 90px; }
+    .blog-section { padding: 60px 0; }
+    .blog-container { max-width: 800px; }
+    .blog-breadcrumb { margin-bottom: 2rem; }
+    .blog-tag-inline { display: inline-block; margin-bottom: 1rem; }
+    .blog-h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 1rem; }
+    .blog-byline { color: var(--text-muted, #888); margin-bottom: 2rem; }
+    .blog-divider { margin: 3rem 0; }
+    .blog-cta-box { background: var(--bg-card, #f8f9fa); border-radius: 12px; padding: 2rem; text-align: center; }
+    .blog-cta-btn { display: inline-block; margin-top: 1rem; }
+  </style>
 </head>
 <body>
 
@@ -61,11 +73,11 @@
     </div>
   </header>
 
-  <main id="main" style="padding-top: 90px;">
-    <section class="blog-post-section" style="padding: 60px 0;">
-      <div class="container" style="max-width: 800px;">
+  <main id="main" class="blog-main">
+    <section class="blog-post-section blog-section">
+      <div class="container blog-container">
 
-        <nav aria-label="breadcrumb" style="margin-bottom: 2rem;">
+        <nav aria-label="breadcrumb" class="blog-breadcrumb">
           <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="../index.html">Home</a></li>
             <li class="breadcrumb-item"><a href="../index.html#insights">Insights</a></li>
@@ -73,9 +85,9 @@
           </ol>
         </nav>
 
-        <span class="blog-tag blog-tag-aws" style="display:inline-block; margin-bottom: 1rem;">AWS · FinOps</span>
-        <h1 style="font-size: 2.2rem; font-weight: 700; margin-bottom: 1rem;">How to Cut Your AWS Bill by 30% in 30 Days</h1>
-        <p style="color: var(--text-muted, #888); margin-bottom: 2rem;">By <strong>Sid Nigam</strong> · January 15, 2026 · 6 min read</p>
+        <span class="blog-tag blog-tag-aws blog-tag-inline">AWS · FinOps</span>
+        <h1 class="blog-h1">How to Cut Your AWS Bill by 30% in 30 Days</h1>
+        <p class="blog-byline">By <strong>Sid Nigam</strong> · January 15, 2026 · 6 min read</p>
 
         <p>Cloud spend creep is one of the most common problems we see at Nimbus Tech Solutions. Within 60 days of going live, most SMBs are paying 30–50% more than they need to. The good news: the fixes are straightforward and don't require re-architecting your stack.</p>
 
@@ -94,11 +106,11 @@
         <h2>5. Set S3 Lifecycle Policies</h2>
         <p>Move objects not accessed in 30 days to S3-IA, and objects not accessed in 90 days to Glacier Instant Retrieval. For log buckets, set a 365-day expiry. This is often a $200–$800/month saving for companies with large S3 footprints.</p>
 
-        <hr style="margin: 3rem 0;">
-        <div style="background: var(--bg-card, #f8f9fa); border-radius: 12px; padding: 2rem; text-align: center;">
+        <hr class="blog-divider">
+        <div class="blog-cta-box">
           <h3>Want us to run this audit for you?</h3>
           <p>Our Cloud &amp; AI Audit identifies all five of these areas — plus compliance gaps and an AI readiness assessment — delivered in 5 business days.</p>
-          <a href="../index.html#contact" class="btn-hero-primary" style="display:inline-block; margin-top: 1rem;">Book Free Strategy Call</a>
+          <a href="../index.html#contact" class="btn-hero-primary blog-cta-btn">Book Free Strategy Call</a>
         </div>
       </div>
     </section>

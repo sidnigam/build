@@ -38,7 +38,19 @@
     "url": "https://nimbustechsolutions.com/blog/smb-rag-pipeline-guide.html"
   }
   </script>
-  <style>* { cursor: auto !important; }</style>
+  <style>
+    * { cursor: auto !important; }
+    .blog-main { padding-top: 90px; }
+    .blog-section { padding: 60px 0; }
+    .blog-container { max-width: 800px; }
+    .blog-breadcrumb { margin-bottom: 2rem; }
+    .blog-tag-inline { display: inline-block; margin-bottom: 1rem; }
+    .blog-h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 1rem; }
+    .blog-byline { color: var(--text-muted, #888); margin-bottom: 2rem; }
+    .blog-divider { margin: 3rem 0; }
+    .blog-cta-box { background: var(--bg-card, #f8f9fa); border-radius: 12px; padding: 2rem; text-align: center; }
+    .blog-cta-btn { display: inline-block; margin-top: 1rem; }
+  </style>
 </head>
 <body>
 
@@ -61,11 +73,11 @@
     </div>
   </header>
 
-  <main id="main" style="padding-top: 90px;">
-    <section class="blog-post-section" style="padding: 60px 0;">
-      <div class="container" style="max-width: 800px;">
+  <main id="main" class="blog-main">
+    <section class="blog-post-section blog-section">
+      <div class="container blog-container">
 
-        <nav aria-label="breadcrumb" style="margin-bottom: 2rem;">
+        <nav aria-label="breadcrumb" class="blog-breadcrumb">
           <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="../index.html">Home</a></li>
             <li class="breadcrumb-item"><a href="../index.html#insights">Insights</a></li>
@@ -73,9 +85,9 @@
           </ol>
         </nav>
 
-        <span class="blog-tag blog-tag-ai" style="display:inline-block; margin-bottom: 1rem;">AI · GenAI</span>
-        <h1 style="font-size: 2.2rem; font-weight: 700; margin-bottom: 1rem;">The SMB Guide to Building Your First RAG Pipeline</h1>
-        <p style="color: var(--text-muted, #888); margin-bottom: 2rem;">By <strong>Sid Nigam</strong> · February 3, 2026 · 9 min read</p>
+        <span class="blog-tag blog-tag-ai blog-tag-inline">AI · GenAI</span>
+        <h1 class="blog-h1">The SMB Guide to Building Your First RAG Pipeline</h1>
+        <p class="blog-byline">By <strong>Sid Nigam</strong> · February 3, 2026 · 9 min read</p>
 
         <p>Retrieval-Augmented Generation (RAG) is the most practical way for SMBs to add AI to their workflows without training a model from scratch. You connect your existing documents — PDFs, wikis, support tickets — to a large language model, and it answers questions using your actual data. Here's how to do it in a weekend for under $200/month.</p>
 
@@ -103,11 +115,11 @@
         <h2>Step 4 — Add a Feedback Loop</h2>
         <p>Log every query and response. Thumbs up/down from users feeds back into your evaluation pipeline. After 2 weeks, you'll have enough signal to identify gaps in your document coverage and prompt quality.</p>
 
-        <hr style="margin: 3rem 0;">
-        <div style="background: var(--bg-card, #f8f9fa); border-radius: 12px; padding: 2rem; text-align: center;">
+        <hr class="blog-divider">
+        <div class="blog-cta-box">
           <h3>Want a production RAG pipeline for your business?</h3>
           <p>We've built RAG systems that handle 10,000+ queries/day. Book a free call and we'll scope out what's right for your use case.</p>
-          <a href="../index.html#contact" class="btn-hero-primary" style="display:inline-block; margin-top: 1rem;">Book Free Strategy Call</a>
+          <a href="../index.html#contact" class="btn-hero-primary blog-cta-btn">Book Free Strategy Call</a>
         </div>
       </div>
     </section>

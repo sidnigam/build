@@ -548,6 +548,22 @@
     }
     .smb-testi-role { font-size: 0.85rem; font-weight: 600; color: var(--c-text); }
 
+    /* ── From the Blog ── */
+    .smb-blog-section { padding: 80px 0; background: var(--c-white); }
+    .smb-blog-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .smb-blog-card {
+      background: var(--c-bg); border: 1px solid var(--c-border);
+      border-radius: var(--radius); padding: 24px;
+      text-decoration: none; color: inherit; display: flex;
+      flex-direction: column; transition: var(--transition);
+    }
+    .smb-blog-card:hover { border-color: var(--c-primary); box-shadow: var(--shadow-md); transform: translateY(-2px); color: inherit; }
+    .smb-blog-label { font-size: 0.78rem; font-weight: 700; color: var(--c-primary-d); background: var(--c-surface); padding: 3px 10px; border-radius: 20px; display: inline-block; margin-bottom: 12px; }
+    .smb-blog-card h4 { font-family: 'Outfit', sans-serif; font-size: 1.05rem; font-weight: 700; color: var(--c-text); margin-bottom: 8px; }
+    .smb-blog-card p { font-size: 0.9rem; color: var(--c-muted); line-height: 1.6; flex: 1; margin-bottom: 16px; }
+    .smb-blog-read { font-size: 0.85rem; font-weight: 600; color: var(--c-primary); }
+    @media (max-width: 768px) { .smb-blog-grid { grid-template-columns: 1fr; } }
+
     /* Website & SEO section */
     .seo-heading { font-family: 'Outfit', sans-serif; font-size: clamp(1.6rem,3vw,2.2rem); font-weight: 800; color: var(--c-text); margin-bottom: 16px; }
     .seo-lead { color: var(--c-muted); font-size: 1.05rem; line-height: 1.75; margin-bottom: 28px; }
@@ -617,8 +633,8 @@
       <button type="button" class="cloud-modal-close" id="cloud-modal-close" aria-label="Close modal"><i class="bi bi-x-lg"></i></button>
       <div id="cloud-modal-body">
         <div class="cloud-modal-icon"><i class="bx bx-cloud-lightning"></i></div>
-        <h3 id="smb-cloud-modal-title">You have a keen eye.</h3>
-        <p class="cloud-modal-sub">You just popped 5 Nimbus clouds — and unlocked a <strong>free 30-minute consultation</strong> with Sid. Fill in your details and we'll be in touch within 24 hours.</p>
+        <h3 id="smb-cloud-modal-title">Nice, you found the easter egg.</h3>
+        <p class="cloud-modal-sub">You just popped 5 Nimbus clouds and unlocked a <strong>free 30-minute consultation</strong> with Sid. Drop your details below and we'll reach out within 24 hours.</p>
         <div class="cmf-form-msg" id="cmf-msg"></div>
         <form id="cloud-unlock-form" class="cmf" novalidate>
           <input type="hidden" name="_replyto" value="sidnigam.work@gmail.com">
@@ -1027,6 +1043,31 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── From the Blog ── -->
+    <section class="smb-blog-section">
+      <div class="container">
+        <div class="smb-section-title" data-aos="fade-up">
+          <div class="section-tag">Helpful Guides</div>
+          <h2>From the Blog</h2>
+          <p>Practical reads for Boston small business owners — no jargon.</p>
+        </div>
+        <div class="smb-blog-grid">
+          <a href="blog/smb-rag-pipeline-guide.html" class="smb-blog-card" data-aos="fade-up" data-aos-delay="100">
+            <span class="smb-blog-label">AI · GenAI</span>
+            <h4>The SMB Guide to Building Your First RAG Pipeline</h4>
+            <p>Connect your internal documents to an LLM in a weekend, for under $200/month. No ML degree required.</p>
+            <span class="smb-blog-read">Read the guide →</span>
+          </a>
+          <a href="blog/cut-aws-bill-30-percent.html" class="smb-blog-card" data-aos="fade-up" data-aos-delay="200">
+            <span class="smb-blog-label">AWS · FinOps</span>
+            <h4>How to Cut Your AWS Bill by 30% in 30 Days</h4>
+            <p>Five quick wins — right-sizing, Savings Plans, idle resource cleanup — that any small team can action this week.</p>
+            <span class="smb-blog-read">Read the guide →</span>
+          </a>
         </div>
       </div>
     </section>

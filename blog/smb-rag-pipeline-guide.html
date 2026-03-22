@@ -50,6 +50,16 @@
     .blog-divider { margin: 3rem 0; }
     .blog-cta-box { background: var(--bg-card, #f8f9fa); border-radius: 12px; padding: 2rem; text-align: center; }
     .blog-cta-btn { display: inline-block; margin-top: 1rem; }
+    .blog-related-section { padding: 48px 0; border-top: 1px solid #e9ecef; }
+    .blog-related-container { max-width: 860px; }
+    .blog-related-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; color: #1e293b; }
+    .blog-related-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .blog-related-card { background: #f8f9fa; border-radius: 10px; padding: 20px; text-decoration: none; color: inherit; display: block; border: 1px solid #e9ecef; transition: border-color 0.2s, box-shadow 0.2s; }
+    .blog-related-card:hover { border-color: #0ea5e9; box-shadow: 0 4px 16px rgba(14,165,233,0.1); color: inherit; }
+    .blog-related-card h4 { font-size: 1rem; font-weight: 600; margin: 8px 0 6px; color: #1e293b; }
+    .blog-related-card p { font-size: 0.85rem; color: #6b7280; margin: 0; line-height: 1.5; }
+    .blog-related-read { font-size: 0.82rem; font-weight: 600; color: #0ea5e9; display: inline-block; margin-top: 10px; }
+    @media (max-width: 576px) { .blog-related-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -120,6 +130,26 @@
           <h3>Want a production RAG pipeline for your business?</h3>
           <p>We've built RAG systems that handle 10,000+ queries/day. Book a free call and we'll scope out what's right for your use case.</p>
           <a href="../index.html#contact" class="btn-hero-primary blog-cta-btn">Book Free Strategy Call</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="blog-related-section">
+      <div class="container blog-related-container">
+        <h3 class="blog-related-title">Related Posts</h3>
+        <div class="blog-related-grid">
+          <a href="cut-aws-bill-30-percent.html" class="blog-related-card">
+            <span class="blog-tag blog-tag-aws">AWS · FinOps</span>
+            <h4>How to Cut Your AWS Bill by 30% in 30 Days</h4>
+            <p>Five FinOps tactics that deliver fast ROI without re-architecting your stack.</p>
+            <span class="blog-related-read">Read More →</span>
+          </a>
+          <a href="kubernetes-vs-ecs-2026.html" class="blog-related-card">
+            <span class="blog-tag blog-tag-strategy">Strategy</span>
+            <h4>Kubernetes vs. ECS: Which Should Your SMB Choose in 2026?</h4>
+            <p>Cost, complexity, and a decision framework — so you pick the right container platform.</p>
+            <span class="blog-related-read">Read More →</span>
+          </a>
         </div>
       </div>
     </section>

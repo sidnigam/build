@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHAKRAVYUHA — an Indian-mythology action roguelite</title>
+<meta name="description" content="Play as Abhimanyu and fight your way out of Yama's realm. A Hades-inspired action roguelite drawn from the Ramayana and Mahabharata. Free, open source, in your browser.">
+<style>
+  :root {
+    --gold: #ffd34d; --ash: #cfcfcf; --punya: #c77dff;
+    --bg: #0b0710; --panel: rgba(14, 9, 20, 0.96);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; background: #050308; overflow: hidden;
+    font-family: Georgia, 'Times New Roman', 'Noto Serif', serif; }
+
+  #wrap { position: relative; width: 100vw; height: 100vh;
+    display: flex; align-items: center; justify-content: center; }
+  #stage { position: relative; aspect-ratio: 16 / 9; width: min(100vw, calc(100vh * 16 / 9)); }
+  canvas#game { width: 100%; height: 100%; display: block; cursor: none; background: var(--bg); }
+
+  /* ---------- overlay panels ---------- */
+  .panel { position: absolute; inset: 0; z-index: 10; display: flex;
+    flex-direction: column; align-items: center; justify-content: center;
+    background: rgba(5, 3, 8, 0.72); color: var(--ash); text-align: center; }
+  .panel.solid { background: var(--panel); }
+  .hidden { display: none !important; }
+
+  h1.title { font-size: clamp(38px, 6vw, 72px); letter-spacing: 0.18em; color: var(--gold);
+    text-shadow: 0 0 30px rgba(255, 211, 77, 0.4); font-weight: normal; }
+  .title-dev { font-size: clamp(16px, 2vw, 24px); color: var(--punya); letter-spacing: 0.4em; margin-top: 2px; }
+  .tagline { margin-top: 10px; font-style: italic; opacity: 0.8; font-size: 15px; }
+
+  .menu-btns { margin-top: 34px; display: flex; flex-direction: column; gap: 12px; }
+  button { font-family: inherit; font-size: 17px; letter-spacing: 0.12em; padding: 11px 38px;
+    background: transparent; color: var(--ash); border: 1px solid rgba(255, 211, 77, 0.45);
+    cursor: pointer; transition: all 0.15s; }
+  button:hover { background: rgba(255, 211, 77, 0.12); color: var(--gold); border-color: var(--gold); }
+  button.primary { color: var(--gold); border-color: var(--gold); font-size: 20px; }
+  button.danger { border-color: rgba(255, 85, 102, 0.4); font-size: 12px; opacity: 0.6; }
+  button.danger:hover { color: #ff5566; border-color: #ff5566; background: rgba(255,85,102,0.08); }
+
+  .hub-currency { color: var(--punya); font-size: 18px; margin-top: 18px; }
+  .narada { max-width: 620px; margin-top: 26px; font-style: italic; line-height: 1.6;
+    color: #b9a3d8; font-size: 15px; }
+  .hub-stats { margin-top: 14px; font-size: 13px; opacity: 0.55; }
+  .controls-hint { position: absolute; bottom: 18px; font-size: 13px; opacity: 0.55; line-height: 1.7; }
+
+  /* ---------- cards (boons, shop, shrine, armory) ---------- */
+  .cards { display: flex; gap: 18px; margin-top: 26px; flex-wrap: wrap; justify-content: center;
+    max-width: 1100px; }
+  .card { width: 250px; padding: 18px; border: 2px solid #555; background: rgba(10, 6, 16, 0.92);
+    cursor: pointer; text-align: left; transition: transform 0.12s, box-shadow 0.12s; }
+  .card:hover { transform: translateY(-4px); box-shadow: 0 6px 24px rgba(255, 211, 77, 0.15); }
+  .card.disabled { opacity: 0.45; cursor: not-allowed; }
+  .card.disabled:hover { transform: none; box-shadow: none; }
+  .card.maxed { border-color: var(--gold); cursor: default; }
+  .card.selected { border-color: var(--gold); box-shadow: 0 0 18px rgba(255, 211, 77, 0.25); }
+  .card.locked { opacity: 0.7; }
+  .card-rarity { font-size: 11px; letter-spacing: 0.2em; margin-bottom: 6px; }
+  .card-name { font-size: 18px; margin-bottom: 8px; }
+  .card-desc { font-size: 13.5px; line-height: 1.5; color: #c9c2d8; }
+  .card-lore { font-size: 12px; font-style: italic; opacity: 0.55; margin-top: 8px; line-height: 1.4; }
+  .card-cost { margin-top: 10px; color: var(--gold); font-size: 14px; letter-spacing: 0.1em; }
+  .pips { margin-left: 8px; }
+  .pip { display: inline-block; width: 9px; height: 9px; border: 1px solid var(--gold);
+    margin-right: 3px; transform: rotate(45deg); }
+  .pip.full { background: var(--gold); }
+
+  /* boon god header */
+  #boon-god { display: flex; gap: 18px; align-items: center; max-width: 760px; text-align: left; }
+  .god-sym { font-size: 52px; }
+  .god-name { font-size: 30px; letter-spacing: 0.12em; }
+  .god-title { font-size: 13px; letter-spacing: 0.18em; opacity: 0.7; margin-top: 2px; }
+  .god-greet { font-style: italic; margin-top: 8px; color: #d8cfe8; font-size: 14.5px; }
+
+  .panel-h { font-size: 30px; color: var(--gold); letter-spacing: 0.2em; }
+  .panel-sub { margin-top: 6px; font-size: 14px; opacity: 0.65; font-style: italic; }
+  .currency-line { margin-top: 12px; color: var(--punya); font-size: 17px; }
+  .back-row { margin-top: 30px; }
+
+  /* codex */
+  #codex-list { margin-top: 22px; max-width: 780px; max-height: 62vh; overflow-y: auto;
+    text-align: left; padding: 0 24px; }
+  .codex-entry { margin-bottom: 22px; }
+  .codex-t { color: var(--gold); font-size: 18px; }
+  .codex-s { font-size: 12px; color: var(--punya); font-style: italic; letter-spacing: 0.06em; }
+  .codex-d { margin-top: 6px; font-size: 14px; line-height: 1.65; color: #c9c2d8; }
+  #codex-list::-webkit-scrollbar { width: 8px; }
+  #codex-list::-webkit-scrollbar-thumb { background: rgba(255,211,77,0.3); }
+
+  /* death / victory */
+  .death-h { font-size: 54px; color: #ff5566; letter-spacing: 0.3em; text-shadow: 0 0 40px rgba(255,85,102,0.4); }
+  .victory-h { font-size: 50px; color: var(--gold); letter-spacing: 0.24em; text-shadow: 0 0 40px rgba(255,211,77,0.5); }
+  .death-line { max-width: 640px; margin-top: 22px; font-style: italic; color: #b9a3d8; line-height: 1.7; font-size: 16px; }
+  .run-stats { margin-top: 26px; width: 360px; }
+  .rs-title { color: var(--gold); letter-spacing: 0.2em; font-size: 15px; margin-bottom: 14px; }
+  .rs-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.08); }
+
+  /* transient text */
+  #banner { position: absolute; top: 17%; left: 0; right: 0; z-index: 8; text-align: center;
+    font-size: 26px; letter-spacing: 0.25em; pointer-events: none;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.8); animation: bannerIn 2.2s ease-out forwards; }
+  @keyframes bannerIn {
+    0% { opacity: 0; transform: translateY(14px); }
+    12% { opacity: 1; transform: translateY(0); }
+    78% { opacity: 1; } 100% { opacity: 0; } }
+  #biome-title, #boss-intro { position: absolute; top: 30%; left: 0; right: 0; z-index: 8;
+    text-align: center; pointer-events: none; animation: bannerIn 2.8s ease-out forwards; }
+  #boss-intro { animation-duration: 4.2s; }
+  .bt-name { font-size: 56px; letter-spacing: 0.35em; text-shadow: 0 0 40px currentColor; }
+  .bt-sub { font-size: 16px; letter-spacing: 0.3em; opacity: 0.75; margin-top: 6px; color: #cfcfcf; }
+  .bt-quote { font-size: 16px; font-style: italic; margin-top: 16px; color: #d8cfe8;
+    max-width: 700px; margin-left: auto; margin-right: auto; }
+
+  .foot { position: absolute; bottom: 8px; right: 14px; z-index: 5; font-size: 11px;
+    opacity: 0.35; color: var(--ash); }
+</style>
+</head>
+<body>
+<div id="wrap"><div id="stage">
+  <canvas id="game" width="1280" height="720"></canvas>
+
+  <!-- transient text layers -->
+  <div id="banner" class="hidden"></div>
+  <div id="biome-title" class="hidden"></div>
+  <div id="boss-intro" class="hidden"></div>
+
+  <!-- HUB : the Banyan at the Edge of Worlds -->
+  <div id="hub" class="panel hidden">
+    <h1 class="title">CHAKRAVYUHA</h1>
+    <div class="title-dev">चक्रव्यूह</div>
+    <div class="tagline">You learned the way in before you were born. Now learn the way out.</div>
+    <div class="hub-currency" id="hub-punya"></div>
+    <div class="menu-btns">
+      <button id="btn-begin" class="primary">BEGIN THE ASCENT</button>
+      <button id="btn-shrine">PATH OF DHARMA</button>
+      <button id="btn-armory">ARMORY</button>
+      <button id="btn-codex">THE POTHI</button>
+    </div>
+    <div class="narada" id="hub-narada"></div>
+    <div class="hub-stats" id="hub-stats"></div>
+    <div class="controls-hint">
+      WASD move · mouse aim · LMB attack · E / RMB special · Q astra · SPACE dash · ESC pause · M mute
+      <br><button id="btn-wipe" class="danger">erase save</button>
+    </div>
+  </div>
+
+  <!-- BOON PICK -->
+  <div id="boonpick" class="panel hidden">
+    <div id="boon-god"></div>
+    <div class="cards" id="boon-cards"></div>
+  </div>
+
+  <!-- KUBERA SHOP -->
+  <div id="shop" class="panel hidden">
+    <div class="panel-h">KUBERA'S WARES</div>
+    <div class="panel-sub">"Everything has a price, prince. Even down here. Especially down here."</div>
+    <div class="currency-line" id="shop-mudra"></div>
+    <div class="cards" id="shop-cards"></div>
+    <div class="back-row"><button id="btn-shop-close">LEAVE</button></div>
+  </div>
+
+  <!-- PATH OF DHARMA (meta upgrades) -->
+  <div id="shrine" class="panel solid hidden">
+    <div class="panel-h">THE PATH OF DHARMA</div>
+    <div class="panel-sub">Merit carried out of death, spent on what endures.</div>
+    <div class="currency-line" id="shrine-punya"></div>
+    <div class="cards" id="shrine-cards"></div>
+    <div class="back-row"><button id="btn-shrine-back">RETURN</button></div>
+  </div>
+
+  <!-- ARMORY -->
+  <div id="armory" class="panel solid hidden">
+    <div class="panel-h">THE ARMORY</div>
+    <div class="panel-sub">Weapons of the great war, waiting under the banyan.</div>
+    <div class="currency-line" id="armory-punya"></div>
+    <div class="cards" id="armory-cards"></div>
+    <div class="back-row"><button id="btn-armory-back">RETURN</button></div>
+  </div>
+
+  <!-- CODEX -->
+  <div id="codex" class="panel solid hidden">
+    <div class="panel-h">THE POTHI</div>
+    <div class="panel-sub">A palm-leaf book of everything this place remembers.</div>
+    <div id="codex-list"></div>
+    <div class="back-row"><button id="btn-codex-back">RETURN</button></div>
+  </div>
+
+  <!-- DEATH -->
+  <div id="death" class="panel hidden">
+    <div class="death-h">SLAIN</div>
+    <div class="death-line" id="death-line"></div>
+    <div class="run-stats" id="death-stats"></div>
+    <div class="back-row"><button id="btn-death-continue" class="primary">RETURN TO THE BANYAN</button></div>
+  </div>
+
+  <!-- VICTORY -->
+  <div id="victory" class="panel hidden">
+    <div class="victory-h">THE WHEEL IS BROKEN</div>
+    <div class="death-line" id="victory-line"></div>
+    <div class="run-stats" id="victory-stats"></div>
+    <div class="back-row"><button id="btn-victory-continue" class="primary">RETURN TO THE BANYAN</button></div>
+  </div>
+
+  <!-- PAUSE -->
+  <div id="pause" class="panel hidden">
+    <div class="panel-h">PAUSED</div>
+    <div class="menu-btns">
+      <button id="btn-resume" class="primary">RESUME</button>
+      <button id="btn-quitrun">ABANDON THE ASCENT</button>
+    </div>
+  </div>
+
+  <div class="foot">open source · built with canvas &amp; vanilla js</div>
+</div></div>
+
+<script src="js/utils.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/data.js"></script>
+<script src="js/meta.js"></script>
+<script src="js/entities.js"></script>
+<script src="js/rooms.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>

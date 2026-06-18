@@ -93,38 +93,38 @@ Source: PROJECT.md + Research (STACK, FEATURES, ARCHITECTURE, PITFALLS)
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| RENDER-01 | — | — |
-| RENDER-02 | — | — |
-| RENDER-03 | — | — |
-| ART-01 | — | — |
-| ART-02 | — | — |
-| ART-03 | — | — |
-| ART-04 | — | — |
-| ART-05 | — | — |
-| ART-06 | — | — |
-| VFX-01 | — | — |
-| VFX-02 | — | — |
-| VFX-03 | — | — |
-| VFX-04 | — | — |
-| VFX-05 | — | — |
-| GAME-01 | — | — |
-| GAME-02 | — | — |
-| GAME-03 | — | — |
-| GAME-04 | — | — |
-| GAME-05 | — | — |
-| GAME-06 | — | — |
-| PLAT-01 | — | — |
-| PLAT-02 | — | — |
-| PLAT-03 | — | — |
-| PLAT-04 | — | — |
-| PLAT-05 | — | — |
-| STEAM-01 | — | — |
-| STEAM-02 | — | — |
-| STEAM-03 | — | — |
-| STEAM-04 | — | — |
-| STEAM-05 | — | — |
-| QA-01 | — | — |
-| QA-02 | — | — |
-| QA-03 | — | — |
-| QA-04 | — | — |
-| QA-05 | — | — |
+| RENDER-01 | Phase 1 | Pending |
+| RENDER-02 | Phase 2 | Pending |
+| RENDER-03 | Phase 2 | Pending |
+| ART-01 | Phase 2 | Pending |
+| ART-02 | Phase 2 | Pending |
+| ART-03 | Phase 2 | Pending |
+| ART-04 | Phase 2 | Pending |
+| ART-05 | Phase 2 | Pending |
+| ART-06 | Phase 2 | Pending |
+| VFX-01 | Phase 3 | Pending |
+| VFX-02 | Phase 3 | Pending |
+| VFX-03 | Phase 3 | Pending |
+| VFX-04 | Phase 3 | Pending |
+| VFX-05 | Phase 3 | Pending |
+| GAME-01 | Phase 4 | Pending |
+| GAME-02 | Phase 4 | Pending |
+| GAME-03 | Phase 4 | Pending |
+| GAME-04 | Phase 4 | Pending |
+| GAME-05 | Phase 4 | Pending |
+| GAME-06 | Phase 4 | Pending |
+| PLAT-01 | Phase 5 | Pending |
+| PLAT-02 | Phase 5 | Pending |
+| PLAT-03 | Phase 5 | Pending |
+| PLAT-04 | Phase 5 | Pending |
+| PLAT-05 | Phase 5 | Pending |
+| STEAM-01 | Phase 6 | Pending |
+| STEAM-02 | Phase 6 | Pending |
+| STEAM-03 | Phase 6 | Pending |
+| STEAM-04 | Phase 6 | Pending |
+| STEAM-05 | Phase 7 | Pending |
+| QA-01 | Phase 7 | Pending |
+| QA-02 | Phase 7 | Pending |
+| QA-03 | Phase 7 | Pending |
+| QA-04 | Phase 2 | Pending |
+| QA-05 | Phase 7 | Pending |

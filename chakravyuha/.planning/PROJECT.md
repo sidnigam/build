@@ -20,6 +20,7 @@ Every death makes the next run feel different — the combination of god boons, 
 - ✓ Save/load integrity — localStorage with tested round-trips — existing
 - ✓ Audio system — synthesized SFX + tanpura drone via WebAudio — existing
 - ✓ Smoke test suite — headless full-run simulation (node test/smoke.js) — existing
+- ✓ Render abstraction seam — CAMERA global + 4 named draw passes (renderBackground/renderEntities/renderEffects/renderHUD); HUD outside camera transform; smoke green — Validated in Phase 01
 
 ### Active
 
@@ -83,6 +84,7 @@ Every death makes the next run feel different — the combination of god boons, 
 | AI-generated art | No art budget; AI tools can produce Hades-adjacent illustrated style at viable quality | — Pending |
 | Electron/Tauri for desktop build | Wraps existing HTML5 game with minimal code changes | — Pending |
 | Commercial release ($5–15) | Project quality and uniqueness of IP justifies paid release | — Pending |
+| HUD outside camera transform (D-10) | HUD no longer shakes with the world — intentional UX improvement; eliminates visual noise during shake | — Validated in Phase 01 |
 
 ## Evolution
 
@@ -102,4 +104,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-17 after initialization*
+*Last updated: 2026-06-19 — Phase 01 complete (render abstraction seam)*

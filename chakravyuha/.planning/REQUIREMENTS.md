@@ -9,7 +9,7 @@ Source: PROJECT.md + Research (STACK, FEATURES, ARCHITECTURE, PITFALLS)
 
 ### RENDER — Rendering Foundation
 
-- [ ] **RENDER-01**: Render abstraction layer with camera system and named draw passes (background, entities, effects, UI) — no visual change to gameplay, smoke tests stay green
+- [x] **RENDER-01**: Render abstraction layer with camera system and named draw passes (background, entities, effects, UI) — no visual change to gameplay, smoke tests stay green
 - [ ] **RENDER-02**: Asset loader that loads sprite sheets from disk with graceful fallback to primitive shapes if asset missing
 - [ ] **RENDER-03**: Sprite manager with per-actor frame animation support (frame index, frame timing, loop/once modes)
 
@@ -93,7 +93,7 @@ Source: PROJECT.md + Research (STACK, FEATURES, ARCHITECTURE, PITFALLS)
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| RENDER-01 | Phase 1 | Pending |
+| RENDER-01 | Phase 1 | Complete |
 | RENDER-02 | Phase 2 | Pending |
 | RENDER-03 | Phase 2 | Pending |
 | ART-01 | Phase 2 | Pending |

@@ -2,16 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Phase 1 context gathered
-last_updated: "2026-06-18T00:49:18.633Z"
-last_activity: 2026-06-17 — Roadmap created, 35 requirements mapped across 7 phases
+status: Executing Phase 01
+stopped_at: Paused at Task 3 checkpoint (human-verify) of 01-01-PLAN.md
+last_updated: "2026-06-19T13:25:03.478Z"
 progress:
   total_phases: 7
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  completed_phases: 1
+  total_plans: 1
+  completed_plans: 1
 ---
 
 # Project State
@@ -21,16 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-17)
 
 **Core value:** Every death makes the next run feel different — god boons, weapon choice, and room layouts create builds players want to talk about.
-**Current focus:** Phase 1 — Render Abstraction Seam
+**Current focus:** Phase 01 — render-abstraction-seam
 
 ## Current Position
 
-Phase: 1 of 7 (Render Abstraction Seam)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-06-17 — Roadmap created, 35 requirements mapped across 7 phases
-
-Progress: [░░░░░░░░░░] 0%
+Phase: 01 (render-abstraction-seam) — EXECUTING
+Plan: 1 of 1
 
 ## Performance Metrics
 
@@ -63,6 +57,9 @@ Recent decisions affecting current work:
 - [Roadmap]: Gate-then-parallel structure — Phase 1 render seam gates everything; rendering track (2→3→4) and packaging track (5→6→7) run in parallel after.
 - [Roadmap]: Save migration (PLAT-04) placed in the wrapper phase (5) before Steamworks, since Steam Auto-Cloud syncs files, not localStorage.
 - [Roadmap]: Cultural review (QA-03) is a hard gate in Phase 7 before the store page goes live.
+- [Phase 01-render-abstraction-seam]: CAMERA reads GAME.shake inside begin() at call time — no top-level GAME ref (D-06)
+- [Phase 01-render-abstraction-seam]: HUD moved outside CAMERA.end() — steady during shake (D-10); crosshair folded into renderHUD (D-11)
+- [Phase 01-render-abstraction-seam]: Danger zones kept in renderBackground under actors to preserve z-order (Open Question 2)
 
 ### Pending Todos
 
@@ -81,6 +78,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-18T00:49:18.625Z
-Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-render-abstraction-seam/01-CONTEXT.md
+Last session: 2026-06-19T13:24:56.262Z
+Stopped at: Paused at Task 3 checkpoint (human-verify) of 01-01-PLAN.md
+Resume file: None

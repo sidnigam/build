@@ -12,7 +12,7 @@ Chakravyuha is a working vanilla-JS/HTML5-Canvas action roguelite being upgraded
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Render Abstraction Seam** - Camera + named draw passes over untouched game logic, zero visual change
+- [x] **Phase 1: Render Abstraction Seam** - Camera + named draw passes over untouched game logic, zero visual change (completed 2026-06-19)
 - [ ] **Phase 2: Asset Pipeline + Sprite System** - AI-art consistency/provenance pipeline, asset loader, sprite manager, cohesive illustrated actors
 - [ ] **Phase 3: VFX + Combat Juice** - Pooled particles, hitstop, screen shake/flash, kill-zoom with accessibility toggles
 - [ ] **Phase 4: Gameplay Depth** - 24 boons + Duo synergies, multi-phase telegraphed bosses, room/hazard variety
@@ -32,7 +32,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Rendering is organized into named, ordered passes (background, entities, effects, UI)
   4. `node test/smoke.js` passes green, and render modules never load in the headless path
 **Plans**: 1 plan
-- [ ] 01-01-PLAN.md — Camera seam + 4 named draw passes over GAME.render(), smoke green, visual A/B
+- [x] 01-01-PLAN.md — Camera seam + 4 named draw passes over GAME.render(), smoke green, visual A/B
 **UI hint**: yes
 
 ### Phase 2: Asset Pipeline + Sprite System
@@ -117,7 +117,7 @@ Phases execute in numeric order. After Phase 1, the rendering track (2 → 3 →
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Render Abstraction Seam | 0/1 | Not started | - |
+| 1. Render Abstraction Seam | 1/1 | Complete   | 2026-06-19 |
 | 2. Asset Pipeline + Sprite System | 0/TBD | Not started | - |
 | 3. VFX + Combat Juice | 0/TBD | Not started | - |
 | 4. Gameplay Depth | 0/TBD | Not started | - |

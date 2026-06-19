@@ -31,7 +31,8 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. World draws are wrapped in a single camera apply/reset pair supporting offset, zoom, and shake
   3. Rendering is organized into named, ordered passes (background, entities, effects, UI)
   4. `node test/smoke.js` passes green, and render modules never load in the headless path
-**Plans**: TBD
+**Plans**: 1 plan
+- [ ] 01-01-PLAN.md — Camera seam + 4 named draw passes over GAME.render(), smoke green, visual A/B
 **UI hint**: yes
 
 ### Phase 2: Asset Pipeline + Sprite System
@@ -116,7 +117,7 @@ Phases execute in numeric order. After Phase 1, the rendering track (2 → 3 →
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Render Abstraction Seam | 0/TBD | Not started | - |
+| 1. Render Abstraction Seam | 0/1 | Not started | - |
 | 2. Asset Pipeline + Sprite System | 0/TBD | Not started | - |
 | 3. VFX + Combat Juice | 0/TBD | Not started | - |
 | 4. Gameplay Depth | 0/TBD | Not started | - |

@@ -80,7 +80,7 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 
 // ---------------- load game scripts ----------------
-const files = ['utils.js', 'audio.js', 'data.js', 'meta.js', 'entities.js', 'rooms.js', 'ui.js', 'game.js'];
+const files = ['utils.js', 'renderer.js', 'audio.js', 'data.js', 'meta.js', 'entities.js', 'rooms.js', 'ui.js', 'game.js'];
 for (const f of files) {
   const src = fs.readFileSync(path.join(__dirname, '..', 'js', f), 'utf8');
   vm.runInContext(src, sandbox, { filename: f });

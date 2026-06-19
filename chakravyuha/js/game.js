@@ -330,19 +330,29 @@ const GAME = {
 
   // ---------------- render ----------------
   render() {
-    const ctx = this.ctx, A = this.arena;
+    const ctx = this.ctx;
+    const inRun = this.state !== 'hub';
+
+    CAMERA.begin(ctx);
+    this.renderBackground(ctx);
+    if (inRun) {
+      this.renderEntities(ctx);
+      this.renderEffects(ctx);
+    }
+    CAMERA.end(ctx);
+    this.renderHUD(ctx);   // UI pass — OUTSIDE camera transform (D-10); includes crosshair (D-11)
+  },
+
+  renderBackground(ctx) {
+    const A = this.arena;
     const inRun = this.state !== 'hub';
     const biome = this.biome;
-
-    ctx.save();
-    // screen shake
-    if (this.shake > 0.5) ctx.translate(U.rand(-this.shake, this.shake) * 0.5, U.rand(-this.shake, this.shake) * 0.5);
 
     // background
     ctx.fillStyle = inRun ? biome.bg : '#0b0710';
     ctx.fillRect(-30, -30, this.W + 60, this.H + 60);
 
-    if (!inRun) { this.renderHubBg(ctx); ctx.restore(); return; }
+    if (!inRun) { this.renderHubBg(ctx); return; }
 
     // arena floor
     ctx.fillStyle = biome.floor;
@@ -438,11 +448,15 @@ const GAME = {
       ctx.strokeStyle = '#a87b1d'; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.arc(pk.x, pk.y, 5, 0, U.TAU); ctx.stroke();
     }
+  },
 
+  renderEntities(ctx) {
     // entities (dead enemies are not drawn)
     for (const e of this.enemies) if (!e.dead) e.draw(ctx);
     if (this.player) this.player.draw(ctx);
+  },
 
+  renderEffects(ctx) {
     // orbits
     for (const o of this.orbits) {
       ctx.fillStyle = '#ffd34d';
@@ -530,20 +544,6 @@ const GAME = {
       ctx.fillText(t.str, t.x, t.y);
     }
     ctx.globalAlpha = 1;
-
-    this.renderHUD(ctx);
-    ctx.restore();
-
-    // crosshair (unshaken)
-    ctx.strokeStyle = 'rgba(255,255,255,0.8)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.arc(INPUT.mx, INPUT.my, 8, 0, U.TAU); ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(INPUT.mx - 12, INPUT.my); ctx.lineTo(INPUT.mx - 4, INPUT.my);
-    ctx.moveTo(INPUT.mx + 4, INPUT.my); ctx.lineTo(INPUT.mx + 12, INPUT.my);
-    ctx.moveTo(INPUT.mx, INPUT.my - 12); ctx.lineTo(INPUT.mx, INPUT.my - 4);
-    ctx.moveTo(INPUT.mx, INPUT.my + 4); ctx.lineTo(INPUT.mx, INPUT.my + 12);
-    ctx.stroke();
   },
 
   renderHubBg(ctx) {
@@ -694,6 +694,17 @@ const GAME = {
       ctx.fillText('Walk into a gate to choose your path →', this.W / 2, this.H - 14);
       ctx.textAlign = 'left';
     }
+
+    // crosshair (D-11: screen-space, outside camera transform)
+    ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(INPUT.mx, INPUT.my, 8, 0, U.TAU); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(INPUT.mx - 12, INPUT.my); ctx.lineTo(INPUT.mx - 4, INPUT.my);
+    ctx.moveTo(INPUT.mx + 4, INPUT.my); ctx.lineTo(INPUT.mx + 12, INPUT.my);
+    ctx.moveTo(INPUT.mx, INPUT.my - 12); ctx.lineTo(INPUT.mx, INPUT.my - 4);
+    ctx.moveTo(INPUT.mx, INPUT.my + 4); ctx.lineTo(INPUT.mx, INPUT.my + 12);
+    ctx.stroke();
   },
 };
 

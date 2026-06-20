@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Ready to execute
-stopped_at: Completed 02-03-PLAN.md
-last_updated: "2026-06-20T20:45:47.455Z"
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-06-20T20:46:39.629Z"
 progress:
   total_phases: 7
   completed_phases: 1
   total_plans: 7
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-06-17)
 ## Current Position
 
 Phase: 02 (asset-pipeline-sprite-system) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 
 ## Performance Metrics
 
@@ -48,6 +48,7 @@ Plan: 3 of 6
 *Updated after each plan completion*
 | Phase 02 P01 | 5 | 3 tasks | 6 files |
 | Phase 02 P03 | 25 | 3 tasks | 10 files |
+| Phase 02 P02 | 35 | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -67,6 +68,9 @@ Recent decisions affecting current work:
 - [Phase 02]: groupFramesByAnimation is a pure function with no Pixi dependency — runs headless and tested directly in smoke
 - [Phase 02]: pack-atlas.js duplicates groupFramesByAnimation locally — sprites.js is a browser global, not a CommonJS module; duplication is intentional to avoid import coupling
 - [Phase 02]: PROVENANCE.json checkpoint_license null until Plan 04 commercial-license gate — ART-06 gate passes vacuously with 0 atlases, fails loudly on orphan atlas
+- [Phase 02]: Bridge canvas at worldContainer z-index 0 — primitives form base layer below entity/fx containers for fallback fidelity
+- [Phase 02]: CAMERA.begin() takes no ctx arg — worldContainer transform persists, end() is a no-op
+- [Phase 02]: SPRITES.ready=false until first atlas loads — has(key) stays false until art files land in Plans 04-06
 
 ### Pending Todos
 
@@ -85,6 +89,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-20T20:45:47.451Z
-Stopped at: Completed 02-03-PLAN.md
+Last session: 2026-06-20T20:46:39.625Z
+Stopped at: Completed 02-02-PLAN.md
 Resume file: None

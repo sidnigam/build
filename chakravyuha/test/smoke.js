@@ -284,5 +284,11 @@ for (const w of ['gandiva', 'gada']) {
     r.errors.length === 0 && r.final === 'victory');
 }
 
+// ---------------- provenance completeness (ART-06) ----------------
+const { checkProvenance } = require('../tools/check-provenance.js');
+const prov = checkProvenance(path.join(__dirname, '..', 'assets', 'sprites'));
+check('provenance: every atlas has a PROVENANCE.json entry'
+  + (prov.missing.length ? ' — missing: ' + prov.missing.join(', ') : ''), prov.ok);
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

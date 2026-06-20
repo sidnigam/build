@@ -45,7 +45,13 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. All 4 biomes show illustrated backgrounds/floor tiles, and boon cards/HUD/overlays use Indian visual motifs
   4. Every generated asset has a provenance record (prompt, model, post-processing), and the Steam AI Content Survey is filled correctly for those assets
   5. `node test/smoke.js` stays green with sprites integrated
-**Plans**: TBD
+**Plans**: 6 plans
+- [ ] 02-01-PLAN.md — Bootstrap: package.json + headless-safe SPRITES global + smoke harness extensions (RENDER-02, RENDER-03)
+- [ ] 02-02-PLAN.md — PixiJS 8 renderer migration: CAMERA→Container, primitive bridge, sprite-or-fallback (RENDER-02, RENDER-03)
+- [ ] 02-03-PLAN.md — Atlas pack tool (animations injection) + provenance tooling + AI disclosure draft (ART-06, QA-04)
+- [ ] 02-04-PLAN.md — Checkpoint license gate + Abhimanyu reference/workflow lock + player art (ART-01, ART-06)
+- [ ] 02-05-PLAN.md — 8 enemy archetypes + 4 bosses with phase-2 art variants (ART-02, ART-03, ART-06)
+- [ ] 02-06-PLAN.md — 4 biome bg/floor sets + UI atlas + finalized provenance/disclosure (ART-04, ART-05, ART-06, QA-04)
 **UI hint**: yes
 
 ### Phase 3: VFX + Combat Juice
@@ -118,7 +124,7 @@ Phases execute in numeric order. After Phase 1, the rendering track (2 → 3 →
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Render Abstraction Seam | 1/1 | Complete   | 2026-06-19 |
-| 2. Asset Pipeline + Sprite System | 0/TBD | Not started | - |
+| 2. Asset Pipeline + Sprite System | 0/6 | Not started | - |
 | 3. VFX + Combat Juice | 0/TBD | Not started | - |
 | 4. Gameplay Depth | 0/TBD | Not started | - |
 | 5. Desktop Wrapper + Gamepad + Settings | 0/TBD | Not started | - |

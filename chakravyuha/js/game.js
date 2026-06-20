@@ -28,7 +28,17 @@ const GAME = {
 
   init() {
     this.canvas = document.getElementById('game');
-    this.ctx = this.canvas.getContext('2d');
+    this.ctx = this.canvas.getContext('2d');   // kept for legacy; visible surface is Pixi-owned after SPRITES.init
+    // Fire PixiJS bootstrap (async; frames before it resolves use D-11 primitive fallback)
+    SPRITES.init(this.canvas).then(() => {
+      // Build manifest from all expected atlas paths — missing files caught per-entry (non-fatal)
+      const manifest = [
+        { key: 'player', path: 'assets/sprites/player/player-atlas.json' },
+        ...Object.keys(DATA.ENEMIES).map(k => ({ key: k, path: `assets/sprites/enemies/${k}-atlas.json` })),
+        ...Object.keys(DATA.BOSSES).map(k => ({ key: k, path: `assets/sprites/bosses/${k}-atlas.json` })),
+      ];
+      SPRITES.load(manifest);
+    });
     this.bindInput();
     this.bindButtons();
     requestAnimationFrame(t => this.frame(t));

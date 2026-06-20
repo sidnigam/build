@@ -80,7 +80,7 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 
 // ---------------- load game scripts ----------------
-const files = ['utils.js', 'renderer.js', 'audio.js', 'data.js', 'meta.js', 'entities.js', 'rooms.js', 'ui.js', 'game.js'];
+const files = ['utils.js', 'renderer.js', 'sprites.js', 'audio.js', 'data.js', 'meta.js', 'entities.js', 'rooms.js', 'ui.js', 'game.js'];
 for (const f of files) {
   const src = fs.readFileSync(path.join(__dirname, '..', 'js', f), 'utf8');
   vm.runInContext(src, sandbox, { filename: f });
@@ -99,6 +99,12 @@ vm.runInContext(`
   UI.hub();
 `, sandbox);
 check('boot: reaches hub', vm.runInContext('GAME.state', sandbox) === 'hub');
+// ---------------- SPRITES headless-safe checks ----------------
+check('SPRITES loaded headless-safe (ready=false)', vm.runInContext('SPRITES.ready', sandbox) === false);
+check("SPRITES.has() false with zero assets (fallback path)", vm.runInContext("SPRITES.has('player')", sandbox) === false);
+const __spritesGrouped = vm.runInContext("JSON.stringify(SPRITES.groupFramesByAnimation(['player_run_1.png','player_idle_0.png','player_idle_1.png','player_run_0.png','player_run_2.png']))", sandbox);
+check('SPRITES groups & orders animation frames',
+  __spritesGrouped === JSON.stringify({idle:['player_idle_0.png','player_idle_1.png'], run:['player_run_0.png','player_run_1.png','player_run_2.png']}));
 
 // ---------------- data integrity ----------------
 vm.runInContext(`

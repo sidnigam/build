@@ -465,9 +465,18 @@ const GAME = {
   },
 
   renderEntities(ctx) {
-    // entities (dead enemies are not drawn)
-    for (const e of this.enemies) if (!e.dead) e.draw(ctx);
-    if (this.player) this.player.draw(ctx);
+    // Sprite-or-fallback: use PixiJS AnimatedSprite when atlas loaded (RENDER-03),
+    // otherwise fall back to entity.draw(ctx) primitives on the bridge canvas (RENDER-02 / D-11).
+    for (const e of this.enemies) {
+      if (e.dead) { if (e._pixiSprite) SPRITES.removeEntity(e); continue; }
+      const key = e.type;
+      if (SPRITES.has(key)) SPRITES.drawEntity(e);
+      else e.draw(ctx);                            // D-11: silent fallback to primitive
+    }
+    if (this.player) {
+      if (SPRITES.has('player')) { this.player.spriteKey = 'player'; SPRITES.drawEntity(this.player); }
+      else this.player.draw(ctx);
+    }
   },
 
   renderEffects(ctx) {

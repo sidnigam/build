@@ -1,0 +1,13 @@
+{
+  "name": "chakravyuha",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "node test/smoke.js",
+    "pack-atlas": "node tools/pack-atlas.js"
+  },
+  "devDependencies": {
+    "free-tex-packer-core": "0.3.8",
+    "sharp": "0.35.2"
+  }
+}

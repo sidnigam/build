@@ -340,17 +340,21 @@ const GAME = {
 
   // ---------------- render ----------------
   render() {
-    const ctx = this.ctx;
+    // Headless guard: SPRITES.bridgeCtx is undefined when init early-returned — no-op safely.
+    if (typeof SPRITES === 'undefined' || !SPRITES.bridgeCtx) return;
+    const ctx = SPRITES.bridgeCtx;               // primitives draw onto the hidden bridge canvas
     const inRun = this.state !== 'hub';
 
-    CAMERA.begin(ctx);
+    SPRITES.clearBridge();
+    CAMERA.begin();                              // drives worldContainer; no ctx argument (D-03)
     this.renderBackground(ctx);
     if (inRun) {
       this.renderEntities(ctx);
       this.renderEffects(ctx);
     }
-    CAMERA.end(ctx);
+    CAMERA.end();
     this.renderHUD(ctx);   // UI pass — OUTSIDE camera transform (D-10); includes crosshair (D-11)
+    SPRITES.uploadBridge();                      // re-upload bridge canvas to Pixi texture
   },
 
   renderBackground(ctx) {

@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Ready to execute
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-06-20T14:19:59.427Z"
+stopped_at: Completed 02-03-PLAN.md
+last_updated: "2026-06-20T20:45:47.455Z"
 progress:
   total_phases: 7
   completed_phases: 1
   total_plans: 7
-  completed_plans: 2
+  completed_plans: 3
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-06-17)
 ## Current Position
 
 Phase: 02 (asset-pipeline-sprite-system) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
 
 ## Performance Metrics
 
@@ -47,6 +47,7 @@ Plan: 2 of 6
 
 *Updated after each plan completion*
 | Phase 02 P01 | 5 | 3 tasks | 6 files |
+| Phase 02 P03 | 25 | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -64,6 +65,8 @@ Recent decisions affecting current work:
 - [Phase 02]: PixiJS NOT added to npm — vendored as pixi.min.js script tag in Plan 02 to preserve no-module-system pattern
 - [Phase 02]: Headless guard checks typeof navigator (not document) — smoke sandbox has document but no navigator per RESEARCH Pitfall 3
 - [Phase 02]: groupFramesByAnimation is a pure function with no Pixi dependency — runs headless and tested directly in smoke
+- [Phase 02]: pack-atlas.js duplicates groupFramesByAnimation locally — sprites.js is a browser global, not a CommonJS module; duplication is intentional to avoid import coupling
+- [Phase 02]: PROVENANCE.json checkpoint_license null until Plan 04 commercial-license gate — ART-06 gate passes vacuously with 0 atlases, fails loudly on orphan atlas
 
 ### Pending Todos
 
@@ -82,6 +85,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-20T14:19:59.423Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-06-20T20:45:47.451Z
+Stopped at: Completed 02-03-PLAN.md
 Resume file: None

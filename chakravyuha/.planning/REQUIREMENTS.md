@@ -20,7 +20,7 @@ Source: PROJECT.md + Research (STACK, FEATURES, ARCHITECTURE, PITFALLS)
 - [ ] **ART-03**: Boss sprites — all 4 bosses (Tataka, Ahiravana, Kumbhakarna, Yama) have large illustrated sprites with a phase-2 variant
 - [ ] **ART-04**: Environmental art — biome-specific background and floor tile sets for all 4 biomes (Naraka, Patala, Ranabhoomi, Vaitarani)
 - [ ] **ART-05**: UI art — styled boon card art, HUD elements, and overlay panels with Indian visual motifs
-- [ ] **ART-06**: AI provenance log — every generated asset has a record of prompt, model, and post-processing steps (IP defensibility + Steam AI survey)
+- [x] **ART-06**: AI provenance log — every generated asset has a record of prompt, model, and post-processing steps (IP defensibility + Steam AI survey)
 
 ### VFX — Visual Effects & Combat Feel
 
@@ -60,7 +60,7 @@ Source: PROJECT.md + Research (STACK, FEATURES, ARCHITECTURE, PITFALLS)
 - [ ] **QA-01**: GitHub Actions CI/CD — signed Windows + macOS binaries produced automatically on every git tag push
 - [ ] **QA-02**: Anonymous opt-in telemetry — single POST on run end recording weapon, biome reached, boons taken, run time
 - [ ] **QA-03**: Cultural review sign-off — 2–3 reviewers with Hindu mythology knowledge approve art and narrative tone before store page goes live
-- [ ] **QA-04**: Steam AI Content Survey completed correctly for all AI-generated visual assets
+- [x] **QA-04**: Steam AI Content Survey completed correctly for all AI-generated visual assets
 - [ ] **QA-05**: Steam Deck Verified checklist passed — controller-complete, glyphs correct, minimum 9px font at 1280×800, functional default framerate
 
 ---
@@ -101,7 +101,7 @@ Source: PROJECT.md + Research (STACK, FEATURES, ARCHITECTURE, PITFALLS)
 | ART-03 | Phase 2 | Pending |
 | ART-04 | Phase 2 | Pending |
 | ART-05 | Phase 2 | Pending |
-| ART-06 | Phase 2 | Pending |
+| ART-06 | Phase 2 | Complete |
 | VFX-01 | Phase 3 | Pending |
 | VFX-02 | Phase 3 | Pending |
 | VFX-03 | Phase 3 | Pending |
@@ -126,5 +126,5 @@ Source: PROJECT.md + Research (STACK, FEATURES, ARCHITECTURE, PITFALLS)
 | QA-01 | Phase 7 | Pending |
 | QA-02 | Phase 7 | Pending |
 | QA-03 | Phase 7 | Pending |
-| QA-04 | Phase 2 | Pending |
+| QA-04 | Phase 2 | Complete |
 | QA-05 | Phase 7 | Pending |

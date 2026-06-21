@@ -1,5 +1,10 @@
 {
   "schema_version": 1,
-  "checkpoint_license": null,
+  "checkpoint_license": {
+    "checkpoint": "SDXL 1.0",
+    "license": "CreativeML OpenRAIL++-M",
+    "commercial_use": true,
+    "confirmed_date": "2026-06-20"
+  },
   "assets": []
 }

@@ -1,0 +1,22 @@
+{
+  "tool": "ComfyUI (local, http://127.0.0.1:8188)",
+  "checkpoint": "sd_xl_base_1.0.safetensors",
+  "checkpoint_license": "CreativeML OpenRAIL++-M, commercial use permitted (see PROVENANCE.json)",
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "steps": 32,
+  "cfg": 7.0,
+  "width": 832,
+  "height": 1216,
+  "seed": 205981,
+  "positive_prompt": "full body shot, wide shot, distant camera framing, entire figure visible from head to feet, Abhimanyu, young heroic Kshatriya warrior prince from the Mahabharata, Indian mythology, warm brown skin, dark hair, front view, facing camera, standing pose, arms relaxed at sides, wearing a (red dhoti:1.3) wrapped traditionally around the waist and legs reaching the ankles, sandals on his feet, a brown rudraksha prayer mala necklace with wooden beads around his neck, a draped golden-embroidered uttariya shawl worn diagonally over one shoulder, ornate gold armor pauldrons and arm guards, gold jewelry and armbands, (small ornate gilded mask covering his eyes only:1.4), holding a straight double-edged sword with a jeweled hilt, Hades-adjacent illustrated 2D game character art, painterly digital illustration, strong readable silhouette, warm earth tones with divine golden accents, clean flat pale background, high detail linework, concept art, character reference sheet, single character, solo",
+  "negative_prompt": "pixel art, 3d render, photorealistic, blurry, extra limbs, deformed hands, asura, demon, monstrous, grotesque, western medieval armor, roman armor, samurai armor, low quality, watermark, text, signature, cropped, close-up, tight crop, portrait, bust, headshot, macro, zoomed in, multiple characters, collage, duplicate, extra views, floating objects, disembodied, sari, female, woman, white dhoti, cream dhoti, pale dhoti, broom, staff, cropped legs, cropped feet, no mask, bare face, unmasked, venetian mask, full face mask, oversized mask, huge mask",
+  "reference_sheet": "assets/sprites/reference/abhimanyu-reference.png",
+  "notes": [
+    "Base checkpoint sd_xl_base_1.0.safetensors chosen for confirmed commercial-safe OpenRAIL++-M license (see PROVENANCE.json checkpoint_license).",
+    "This is pure text-to-image (no ControlNet/IPAdapter installed) -- style/character consistency across future generations (player frames, enemies, bosses, biomes, UI) comes from reusing this same checkpoint + reusing this prompt's descriptive language/palette, not from image-conditioning on the reference PNG.",
+    "The approved reference image intentionally does NOT depict the gilded eye-mask on the main figure -- 5 generation rounds plus 1 inpaint attempt showed mask-presence and full-body/correct-limb framing consistently traded off against each other in this model at this resolution. A separate mask-study inset appears in the same image but is NOT face-consistent with the main figure (SDXL invented it as a 'concept sheet' embellishment, not a true multi-view of one identity) -- treat it as a loose design study only, not a locked identity reference.",
+    "Design decision: the mask becomes a separate in-game item/toggle with its own gameplay mechanics (see project backlog), not a fixed part of Abhimanyu's default appearance. Future frame-generation prompts should describe the mask explicitly (e.g. 'wearing a small ornate gilded mask over his eyes') only when generating the masked-form sprite variant.",
+    "Prior rounds (not kept): v1 single-image collage (weak Indian motifs, no distinct views); v2 three independent bust crops (back view failed -- came out front-facing); v3 front/side/back with mask emphasis 1.6 (overcorrected to extreme mask closeup) and a genuine side-profile bust (no legs); v4 front (correct dhoti/sword, cropped at thighs, no mask) + true side profile bust (no mask, no legs)."
+  ]
+}

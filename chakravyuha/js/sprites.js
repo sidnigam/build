@@ -214,7 +214,7 @@ const SPRITES = {
 
     const spr = new PIXI.AnimatedSprite(frames);
     spr.animationSpeed = 0.15;
-    spr.loop = (anim === 'idle' || anim === 'run');
+    spr.loop = (anim === 'idle' || anim === 'run' || anim === 'phase2');
     spr.anchor.set(0.5);   // overridden by drawEntity with the feet anchor from spriteLayout
     if (!spr.loop) {
       spr.onComplete = () => { spr.gotoAndStop(spr.totalFrames - 1); };
@@ -297,6 +297,7 @@ const SPRITES = {
    */
   movedSince(e) {
     const px = e._sprLastX, py = e._sprLastY;
+    e._sprVX = (px === undefined) ? 0 : (e.x - px);   // 02-07: signed x-velocity for run lean
     e._sprLastX = e.x;
     e._sprLastY = e.y;
     if (px === undefined || py === undefined) return false;
@@ -490,21 +491,48 @@ const SPRITES = {
   /**
    * endEntities() — destroy sprites of entities not drawn this frame
    * (replaced via G.enemies = [], or not rendered because we are in the hub).
+   * Dead entities are retired (fade out via tickDying) instead of destroyed outright (02-07).
    */
   endEntities() {
     for (const e of Array.from(this._tracked)) {
-      if (e._sprSeen !== this._frameId) this.removeEntity(e);
+      if (e._sprSeen !== this._frameId) {
+        if (e.dead === true) this.retireEntity(e);
+        else this.removeEntity(e);
+      }
+    }
+    // If tickDying was not called this frame (e.g. hub / no render pass), don't let dying sprites leak.
+    if (this._dying.length && this._dyingTick !== this._frameId) {
+      for (const item of this._dying) {
+        if (item.spr.parent) item.spr.parent.removeChild(item.spr);
+        if (typeof item.spr.destroy === 'function') item.spr.destroy();
+      }
+      this._dying.length = 0;
+    }
+    // Hide ghosts that were not refreshed this frame (e.g. player not sprite-rendered, or in the hub).
+    if (this._ghosts && this._ghosts.length && this._ghostFrame !== this._frameId) {
+      for (const g of this._ghosts) g.visible = false;
     }
   },
 
   clearEntities() {
     for (const e of Array.from(this._tracked)) this.removeEntity(e);
+    for (const item of this._dying) {
+      if (item.spr.parent) item.spr.parent.removeChild(item.spr);
+      if (typeof item.spr.destroy === 'function') item.spr.destroy();
+    }
+    this._dying.length = 0;
+    for (const g of this._ghosts || []) {
+      if (g.parent) g.parent.removeChild(g);
+      if (typeof g.destroy === 'function') g.destroy();
+    }
+    this._ghosts = [];
   },
 
   /**
    * drawEntity(e)
    * Maintains a per-entity PixiJS sprite cache (e._pixiSprite).
-   * Positions the sprite and swaps animation when entity state changes.
+   * Positions the sprite, swaps texture-anim when entity state changes, and composes the 02-07
+   * procedural transform (breathing/run/dash/attack/windup/hit-squash/spawn-fade/blink) on top.
    */
   drawEntity(e) {
     const key = e.spriteKey || e.type;
@@ -513,17 +541,19 @@ const SPRITES = {
     if (!sheet) return;
 
     const moved = this.movedSince(e);
-    const want = this.animForEntity(e, moved);
-    // Partial atlases (e.g. idle-only) fall back to idle instead of blinking out.
-    const animName = this.pickAnim(Object.keys(sheet.animations || {}), want);
-    if (!animName) {
+    const procState = this.procStateFor(e, moved);
+    // Partial atlases (e.g. idle-only, or single-pose 'idle'+'phase2') fall back to idle;
+    // 'windup' has no texture of its own, so it borrows the 'attack' texture (procAnim still poses it).
+    const texAnim = this.textureAnimFor(e, Object.keys(sheet.animations || {}), procState === 'windup' ? 'attack' : procState);
+    if (!texAnim) {
       if (e._pixiSprite) this._markSeen(e);   // keep whatever sprite exists; don't let the sweep kill it
       return;
     }
 
-    if (!e._pixiSprite || e._pixiAnim !== animName) {
+    if (!e._pixiSprite || e._pixiAnim !== texAnim) {
+      const oldAnim = e._pixiAnim;
       // Create the replacement FIRST; only swap if it succeeds (never leave the entity without a sprite).
-      const spr = this.createAnimatedSprite(key, animName);
+      const spr = this.createAnimatedSprite(key, texAnim);
       if (spr) {
         const old = e._pixiSprite;
         if (old) {
@@ -536,13 +566,18 @@ const SPRITES = {
           frameH: tex.orig.height,
           trimY: tex.trim ? tex.trim.y : 0,
           trimH: tex.trim ? tex.trim.height : 0,
+          trimW: tex.trim ? tex.trim.width : 0,
           heightPerR: this.heightPerRFor(key, e),
         });
         spr.anchor.set(0.5, layout.anchorY);
         e._pixiSprite = spr;
-        e._pixiAnim   = animName;
+        e._pixiAnim   = texAnim;
         e._pixiLayout = layout;
         this.entityContainer.addChild(spr);
+        // 02-07: boss phase transition (idle -> phase2) gets a one-shot white flash.
+        if (e.boss && oldAnim === 'idle' && texAnim === 'phase2') {
+          e._sprPhaseFlashT = this.CFG.PHASE_FLASH_DUR;
+        }
       } else if (!e._pixiSprite) {
         return;
       }
@@ -558,11 +593,150 @@ const SPRITES = {
       angle = Math.atan2(GAME.player.y - e.y, GAME.player.x - e.x);
     }
     e._sprFacing = this.facingSign(angle, e._sprFacing);
-    spr.scale.set(layout.scale * e._sprFacing, layout.scale);
+
+    // 02-07: procedural transform composition.
+    const G = (typeof GAME !== 'undefined') ? GAME : null;
+    const t = G ? G.time : 0;
+    const dt = G ? G.dt : 0;
+    if (e._sprPhase === undefined) e._sprPhase = (e.spriteKey === 'player') ? 0 : Math.random() * Math.PI * 2;
+    if (e._sprPhaseFlashT > 0) e._sprPhaseFlashT = Math.max(0, e._sprPhaseFlashT - dt);
+    const lean = Math.max(-1, Math.min(1, (e._sprVX || 0) / 6));
+    let attackT;
+    if (e.spriteKey === 'player') {
+      attackT = (e.swing && e.swing.t > 0) ? e.swing.t / this.CFG.SWING_DUR : 0;
+    } else {
+      attackT = procState === 'attack' ? 1 : 0;
+    }
+    const flash = this.flashAmount(e);
+    const pa = this.procAnim(procState, t, { phase: e._sprPhase, lean, hit: flash > 0 ? 1 : 0, attackT, asleep: !!e.asleep, stunned: e.stun > 0 });
+    const sp = this.spawnPose(e);
+
+    spr.scale.set(layout.scale * e._sprFacing * pa.sx * sp.scale, layout.scale * pa.sy * sp.scale);
     spr.x = e.x;
-    spr.y = e.y + layout.dy;   // feet at the bottom of the hitbox circle
+    spr.y = e.y + layout.dy + pa.dyR * e.r;
+    spr.rotation = pa.rot;
+    spr.alpha = sp.alpha * this.blinkAlpha(e, t);
     spr.zIndex = e.y;          // lower on screen draws in front
+    this._applyFlash(spr, flash);
     this._markSeen(e);
+
+    if (e.spriteKey === 'player') this.drawGhosts(e);
+  },
+
+  /**
+   * _applyFlash(spr, k) — lazily attaches/detaches a ColorMatrixFilter that lerps the sprite's
+   * color toward white by k (0..1); filters are only attached while flashing (near-zero per-frame
+   * cost otherwise). OFF=1: the vendored Pixi v8 GL fragment shader (color-matrix-filter) does
+   * `result.r = uColorMatrix[0]*color.r + ... + uColorMatrix[4]` against color already normalized
+   * to 0..1 (texture sample, alpha-unpremultiplied) — so the offset column adds directly, no /255.
+   */
+  _applyFlash(spr, k) {
+    if (!spr) return;
+    if (k > 0) {
+      try {
+        const PIXI = window.PIXI;
+        if (!spr._flashF) spr._flashF = new PIXI.ColorMatrixFilter();
+        const OFF = 1;
+        spr._flashF.matrix = [
+          1 - k, 0, 0, 0, k * OFF,
+          0, 1 - k, 0, 0, k * OFF,
+          0, 0, 1 - k, 0, k * OFF,
+          0, 0, 0, 1, 0,
+        ];
+        spr.filters = [spr._flashF];
+      } catch (err) {
+        if (!this._flashWarned) { console.warn('[SPRITES] ColorMatrixFilter unavailable — flash disabled', err); this._flashWarned = true; }
+        spr.filters = null;
+        spr.tint = 0xffffff;
+      }
+    } else if (spr.filters) {
+      spr.filters = null;
+    }
+  },
+
+  // ---------------- Death fade-out pool (02-07) ----------------
+  _dying: [],
+  _dyingTick: -1,
+
+  /**
+   * retireEntity(e) — instead of destroying a dead entity's sprite immediately, hand it to the
+   * dying pool so tickDying can shrink/fade it over CFG.DEATH_DUR. The entity stops being tracked.
+   */
+  retireEntity(e) {
+    const spr = e._pixiSprite;
+    if (spr) {
+      this._dying.push({ spr, t: 0, bx: spr.scale.x, by: spr.scale.y });
+    }
+    e._pixiSprite = null;
+    e._pixiAnim   = null;
+    e._pixiLayout = null;
+    this._tracked.delete(e);
+  },
+
+  /**
+   * tickDying(dt) — advances every retired sprite's death fade; destroys + removes on completion.
+   * Headless-safe: a no-op when _dying is empty (smoke tests never populate it).
+   */
+  tickDying(dt) {
+    this._dyingTick = this._frameId;
+    for (let i = this._dying.length - 1; i >= 0; i--) {
+      const item = this._dying[i];
+      item.t += dt;
+      const pose = this.deathPose(item.t);
+      const spr = item.spr;
+      spr.alpha = pose.alpha;
+      spr.scale.set(item.bx * pose.scale, item.by * pose.scale);
+      spr.rotation = pose.rot * Math.sign(item.bx || 1);
+      this._applyFlash(spr, item.t < 0.08 ? this.CFG.FLASH_MAX : 0);
+      if (pose.done) {
+        if (spr.parent) spr.parent.removeChild(spr);
+        if (typeof spr.destroy === 'function') spr.destroy();
+        this._dying.splice(i, 1);
+      }
+    }
+  },
+
+  // ---------------- Dash afterimages (02-07) ----------------
+  _ghosts: [],
+  _ghostFrame: -1,
+
+  /**
+   * drawGhosts(e) — pools tinted afterimage sprites along e.trail (player dash only). Ghosts are
+   * lazily created up to CFG.GHOST_MAX and hidden (not destroyed) once their trail point expires.
+   */
+  drawGhosts(e) {
+    if (!this.entityContainer || !e._pixiSprite) return;
+    const trail = e.trail || [];
+    const layout = e._pixiLayout;
+    const pts = trail.slice(Math.max(0, trail.length - this.CFG.GHOST_MAX));
+    if (!this._ghosts) this._ghosts = [];
+    try {
+      const PIXI = window.PIXI;
+      for (let i = 0; i < pts.length; i++) {
+        let g = this._ghosts[i];
+        if (!g) {
+          g = new PIXI.Sprite(e._pixiSprite.texture);
+          this.entityContainer.addChild(g);
+          this._ghosts[i] = g;
+        }
+        const pt = pts[i];
+        g.texture = e._pixiSprite.texture;
+        g.anchor.set(e._pixiSprite.anchor.x, e._pixiSprite.anchor.y);
+        g.scale.set(layout.scale * e._sprFacing, layout.scale);
+        g.x = pt.x;
+        g.y = pt.y + layout.dy;
+        g.alpha = this.ghostAlpha(pt.t);
+        g.tint = this.CFG.GHOST_TINT;
+        g.zIndex = pt.y - 0.5;
+        g.visible = true;
+      }
+      for (let i = pts.length; i < this._ghosts.length; i++) {
+        if (this._ghosts[i]) this._ghosts[i].visible = false;
+      }
+      this._ghostFrame = this._frameId;
+    } catch (err) {
+      if (!this._ghostWarned) { console.warn('[SPRITES] dash ghosts unavailable', err); this._ghostWarned = true; }
+    }
   },
 
   /**

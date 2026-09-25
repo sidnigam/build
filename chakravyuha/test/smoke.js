@@ -1032,6 +1032,38 @@ check("UI.applyRebind('dash','j') sets INPUT.bindings.dash", smr.rebindApplied);
 check('UI.applyRebind persists the binding via STORE', smr.rebindPersisted);
 check('Rebinding a move* action takes effect immediately for PAD.digitalMoveVector', smr.moveRebindWorks);
 
+// ---------------- Settings panel: full boot + open/close + AUDIO round-trip (05-03 Task 3) ----------------
+vm.runInContext(`
+globalThis.__settingsPanelResults = {};
+(function() {
+  const R = __settingsPanelResults;
+  let threw = null;
+  try {
+    META.load();
+    GAME.init();
+    UI.hub();
+    UI.settings('hub');
+    R.openHiddenFalse = document.getElementById('settings').classList.contains('hidden') === false;
+    UI.closeSettings();
+    R.closeHiddenTrue = document.getElementById('settings').classList.contains('hidden') === true;
+  } catch (e) { threw = e.message; }
+  R.noThrow = threw === null;
+  R.threwMsg = threw;
+
+  R.volDefault = AUDIO.getVolume('master') === 1;
+  AUDIO.setVolume('master', 0.3);
+  R.volSet = AUDIO.getVolume('master') === 0.3;
+  AUDIO.setVolume('master', 1); // reset so it doesn't affect anything after this point
+})();
+`, sandbox);
+const spr = vm.runInContext('__settingsPanelResults', sandbox);
+console.log('\n— Settings panel: full boot + open/close (05-03 Task 3) —');
+check('a full boot + UI.settings("hub") + UI.closeSettings() sequence throws nothing' + (spr.threwMsg ? ' — ' + spr.threwMsg : ''), spr.noThrow);
+check('UI.settings("hub") leaves #settings not hidden', spr.openHiddenFalse);
+check('UI.closeSettings() leaves #settings hidden', spr.closeHiddenTrue);
+check("AUDIO.getVolume('master') === 1 by default", spr.volDefault);
+check("AUDIO.setVolume('master', 0.3) -> AUDIO.getVolume('master') === 0.3", spr.volSet);
+
 // ---------------- provenance completeness (ART-06) ----------------
 const { checkProvenance } = require('../tools/check-provenance.js');
 const prov = checkProvenance(path.join(__dirname, '..', 'assets', 'sprites'));

@@ -123,6 +123,11 @@
   .a11y label { display: flex; align-items: center; gap: 10px; cursor: pointer; }
   .a11y input[type=range] { width: 160px; }
 </style>
+<style id="settings-css">
+  .settings-row { display: flex; justify-content: space-between; align-items: center;
+    width: 360px; margin: 8px 0; gap: 16px; color: var(--ash); font-size: 14px; letter-spacing: 0.06em; }
+  #settings-rebind-list .settings-row { font-size: 13px; }
+</style>
 </head>
 <body>
 <div id="wrap"><div id="stage">
@@ -144,6 +149,7 @@
       <button id="btn-shrine">PATH OF DHARMA</button>
       <button id="btn-armory">ARMORY</button>
       <button id="btn-codex">THE POTHI</button>
+      <button id="btn-hub-settings">SETTINGS</button>
     </div>
     <div class="narada" id="hub-narada"></div>
     <div class="hub-stats" id="hub-stats"></div>
@@ -215,6 +221,7 @@
     <div class="panel-h">PAUSED</div>
     <div class="menu-btns">
       <button id="btn-resume" class="primary">RESUME</button>
+      <button id="btn-pause-settings">SETTINGS</button>
       <button id="btn-quitrun">ABANDON THE ASCENT</button>
     </div>
     <div class="a11y">
@@ -225,6 +232,25 @@
       <label><input type="checkbox" id="set-hitstop"> Hitstop (freeze frames)</label>
       <label><input type="checkbox" id="set-reducedParticles"> Reduced particles</label>
     </div>
+  </div>
+
+  <!-- SETTINGS (Phase 5 Plan 3) -->
+  <div id="settings" class="panel solid hidden">
+    <div class="panel-h">SETTINGS</div>
+    <div class="settings-row"><label>Master Volume</label><input type="range" id="settings-master" min="0" max="100"></div>
+    <div class="settings-row"><label>Music Volume</label><input type="range" id="settings-music" min="0" max="100"></div>
+    <div class="settings-row"><label>SFX Volume</label><input type="range" id="settings-sfx" min="0" max="100"></div>
+    <div class="settings-row"><label>Fullscreen</label><button id="settings-fullscreen">TOGGLE</button></div>
+    <div class="settings-row"><label>Resolution</label>
+      <select id="settings-resolution">
+        <option value="auto">Auto</option><option value="1280x720">1280x720</option>
+        <option value="1600x900">1600x900</option><option value="1920x1080">1920x1080</option>
+      </select>
+    </div>
+    <div class="settings-row"><label>Screen Shake</label><input type="checkbox" id="settings-shake"></div>
+    <div class="settings-row"><label>Screen Flash</label><input type="checkbox" id="settings-flash"></div>
+    <div id="settings-rebind-list"></div>
+    <div class="back-row"><button id="btn-settings-back">BACK</button></div>
   </div>
 
   <div class="foot">open source · built with canvas &amp; vanilla js</div>

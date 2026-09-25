@@ -22,6 +22,13 @@ const SPRITES = {
   bridgeTexture: null,
   bridgeSprite: null,
 
+  // Second 2D canvas bridge for the HUD — lives in hudContainer (outside worldContainer),
+  // so camera shake never moves it and it always draws above entity sprites.
+  hudBridgeCanvas: null,
+  hudBridgeCtx: null,
+  hudBridgeTexture: null,
+  hudBridgeSprite: null,
+
   /**
    * async init(canvasEl)
    * D-05 headless guard: bail immediately if navigator is not defined
@@ -53,6 +60,7 @@ const SPRITES = {
       this.fxContainer     = new PIXI.Container();
       this.hudContainer    = new PIXI.Container();
 
+      this.entityContainer.sortableChildren = true;   // y-sort via zIndex = e.y (drawEntity)
       this.worldContainer.addChild(this.bgContainer, this.entityContainer, this.fxContainer);
       this.app.stage.addChild(this.worldContainer, this.hudContainer);
 
@@ -66,6 +74,18 @@ const SPRITES = {
       this.bridgeSprite  = new PIXI.Sprite(this.bridgeTexture);
       // Insert bridge sprite into worldContainer at z-index 0 (below entity/fx containers)
       this.worldContainer.addChildAt(this.bridgeSprite, 0);
+      // KNOWN LIMITATION: renderEffects primitives (projectiles, orbits, rings, damage text) draw on
+      // this world bridge and therefore render UNDER Pixi entity sprites. Accepted for now — the fx
+      // layer moves to Pixi (fxContainer) in a later plan.
+
+      // HUD bridge — separate canvas in hudContainer: unaffected by camera shake, above entities.
+      this.hudBridgeCanvas = document.createElement('canvas');
+      this.hudBridgeCanvas.width  = 1280;
+      this.hudBridgeCanvas.height = 720;
+      this.hudBridgeCtx = this.hudBridgeCanvas.getContext('2d');
+      this.hudBridgeTexture = PIXI.Texture.from(this.hudBridgeCanvas);
+      this.hudBridgeSprite  = new PIXI.Sprite(this.hudBridgeTexture);
+      this.hudContainer.addChild(this.hudBridgeSprite);
 
     } catch (e) {
       console.warn('SPRITES disabled — fallback to primitives', e);
@@ -79,6 +99,7 @@ const SPRITES = {
    */
   clearBridge() {
     if (this.bridgeCtx) this.bridgeCtx.clearRect(0, 0, 1280, 720);
+    if (this.hudBridgeCtx) this.hudBridgeCtx.clearRect(0, 0, 1280, 720);
   },
 
   /**
@@ -87,6 +108,7 @@ const SPRITES = {
    */
   uploadBridge() {
     if (this.bridgeTexture) this.bridgeTexture.source.update();
+    if (this.hudBridgeTexture) this.hudBridgeTexture.source.update();
   },
 
   /**
@@ -193,7 +215,7 @@ const SPRITES = {
     const spr = new PIXI.AnimatedSprite(frames);
     spr.animationSpeed = 0.15;
     spr.loop = (anim === 'idle' || anim === 'run');
-    spr.anchor.set(0.5);
+    spr.anchor.set(0.5);   // overridden by drawEntity with the feet anchor from spriteLayout
     if (!spr.loop) {
       spr.onComplete = () => { spr.gotoAndStop(spr.totalFrames - 1); };
     }
@@ -325,26 +347,60 @@ const SPRITES = {
   drawEntity(e) {
     const key = e.spriteKey || e.type;
     if (!key || !this.has(key) || !this.entityContainer) return;
+    const sheet = this.sheets[key];
+    if (!sheet) return;
 
-    const PIXI = window.PIXI;
-    const animName = this.animForEntity(e, this.movedSince(e));
-
-    if (!e._pixiSprite || e._pixiAnim !== animName) {
-      // Remove old sprite if animation changed
-      if (e._pixiSprite && e._pixiSprite.parent) {
-        e._pixiSprite.parent.removeChild(e._pixiSprite);
-        e._pixiSprite.destroy();
-      }
-      const spr = this.createAnimatedSprite(key, animName);
-      if (!spr) return;
-      e._pixiSprite = spr;
-      e._pixiAnim   = animName;
-      this.entityContainer.addChild(spr);
+    const moved = this.movedSince(e);
+    const want = this.animForEntity(e, moved);
+    // Partial atlases (e.g. idle-only) fall back to idle instead of blinking out.
+    const animName = this.pickAnim(Object.keys(sheet.animations || {}), want);
+    if (!animName) {
+      if (e._pixiSprite) this._markSeen(e);   // keep whatever sprite exists; don't let the sweep kill it
+      return;
     }
 
-    // Update position each frame
-    e._pixiSprite.x = e.x;
-    e._pixiSprite.y = e.y;
+    if (!e._pixiSprite || e._pixiAnim !== animName) {
+      // Create the replacement FIRST; only swap if it succeeds (never leave the entity without a sprite).
+      const spr = this.createAnimatedSprite(key, animName);
+      if (spr) {
+        const old = e._pixiSprite;
+        if (old) {
+          if (old.parent) old.parent.removeChild(old);
+          if (typeof old.destroy === 'function') old.destroy();
+        }
+        const tex = spr.textures[0];
+        const layout = this.spriteLayout({
+          r: e.r,
+          frameH: tex.orig.height,
+          trimY: tex.trim ? tex.trim.y : 0,
+          trimH: tex.trim ? tex.trim.height : 0,
+          heightPerR: this.heightPerRFor(key, e),
+        });
+        spr.anchor.set(0.5, layout.anchorY);
+        e._pixiSprite = spr;
+        e._pixiAnim   = animName;
+        e._pixiLayout = layout;
+        this.entityContainer.addChild(spr);
+      } else if (!e._pixiSprite) {
+        return;
+      }
+    }
+
+    const spr = e._pixiSprite;
+    const layout = e._pixiLayout;
+    // Facing: player faces aim; enemies/bosses face the player.
+    let angle = 0;
+    if (e.spriteKey === 'player' || e.type === undefined) {
+      angle = e.aim || 0;
+    } else if (typeof GAME !== 'undefined' && GAME.player) {
+      angle = Math.atan2(GAME.player.y - e.y, GAME.player.x - e.x);
+    }
+    e._sprFacing = this.facingSign(angle, e._sprFacing);
+    spr.scale.set(layout.scale * e._sprFacing, layout.scale);
+    spr.x = e.x;
+    spr.y = e.y + layout.dy;   // feet at the bottom of the hitbox circle
+    spr.zIndex = e.y;          // lower on screen draws in front
+    this._markSeen(e);
   },
 
   /**

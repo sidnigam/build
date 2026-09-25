@@ -28,7 +28,7 @@ const GAME = {
 
   init() {
     this.canvas = document.getElementById('game');
-    this.ctx = this.canvas.getContext('2d');   // kept for legacy; visible surface is Pixi-owned after SPRITES.init
+    this.ctx = null; // visible canvas is Pixi-owned (WebGL); a prior 2D context would block WebGL
     // Fire PixiJS bootstrap (async; frames before it resolves use D-11 primitive fallback)
     SPRITES.init(this.canvas).then(() => {
       // Build manifest from all expected atlas paths — missing files caught per-entry (non-fatal)
@@ -348,12 +348,16 @@ const GAME = {
     SPRITES.clearBridge();
     CAMERA.begin();                              // drives worldContainer; no ctx argument (D-03)
     this.renderBackground(ctx);
+    SPRITES.beginEntities();
     if (inRun) {
       this.renderEntities(ctx);
       this.renderEffects(ctx);
     }
+    // Sweep sprites whose entities were not drawn this frame (G.enemies = [] on room change, hub state).
+    SPRITES.endEntities();
     CAMERA.end();
-    this.renderHUD(ctx);   // UI pass — OUTSIDE camera transform (D-10); includes crosshair (D-11)
+    // UI pass — separate HUD bridge in hudContainer: unaffected by shake, above sprites (D-10/D-11)
+    this.renderHUD(SPRITES.hudBridgeCtx || ctx);
     SPRITES.uploadBridge();                      // re-upload bridge canvas to Pixi texture
   },
 

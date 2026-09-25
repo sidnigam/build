@@ -598,6 +598,55 @@ check(`VFX: timing — 600 full-pool updates < 3000ms (${vr.timingMs}ms)`, vr.ti
 check('VFX: reducedParticles scales burst count by 0.35 (min 1)', vr.reduced);
 check('VFX: render(ctx) does not throw in headless fallback', vr.render);
 
+// ---------------- SETTINGS: volume/resolution keys + STORE persistence (05-03) ----------------
+vm.runInContext(`
+globalThis.__settingsV2Results = {};
+(function() {
+  const R = __settingsV2Results;
+  SETTINGS.reset();
+
+  // 1. fresh defaults for the new keys
+  R.freshVolumeDefaults = SETTINGS.get('masterVolume') === 1 && SETTINGS.get('musicVolume') === 1 &&
+    SETTINGS.get('sfxVolume') === 1 && SETTINGS.get('resolutionMode') === 'auto';
+
+  // 2. clamping
+  SETTINGS.set('masterVolume', 5);
+  R.clampHigh = SETTINGS.get('masterVolume') === 1;
+  SETTINGS.set('masterVolume', -1);
+  R.clampLow = SETTINGS.get('masterVolume') === 0;
+  SETTINGS.reset();
+
+  // 3. resolutionMode enum validation
+  SETTINGS.set('resolutionMode', 'bogus');
+  R.resolutionRejected = SETTINGS.get('resolutionMode') === 'auto';
+  SETTINGS.set('resolutionMode', '1600x900');
+  R.resolutionAccepted = SETTINGS.get('resolutionMode') === '1600x900';
+  SETTINGS.reset();
+
+  // 4. persistence round-trip via STORE (not raw localStorage)
+  SETTINGS.set('masterVolume', 0.6);
+  SETTINGS._v = null;
+  R.volumePersist = SETTINGS.load().masterVolume === 0.6;
+  SETTINGS.reset();
+
+  // 5. Phase 3's existing keys are untouched by the extension
+  R.phase3Untouched = SETTINGS.get('screenShake') === true && SETTINGS.get('shakeIntensity') === 1 &&
+    SETTINGS.get('screenFlash') === true && SETTINGS.get('hitstop') === true &&
+    SETTINGS.get('reducedParticles') === false;
+
+  SETTINGS.reset();
+})();
+`, sandbox);
+const svr = vm.runInContext('__settingsV2Results', sandbox);
+console.log('\n— SETTINGS: volume/resolution + STORE persistence (05-03) —');
+check('SETTINGS: masterVolume/musicVolume/sfxVolume/resolutionMode defaults on fresh storage', svr.freshVolumeDefaults);
+check('SETTINGS: set(masterVolume, 5) clamps to 1', svr.clampHigh);
+check('SETTINGS: set(masterVolume, -1) clamps to 0', svr.clampLow);
+check("SETTINGS: set(resolutionMode, 'bogus') is rejected (unchanged)", svr.resolutionRejected);
+check("SETTINGS: set(resolutionMode, '1600x900') is accepted", svr.resolutionAccepted);
+check('SETTINGS: masterVolume persists across a reload via STORE', svr.volumePersist);
+check("SETTINGS: Phase 3's screenShake/shakeIntensity/screenFlash/hitstop/reducedParticles are unaffected", svr.phase3Untouched);
+
 // ---------------- Hitstop + CAMERA punch/kick/shake-scaling (Phase 3 Plan 2) ----------------
 vm.runInContext(`
 globalThis.__hitstopResults = {};

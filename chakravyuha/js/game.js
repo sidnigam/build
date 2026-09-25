@@ -38,6 +38,7 @@ const GAME = {
         ...Object.keys(DATA.BOSSES).map(k => ({ key: k, path: `assets/sprites/bosses/${k}-atlas.json` })),
       ];
       SPRITES.load(manifest);
+      SPRITES.loadTextures(DATA.BIOMES.map(b => ({ key: SPRITES.bgKeyFor(b), path: SPRITES.bgPathFor(b) })));   // biome backgrounds (02-10); missing -> primitive bg
     });
     this.bindInput();
     this.bindButtons();
@@ -366,15 +367,27 @@ const GAME = {
     const inRun = this.state !== 'hub';
     const biome = this.biome;
 
-    // background
-    ctx.fillStyle = inRun ? biome.bg : '#0b0710';
-    ctx.fillRect(-30, -30, this.W + 60, this.H + 60);
+    // background — illustrated biome image when loaded (02-10), else the primitive fill (D-11)
+    const hasBg = SPRITES.setBackground(inRun ? SPRITES.bgKeyFor(biome) : null);   // hub shows no biome bg
+    if (hasBg) {
+      ctx.fillStyle = 'rgba(0,0,0,' + SPRITES.CFG.BG_DIM_OUTER + ')';               // dim everything outside the arena
+      ctx.fillRect(-30, -30, this.W + 60, this.H + 60);
+    } else {
+      ctx.fillStyle = inRun ? biome.bg : '#0b0710';
+      ctx.fillRect(-30, -30, this.W + 60, this.H + 60);
+    }
 
     if (!inRun) { this.renderHubBg(ctx); return; }
 
     // arena floor
-    ctx.fillStyle = biome.floor;
-    ctx.fillRect(A.x, A.y, A.w, A.h);
+    if (hasBg) {
+      ctx.clearRect(A.x, A.y, A.w, A.h);                                              // undo the outer dim inside the arena
+      ctx.globalAlpha = SPRITES.CFG.BG_FLOOR_TINT; ctx.fillStyle = biome.floor;       // biome-tinted readability wash
+      ctx.fillRect(A.x, A.y, A.w, A.h); ctx.globalAlpha = 1;
+    } else {
+      ctx.fillStyle = biome.floor;
+      ctx.fillRect(A.x, A.y, A.w, A.h);
+    }
 
     // chakravyuha mandala floor pattern
     const cx = A.x + A.w / 2, cy = A.y + A.h / 2;
@@ -479,7 +492,7 @@ const GAME = {
     }
     const P = this.player;
     if (P) {
-      if (SPRITES.has('player')) { P.spriteKey = 'player'; this.renderPlayerSpriteExtras(ctx, P); SPRITES.drawEntity(P); }
+      if (SPRITES.has('player')) { P.spriteKey = 'player'; this.renderPlayerSpriteExtras(ctx, P); SPRITES.drawEntity(P); SPRITES.drawWeapon(P); }
       else P.draw(ctx);
     }
   },

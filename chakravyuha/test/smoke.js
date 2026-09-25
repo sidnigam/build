@@ -80,7 +80,7 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 
 // ---------------- load game scripts ----------------
-const files = ['utils.js', 'renderer.js', 'sprites.js', 'audio.js', 'data.js', 'meta.js', 'entities.js', 'rooms.js', 'ui.js', 'game.js', 'storage.js', 'gamepad.js'];
+const files = ['utils.js', 'settings.js', 'renderer.js', 'sprites.js', 'vfx.js', 'audio.js', 'data.js', 'meta.js', 'entities.js', 'rooms.js', 'ui.js', 'game.js', 'storage.js', 'gamepad.js'];
 for (const f of files) {
   const src = fs.readFileSync(path.join(__dirname, '..', 'js', f), 'utf8');
   vm.runInContext(src, sandbox, { filename: f });
@@ -468,6 +468,117 @@ for (const w of ['gandiva', 'gada']) {
   check(`${w}: victory, no errors` + (r.errors.length ? ' — ' + r.errors[0] : ''),
     r.errors.length === 0 && r.final === 'victory');
 }
+
+// ---------------- VFX + SETTINGS (Phase 3) ----------------
+vm.runInContext(`
+globalThis.__vfxResults = {};
+(function() {
+  const R = __vfxResults;
+
+  // 1. fresh defaults
+  localStorage.removeItem(SETTINGS.KEY);
+  SETTINGS._v = null;
+  SETTINGS.load();
+  R.defaults = SETTINGS.get('screenShake') === true && SETTINGS.get('shakeIntensity') === 1 &&
+    SETTINGS.get('screenFlash') === true && SETTINGS.get('hitstop') === true && SETTINGS.get('reducedParticles') === false;
+
+  // 2. persistence across reload
+  SETTINGS.set('screenFlash', false);
+  SETTINGS._v = null;
+  R.persist = SETTINGS.load().screenFlash === false;
+  SETTINGS.reset();
+
+  // 3. clamping / type rejection / unknown-key rejection
+  SETTINGS.set('shakeIntensity', 5);
+  const clampHigh = SETTINGS.get('shakeIntensity') === 1;
+  SETTINGS.set('shakeIntensity', -1);
+  const clampLow = SETTINGS.get('shakeIntensity') === 0;
+  const beforeType = SETTINGS.get('screenShake');
+  SETTINGS.set('screenShake', 'yes');
+  const typeRejected = SETTINGS.get('screenShake') === beforeType;
+  const beforeUnknown = JSON.stringify(SETTINGS.all());
+  SETTINGS.set('bogus', 1);
+  const unknownIgnored = JSON.stringify(SETTINGS.all()) === beforeUnknown;
+  R.clamp = clampHigh && clampLow && typeRejected && unknownIgnored;
+  SETTINGS.reset();
+
+  // 4. corrupt storage falls back to defaults
+  localStorage.setItem(SETTINGS.KEY, '{not json');
+  let corruptOk = true;
+  try {
+    const v = SETTINGS.load();
+    corruptOk = JSON.stringify(v) === JSON.stringify(SETTINGS.DEFAULTS);
+  } catch (e) { corruptOk = false; }
+  R.corrupt = corruptOk;
+  localStorage.removeItem(SETTINGS.KEY);
+  SETTINGS.reset();
+
+  // 5. pool identity + shape at load
+  R.poolLen = VFX.pool.length === VFX.CAP && VFX.CAP === 2048;
+  R.freshActive = VFX.stats().active === 0;
+
+  // 6. burst activates n particles, drains to 0 after their lifetime
+  VFX.burst(100, 100, '#ff0000', 10, 160, 0.4, 3);
+  R.burstActive = VFX.stats().active === 10;
+  for (let i = 0; i < 60; i++) VFX.update(1/60);
+  R.burstDrained = VFX.stats().active === 0;
+
+  // 7. flood: no growth, identity preserved, dropped>0, drains
+  const firstRef = VFX.pool[0], lastRef = VFX.pool[VFX.CAP - 1];
+  let floodOk = true;
+  for (let f = 0; f < 600; f++) {
+    VFX.burst(50, 50, '#ffffff', 100, 100, 2, 3);
+    VFX.update(1/60);
+    if (VFX.stats().active > VFX.CAP) floodOk = false;
+  }
+  const lenSame = VFX.pool.length === VFX.CAP;
+  const identitySame = VFX.pool[0] === firstRef && VFX.pool[VFX.CAP - 1] === lastRef;
+  const droppedGtZero = VFX.stats().dropped > 0;
+  for (let f = 0; f < 120; f++) VFX.update(1/60);
+  const drainedAfterFlood = VFX.stats().active === 0;
+  R.flood = floodOk && lenSame && identitySame && droppedGtZero && drainedAfterFlood;
+
+  // 8. timing: 600 update() calls over a full pool < 3000ms
+  for (let i = 0; i < VFX.CAP; i++) VFX.burst(10, 10, '#fff', 1, 1, 20, 1);
+  const t0 = Date.now();
+  for (let i = 0; i < 600; i++) VFX.update(1/60);
+  R.timingMs = Date.now() - t0;
+  R.timingOk = R.timingMs < 3000;
+  for (let i = 0; i < 1200; i++) VFX.update(1/60); // drain fully
+
+  // 9. reducedParticles scales burst count by 0.35 (min 1)
+  SETTINGS.set('reducedParticles', true);
+  VFX.burst(20, 20, '#fff', 20, 100, 0.4, 3);
+  R.reduced = VFX.stats().active === Math.ceil(20 * 0.35);
+  for (let i = 0; i < 60; i++) VFX.update(1/60);
+  SETTINGS.set('reducedParticles', false);
+
+  // 10. render(ctx) does not throw in headless fallback path
+  VFX.burst(5, 5, '#fff', 5, 50, 0.4, 2);
+  let renderOk = true;
+  try {
+    VFX.render(document.getElementById('__vfxcv').getContext('2d'));
+  } catch (e) { renderOk = false; }
+  R.render = renderOk;
+  for (let i = 0; i < 60; i++) VFX.update(1/60);
+
+  SETTINGS.reset();
+})();
+`, sandbox);
+const vr = vm.runInContext('__vfxResults', sandbox);
+console.log('\n— VFX + SETTINGS (Phase 3) —');
+check('SETTINGS: defaults on fresh storage', vr.defaults);
+check('SETTINGS: set() persists across reload', vr.persist);
+check('SETTINGS: clamps numbers, rejects wrong types/unknown keys', vr.clamp);
+check('SETTINGS: corrupt JSON falls back to defaults without throwing', vr.corrupt);
+check('VFX: pool.length === CAP === 2048 at load', vr.poolLen);
+check('VFX: stats().active === 0 fresh', vr.freshActive);
+check('VFX: burst() activates n particles', vr.burstActive);
+check('VFX: particles drain to 0 after their lifetime', vr.burstDrained);
+check('VFX: flood past CAP — no growth, identity preserved, dropped>0, drains', vr.flood);
+check(`VFX: timing — 600 full-pool updates < 3000ms (${vr.timingMs}ms)`, vr.timingOk);
+check('VFX: reducedParticles scales burst count by 0.35 (min 1)', vr.reduced);
+check('VFX: render(ctx) does not throw in headless fallback', vr.render);
 
 // ---------------- provenance completeness (ART-06) ----------------
 const { checkProvenance } = require('../tools/check-provenance.js');

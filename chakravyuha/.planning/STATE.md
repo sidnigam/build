@@ -92,8 +92,15 @@ None yet.
 - [Phase 6]: Steam overlay on macOS is a known-broken combo with steamworks.js; steamworks-ffi-node fallback is unverified on this build. Likely needs /gsd:research-phase.
 - [Phase 7]: macOS hardened-runtime entitlements for Steamworks dylibs are undocumented; bake into CI early, not launch week. Likely needs /gsd:research-phase.
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Status | Directory |
+|---|-------------|------|--------|--------|-----------|
+| 260924-tka | Harden sprite runtime and pack idle player atlas for in-game scale check | 2026-09-25 | 622f143 | Needs Review (browser check deferred by user) | [260924-tka-harden-sprite-runtime-and-pack-idle-play](./quick/260924-tka-harden-sprite-runtime-and-pack-idle-play/) |
+
 ## Session Continuity
 
-Last session: 2026-09-24
+Last session: 2026-09-25
+Last activity: 2026-09-25 - Completed quick task 260924-tka (browser verify pending)
 Stopped at: 02-04 paused at task 2/2 — idle frames only (4/4); quick-260924-tka hardened sprite runtime + packed idle atlas
 Resume file: .planning/HANDOFF.json

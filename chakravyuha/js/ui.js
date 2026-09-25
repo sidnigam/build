@@ -44,6 +44,7 @@ const UI = {
 
   // ---------- hub (the Banyan at the Edge of Worlds) ----------
   hub() {
+    this.bindSettingsEntryPoints();
     this.hideAll();
     GAME.state = 'hub';
     AUDIO.stopDrone();
@@ -321,5 +322,98 @@ const UI = {
   resume() {
     this.hide('pause');
     GAME.state = GAME.prePause || 'combat';
+  },
+
+  // ---------- settings (Phase 5 Plan 3) ----------
+  settings(returnTo) {
+    GAME._settingsReturn = returnTo; // 'hub' | 'pause'
+    this.renderSettings();
+    this.show('settings');
+  },
+
+  closeSettings() {
+    this.hide('settings');
+    if (GAME._settingsReturn === 'pause') this.show('pause');
+    else this.hub();
+  },
+
+  renderSettings() {
+    const master = this.el('settings-master');
+    master.value = Math.round(AUDIO.getVolume('master') * 100);
+    master.oninput = e => AUDIO.setVolume('master', e.target.value / 100);
+
+    const music = this.el('settings-music');
+    music.value = Math.round(AUDIO.getVolume('music') * 100);
+    music.oninput = e => AUDIO.setVolume('music', e.target.value / 100);
+
+    const sfx = this.el('settings-sfx');
+    sfx.value = Math.round(AUDIO.getVolume('sfx') * 100);
+    sfx.oninput = e => AUDIO.setVolume('sfx', e.target.value / 100);
+
+    const fs = this.el('settings-fullscreen');
+    fs.onclick = () => this.toggleFullscreen();
+
+    const res = this.el('settings-resolution');
+    res.value = SETTINGS.get('resolutionMode');
+    res.onchange = e => SETTINGS.set('resolutionMode', e.target.value);
+
+    const shake = this.el('settings-shake');
+    shake.checked = !!SETTINGS.get('screenShake');
+    shake.onchange = e => SETTINGS.set('screenShake', !!e.target.checked);
+
+    const flash = this.el('settings-flash');
+    flash.checked = !!SETTINGS.get('screenFlash');
+    flash.onchange = e => SETTINGS.set('screenFlash', !!e.target.checked);
+
+    const list = this.el('settings-rebind-list');
+    list.innerHTML = '';
+    const actions = ['moveUp', 'moveDown', 'moveLeft', 'moveRight', 'dash', 'cast', 'special', 'pause'];
+    for (const action of actions) {
+      const row = document.createElement('div');
+      row.className = 'settings-row';
+      const label = document.createElement('label');
+      label.textContent = action;
+      const btn = document.createElement('button');
+      btn.textContent = (INPUT.bindings[action] || []).join('/').toUpperCase() || '—';
+      btn.onclick = () => this.startRebind(action);
+      row.appendChild(label);
+      row.appendChild(btn);
+      list.appendChild(row);
+    }
+  },
+
+  toggleFullscreen() {
+    if (window.chakraNative && chakraNative.isDesktop) {
+      chakraNative.setFullscreen(!chakraNative.getFullscreen());
+    } else if (typeof document !== 'undefined' && document.documentElement && typeof document.documentElement.requestFullscreen === 'function') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else if (document.exitFullscreen) document.exitFullscreen();
+    }
+  },
+
+  startRebind(action) {
+    this._rebindAction = action;
+    const onKey = (e) => {
+      window.removeEventListener('keydown', onKey);
+      this.applyRebind(action, e.key.toLowerCase());
+      this._rebindAction = null;
+      this.renderSettings();
+    };
+    window.addEventListener('keydown', onKey, { once: true });
+  },
+
+  applyRebind(action, key) {
+    if (!INPUT.bindings[action]) return false;
+    INPUT.bindings[action] = [key];
+    STORE.set('chakravyuha_bindings_v1', INPUT.bindings);
+    return true;
+  },
+
+  bindSettingsEntryPoints() {
+    if (this._settingsBound) return;
+    this._settingsBound = true;
+    this.el('btn-hub-settings').addEventListener('click', () => { AUDIO.sfx('click'); this.settings('hub'); });
+    this.el('btn-pause-settings').addEventListener('click', () => { AUDIO.sfx('click'); this.settings('pause'); });
+    this.el('btn-settings-back').addEventListener('click', () => { AUDIO.sfx('click'); this.closeSettings(); });
   },
 };

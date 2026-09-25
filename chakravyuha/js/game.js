@@ -53,6 +53,7 @@ const GAME = {
 
   // ---------------- input ----------------
   bindInput() {
+    Object.assign(INPUT.bindings, STORE.get('chakravyuha_bindings_v1', {}));
     const cv = this.canvas;
     const firstTouch = () => { AUDIO.init(); AUDIO.resume(); };
     window.addEventListener('pointerdown', firstTouch, { once: true });

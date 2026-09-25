@@ -961,6 +961,77 @@ vm.runInContext(`
 check('VFX.renderDebug(ctx) does not throw when VFX.debug is on', vm.runInContext('__debugOverlayOk', sandbox));
 vm.runInContext('for (let i = 0; i < 600; i++) VFX.update(1/60);', sandbox); // drain fully
 
+// ---------------- Settings menu: AUDIO volume hooks + rebinding (05-03 Task 2) ----------------
+vm.runInContext(`
+globalThis.__settingsMenuResults = {};
+(function() {
+  const R = __settingsMenuResults;
+  SETTINGS.reset();
+
+  // 1. AUDIO.getVolume reflects SETTINGS
+  R.getMaster = AUDIO.getVolume('master') === 1;
+  R.getMusic = AUDIO.getVolume('music') === 1;
+  R.getSfx = AUDIO.getVolume('sfx') === 1;
+
+  // 2. AUDIO.setVolume updates SETTINGS and doesn't throw (headless -> ctx is null)
+  let setThrew = false;
+  try { AUDIO.setVolume('sfx', 0.4); } catch (e) { setThrew = true; }
+  R.setNoThrow = !setThrew;
+  R.setPersists = SETTINGS.get('sfxVolume') === 0.4;
+
+  // 3. AUDIO.setVolume with a bogus kind is a safe no-op
+  let bogusThrew = false;
+  try { AUDIO.setVolume('bogus', 0.4); } catch (e) { bogusThrew = true; }
+  R.bogusNoThrow = !bogusThrew;
+
+  SETTINGS.reset();
+
+  // 4. UI.settings('hub') / UI.closeSettings() from the hub
+  UI.hub();
+  UI.settings('hub');
+  R.hubSettingsShown = GAME.state === 'hub' && document.getElementById('settings').classList.contains('hidden') === false;
+  UI.closeSettings();
+  R.hubSettingsClosed = document.getElementById('settings').classList.contains('hidden') === true;
+
+  // 5. UI.settings('pause') / UI.closeSettings() from pause
+  GAME.state = 'combat';
+  UI.pause();
+  UI.settings('pause');
+  R.pauseSettingsShown = GAME.state === 'paused' && document.getElementById('settings').classList.contains('hidden') === false;
+  UI.closeSettings();
+  R.pauseSettingsClosed = document.getElementById('settings').classList.contains('hidden') === true &&
+    GAME.state === 'paused' && document.getElementById('pause').classList.contains('hidden') === false;
+  UI.resume();
+
+  // 6. UI.applyRebind mutates INPUT.bindings live and persists via STORE
+  UI.applyRebind('dash', 'j');
+  R.rebindApplied = JSON.stringify(INPUT.bindings.dash) === JSON.stringify(['j']);
+  R.rebindPersisted = JSON.stringify(STORE.get('chakravyuha_bindings_v1', {}).dash) === JSON.stringify(['j']);
+
+  // 7. rebinding a move action takes effect immediately for movement
+  UI.applyRebind('moveUp', 'i');
+  R.moveRebindWorks = JSON.stringify(PAD.digitalMoveVector({ i: true }, INPUT.bindings)) === JSON.stringify({ dx: 0, dy: -1 });
+
+  // restore defaults for the rest of the suite
+  INPUT.bindings.dash = [' '];
+  INPUT.bindings.moveUp = ['w', 'arrowup'];
+  STORE.set('chakravyuha_bindings_v1', INPUT.bindings);
+  UI.hub();
+})();
+`, sandbox);
+const smr = vm.runInContext('__settingsMenuResults', sandbox);
+console.log('\n— Settings menu: AUDIO volume hooks + rebinding (05-03) —');
+check("AUDIO.getVolume('master'/'music'/'sfx') reflects SETTINGS defaults", smr.getMaster && smr.getMusic && smr.getSfx);
+check('AUDIO.setVolume does not throw headless (ctx is null) and persists to SETTINGS', smr.setNoThrow && smr.setPersists);
+check('AUDIO.setVolume with an unknown kind is a safe no-op', smr.bogusNoThrow);
+check("UI.settings('hub') shows the panel without leaving GAME.state='hub'", smr.hubSettingsShown);
+check('UI.closeSettings() hides the settings panel (returned to hub)', smr.hubSettingsClosed);
+check("UI.settings('pause') shows the panel while GAME.state='paused'", smr.pauseSettingsShown);
+check('UI.closeSettings() re-shows #pause and leaves GAME.state="paused"', smr.pauseSettingsClosed);
+check("UI.applyRebind('dash','j') sets INPUT.bindings.dash", smr.rebindApplied);
+check('UI.applyRebind persists the binding via STORE', smr.rebindPersisted);
+check('Rebinding a move* action takes effect immediately for PAD.digitalMoveVector', smr.moveRebindWorks);
+
 // ---------------- provenance completeness (ART-06) ----------------
 const { checkProvenance } = require('../tools/check-provenance.js');
 const prov = checkProvenance(path.join(__dirname, '..', 'assets', 'sprites'));

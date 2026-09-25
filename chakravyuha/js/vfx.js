@@ -112,6 +112,16 @@ const VFX = {
     fn.call(this, x, y, angle, color);
   },
 
+  // ---------------- hitstop (VFX-03, D-09..D-11) ----------------
+  // Converts frames (@60fps) to a duration in GAME.hitstop. Never stacks additively (max, not add).
+  // Honours the SETTINGS.hitstop opt-out and the anti-chain grace window (GAME.hitstopCd).
+  hitstop(frames) {
+    if (typeof SETTINGS !== 'undefined' && SETTINGS.get('hitstop') === false) return;
+    if (typeof GAME === 'undefined') return;
+    if (GAME.hitstopCd > 0 && frames < 8) return;
+    GAME.hitstop = Math.max(GAME.hitstop || 0, frames / 60);
+  },
+
   // ---------------- simulation ----------------
   update(dt) {
     if (this.stress) {

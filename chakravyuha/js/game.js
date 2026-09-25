@@ -20,6 +20,7 @@ const GAME = {
   state: 'hub',           // hub | combat | cleared | choosing | paused | dead | victory
   time: 0, dt: 0, runTime: 0,
   shake: 0,
+  hitstop: 0, hitstopCd: 0,   // VFX-03: freeze-frame gating (D-09/D-10)
 
   // run state
   player: null, biome: DATA.BIOMES[0], biomeIdx: 0, roomIdx: 0, totalRooms: 0,
@@ -123,6 +124,8 @@ const GAME = {
     this.player.y = this.arena.y + this.arena.h / 2;
     this.runTime = 0; this.kills = 0; this.totalRooms = 0;
     this.bossRewarded = false;
+    this.hitstop = 0; this.hitstopCd = 0;
+    CAMERA.resetFx();
     META.runs++; META.save();
     ROOMS.enterBiome(0);
   },
@@ -170,11 +173,22 @@ const GAME = {
     this.time += this.dt;
 
     if (this.playing()) this.update(this.dt);
+    CAMERA.update(this.dt);       // real dt: keeps animating through hitstop/paused/choosing states
     this.render();
     requestAnimationFrame(tt => this.frame(tt));
   },
 
   update(dt) {
+    // VFX-03: hitstop freezes simulation but not render/UI/camera. Never blocks forward
+    // progress indefinitely — hitstopCd gates re-triggering for a short grace window.
+    if (this.hitstop > 0) {
+      this.hitstop -= dt;
+      this.shake = Math.max(0, this.shake - dt * 60);
+      if (this.hitstop <= 0) { this.hitstop = 0; this.hitstopCd = 0.06; }
+      return;
+    }
+    U.cool(this, 'hitstopCd', dt);
+
     this.runTime += dt;
     U.cool(this, 'bossHurtT', dt);
     this.shake = Math.max(0, this.shake - dt * 60);

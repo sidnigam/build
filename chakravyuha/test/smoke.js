@@ -597,6 +597,95 @@ check(`VFX: timing — 600 full-pool updates < 3000ms (${vr.timingMs}ms)`, vr.ti
 check('VFX: reducedParticles scales burst count by 0.35 (min 1)', vr.reduced);
 check('VFX: render(ctx) does not throw in headless fallback', vr.render);
 
+// ---------------- Hitstop + CAMERA punch/kick/shake-scaling (Phase 3 Plan 2) ----------------
+vm.runInContext(`
+globalThis.__hitstopResults = {};
+(function() {
+  const R = __hitstopResults;
+  SETTINGS.reset();
+  GAME.startRun();
+  const e = GAME.enemies.find(x => !x.dead);
+
+  // 1. hitstop is a max, not additive
+  GAME.hitstop = 0; GAME.hitstopCd = 0;
+  VFX.hitstop(4);
+  const afterFirst = GAME.hitstop;
+  VFX.hitstop(3);
+  R.hitstopMax = Math.abs(afterFirst - 4/60) < 1e-9 && Math.abs(GAME.hitstop - 4/60) < 1e-9;
+
+  // 2. freezes runTime + enemy movement, still decays shake
+  const rtBefore = GAME.runTime;
+  const ex = e ? e.x : 0, ey = e ? e.y : 0;
+  GAME.shake = 10;
+  GAME.update(1/60);
+  R.hitstopFreezes = GAME.runTime === rtBefore && (!e || (e.x === ex && e.y === ey)) && GAME.shake < 10;
+
+  while (GAME.hitstop > 0) GAME.update(1/60);
+  R.hitstopCdSet = GAME.hitstopCd > 0;
+
+  // 3. grace window ignores small requests, honours big ones
+  VFX.hitstop(4);
+  R.cdIgnoresSmall = GAME.hitstop === 0;
+  VFX.hitstop(10);
+  R.cdHonoursBig = Math.abs(GAME.hitstop - 10/60) < 1e-9;
+  while (GAME.hitstop > 0) GAME.update(1/60);
+  GAME.hitstopCd = 0;
+
+  // 4. SETTINGS.hitstop=false is a full no-op
+  SETTINGS.set('hitstop', false);
+  GAME.hitstop = 0;
+  VFX.hitstop(8);
+  R.settingOff = GAME.hitstop === 0;
+  SETTINGS.set('hitstop', true);
+
+  // 5. CAMERA punch/zoom pulse
+  CAMERA.resetFx();
+  CAMERA.punch(100, 100, 0.05, 0.2);
+  CAMERA.update(0.02);
+  const zoomDuring = CAMERA.zoomPulse();
+  CAMERA.update(0.3);
+  R.punchZoom = zoomDuring > 1 && CAMERA.zoom === 1;
+
+  // 6. shakeScale gating (screenShake off = full no-op; intensity scales)
+  CAMERA.resetFx();
+  SETTINGS.set('screenShake', false);
+  CAMERA.punch(50, 50, 0.05, 0.2);
+  const punchNoop = CAMERA.punchT === 0;
+  CAMERA.kick(5, 5);
+  const kickNoop = CAMERA.kx === 0 && CAMERA.ky === 0;
+  const scaleOff = CAMERA.shakeScale() === 0;
+  SETTINGS.set('screenShake', true);
+  SETTINGS.set('shakeIntensity', 0.5);
+  const scaleHalf = CAMERA.shakeScale() === 0.5;
+  R.shakeScale = punchNoop && kickNoop && scaleOff && scaleHalf;
+  SETTINGS.reset();
+  CAMERA.resetFx();
+
+  // 7. kill-spam guarantees forward progress under hitstop chaining.
+  // Real kill/hit call sites (hitEnemy/killEnemy) live INSIDE GAME.update()'s simulation
+  // section, so they cannot fire while update() is short-circuited by hitstop — mirror
+  // that here by only requesting a new hitstop when the sim actually ran this frame.
+  GAME.startRun();
+  const rt0 = GAME.runTime;
+  for (let f = 0; f < 600; f++) {
+    if (GAME.hitstop <= 0) VFX.hitstop(4);
+    GAME.update(1/60);
+  }
+  R.killSpamProgress = (GAME.runTime - rt0) >= 4; // >= 40% of the 10s simulated
+  GAME.hitstop = 0; GAME.hitstopCd = 0;
+})();
+`, sandbox);
+const hr = vm.runInContext('__hitstopResults', sandbox);
+console.log('\n— Hitstop + CAMERA punch/kick/shake (Phase 3) —');
+check('VFX.hitstop() sets GAME.hitstop as a max, not additive', hr.hitstopMax);
+check('Hitstop freezes runTime/enemy movement, still decays shake', hr.hitstopFreezes);
+check('Hitstop end sets GAME.hitstopCd grace window', hr.hitstopCdSet);
+check('Grace window ignores sub-8-frame requests, honours >=8-frame requests', hr.cdIgnoresSmall && hr.cdHonoursBig);
+check('SETTINGS.hitstop=false makes VFX.hitstop() a no-op', hr.settingOff);
+check('CAMERA.punch() pulses zoom > 1 then decays back to 1', hr.punchZoom);
+check('CAMERA.shakeScale() gates punch/kick to no-op when screenShake=false, scales with shakeIntensity', hr.shakeScale);
+check('Kill-spam hitstop chaining still guarantees forward progress', hr.killSpamProgress);
+
 // ---------------- provenance completeness (ART-06) ----------------
 const { checkProvenance } = require('../tools/check-provenance.js');
 const prov = checkProvenance(path.join(__dirname, '..', 'assets', 'sprites'));

@@ -116,6 +116,12 @@
 
   .foot { position: absolute; bottom: 8px; right: 14px; z-index: 5; font-size: 11px;
     opacity: 0.35; color: var(--ash); }
+
+  .a11y { margin-top: 26px; display: flex; flex-direction: column; gap: 8px;
+    font-size: 14px; letter-spacing: 0.08em; color: #e8dcc0; }
+  .a11y-h { color: var(--gold); font-size: 13px; letter-spacing: 0.2em; }
+  .a11y label { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .a11y input[type=range] { width: 160px; }
 </style>
 </head>
 <body>
@@ -210,6 +216,14 @@
     <div class="menu-btns">
       <button id="btn-resume" class="primary">RESUME</button>
       <button id="btn-quitrun">ABANDON THE ASCENT</button>
+    </div>
+    <div class="a11y">
+      <div class="a11y-h">ACCESSIBILITY</div>
+      <label><input type="checkbox" id="set-screenShake"> Screen shake &amp; camera punch</label>
+      <label>Shake intensity <input type="range" id="set-shakeIntensity" min="0" max="100" step="5"></label>
+      <label><input type="checkbox" id="set-screenFlash"> Screen flash</label>
+      <label><input type="checkbox" id="set-hitstop"> Hitstop (freeze frames)</label>
+      <label><input type="checkbox" id="set-reducedParticles"> Reduced particles</label>
     </div>
   </div>
 

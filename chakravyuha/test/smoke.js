@@ -850,6 +850,39 @@ check('VFX.ambient(unknown biome) is a no-op', ar.unknownNoop);
 check('VFX.ambientActive never exceeds 15% of CAP, even at 10x rate for 3000 frames', ar.ambientCapped);
 check('reducedParticles lowers steady-state ambientActive by at least half', ar.reducedHalves);
 
+// ---------------- Accessibility toggles / SETTINGS.bindDom (Phase 3 Plan 3 Task 2) ----------------
+vm.runInContext(`
+globalThis.__domResults = {};
+(function() {
+  const R = __domResults;
+  SETTINGS.reset();
+
+  SETTINGS.set('screenFlash', false);
+  SETTINGS.bindDom();
+  R.syncedFlash = document.getElementById('set-screenFlash').checked === false;
+  R.syncedShake = document.getElementById('set-screenShake').checked === true;
+  R.syncedIntensity = document.getElementById('set-shakeIntensity').value === '100';
+
+  SETTINGS.applyFromDom({ id: 'set-hitstop', checked: false });
+  R.applyBoolean = SETTINGS.get('hitstop') === false;
+  SETTINGS.applyFromDom({ id: 'set-shakeIntensity', value: '40' });
+  R.applyNumber = SETTINGS.get('shakeIntensity') === 0.4;
+
+  let bindThrew = false;
+  try { SETTINGS.applyFromDom({ id: 'set-does-not-exist', checked: true }); } catch (e) { bindThrew = true; }
+  R.missingElOk = !bindThrew;
+
+  SETTINGS.reset();
+})();
+`, sandbox);
+const dr = vm.runInContext('__domResults', sandbox);
+console.log('\n— Accessibility toggles / SETTINGS.bindDom (Phase 3) —');
+check('SETTINGS.bindDom() syncs checkbox state from SETTINGS', dr.syncedFlash && dr.syncedShake);
+check('SETTINGS.bindDom() syncs the shake-intensity slider as a percent string', dr.syncedIntensity);
+check('SETTINGS.applyFromDom() applies boolean checkbox values', dr.applyBoolean);
+check('SETTINGS.applyFromDom() applies range-slider values as 0..1 floats', dr.applyNumber);
+check('SETTINGS.applyFromDom()/bindDom() with an unknown id does not throw', dr.missingElOk);
+
 // ---------------- provenance completeness (ART-06) ----------------
 const { checkProvenance } = require('../tools/check-provenance.js');
 const prov = checkProvenance(path.join(__dirname, '..', 'assets', 'sprites'));

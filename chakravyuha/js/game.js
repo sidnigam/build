@@ -139,12 +139,15 @@ const GAME = {
       this.eprojectiles = [];
       burst(P.x, P.y, '#7fdcb7', 30, 320, 0.9, 5);
       this.shake = 14;
+      VFX.flash(0x7fdcb7, 0.45, 0.35);
       AUDIO.sfx('defiance');
       UI.banner('THE SANJEEVANI CALLS YOU BACK', '#7fdcb7');
       return;
     }
     P.hp = 0;
     this.state = 'dead';
+    VFX.flash(0xff2030, 0.45, 0.35);
+    VFX.hitstop(8);
     META.deaths++; META.save();
     AUDIO.stopDrone();
     AUDIO.sfx('death');
@@ -174,6 +177,7 @@ const GAME = {
 
     if (this.playing()) this.update(this.dt);
     CAMERA.update(this.dt);       // real dt: keeps animating through hitstop/paused/choosing states
+    VFX.tick(this.dt);            // real dt: flash fade + FPS EMA keep running through hitstop
     this.render();
     requestAnimationFrame(tt => this.frame(tt));
   },
@@ -195,6 +199,7 @@ const GAME = {
 
     const P = this.player;
     P.update(dt);
+    if (P.dashT > 0) VFX.emit('dash', P.x, P.y, P.dashDir);
 
     // enemies
     for (const e of this.enemies) if (!e.dead) e.update(dt);
@@ -232,6 +237,10 @@ const GAME = {
       if (p.x < A.x || p.x > A.x + A.w || p.y < A.y || p.y > A.y + A.h) p.t = 0;
       for (const pil of this.pillars)
         if (U.dist(p.x, p.y, pil.x, pil.y) < pil.r + p.r) p.t = 0;
+      if (p.chakra) {
+        if (!p._vfx) { p._vfx = true; VFX.emit('castGlow', p.x, p.y, Math.atan2(p.vy, p.vx)); }
+        VFX.emit('astraTrail', p.x, p.y);
+      }
       for (const e of this.enemies) {
         if (e.dead || p.hitSet.has(e) || e.spawnT > 0) continue;
         if (U.dist(p.x, p.y, e.x, e.y) < e.r + p.r) {
@@ -308,6 +317,7 @@ const GAME = {
       o.angle += dt * 4.5;
       o.x = P.x + Math.cos(o.angle) * o.dist;
       o.y = P.y + Math.sin(o.angle) * o.dist;
+      VFX.emit('astraTrail', o.x, o.y);
       for (const e of this.enemies) {
         if (e.dead) continue;
         const cd = o.hitCd[e.type + this.enemies.indexOf(e)] || 0;

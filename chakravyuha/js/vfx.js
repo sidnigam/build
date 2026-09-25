@@ -20,6 +20,10 @@ const VFX = {
   _pxFailed: false,
   PRESETS: {},
 
+  // screen flash overlay state (VFX-04, D-15)
+  flashT: 0, flashDur: 0, flashAlpha: 0, flashColor: 0xffffff,
+  fps: 0,   // FPS EMA maintained by tick(), consumed by the Plan 03 debug overlay
+
   // ---------------- pool bookkeeping ----------------
   _initPool() {
     this.pool = new Array(this.CAP);
@@ -120,6 +124,26 @@ const VFX = {
     if (typeof GAME === 'undefined') return;
     if (GAME.hitstopCd > 0 && frames < 8) return;
     GAME.hitstop = Math.max(GAME.hitstop || 0, frames / 60);
+  },
+
+  // ---------------- screen flash (VFX-04, D-15) ----------------
+  // Full-screen overlay tracked here even headless (flashT/flashColor/flashAlpha), drawn
+  // only when a Pixi flash graphic is attached (_tryAttach/_renderFlash).
+  flash(color, alpha, dur) {
+    if (typeof SETTINGS !== 'undefined' && SETTINGS.get('screenFlash') === false) return;
+    const current = this.flashDur > 0 ? this.flashAlpha * (this.flashT / this.flashDur) : 0;
+    if (alpha >= current) {
+      this.flashColor = color;
+      this.flashAlpha = alpha;
+      this.flashDur = dur;
+      this.flashT = dur;
+    }
+  },
+
+  // Called every real frame (js/game.js frame()) — fades the flash and maintains the FPS EMA.
+  tick(dt) {
+    this.flashT = Math.max(0, this.flashT - dt);
+    this.fps = this.fps ? this.fps * 0.95 + (1 / Math.max(dt, 1e-4)) * 0.05 : 60;
   },
 
   // ---------------- simulation ----------------
@@ -302,7 +326,126 @@ const VFX = {
 
 VFX._initPool();
 
-// trivial preset — Plan 02 fills in the full combat set (hit/crit/death/etc.)
+// ---------------- combat presets (VFX-01, D-04) ----------------
+// tex ids: 0 dot, 1 spark, 2 ember, 3 mist. All counts run through this.count()
+// so reducedParticles scales them down; none of these allocate arrays/closures beyond
+// the loop body itself.
 VFX.PRESETS.dot = function (x, y, angle, color) {
   this.spawn(x, y, 0, 0, 0.3, 3, 3, color || '#ffffff', 0, false, 0.9, 0, 1, false);
+};
+
+VFX.PRESETS.hit = function (x, y, a) {
+  const n = this.count(6);
+  for (let i = 0; i < n; i++) {
+    const ang = a + U.rand(-0.6, 0.6);
+    const spd = U.rand(180, 380);
+    const life = U.rand(0.12, 0.22);
+    this.spawn(x, y, Math.cos(ang) * spd, Math.sin(ang) * spd, life, 3, 1, '#ffffff', 1, true, 0.88, 0, 1, false);
+  }
+  this.spawn(x, y, 0, 0, 0.08, 10, 2, '#ffffff', 0, true, 0.9, 0, 1, false);
+};
+
+VFX.PRESETS.crit = function (x, y, a) {
+  const n = this.count(10);
+  for (let i = 0; i < n; i++) {
+    const ang = a + U.rand(-0.6, 0.6);
+    const spd = U.rand(180, 380);
+    const life = U.rand(0.12, 0.22);
+    this.spawn(x, y, Math.cos(ang) * spd, Math.sin(ang) * spd, life, 3, 1, '#ffd34d', 1, true, 0.88, 0, 1, false);
+  }
+  this.spawn(x, y, 0, 0, 0.08, 16, 2, '#ffd34d', 0, true, 0.9, 0, 1, false);
+};
+
+VFX.PRESETS.death = function (x, y, a, color) {
+  const col = color || '#ffffff';
+  const nd = this.count(16);
+  for (let i = 0; i < nd; i++) {
+    const ang = U.rand(U.TAU);
+    const spd = U.rand(120, 260);
+    const life = U.rand(0.35, 0.6);
+    this.spawn(x, y, Math.cos(ang) * spd, Math.sin(ang) * spd, life, 4, 1, col, 0, false, 0.93, 0, 1, false);
+  }
+  const ne = this.count(8);
+  for (let i = 0; i < ne; i++) {
+    const ang = U.rand(U.TAU);
+    const life = U.rand(0.6, 1.0);
+    this.spawn(x, y, Math.cos(ang) * U.rand(10, 40), U.rand(-70, -20), life, 3, 1, '#ff9a3c', 2, true, 0.97, -120, 1, false);
+  }
+};
+
+VFX.PRESETS.bossDeath = function (x, y, a, color) {
+  const col = color || '#ffffff';
+  const rings = [{ spd: 180, color: col }, { spd: 320, color: '#ffffff' }, { spd: 460, color: '#ffd34d' }];
+  for (const ring of rings) {
+    const n = this.count(30);
+    for (let i = 0; i < n; i++) {
+      const ang = (i / n) * U.TAU + U.rand(-0.05, 0.05);
+      const life = U.rand(0.8, 1.4);
+      this.spawn(x, y, Math.cos(ang) * ring.spd, Math.sin(ang) * ring.spd, life, 5, 1, ring.color, 0, false, 0.94, 0, 1, false);
+    }
+  }
+  const ne = this.count(30);
+  for (let i = 0; i < ne; i++) {
+    const ang = U.rand(U.TAU);
+    const life = U.rand(0.8, 1.4);
+    this.spawn(x, y, Math.cos(ang) * U.rand(40, 120), Math.sin(ang) * U.rand(40, 120) - 40, life, 4, 1, '#ff9a3c', 2, true, 0.96, -80, 1, false);
+  }
+};
+
+VFX.PRESETS.hurt = function (x, y, a) {
+  const nd = this.count(12);
+  for (let i = 0; i < nd; i++) {
+    const ang = U.rand(U.TAU);
+    const spd = U.rand(60, 180);
+    const life = U.rand(0.25, 0.4);
+    this.spawn(x, y, Math.cos(ang) * spd, Math.sin(ang) * spd, life, 3, 1, '#ff3344', 0, false, 0.9, 0, 1, false);
+  }
+  const ns = this.count(4);
+  for (let i = 0; i < ns; i++) {
+    const ang = U.rand(U.TAU);
+    const spd = U.rand(100, 220);
+    const life = U.rand(0.15, 0.25);
+    this.spawn(x, y, Math.cos(ang) * spd, Math.sin(ang) * spd, life, 3, 1, '#ff3344', 1, true, 0.85, 0, 1, false);
+  }
+};
+
+VFX.PRESETS.dash = function (x, y, a) {
+  const n = this.count(2);
+  for (let i = 0; i < n; i++) {
+    const back = a + Math.PI;
+    const spd = U.rand(10, 40);
+    this.spawn(x + U.rand(-4, 4), y + U.rand(-4, 4), Math.cos(back) * spd, Math.sin(back) * spd, 0.25, 7, 2, '#7fdcb7', 0, true, 0.9, 0, 0, false);
+  }
+};
+
+VFX.PRESETS.castGlow = function (x, y, a) {
+  this.spawn(x, y, 0, 0, 0.25, 22, 6, '#ffd34d', 0, true, 0.9, 0, 1, false);
+  const n = this.count(8);
+  for (let i = 0; i < n; i++) {
+    const ang = a + U.rand(-0.5, 0.5);
+    const spd = U.rand(120, 260);
+    const life = U.rand(0.15, 0.25);
+    this.spawn(x, y, Math.cos(ang) * spd, Math.sin(ang) * spd, life, 3, 1, '#ffd34d', 1, true, 0.88, 0, 1, false);
+  }
+};
+
+VFX.PRESETS.astraTrail = function (x, y) {
+  this.spawn(x, y, U.rand(-15, 15), U.rand(-15, 15), 0.3, 4, 1, '#ffd34d', 2, true, 0.95, 0, 1, false);
+};
+
+VFX.PRESETS.phase = function (x, y, a, color) {
+  const col = color || '#ffffff';
+  const n = this.count(36);
+  for (let i = 0; i < n; i++) {
+    const ang = (i / n) * U.TAU;
+    const c = (i % 2 === 0) ? '#ffffff' : '#ffd34d';
+    this.spawn(x, y, Math.cos(ang) * 360, Math.sin(ang) * 360, 0.6, 4, 1, c, 0, true, 0.95, 0, 1, false);
+  }
+  const nc = this.count(20);
+  for (let i = 0; i < nc; i++) {
+    const ang = U.rand(U.TAU);
+    const spd = U.rand(80, 220);
+    const life = U.rand(0.4, 0.7);
+    this.spawn(x, y, Math.cos(ang) * spd, Math.sin(ang) * spd, life, 4, 1, col, 0, false, 0.94, 0, 1, false);
+  }
 };

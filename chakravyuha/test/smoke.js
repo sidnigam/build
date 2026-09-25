@@ -686,6 +686,99 @@ check('CAMERA.punch() pulses zoom > 1 then decays back to 1', hr.punchZoom);
 check('CAMERA.shakeScale() gates punch/kick to no-op when screenShake=false, scales with shakeIntensity', hr.shakeScale);
 check('Kill-spam hitstop chaining still guarantees forward progress', hr.killSpamProgress);
 
+// ---------------- Combat presets + screen flash + hook points (Phase 3 Plan 2 Task 2) ----------------
+vm.runInContext(`
+globalThis.__combatVfxResults = {};
+(function() {
+  const R = __combatVfxResults;
+  SETTINGS.reset();
+  GAME.hitstop = 0; GAME.hitstopCd = 0;
+  CAMERA.resetFx();
+
+  // 1. every preset emits particles; bossDeath emits >= 80 (non-reduced)
+  const presetNames = ['hit','crit','death','bossDeath','hurt','dash','castGlow','astraTrail','phase'];
+  R.presetsEmit = presetNames.every(name => {
+    const before = VFX.stats().active;
+    VFX.emit(name, 400, 300, 0.3, '#ff8844');
+    const after = VFX.stats().active;
+    const grew = after > before;
+    while (VFX.stats().active > 0) VFX.update(1/60); // drain between presets
+    return grew;
+  });
+  VFX.emit('bossDeath', 400, 300, 0, '#ff8844');
+  R.bossDeathCount = VFX.stats().active >= 80;
+  while (VFX.stats().active > 0) VFX.update(1/60);
+
+  // 2. hitEnemy on a non-boss, non-lethal hit emits particles
+  GAME.startRun();
+  const P = GAME.player;
+  const enemy = GAME.enemies.find(x => !x.dead);
+  if (enemy) {
+    enemy.hp = enemy.maxhp * 10; // survive the hit
+    const before = VFX.stats().active;
+    hitEnemy(enemy, 5, 'attack');
+    R.hitEmits = VFX.stats().active > before;
+  } else R.hitEmits = false;
+  while (VFX.stats().active > 0) VFX.update(1/60);
+
+  // killEnemy on a non-boss sets hitstop + camera punch (screenShake on, cd clear)
+  GAME.hitstop = 0; GAME.hitstopCd = 0; CAMERA.resetFx();
+  const enemy2 = GAME.enemies.find(x => !x.dead && !x.boss) || GAME.enemies.find(x => !x.dead);
+  if (enemy2) {
+    killEnemy(enemy2);
+    R.killSetsHitstop = GAME.hitstop > 0;
+    R.killSetsPunch = CAMERA.punchT > 0;
+  } else { R.killSetsHitstop = false; R.killSetsPunch = false; }
+  while (GAME.hitstop > 0) GAME.update(1/60);
+  GAME.hitstopCd = 0; CAMERA.resetFx();
+  while (VFX.stats().active > 0) VFX.update(1/60);
+
+  // killEnemy on a boss -> hitstop >= 9/60, flashT > 0
+  GAME.hitstop = 0; GAME.hitstopCd = 0;
+  const boss = new Boss('tataka', GAME.arena.x + 100, GAME.arena.y + 100);
+  boss.hp = 1;
+  killEnemy(boss);
+  R.bossKillHitstop = GAME.hitstop >= 9/60;
+  R.bossKillFlash = VFX.flashT > 0;
+  while (GAME.hitstop > 0) GAME.update(1/60);
+  GAME.hitstopCd = 0;
+  VFX.flashT = 0;
+  while (VFX.stats().active > 0) VFX.update(1/60);
+
+  // 3. Player.takeDamage flashes red; screenFlash=false suppresses it
+  P.iframes = 0; P.dashT = 0; P.hp = P.maxhp;
+  VFX.flashT = 0;
+  P.takeDamage(10);
+  R.hurtFlash = VFX.flashT > 0 && VFX.flashColor === 0xff2030;
+  VFX.flashT = 0;
+  SETTINGS.set('screenFlash', false);
+  P.iframes = 0; P.dashT = 0;
+  P.takeDamage(10);
+  R.hurtFlashOff = VFX.flashT === 0;
+  SETTINGS.set('screenFlash', true);
+
+  // 4. VFX.tick fades flash to 0
+  VFX.flash(0xffffff, 0.5, 0.3);
+  VFX.tick(0.5);
+  R.tickFades = VFX.flashT === 0;
+
+  GAME.hitstop = 0; GAME.hitstopCd = 0;
+  CAMERA.resetFx();
+  SETTINGS.reset();
+  while (VFX.stats().active > 0) VFX.update(1/60);
+})();
+`, sandbox);
+const cv = vm.runInContext('__combatVfxResults', sandbox);
+console.log('\n— Combat presets + screen flash + hooks (Phase 3) —');
+check('Every combat preset (hit/crit/death/bossDeath/hurt/dash/castGlow/astraTrail/phase) emits particles', cv.presetsEmit);
+check('bossDeath emits >= 80 particles (non-reduced)', cv.bossDeathCount);
+check('hitEnemy (non-lethal) emits pooled particles', cv.hitEmits);
+check('killEnemy sets hitstop + camera punch (screenShake on)', cv.killSetsHitstop && cv.killSetsPunch);
+check('killEnemy on a boss sets hitstop >= 9/60 and flashes the screen', cv.bossKillHitstop && cv.bossKillFlash);
+check('Player.takeDamage flashes red (0xff2030)', cv.hurtFlash);
+check('Player.takeDamage does not flash when SETTINGS.screenFlash=false', cv.hurtFlashOff);
+check('VFX.tick(dt) fades the flash to 0', cv.tickFades);
+
 // ---------------- provenance completeness (ART-06) ----------------
 const { checkProvenance } = require('../tools/check-provenance.js');
 const prov = checkProvenance(path.join(__dirname, '..', 'assets', 'sprites'));

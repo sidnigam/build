@@ -42,10 +42,11 @@ function hitEnemy(e, base, src = 'attack', opts = {}) {
 
   e.hp -= dmg;
   e.flash = 0.1;
+  const hitAngle = U.angle(P.x, P.y, e.x, e.y);
   if (src !== 'burn') {
     dmgText(e.x, e.y - e.r - 6, Math.round(dmg), crit ? '#ffd34d' : '#fff', crit ? 20 : 15);
     AUDIO.sfx(crit ? 'crit' : 'hit');
-    burst(e.x, e.y, crit ? '#ffd34d' : '#ffffff', crit ? 10 : 5, 140, 0.3, 2.5);
+    VFX.emit(crit ? 'crit' : 'hit', e.x, e.y, hitAngle);
   } else {
     dmgText(e.x, e.y - e.r - 6, Math.round(dmg), '#ff7040', 12);
   }
@@ -69,6 +70,13 @@ function hitEnemy(e, base, src = 'attack', opts = {}) {
 
   if (e.hp <= 0) killEnemy(e);
   else if (e.boss) GAME.bossHurtT = 0.15;
+
+  if (!e.dead && src !== 'burn') {
+    if (e.boss && (crit || src === 'special' || opts.finisher || dmg >= e.maxhp * 0.08)) VFX.hitstop(6);
+    else if (opts.finisher) VFX.hitstop(3);
+  }
+  if (opts.finisher) CAMERA.kick(Math.cos(hitAngle) * 4, Math.sin(hitAngle) * 4);
+
   return dmg;
 }
 
@@ -100,7 +108,10 @@ function chainLightning(from, dmg, jumps) {
 function killEnemy(e) {
   if (e.dead) return;
   e.dead = true;
-  burst(e.x, e.y, e.color, 16, 220, 0.6, 4);
+  VFX.emit(e.boss ? 'bossDeath' : 'death', e.x, e.y, 0, e.color);
+  VFX.hitstop(e.boss ? 10 : 4);
+  CAMERA.punch(e.x, e.y, e.boss ? 0.08 : 0.03, e.boss ? 0.6 : 0.18);
+  if (e.boss) VFX.flash(0xffffff, 0.35, 0.3);
   AUDIO.sfx(e.boss ? 'bossdie' : 'kill');
   GAME.shake = Math.max(GAME.shake, e.boss ? 18 : 4);
   GAME.kills++;
@@ -316,7 +327,7 @@ class Player {
       if (e.dead) continue;
       const d = U.dist(this.x, this.y, e.x, e.y);
       if (d < w.range + e.r && Math.abs(U.angDiff(this.aim, U.angle(this.x, this.y, e.x, e.y))) < w.arc / 2) {
-        hitEnemy(e, dmg, 'attack');
+        hitEnemy(e, dmg, 'attack', isFinisher ? { finisher: true } : undefined);
         if (!e.boss) {
           const a = U.angle(this.x, this.y, e.x, e.y);
           e.kx += Math.cos(a) * kb; e.ky += Math.sin(a) * kb;
@@ -422,7 +433,13 @@ class Player {
     GAME.shake = Math.max(GAME.shake, 8);
     dmgText(this.x, this.y - 24, dmg, '#ff5566', 18);
     AUDIO.sfx('hurt');
-    burst(this.x, this.y, '#ff5566', 10, 180, 0.4);
+    VFX.emit('hurt', this.x, this.y, 0);
+    VFX.flash(0xff2030, 0.28, 0.2);
+    VFX.hitstop(3);
+    if (fromX !== undefined) {
+      const a = U.angle(fromX, fromY, this.x, this.y);
+      CAMERA.kick(Math.cos(a) * 6, Math.sin(a) * 6);
+    }
     if (this.hp <= 0) GAME.onPlayerDeath();
   }
 
@@ -760,7 +777,9 @@ class Boss extends Enemy {
     if (this.phase === 1 && this.hp < this.maxhp * 0.5) {
       this.phase = 2;
       GAME.shake = 14;
-      burst(this.x, this.y, this.color, 30, 300, 0.8, 5);
+      VFX.emit('phase', this.x, this.y, 0, this.color);
+      VFX.flash(0xfff0c0, 0.4, 0.25);
+      VFX.hitstop(6);
       dmgText(this.x, this.y - this.r - 20, '!!', '#ff4430', 28);
     }
 

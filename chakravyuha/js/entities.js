@@ -761,16 +761,38 @@ const BOSS_MOVE_DEFS = {
   summon:   { wind: 0.6,  active: 0,   dmg: false },
   noose:    { wind: 0.6,  active: 1.6, dmg: true },
   teleport: { wind: 0.4,  active: 0,   dmg: false },
+  // ---- phase-2 signature attacks (D-12), 2 per boss ----
+  leap:        { wind: 0.9, active: 0.25, dmg: true },  // tataka opener
+  maw:         { wind: 0.7, active: 0.2,  dmg: true },  // tataka
+  lamps:       { wind: 1.0, active: 0,    dmg: true },  // ahiravana opener
+  crossBeams:  { wind: 0.9, active: 0.35, dmg: true },  // ahiravana
+  quake:       { wind: 0.8, active: 1.8,  dmg: true },  // kumbhakarna opener
+  roar:        { wind: 0.8, active: 0.3,  dmg: true },  // kumbhakarna
+  ledger:      { wind: 1.0, active: 0.3,  dmg: true },  // yama opener — "The Ledger is Opened"
+  danda:       { wind: 0.8, active: 0.25, dmg: true },  // yama — "Danda of Judgment"
 };
 
-// [id, weight, overrides?] per phase. Phase 2 initially mirrors phase 1 (Task 3 adds new moves).
+// [id, weight, overrides?] per phase. The first phase-2 entry flagged {opener:true} always
+// opens phase 2 deterministically (D-11); phase-1 numeric scaling (radial/spiral/slam/summon
+// counts) is applied in Boss.update via this.phase, unchanged from before Phase 4.
 const BOSS_MOVESETS = {
-  tataka:      { 1: [['chase',3],['radial',2],['charge',2],['summon',1]] },
-  ahiravana:   { 1: [['teleport',3],['spiral',3],['radial',2],['summon',2]] },
-  kumbhakarna: { 1: [['chase',3,{active:2.4}],['slam',3],['charge',2,{wind:0.7}],['radial',1]] },
-  yama:        { 1: [['noose',2],['spiral',3,{active:2.0}],['slam',2],['charge',2],['summon',1]] },
+  tataka: {
+    1: [['chase',3],['radial',2],['charge',2],['summon',1]],
+    2: [['leap',2,{opener:true}],['maw',2],['chase',3],['radial',2],['charge',2],['summon',1]],
+  },
+  ahiravana: {
+    1: [['teleport',3],['spiral',3],['radial',2],['summon',2]],
+    2: [['lamps',2,{opener:true}],['crossBeams',2],['teleport',3],['spiral',2],['radial',1],['summon',1]],
+  },
+  kumbhakarna: {
+    1: [['chase',3,{active:2.4}],['slam',3],['charge',2,{wind:0.7}],['radial',1]],
+    2: [['quake',2,{opener:true}],['roar',2],['chase',2,{active:2.0}],['slam',3],['charge',2,{wind:0.7}]],
+  },
+  yama: {
+    1: [['noose',2],['spiral',3,{active:2.0}],['slam',2],['charge',2],['summon',1]],
+    2: [['ledger',2,{opener:true}],['danda',2],['noose',2],['spiral',2,{active:2.0}],['slam',1],['summon',1]],
+  },
 };
-for (const id of Object.keys(BOSS_MOVESETS)) BOSS_MOVESETS[id][2] = BOSS_MOVESETS[id][1].slice();
 
 const PHASE2_TITLES = {
   tataka: 'THE FOREST HUNGERS', ahiravana: 'THE FIVE LAMPS BURN',
@@ -881,6 +903,30 @@ class Boss extends Enemy {
                              y: U.clamp(P.y + Math.sin(a) * 200, A.y + 60, A.y + A.h - 60) };
         break;
       }
+      // ---- phase-2 signature attacks (D-12) ----
+      case 'leap':
+        this.leapTarget = { x: U.clamp(P.x, A.x + 60, A.x + A.w - 60), y: U.clamp(P.y, A.y + 60, A.y + A.h - 60) };
+        break;
+      case 'maw': this.mawA = aToP; break;
+      case 'lamps': {
+        const cx = A.x + A.w / 2, cy = A.y + A.h / 2;
+        this.lampPts = [];
+        for (let i = 0; i < 5; i++) {
+          const a = i * (U.TAU / 5) + U.rand(-0.2, 0.2);
+          this.lampPts.push({ x: cx + Math.cos(a) * 220, y: cy + Math.sin(a) * 220 });
+        }
+        break;
+      }
+      case 'crossBeams':
+        this.beamPx = U.clamp(P.x, A.x + 18, A.x + A.w - 18);
+        this.beamPy = U.clamp(P.y, A.y + 18, A.y + A.h - 18);
+        break;
+      case 'quake': this.waveR = this.r; this.quakeHit = false; break;
+      case 'roar': this.roarA = aToP; break;
+      case 'ledger':
+        this.ledgerYs = [P.y, P.y - 140, P.y + 140].map(y => U.clamp(y, A.y + 20, A.y + A.h - 20));
+        break;
+      case 'danda': this.dandaA = aToP; break;
     }
   }
 
@@ -914,6 +960,40 @@ class Boss extends Enemy {
         break;
       case 'teleport':
         this.marks = [{ type: 'circle', x: this.teleTarget.x, y: this.teleTarget.y, r: this.r }];
+        break;
+      // ---- phase-2 signature attacks (D-12) ----
+      case 'leap': {
+        const A = GAME.arena;
+        GAME.dangerZones = [{ x: this.leapTarget.x, y: this.leapTarget.y, r: 90, frac: 1 - this.t / this.windTotal }];
+        break;
+      }
+      case 'maw':
+        this.telegraph = { type: 'cone', a: this.mawA, arc: 1.9, r: 240 };
+        break;
+      case 'lamps':
+        this.marks = this.lampPts.map(p => ({ type: 'circle', x: p.x, y: p.y, r: 34 }));
+        break;
+      case 'crossBeams': {
+        const A = GAME.arena;
+        this.marks = [
+          { type: 'band', x: A.x, y: this.beamPy - 18, w: A.w, h: 36 },
+          { type: 'band', x: this.beamPx - 18, y: A.y, w: 36, h: A.h },
+        ];
+        break;
+      }
+      case 'quake':
+        this.telegraph = { type: 'ring', r0: this.r + 10, r1: this.r + 60 };
+        break;
+      case 'roar':
+        this.telegraph = { type: 'cone', a: this.roarA, arc: 1.4, r: 320 };
+        break;
+      case 'ledger': {
+        const A = GAME.arena;
+        this.marks = this.ledgerYs.map(y => ({ type: 'band', x: A.x, y: y - 20, w: A.w, h: 40 }));
+        break;
+      }
+      case 'danda':
+        this.telegraph = { type: 'cone', a: this.dandaA, arc: U.TAU - 1.05, r: 200 };
         break;
     }
   }
@@ -1111,6 +1191,118 @@ class Boss extends Enemy {
         break;
       }
 
+      // ---- phase-2 signature attacks (D-12) ----
+      case 'leap': {
+        if (!this.struck) {
+          this.struck = true;
+          this.strike();
+          this.x = this.leapTarget.x; this.y = this.leapTarget.y;
+          burst(this.x, this.y, this.color, 18, 220, 0.5);
+          if (U.dist(P.x, P.y, this.x, this.y) < 90 + P.r) this.hurtPlayer(this.dmg * 1.6);
+          for (let i = 0; i < 8; i++) {
+            const a = (i / 8) * U.TAU;
+            this.shoot(Math.cos(a) * 230, Math.sin(a) * 230, this.dmg * 0.6, 7);
+          }
+          GAME.shake = Math.max(GAME.shake, 12);
+          GAME.dangerZones = [];
+        }
+        if (this.t <= 0) { this.state = 'rest'; this.t = 0.8; this.armed = null; }
+        break;
+      }
+
+      case 'maw': {
+        if (!this.struck) {
+          this.struck = true;
+          this.strike();
+          if (dToP < 240 + P.r && Math.abs(U.angDiff(this.mawA, aToP)) < 1.9 / 2) this.hurtPlayer(this.dmg * 1.5);
+          burst(this.x, this.y, this.color, 10, 200, 0.3);
+        }
+        if (this.t <= 0) { this.state = 'rest'; this.t = 0.6; this.armed = null; }
+        break;
+      }
+
+      case 'lamps': {
+        this.strike();
+        for (const lamp of this.lampPts) {
+          burst(lamp.x, lamp.y, this.color, 10, 160, 0.4);
+          for (let k = 0; k < 6; k++) {
+            const a = (k / 6) * U.TAU;
+            this.shoot(Math.cos(a) * 210, Math.sin(a) * 210, this.dmg * 0.6, 6, lamp.x, lamp.y);
+          }
+        }
+        AUDIO.sfx('special');
+        this.state = 'rest'; this.t = 0.9; this.armed = null;
+        break;
+      }
+
+      case 'crossBeams': {
+        if (!this.struck) {
+          this.struck = true;
+          this.strike();
+          const A = GAME.arena;
+          const inH = P.y > this.beamPy - 18 && P.y < this.beamPy + 18;
+          const inV = P.x > this.beamPx - 18 && P.x < this.beamPx + 18;
+          if (inH || inV) this.hurtPlayer(this.dmg * 1.4);
+          GAME.bolts.push({ x1: A.x, y1: this.beamPy, x2: A.x + A.w, y2: this.beamPy, t: 0.25 });
+          GAME.bolts.push({ x1: this.beamPx, y1: A.y, x2: this.beamPx, y2: A.y + A.h, t: 0.25 });
+          GAME.shake = Math.max(GAME.shake, 8);
+        }
+        if (this.t <= 0) { this.state = 'rest'; this.t = 0.7; this.armed = null; }
+        break;
+      }
+
+      case 'quake': {
+        if (!this.struck) { this.struck = true; this.strike(); }
+        this.waveR += 380 * dt;
+        this.marks = [{ type: 'ringMark', x: this.x, y: this.y, r: this.waveR, width: 24 }];
+        if (!this.quakeHit && Math.abs(dToP - this.waveR) < 12 + P.r) { this.hurtPlayer(this.dmg * 1.3); this.quakeHit = true; }
+        if (this.waveR > 700 || this.t <= 0) { this.state = 'rest'; this.t = 1.0; this.armed = null; this.marks = []; }
+        break;
+      }
+
+      case 'roar': {
+        if (!this.struck) {
+          this.struck = true;
+          this.strike();
+          if (dToP < 320 + P.r && Math.abs(U.angDiff(this.roarA, aToP)) < 1.4 / 2) {
+            this.hurtPlayer(this.dmg * 1.2);
+            P.x += Math.cos(this.roarA) * 140; P.y += Math.sin(this.roarA) * 140;
+            clampToArena(P);
+          }
+          burst(this.x, this.y, this.color, 12, 220, 0.4);
+          GAME.shake = Math.max(GAME.shake, 10);
+        }
+        if (this.t <= 0) { this.state = 'rest'; this.t = 0.8; this.armed = null; }
+        break;
+      }
+
+      case 'ledger': {
+        if (!this.struck) {
+          this.struck = true;
+          this.strike();
+          const A = GAME.arena;
+          for (const y of this.ledgerYs) {
+            if (P.y > y - 20 && P.y < y + 20) this.hurtPlayer(this.dmg * 1.3);
+            GAME.rings.push({ x: A.x + A.w / 2, y, r: 40, t: 0.3, color: this.color });
+          }
+        }
+        if (this.t <= 0) { this.state = 'rest'; this.t = 0.8; this.armed = null; }
+        break;
+      }
+
+      case 'danda': {
+        if (!this.struck) {
+          this.struck = true;
+          this.strike();
+          const safeCenter = this.dandaA + Math.PI;
+          const inSafeWedge = Math.abs(U.angDiff(safeCenter, aToP)) < 0.5236; // 30deg half-wedge (60deg total)
+          if (dToP < 200 + P.r && !inSafeWedge) this.hurtPlayer(this.dmg * 1.4);
+          burst(this.x, this.y, this.color, 14, 200, 0.4);
+        }
+        if (this.t <= 0) { this.state = 'rest'; this.t = 0.7; this.armed = null; }
+        break;
+      }
+
       case 'rest':
         if (this.t <= 0) this.pickMove();
         break;
@@ -1165,6 +1357,13 @@ class Boss extends Enemy {
         } else if (m.type === 'band') {
           ctx.fillRect(m.x, m.y, m.w, m.h);
           ctx.strokeRect(m.x, m.y, m.w, m.h);
+        } else if (m.type === 'ringMark') {
+          // expanding shockwave ring (kumbhakarna quake) — stroke only, no fill
+          ctx.save();
+          ctx.lineWidth = m.width;
+          ctx.strokeStyle = 'rgba(255,68,68,0.55)';
+          ctx.beginPath(); ctx.arc(m.x, m.y, m.r, 0, U.TAU); ctx.stroke();
+          ctx.restore();
         }
       }
       ctx.globalAlpha = 1;

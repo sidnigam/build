@@ -1060,7 +1060,81 @@ for (const bossId of Object.keys(bossMoveResults)) {
   }
 }
 
-// Global gate: zero violations across everything simulated so far (full runs + per-move harness).
+// Static: every boss's phase-2 moveset contains >= 2 attacks absent from phase 1.
+vm.runInContext(`
+globalThis.__phase2NewMoves = {};
+for (const bossId of Object.keys(DATA.BOSSES)) {
+  const p1 = new Set(BOSS_MOVESETS[bossId][1].map(m => m[0]));
+  const p2 = new Set(BOSS_MOVESETS[bossId][2].map(m => m[0]));
+  __phase2NewMoves[bossId] = [...p2].filter(id => !p1.has(id));
+}
+`, sandbox);
+const phase2NewMoves = vm.runInContext('__phase2NewMoves', sandbox);
+console.log('\n— boss phase-2 movesets: >= 2 new attacks per boss (Phase 4) —');
+for (const bossId of Object.keys(phase2NewMoves)) {
+  check(`${bossId}: >= 2 phase-2-only attacks (${phase2NewMoves[bossId].join(', ')})`,
+    phase2NewMoves[bossId].length >= 2);
+}
+
+// Phase-transition harness: 50% HP -> phaseShift -> deterministic opener -> phase-2-only
+// moves appear over time, with zero new BOSS_TG violations along the way.
+vm.runInContext(`
+globalThis.__bossPhaseTransition = function(bossId) {
+  GAME.startRun();
+  const P = GAME.player;
+  P.maxhp = P.hp = 1e9;
+  const biomeIdx = DATA.BIOMES.findIndex(b => b.boss === bossId);
+  GAME.biomeIdx = biomeIdx; GAME.biome = DATA.BIOMES[biomeIdx];
+  ROOMS.enterRoom('boss');
+  const B = GAME.bossRef;
+  B.asleep = false;
+  B.pickMove();
+  B.hp = B.maxhp * 0.49;
+  const v0 = BOSS_TG.violations.length;
+  const DT = 1 / 60;
+
+  GAME.update(DT);
+  const enteredPhaseShift = B.phase === 2 && B.state === 'phaseShift';
+
+  const table2 = BOSS_MOVESETS[bossId][2];
+  const openerId = (table2.find(m => m[2] && m[2].opener) || [null])[0];
+  let openerSeen = false, frames = 0;
+  while (frames++ < 96) { // 1.6s
+    for (const e of GAME.enemies) if (e !== B) e.dead = true;
+    P.iframes = 0; P.dashT = 0;
+    GAME.update(DT);
+    if (B.lastMove === openerId && (B.state === openerId + 'Wind' || B.state === openerId)) { openerSeen = true; break; }
+  }
+
+  const lastMoves = new Set();
+  frames = 0;
+  while (frames++ < 1800) { // 30s
+    for (const e of GAME.enemies) if (e !== B) e.dead = true;
+    P.iframes = 0; P.dashT = 0;
+    GAME.update(DT);
+    lastMoves.add(B.lastMove);
+  }
+  const p1Ids = new Set(BOSS_MOVESETS[bossId][1].map(m => m[0]));
+  const p2OnlyIds = new Set(BOSS_MOVESETS[bossId][2].map(m => m[0]).filter(id => !p1Ids.has(id)));
+  const hasPhase2Only = [...lastMoves].some(id => p2OnlyIds.has(id));
+
+  return { enteredPhaseShift, openerId, openerSeen, hasPhase2Only, newViolations: BOSS_TG.violations.length - v0 };
+};
+
+globalThis.__phaseTransitionResults = {};
+for (const bossId of Object.keys(DATA.BOSSES)) __phaseTransitionResults[bossId] = __bossPhaseTransition(bossId);
+`, sandbox);
+const phaseTransitionResults = vm.runInContext('__phaseTransitionResults', sandbox);
+console.log('\n— boss phase transitions: phaseShift -> deterministic opener -> phase-2 moves (Phase 4) —');
+for (const bossId of Object.keys(phaseTransitionResults)) {
+  const r = phaseTransitionResults[bossId];
+  check(`${bossId}: 50% HP triggers phaseShift`, r.enteredPhaseShift);
+  check(`${bossId}: opens phase 2 deterministically with its signature move (${r.openerId})`, r.openerSeen);
+  check(`${bossId}: phase-2-only moves appear over 30s of play`, r.hasPhase2Only);
+  check(`${bossId}: no new BOSS_TG violations during the phase transition`, r.newViolations === 0);
+}
+
+// Global gate: zero violations across everything simulated so far (full runs + all harnesses).
 check('no unarmed boss damage anywhere (global BOSS_TG.violations gate)',
   vm.runInContext('BOSS_TG.violations.length', sandbox) === 0);
 

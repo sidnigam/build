@@ -45,6 +45,7 @@ const GAME = {
         ...Object.keys(DATA.BOSSES).map(k => ({ key: k, path: `assets/sprites/bosses/${k}-atlas.json` })),
       ];
       SPRITES.load(manifest);
+      SPRITES.loadTextures(DATA.BIOMES.map(b => ({ key: SPRITES.bgKeyFor(b), path: SPRITES.bgPathFor(b) })));   // biome backgrounds (02-10); missing -> primitive bg
     });
     this.bindInput();
     this.bindButtons();
@@ -406,15 +407,27 @@ const GAME = {
     const inRun = this.state !== 'hub';
     const biome = this.biome;
 
-    // background
-    ctx.fillStyle = inRun ? biome.bg : '#0b0710';
-    ctx.fillRect(-30, -30, this.W + 60, this.H + 60);
+    // background — illustrated biome image when loaded (02-10), else the primitive fill (D-11)
+    const hasBg = SPRITES.setBackground(inRun ? SPRITES.bgKeyFor(biome) : null);   // hub shows no biome bg
+    if (hasBg) {
+      ctx.fillStyle = 'rgba(0,0,0,' + SPRITES.CFG.BG_DIM_OUTER + ')';               // dim everything outside the arena
+      ctx.fillRect(-30, -30, this.W + 60, this.H + 60);
+    } else {
+      ctx.fillStyle = inRun ? biome.bg : '#0b0710';
+      ctx.fillRect(-30, -30, this.W + 60, this.H + 60);
+    }
 
     if (!inRun) { this.renderHubBg(ctx); return; }
 
     // arena floor
-    ctx.fillStyle = biome.floor;
-    ctx.fillRect(A.x, A.y, A.w, A.h);
+    if (hasBg) {
+      ctx.clearRect(A.x, A.y, A.w, A.h);                                              // undo the outer dim inside the arena
+      ctx.globalAlpha = SPRITES.CFG.BG_FLOOR_TINT; ctx.fillStyle = biome.floor;       // biome-tinted readability wash
+      ctx.fillRect(A.x, A.y, A.w, A.h); ctx.globalAlpha = 1;
+    } else {
+      ctx.fillStyle = biome.floor;
+      ctx.fillRect(A.x, A.y, A.w, A.h);
+    }
 
     // chakravyuha mandala floor pattern
     const cx = A.x + A.w / 2, cy = A.y + A.h / 2;
@@ -511,16 +524,165 @@ const GAME = {
   renderEntities(ctx) {
     // Sprite-or-fallback: use PixiJS AnimatedSprite when atlas loaded (RENDER-03),
     // otherwise fall back to entity.draw(ctx) primitives on the bridge canvas (RENDER-02 / D-11).
+    SPRITES.tickDying(this.dt);                      // death shrink/fade (02-07)
     for (const e of this.enemies) {
-      if (e.dead) { if (e._pixiSprite) SPRITES.removeEntity(e); continue; }
-      const key = e.type;
-      if (SPRITES.has(key)) SPRITES.drawEntity(e);
-      else e.draw(ctx);                            // D-11: silent fallback to primitive
+      if (e.dead) { if (e._pixiSprite) SPRITES.retireEntity(e); continue; }
+      if (SPRITES.has(e.type)) { this.renderSpriteExtras(ctx, e); SPRITES.drawEntity(e); }
+      else e.draw(ctx);                              // D-11: silent fallback to primitive
     }
-    if (this.player) {
-      if (SPRITES.has('player')) { this.player.spriteKey = 'player'; SPRITES.drawEntity(this.player); }
-      else this.player.draw(ctx);
+    const P = this.player;
+    if (P) {
+      if (SPRITES.has('player')) { P.spriteKey = 'player'; this.renderPlayerSpriteExtras(ctx, P); SPRITES.drawEntity(P); SPRITES.drawWeapon(P); }
+      else P.draw(ctx);
     }
+  },
+
+  /**
+   * renderSpriteExtras(ctx, e) — 02-07: gameplay-critical primitives that Enemy.draw/Boss.draw
+   * used to paint, restored for the sprite path (drawn UNDER the sprite; anything above the head
+   * uses SPRITES.headY so it is not hidden behind the sprite). Mirrors js/entities.js draw() logic
+   * exactly where noted; js/entities.js itself is never touched (owned by Phase 3/4).
+   */
+  renderSpriteExtras(ctx, e) {
+    if (e.spawnT > 0) {
+      // spawn-in mandala (mirrors Enemy.draw)
+      const p = 1 - e.spawnT / 0.6;
+      ctx.globalAlpha = p;
+      ctx.strokeStyle = e.color; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.r * (2 - p), 0, U.TAU * p); ctx.stroke();
+      ctx.globalAlpha = 1;
+      return;
+    }
+
+    // ground shadow — sprite art has no baked contact shadow
+    ctx.fillStyle = 'rgba(0,0,0,' + SPRITES.CFG.SHADOW_ALPHA + ')';
+    ctx.beginPath();
+    ctx.ellipse(e.x, e.y + e.r * SPRITES.CFG.FEET_OFFSET_R, e.r * 0.9, e.r * 0.32, 0, 0, U.TAU);
+    ctx.fill();
+
+    // telegraph (mirrors Enemy.draw / Boss.draw)
+    if (e.telegraph) {
+      const hw = e.boss ? e.r * 0.8 : e.r;
+      ctx.globalAlpha = 0.5 + 0.3 * Math.sin(this.time * 18);
+      ctx.strokeStyle = '#ff4444'; ctx.fillStyle = 'rgba(255,68,68,0.12)'; ctx.lineWidth = 2;
+      if (e.telegraph.type === 'line') {
+        const tg = e.telegraph;
+        ctx.save();
+        ctx.translate(e.x, e.y); ctx.rotate(tg.a);
+        ctx.fillRect(0, -hw, tg.len, hw * 2);
+        ctx.strokeRect(0, -hw, tg.len, hw * 2);
+        ctx.restore();
+      } else {
+        ctx.beginPath(); ctx.arc(e.x, e.y, e.telegraph.r, 0, U.TAU);
+        ctx.fill(); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // noose (Yama) — mirrors Boss.draw
+    if (e.boss && e.state === 'noose' && this.player) {
+      const P = this.player;
+      ctx.strokeStyle = '#9fb8ff'; ctx.lineWidth = 3;
+      ctx.setLineDash([8, 6]);
+      ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(P.x, P.y); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // maya ring — drawn at the feet so it reads under a tall sprite (legacy drew it around center)
+    if (e.maya > 0) {
+      ctx.strokeStyle = '#5c7cff'; ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.ellipse(e.x, e.y + e.r, e.r + 4, (e.r + 4) * 0.4, 0, 0, U.TAU);
+      ctx.stroke();
+    }
+
+    const headY = SPRITES.headY(e, e.type);
+
+    // burn pips — same horizontal layout as Enemy.draw/Boss.draw, moved to headY
+    if (e.burns && e.burns.length) {
+      ctx.fillStyle = '#ff7040';
+      const spacing = e.boss ? 10 : 8, rad = e.boss ? 4 : 3, ox = e.boss ? -10 : -8;
+      for (let i = 0; i < e.burns.length; i++) {
+        ctx.beginPath(); ctx.arc(e.x + ox + i * spacing, headY - 8, rad, 0, U.TAU); ctx.fill();
+      }
+    }
+
+    // stun glyph
+    if (e.stun > 0) {
+      ctx.fillStyle = '#ffd34d'; ctx.font = '12px Georgia';
+      ctx.fillText('✦', e.x - 4, headY - 12);
+    }
+
+    // asleep zzz (mirrors Boss.draw)
+    if (e.asleep) {
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 22px Georgia';
+      ctx.fillText('z z z', e.x + e.r * 0.5, headY - 8);
+    }
+
+    // hp bar for damaged non-boss enemies
+    if (!e.boss && e.hp < e.maxhp) {
+      const w = e.r * 2;
+      const y = e.y + e.r * SPRITES.CFG.FEET_OFFSET_R + 4;
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(e.x - w / 2, y, w, 4);
+      ctx.fillStyle = '#ff5566';
+      ctx.fillRect(e.x - w / 2, y, w * U.clamp(e.hp / e.maxhp, 0, 1), 4);
+    }
+
+    ctx.globalAlpha = 1;
+    ctx.setLineDash([]);
+    ctx.textAlign = 'left';
+  },
+
+  /**
+   * renderPlayerSpriteExtras(ctx, P) — 02-07: sprite-path player overlays. Does NOT draw the
+   * legacy body circle/aura/facing tick (the sprite + 02-10 weapon overlay replace them).
+   */
+  renderPlayerSpriteExtras(ctx, P) {
+    // Render-parity with Player.draw's `this.swing.t -= GAME.dt`: draw() is never called in the
+    // sprite path, so without this the attack state (swing.t>0) would never end. Not new gameplay.
+    if (P.swing && P.swing.t > 0) P.swing.t -= this.dt;
+
+    // ground shadow
+    ctx.fillStyle = 'rgba(0,0,0,' + SPRITES.CFG.SHADOW_ALPHA + ')';
+    ctx.beginPath();
+    ctx.ellipse(P.x, P.y + P.r * SPRITES.CFG.FEET_OFFSET_R, P.r * 0.9, P.r * 0.32, 0, 0, U.TAU);
+    ctx.fill();
+
+    // swing wedge — dimmed to 0.6x legacy alpha; the 02-10 weapon sweep carries the main read
+    if (P.swing && P.swing.t > 0) {
+      ctx.globalAlpha = (P.swing.t / SPRITES.CFG.SWING_DUR) * 0.33;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.moveTo(P.x, P.y);
+      ctx.arc(P.x, P.y, P.swing.range, P.swing.a - P.swing.arc / 2, P.swing.a + P.swing.arc / 2);
+      ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    // bow charge line (mirrors Player.draw)
+    if (P.charging) {
+      ctx.strokeStyle = P.charge >= 0.98 ? '#ffd34d' : 'rgba(255,255,255,0.5)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(P.x + Math.cos(P.aim) * 20, P.y + Math.sin(P.aim) * 20);
+      ctx.lineTo(P.x + Math.cos(P.aim) * (20 + 60 * P.charge), P.y + Math.sin(P.aim) * (20 + 60 * P.charge));
+      ctx.stroke();
+    }
+
+    // bhakti ready glow — as a ground ring so it reads under the tall sprite
+    if (P.bhaktiReady) {
+      ctx.strokeStyle = '#ff8c42'; ctx.lineWidth = 2;
+      ctx.globalAlpha = 0.6 + 0.4 * Math.sin(this.time * 8);
+      ctx.beginPath();
+      ctx.ellipse(P.x, P.y + P.r, P.r + 6, (P.r + 6) * 0.4, 0, 0, U.TAU);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.globalAlpha = 1;
+    ctx.setLineDash([]);
+    ctx.textAlign = 'left';
   },
 
   renderEffects(ctx) {

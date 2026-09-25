@@ -259,6 +259,14 @@ const SPRITES = {
     GHOST_MAX: 6,                // tunable: max simultaneous dash afterimages
     TRAIL_LIFE: 0.25,            // tunable: dash trail point lifetime (mirrors Player trail push at t:0.25)
     SHADOW_ALPHA: 0.35,          // tunable: ground shadow alpha under sprite-rendered actors
+
+    // ---------------- Tunables (02-10 weapon overlay + biome bg) ----------------
+    WEAPON_HAND_R: 0.55,         // tunable: hand distance from body center along aim, x r
+    WEAPON_HAND_DY: -0.9,        // tunable: hand height, x r (negative = up toward the chest)
+    WEAPON_SCALE_PER_R: 1 / 13,  // tunable: weapon art is authored for r=13
+    WEAPON_REACH_BULGE: 0.15,    // tunable: mid-swing reach bulge fraction
+    BG_DIM_OUTER: 0.6,           // tunable: darken-overlay alpha outside the arena when a biome bg shows
+    BG_FLOOR_TINT: 0.35,         // tunable: biome-floor color wash alpha over the illustrated bg inside the arena
   },
 
   ATTACK_STATES: new Set(['wind', 'lunge', 'strike', 'charge', 'charging', 'noose', 'spiral', 'summon', 'slam', 'cast', 'sweep']),
@@ -473,6 +481,87 @@ const SPRITES = {
     const C = this.CFG;
     const p = Math.max(0, Math.min(1, t / C.TRAIL_LIFE));
     return p * C.GHOST_ALPHA;
+  },
+
+  // ---------------- Weapon overlay + biome bg (02-10, pure — no Pixi) ----------------
+
+  WEAPON_KINDS: { khanda: 'sword', gandiva: 'bow', gada: 'mace' },
+
+  /**
+   * weaponKindFor(w) — pure. Named weapons map explicitly; otherwise bow/melee type decides.
+   * Safe for undefined (no weapon equipped yet) — defaults to 'sword'.
+   */
+  weaponKindFor(w) {
+    if (w && this.WEAPON_KINDS[w.id]) return this.WEAPON_KINDS[w.id];
+    return (w && w.type === 'bow') ? 'bow' : 'sword';
+  },
+
+  /**
+   * weaponPose(e) — pure. Hand position (foreshortened along aim), rotation (aim, or swept during
+   * a melee swing with alternating combo direction), reach bulge mid-swing, bow draw-back pull,
+   * and a z key for front/behind-body draw order.
+   */
+  weaponPose(e) {
+    const C = this.CFG;
+    const kind = this.weaponKindFor(e.weapon);
+    const x = e.x + Math.cos(e.aim) * e.r * C.WEAPON_HAND_R;
+    const y = e.y + e.r * C.WEAPON_HAND_DY + Math.sin(e.aim) * e.r * C.WEAPON_HAND_R * 0.5;
+
+    let rot, swingP, reach;
+    const swing = e.swing;
+    if (kind !== 'bow' && swing && swing.t > 0) {
+      const p = 1 - Math.max(0, Math.min(1, swing.t / C.SWING_DUR));
+      const ease = 1 - Math.pow(1 - p, 3);
+      const dir = (e.comboIdx % 2 === 1) ? 1 : -1;
+      rot = swing.a + dir * (-swing.arc / 2 + swing.arc * ease);
+      swingP = p;
+      reach = 1 + C.WEAPON_REACH_BULGE * Math.sin(p * Math.PI);
+    } else {
+      rot = e.aim;
+      swingP = -1;
+      reach = 1;
+    }
+
+    const pull = (kind === 'bow' && e.charging) ? Math.max(0, Math.min(1, e.charge)) : 0;
+    const z = e.y + (Math.sin(rot) > -0.2 ? 1 : -1);
+
+    return { kind, x, y, rot, z, swingP, reach, pull };
+  },
+
+  /**
+   * bgKeyFor(b) / bgPathFor(b) — pure. Biome id -> texture key / asset path.
+   */
+  bgKeyFor(b) {
+    return 'bg:' + b.id;
+  },
+  bgPathFor(b) {
+    return 'assets/sprites/biomes/' + b.id + '-bg.png';
+  },
+
+  /**
+   * hasTexture(key) — pure (once loaded). false in headless/zero-asset state.
+   */
+  textures: {},
+  hasTexture(key) {
+    return !!this.textures[key];
+  },
+
+  /**
+   * loadTextures(list) — async, non-fatal (D-11). Same navigator/document/PIXI guard as load().
+   * list: Array of { key, path } — e.g. { key: 'bg:naraka', path: 'assets/sprites/biomes/naraka-bg.png' }.
+   */
+  async loadTextures(list) {
+    if (typeof navigator === 'undefined' || typeof document === 'undefined') return;
+    const PIXI = (typeof window !== 'undefined' && window.PIXI);
+    if (!PIXI) return;
+    for (const entry of list) {
+      try {
+        this.textures[entry.key] = await PIXI.Assets.load(entry.path);
+      } catch (e) {
+        console.warn('[SPRITES] texture missing for "' + entry.key + '" — using primitive fallback', e);
+        this._missing.add(entry.key);
+      }
+    }
   },
 
   // ---------------- Mark-and-sweep bookkeeping (no Pixi dependency) ----------------
@@ -737,6 +826,15 @@ const SPRITES = {
     } catch (err) {
       if (!this._ghostWarned) { console.warn('[SPRITES] dash ghosts unavailable', err); this._ghostWarned = true; }
     }
+  },
+
+  /**
+   * setBackground(key) — 02-10 Task 1 stub: headless/no-Pixi guard only. The Pixi body (cover-fit
+   * sprite below the bridge) is added in Task 2.
+   */
+  setBackground(key) {
+    if (!this.worldContainer) return false;
+    return false;
   },
 
   /**

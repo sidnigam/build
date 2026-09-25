@@ -366,6 +366,72 @@ sandbox.__ctxStub = ctxStub;
   check('GAME.renderSpriteExtras/renderPlayerSpriteExtras: no throw headless, swing.t decays by dt', ok);
 }
 
+// ---------------- weapon + biome bg helpers (02-10) ----------------
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+
+  check('SPRITES.weaponKindFor: named weapons, bow/melee fallback, undefined-safe',
+    R(`(() => {
+      return SPRITES.weaponKindFor(DATA.WEAPONS.khanda) === 'sword'
+        && SPRITES.weaponKindFor(DATA.WEAPONS.gandiva) === 'bow'
+        && SPRITES.weaponKindFor(DATA.WEAPONS.gada) === 'mace'
+        && SPRITES.weaponKindFor({ id: 'x', type: 'bow' }) === 'bow'
+        && SPRITES.weaponKindFor({ id: 'x', type: 'melee' }) === 'sword'
+        && SPRITES.weaponKindFor(undefined) === 'sword';
+    })()`) === true);
+
+  check('SPRITES.weaponPose: idle rot=aim, swingP=-1',
+    R(`(() => {
+      const p = SPRITES.weaponPose({ x: 100, y: 100, r: 13, aim: 0.5, weapon: DATA.WEAPONS.khanda, swing: null });
+      return p.rot === 0.5 && p.swingP === -1;
+    })()`) === true);
+
+  check('SPRITES.weaponPose: melee swing sweeps start->end, combo alternates direction',
+    R(`(() => {
+      const C = SPRITES.CFG;
+      const base = { x: 0, y: 0, r: 13, aim: 0, weapon: DATA.WEAPONS.khanda };
+      const start1 = SPRITES.weaponPose(Object.assign({}, base, { comboIdx: 1, swing: { a: 0, t: C.SWING_DUR, arc: 2, range: 78 } }));
+      const end1   = SPRITES.weaponPose(Object.assign({}, base, { comboIdx: 1, swing: { a: 0, t: 1e-6, arc: 2, range: 78 } }));
+      const start2 = SPRITES.weaponPose(Object.assign({}, base, { comboIdx: 2, swing: { a: 0, t: C.SWING_DUR, arc: 2, range: 78 } }));
+      const end2   = SPRITES.weaponPose(Object.assign({}, base, { comboIdx: 2, swing: { a: 0, t: 1e-6, arc: 2, range: 78 } }));
+      return Math.abs(start1.rot - (-1)) < 1e-6 && Math.abs(end1.rot - 1) < 1e-3
+        && Math.abs(start2.rot - 1) < 1e-6 && Math.abs(end2.rot - (-1)) < 1e-3;
+    })()`) === true);
+
+  check('SPRITES.weaponPose: bow ignores swing, pull follows charge only while charging',
+    R(`(() => {
+      const p1 = SPRITES.weaponPose({ x: 0, y: 0, r: 13, aim: 0.7, weapon: DATA.WEAPONS.gandiva, swing: { a: 0, t: 0.1, arc: 2, range: 78 }, charging: true, charge: 0.6 });
+      const p2 = SPRITES.weaponPose({ x: 0, y: 0, r: 13, aim: 0.7, weapon: DATA.WEAPONS.gandiva, charging: false, charge: 0.6 });
+      return p1.rot === 0.7 && p1.pull === 0.6 && p2.pull === 0;
+    })()`) === true);
+
+  check('SPRITES.weaponPose: front (aim down) vs back (aim up) z-order',
+    R(`(() => {
+      const down = SPRITES.weaponPose({ x: 0, y: 100, r: 13, aim: Math.PI / 2, weapon: DATA.WEAPONS.khanda });
+      const up   = SPRITES.weaponPose({ x: 0, y: 100, r: 13, aim: -Math.PI / 2, weapon: DATA.WEAPONS.khanda });
+      return down.z > 100 && up.z < 100;
+    })()`) === true);
+
+  check('SPRITES.weaponPose: hand offset stays close to the body',
+    R(`(() => {
+      const C = SPRITES.CFG;
+      const e = { x: 50, y: 60, r: 13, aim: 1.1, weapon: DATA.WEAPONS.gada };
+      const p = SPRITES.weaponPose(e);
+      const dx = p.x - e.x, dy = p.y - (e.y + e.r * C.WEAPON_HAND_DY);
+      return Math.sqrt(dx * dx + dy * dy) <= 1.5 * e.r;
+    })()`) === true);
+
+  check('SPRITES.bgKeyFor/bgPathFor',
+    R(`SPRITES.bgKeyFor({ id: 'naraka' }) === 'bg:naraka' && SPRITES.bgPathFor({ id: 'patala' }) === 'assets/sprites/biomes/patala-bg.png'`) === true);
+
+  check('SPRITES texture helpers: headless-safe (no PIXI, no worldContainer)',
+    R(`(() => {
+      const notThrow = SPRITES.hasTexture('bg:naraka') === false && SPRITES.setBackground('bg:naraka') === false && SPRITES.setBackground(null) === false;
+      const r = SPRITES.loadTextures([{ key: 'bg:naraka', path: 'x.png' }]);
+      return notThrow && typeof r.then === 'function';
+    })()`) === true);
+}
+
 // ---------------- data integrity ----------------
 vm.runInContext(`
   globalThis.__dataErrors = [];

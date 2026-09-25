@@ -334,6 +334,38 @@ check('SPRITES groups & orders animation frames',
     })()`) === true);
 }
 
+// ---------------- sprite-path overlays (02-07) ----------------
+sandbox.__ctxStub = ctxStub;
+{
+  let ok = false;
+  try {
+    ok = vm.runInContext(`(() => {
+      if (!GAME.player) GAME.startRun();
+      const e = new Enemy('rakshasa', 300, 300, 1);
+      e.spawnT = 0; e.telegraph = { type: 'line', a: 0, len: 80 }; e.burns = [{ t: 1, dps: 1 }]; e.stun = 0.5; e.hp = 10;
+      GAME.renderSpriteExtras(__ctxStub, e);
+
+      const b = new Boss('yama', 400, 300);
+      b.state = 'noose'; b.telegraph = { type: 'circle', r: 60 }; b.asleep = true;
+      GAME.renderSpriteExtras(__ctxStub, b);
+
+      GAME.dt = 1 / 60;
+      const P = GAME.player;
+      P.swing = { a: 0, t: 0.1, range: 78, arc: 1.9 };
+      P.charging = true; P.charge = 1; P.bhaktiReady = true;
+      GAME.renderPlayerSpriteExtras(__ctxStub, P);
+      const swingOk = Math.abs(P.swing.t - (0.1 - 1 / 60)) < 1e-9;
+
+      P.swing.t = 0;
+      GAME.renderPlayerSpriteExtras(__ctxStub, P);
+      const zeroOk = P.swing.t === 0;
+
+      return swingOk && zeroOk;
+    })()`, sandbox);
+  } catch (e) { console.error(e); ok = false; }
+  check('GAME.renderSpriteExtras/renderPlayerSpriteExtras: no throw headless, swing.t decays by dt', ok);
+}
+
 // ---------------- data integrity ----------------
 vm.runInContext(`
   globalThis.__dataErrors = [];

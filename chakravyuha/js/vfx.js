@@ -22,7 +22,12 @@ const VFX = {
 
   // screen flash overlay state (VFX-04, D-15)
   flashT: 0, flashDur: 0, flashAlpha: 0, flashColor: 0xffffff,
-  fps: 0,   // FPS EMA maintained by tick(), consumed by the Plan 03 debug overlay
+  fps: 0,   // FPS EMA maintained by tick(), consumed by the debug overlay
+
+  // biome ambient particles (VFX-05, D-16)
+  AMBIENT: {},
+  _ambAcc: 0,
+  _ambBiome: null,
 
   // ---------------- pool bookkeeping ----------------
   _initPool() {
@@ -146,6 +151,44 @@ const VFX = {
     this.fps = this.fps ? this.fps * 0.95 + (1 / Math.max(dt, 1e-4)) * 0.05 : 60;
   },
 
+  // ---------------- biome ambient particles (VFX-05, D-16) ----------------
+  // Spawn-accumulator pattern: def.rate is particles/sec, scaled by reducedParticles.
+  // Ambient is hard-capped at 15% of CAP so it can never starve combat VFX.
+  ambient(biomeId, A, dt) {
+    const def = this.AMBIENT[biomeId];
+    if (!def) return;
+    if (this._ambBiome !== biomeId) { this._ambBiome = biomeId; this._ambAcc = 0; }
+    const reduced = typeof SETTINGS !== 'undefined' && SETTINGS.get('reducedParticles');
+    const rate = def.rate * (reduced ? 0.25 : 1);
+    this._ambAcc += rate * dt;
+    const capAmb = (this.CAP * 0.15) | 0;
+    while (this._ambAcc >= 1) {
+      this._ambAcc -= 1;
+      if (this.ambientActive < capAmb) def.spawn.call(this, A);
+    }
+  },
+
+  // ---------------- dev debug overlay (D-19) ----------------
+  renderDebug(ctx) {
+    if (!this.debug || !ctx) return;
+    const x = 1280 - 250, y = 76, w = 236, h = 78;
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 1;
+    ctx.strokeRect(x, y, w, h);
+    ctx.fillStyle = '#9cffb0';
+    ctx.font = '12px monospace';
+    ctx.textAlign = 'left';
+    const enemyCount = (typeof GAME !== 'undefined' && GAME.enemies) ? GAME.enemies.length : 0;
+    const lines = [
+      `FPS ${Math.round(this.fps || 0)}`,
+      `particles ${this.activeCount}/${this.CAP}  peak ${this.peak}`,
+      `dropped ${this.dropped}  ambient ${this.ambientActive}`,
+      `enemies ${enemyCount}  hitstop ${(typeof GAME !== 'undefined' && GAME.hitstop > 0) ? 'ON' : '-'}  ${this.stress ? 'STRESS' : ''}`,
+    ];
+    for (let i = 0; i < lines.length; i++) ctx.fillText(lines[i], x + 8, y + 18 + i * 16);
+  },
+
   // ---------------- simulation ----------------
   update(dt) {
     if (this.stress) {
@@ -198,7 +241,7 @@ const VFX = {
       const p = this.pool[i];
       if (!p.active) continue;
       const frac = U.clamp(p.t / p.max, 0, 1);
-      ctx.globalAlpha = frac;
+      ctx.globalAlpha = p.tex === 3 ? frac * 0.25 : frac; // mist (D-16): softer overall alpha
       ctx.fillStyle = p.color;
       const rad = U.lerp(p.r1, p.r0, frac);
       ctx.beginPath(); ctx.arc(p.x, p.y, rad, 0, U.TAU); ctx.fill();
@@ -448,4 +491,53 @@ VFX.PRESETS.phase = function (x, y, a, color) {
     const life = U.rand(0.4, 0.7);
     this.spawn(x, y, Math.cos(ang) * spd, Math.sin(ang) * spd, life, 4, 1, col, 0, false, 0.94, 0, 1, false);
   }
+};
+
+// ---------------- biome ambient particles (VFX-05, D-16) ----------------
+// Note on tuning: velocities/lives below are deliberately gentler than a literal reading
+// of the design doc's per-biome descriptions (e.g. "vy -30..-70") would suggest — sustained
+// for a multi-second ambient lifetime those speeds would routinely drift particles well
+// outside the arena. Slower ambient drift reads just as well visually and keeps particles
+// close to their spawn point for the lifetime of the effect (see 03-03-SUMMARY.md).
+VFX.AMBIENT.naraka = {
+  rate: 18,
+  // rising orange/red embers, additive, spawned in the bottom 60% of the arena
+  spawn(A) {
+    const x = U.rand(A.x, A.x + A.w);
+    const y = U.rand(A.y + A.h * 0.4, A.y + A.h);
+    const color = U.choice(['#ff7a2a', '#ffb347', '#ff3b1f']);
+    this.spawn(x, y, U.rand(-6, 6), U.rand(-16, -6), U.rand(2, 3.5), 2, 0.5, color, 2, true, 1, 0, 1, true);
+  },
+};
+
+VFX.AMBIENT.patala = {
+  rate: 10,
+  // slow rising teal/green bubbles and motes
+  spawn(A) {
+    const x = U.rand(A.x, A.x + A.w);
+    const y = U.rand(A.y, A.y + A.h);
+    const color = U.choice(['#58e0c0', '#9ce0c8']);
+    this.spawn(x, y, U.rand(-4, 4), U.rand(-8, -3), U.rand(3, 5), 3, 5, color, 0, false, 1, 0, 0, true);
+  },
+};
+
+VFX.AMBIENT.ranabhoomi = {
+  rate: 14,
+  // drifting grey-tan dust/ash with a gentle horizontal drift
+  spawn(A) {
+    const x = U.rand(A.x, A.x + A.w);
+    const y = U.rand(A.y, A.y + A.h);
+    const color = U.choice(['#b8a88a', '#8c8274']);
+    this.spawn(x, y, U.rand(4, 8), U.rand(-3, 3), U.rand(3, 5), 1.5, 2.5, color, 0, false, 1, 0, 0, true);
+  },
+};
+
+VFX.AMBIENT.vaitarani = {
+  rate: 4,
+  // large, low-alpha, slow blue-grey mist puffs (mist alpha is further softened in render())
+  spawn(A) {
+    const x = U.rand(A.x, A.x + A.w);
+    const y = U.rand(A.y, A.y + A.h);
+    this.spawn(x, y, U.rand(-4, 4), 0, U.rand(5, 8), 40, 70, '#8fa8c8', 3, false, 1, 0, 0, true);
+  },
 };

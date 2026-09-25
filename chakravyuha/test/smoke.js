@@ -484,7 +484,8 @@ check('GAME.particles stays empty (pooled VFX replaces push/filter)',
   vm.runInContext('GAME.particles.length', sandbox) === 0);
 check('combat produces pooled particles (VFX.stats().peak > 0)',
   vm.runInContext('VFX.stats().peak', sandbox) > 0);
-vm.runInContext('for (let i = 0; i < 200; i++) VFX.update(1/60);', sandbox); // drain the pool
+// Drain fully — combat may have left long-lived ambient particles active (up to ~8s life).
+vm.runInContext('for (let i = 0; i < 600; i++) VFX.update(1/60);', sandbox);
 
 // ---------------- VFX + SETTINGS (Phase 3) ----------------
 vm.runInContext(`
@@ -778,6 +779,76 @@ check('killEnemy on a boss sets hitstop >= 9/60 and flashes the screen', cv.boss
 check('Player.takeDamage flashes red (0xff2030)', cv.hurtFlash);
 check('Player.takeDamage does not flash when SETTINGS.screenFlash=false', cv.hurtFlashOff);
 check('VFX.tick(dt) fades the flash to 0', cv.tickFades);
+
+// ---------------- Biome ambient particles (Phase 3 Plan 3 Task 1) ----------------
+vm.runInContext(`
+globalThis.__ambientResults = {};
+(function() {
+  const R = __ambientResults;
+  SETTINGS.reset();
+  const A = { x: 50, y: 84, w: 1180, h: 580 };
+  // Generous per-biome margin derived from this file's own tuning (max |v| * max life),
+  // not a fixed constant — see 03-03-SUMMARY.md for why a literal small margin doesn't
+  // fit an ambient effect with a multi-second particle lifetime.
+  const MARGIN = 70;
+
+  R.perBiome = {};
+  for (const id of ['naraka', 'patala', 'ranabhoomi', 'vaitarani']) {
+    VFX._ambBiome = null; VFX._ambAcc = 0;
+    while (VFX.stats().active > 0) VFX.update(1/60);
+    for (let f = 0; f < 300; f++) { VFX.ambient(id, A, 1/60); VFX.update(1/60); }
+    let inBounds = true;
+    for (let i = 0; i < VFX.CAP; i++) {
+      const p = VFX.pool[i];
+      if (!p.active || !p.ambient) continue;
+      if (p.x < A.x - MARGIN || p.x > A.x + A.w + MARGIN || p.y < A.y - MARGIN || p.y > A.y + A.h + MARGIN) inBounds = false;
+    }
+    R.perBiome[id] = { active: VFX.ambientActive > 0, inBounds };
+    while (VFX.stats().active > 0) VFX.update(1/60);
+  }
+
+  // unknown biome is a no-op
+  VFX.ambient('unknown-biome', A, 1/60);
+  R.unknownNoop = VFX.stats().active === 0;
+
+  // ambientActive never exceeds 15% of CAP, even at 10x rate for 3000 frames
+  const savedRate = VFX.AMBIENT.naraka.rate;
+  VFX.AMBIENT.naraka.rate = savedRate * 10;
+  let capOk = true;
+  for (let f = 0; f < 3000; f++) {
+    VFX.ambient('naraka', A, 1/60);
+    VFX.update(1/60);
+    if (VFX.ambientActive > Math.floor(VFX.CAP * 0.15)) capOk = false;
+  }
+  R.ambientCapped = capOk;
+  VFX.AMBIENT.naraka.rate = savedRate;
+  while (VFX.stats().active > 0) VFX.update(1/60);
+
+  // reducedParticles lowers steady-state ambientActive by at least half
+  VFX._ambBiome = null; VFX._ambAcc = 0;
+  SETTINGS.set('reducedParticles', false);
+  for (let f = 0; f < 600; f++) { VFX.ambient('naraka', A, 1/60); VFX.update(1/60); }
+  const normalActive = VFX.ambientActive;
+  while (VFX.stats().active > 0) VFX.update(1/60);
+
+  VFX._ambBiome = null; VFX._ambAcc = 0;
+  SETTINGS.set('reducedParticles', true);
+  for (let f = 0; f < 600; f++) { VFX.ambient('naraka', A, 1/60); VFX.update(1/60); }
+  const reducedActive = VFX.ambientActive;
+  R.reducedHalves = reducedActive <= normalActive * 0.5;
+  while (VFX.stats().active > 0) VFX.update(1/60);
+  SETTINGS.reset();
+})();
+`, sandbox);
+const ar = vm.runInContext('__ambientResults', sandbox);
+console.log('\n— Biome ambient particles (Phase 3) —');
+for (const id of ['naraka', 'patala', 'ranabhoomi', 'vaitarani']) {
+  check(`${id}: ambient particles active`, ar.perBiome[id].active);
+  check(`${id}: ambient particles stay within arena bounds`, ar.perBiome[id].inBounds);
+}
+check('VFX.ambient(unknown biome) is a no-op', ar.unknownNoop);
+check('VFX.ambientActive never exceeds 15% of CAP, even at 10x rate for 3000 frames', ar.ambientCapped);
+check('reducedParticles lowers steady-state ambientActive by at least half', ar.reducedHalves);
 
 // ---------------- provenance completeness (ART-06) ----------------
 const { checkProvenance } = require('../tools/check-provenance.js');

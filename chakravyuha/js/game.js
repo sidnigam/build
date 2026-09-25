@@ -73,6 +73,11 @@ const GAME = {
         if (this.state === 'paused') UI.resume();
         else UI.pause();
       }
+      if (k === 'f3') {
+        e.preventDefault();
+        if (e.shiftKey) VFX.stress = !VFX.stress;
+        else VFX.debug = !VFX.debug;
+      }
     });
     window.addEventListener('keyup', e => { INPUT.keys[e.key.toLowerCase()] = false; });
 
@@ -363,6 +368,7 @@ const GAME = {
 
     // cosmetic arrays
     VFX.update(dt);
+    VFX.ambient(this.biome.id, this.arena, dt);
     for (const t of this.texts) { t.t -= dt; t.y -= 36 * dt; }
     this.texts = this.texts.filter(t => t.t > 0);
     for (const r of this.rings) r.t -= dt;
@@ -391,6 +397,7 @@ const GAME = {
     CAMERA.end();
     // UI pass — separate HUD bridge in hudContainer: unaffected by shake, above sprites (D-10/D-11)
     this.renderHUD(SPRITES.hudBridgeCtx || ctx);
+    VFX.renderDebug(SPRITES.hudBridgeCtx || ctx);
     SPRITES.uploadBridge();                      // re-upload bridge canvas to Pixi texture
   },
 

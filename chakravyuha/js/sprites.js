@@ -759,6 +759,7 @@ const SPRITES = {
     e._pixiSprite = null;
     e._pixiAnim   = null;
     e._pixiLayout = null;
+    this._destroyWeapon(e);   // 02-10: a dead player's weapon disappears with it
     this._tracked.delete(e);
   },
 
@@ -828,12 +829,146 @@ const SPRITES = {
     }
   },
 
+  // ---------------- Weapon overlay Pixi runtime (02-10) ----------------
+
   /**
-   * setBackground(key) — 02-10 Task 1 stub: headless/no-Pixi guard only. The Pixi body (cover-fit
-   * sprite below the bridge) is added in Task 2.
+   * _buildWeapon(kind) — builds a code-drawn khanda/gandiva/gada in a gold+steel palette.
+   * Art is authored for r=13 along the +x axis, grip/limb-center at the local origin.
+   * Returns { root, string } — string is a redrawn-per-frame Graphics child, bow only.
+   */
+  _buildWeapon(kind) {
+    const PIXI = window.PIXI;
+    const root = new PIXI.Container();
+    const GOLD = 0xffd34d, DEEP_GOLD = 0xa87b1d, STEEL = 0xd9dde6, LEATHER = 0x3a2412, OUTLINE = 0x1a0f08;
+    let string = null;
+
+    if (kind === 'mace') {
+      const g = new PIXI.Graphics();
+      g.rect(0, -1.8, 26, 3.6).fill({ color: DEEP_GOLD });                 // shaft
+      for (const bx of [6, 13, 20]) g.rect(bx, -1.8, 2, 3.6).fill({ color: GOLD }); // bands
+      g.circle(31, 0, 8).fill({ color: 0xc9a13a }).stroke({ width: 1, color: OUTLINE }); // head
+      for (let i = 0; i < 8; i++) {                                        // flanges
+        const a = (i / 8) * Math.PI * 2;
+        const bx = 31 + Math.cos(a) * 8, by = Math.sin(a) * 8;
+        const tx = 31 + Math.cos(a) * 12, ty = Math.sin(a) * 12;
+        const px = -Math.sin(a) * 2, py = Math.cos(a) * 2;
+        g.poly([bx - px, by - py, bx + px, by + py, tx, ty]).fill({ color: STEEL });
+      }
+      g.circle(40, 0, 2.2).fill({ color: GOLD });                          // top knob
+      g.moveTo(24, -1.6).lineTo(2, -1.6).stroke({ width: 1, color: 0xffffff, alpha: 0.4 }); // highlight
+      root.addChild(g);
+    } else if (kind === 'bow') {
+      const g = new PIXI.Graphics();
+      g.moveTo(4, -20).quadraticCurveTo(14, -12, 12, 0).quadraticCurveTo(14, 12, 4, 20)
+        .stroke({ width: 5, color: OUTLINE });
+      g.moveTo(4, -20).quadraticCurveTo(14, -12, 12, 0).quadraticCurveTo(14, 12, 4, 20)
+        .stroke({ width: 3, color: GOLD });
+      g.rect(10, -3, 4, 6).fill({ color: LEATHER });                       // grip
+      g.circle(4, -20, 1.6).fill({ color: GOLD });
+      g.circle(4, 20, 1.6).fill({ color: GOLD });                          // tip caps
+      root.addChild(g);
+      string = new PIXI.Graphics();                                       // redrawn per-frame (drawWeapon)
+      root.addChild(string);
+    } else {
+      // sword (khanda) — default: straight double-edged blade with a broadened tip.
+      const g = new PIXI.Graphics();
+      g.rect(0, -1.6, 8, 3.2).fill({ color: LEATHER });                    // grip
+      g.circle(-1, 0, 2.6).fill({ color: GOLD });                          // pommel
+      g.rect(8, -5, 3, 10).fill({ color: GOLD });                          // crossguard
+      g.circle(9.5, -5, 1.2).fill({ color: GOLD });
+      g.circle(9.5, 5, 1.2).fill({ color: GOLD });                         // finials
+      g.poly([11, -2.2, 34, -2.6, 38, -3.4, 42, 0, 38, 3.4, 34, 2.6, 11, 2.2])
+        .fill({ color: STEEL }).stroke({ width: 1, color: OUTLINE });      // blade
+      g.moveTo(12, -0.6).lineTo(36, -0.6).stroke({ width: 1, color: 0xffffff, alpha: 0.55 }); // fuller highlight
+      root.addChild(g);
+    }
+
+    return { root, string };
+  },
+
+  /**
+   * drawWeapon(e) — draws/updates the player's equipped weapon each frame. No weapon art without
+   * a live player sprite. Never throws: a failure here must not break the frame.
+   */
+  drawWeapon(e) {
+    if (!this.entityContainer || !e._pixiSprite) return;
+    try {
+      const pose = this.weaponPose(e);
+      if (e._pixiWeaponKind !== pose.kind) {
+        if (e._pixiWeapon) {
+          if (e._pixiWeapon.parent) e._pixiWeapon.parent.removeChild(e._pixiWeapon);
+          e._pixiWeapon.destroy({ children: true });
+        }
+        const built = this._buildWeapon(pose.kind);
+        e._pixiWeapon = built.root;
+        e._pixiWeaponString = built.string;
+        e._pixiWeaponKind = pose.kind;
+        this.entityContainer.addChild(e._pixiWeapon);
+      }
+
+      const root = e._pixiWeapon;
+      root.position.set(pose.x, pose.y);
+      root.rotation = pose.rot;
+      const s = e.r * this.CFG.WEAPON_SCALE_PER_R;
+      root.scale.set(s * pose.reach, s * (Math.cos(pose.rot) < 0 ? -1 : 1));   // flip Y so art stays right-side up
+      root.zIndex = pose.z;
+      root.alpha = e._pixiSprite.alpha;   // inherits the iframes blink
+
+      if (pose.kind === 'bow' && e._pixiWeaponString) {
+        const str = e._pixiWeaponString;
+        str.clear();
+        str.moveTo(4, -20).lineTo(4 - 14 * pose.pull, 0).lineTo(4, 20).stroke({ width: 1, color: 0xf2e6c8 });
+        if (pose.pull > 0) {
+          str.moveTo(4 - 14 * pose.pull, 0).lineTo(34, 0).stroke({ width: 1.5, color: 0xd9dde6 });
+          str.poly([34, -2, 40, 0, 34, 2]).fill({ color: 0xd9dde6 });   // nocked arrow tip
+        }
+      }
+    } catch (err) {
+      if (!this._weaponWarned) { console.warn('[SPRITES] weapon overlay unavailable', err); this._weaponWarned = true; }
+    }
+  },
+
+  /**
+   * _destroyWeapon(e) — detaches + destroys an entity's weapon (if any) and clears its fields.
+   * Called from both removeEntity and retireEntity so a dead/despawned player's weapon never leaks.
+   */
+  _destroyWeapon(e) {
+    const w = e._pixiWeapon;
+    if (w) {
+      if (w.parent) w.parent.removeChild(w);
+      w.destroy({ children: true });
+    }
+    e._pixiWeapon = null;
+    e._pixiWeaponKind = null;
+    e._pixiWeaponString = null;
+  },
+
+  // ---------------- Biome background sprite (02-10) ----------------
+
+  /**
+   * setBackground(key) — shows the cover-fit illustrated biome background below the bridge canvas
+   * (worldContainer index 0), or hides it when key is falsy / the texture hasn't loaded (D-11).
    */
   setBackground(key) {
     if (!this.worldContainer) return false;
+    const tex = key && this.textures[key];
+    if (tex) {
+      if (!this.bgSprite) {
+        const PIXI = window.PIXI;
+        this.bgSprite = new PIXI.Sprite(tex);
+        this.worldContainer.addChildAt(this.bgSprite, 0);   // below bridgeSprite (D-11 fallback stays underneath)
+      } else if (this.bgSprite.texture !== tex) {
+        this.bgSprite.texture = tex;
+      }
+      // Cover-fit the shake-padded rect (-30,-30,1340,780) uniformly.
+      const sc = Math.max(1340 / tex.width, 780 / tex.height);
+      this.bgSprite.scale.set(sc);
+      this.bgSprite.x = 640 - (tex.width * sc) / 2;
+      this.bgSprite.y = 360 - (tex.height * sc) / 2;
+      this.bgSprite.visible = true;
+      return true;
+    }
+    if (this.bgSprite) this.bgSprite.visible = false;
     return false;
   },
 
@@ -850,6 +985,7 @@ const SPRITES = {
     e._pixiSprite = null;
     e._pixiAnim   = null;
     e._pixiLayout = null;
+    this._destroyWeapon(e);   // 02-10: weapon lifecycle mirrors the sprite lifecycle
     this._tracked.delete(e);
   },
 };

@@ -2,12 +2,43 @@
   "name": "chakravyuha",
   "version": "1.0.0",
   "private": true,
+  "main": "electron/main.js",
   "scripts": {
     "test": "node test/smoke.js",
-    "pack-atlas": "node tools/pack-atlas.js"
+    "pack-atlas": "node tools/pack-atlas.js",
+    "start:desktop": "electron .",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win"
   },
   "devDependencies": {
+    "electron": "^42.11.8",
+    "electron-builder": "^26.15.3",
     "free-tex-packer-core": "0.3.8",
     "sharp": "0.35.2"
+  },
+  "build": {
+    "appId": "com.chakravyuha.game",
+    "productName": "Chakravyuha",
+    "files": [
+      "index.html",
+      "js/**/*",
+      "assets/**/*",
+      "vendor/**/*",
+      "electron/**/*",
+      "!assets/**/_raw/**",
+      "!assets/**/_review/**",
+      "!assets/**/reference/**"
+    ],
+    "mac": {
+      "target": [
+        { "target": "dmg", "arch": ["arm64", "x64"] }
+      ],
+      "identity": null
+    },
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ]
+    }
   }
 }

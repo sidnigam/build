@@ -80,7 +80,7 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 
 // ---------------- load game scripts ----------------
-const files = ['utils.js', 'renderer.js', 'sprites.js', 'audio.js', 'data.js', 'meta.js', 'entities.js', 'rooms.js', 'ui.js', 'game.js'];
+const files = ['utils.js', 'renderer.js', 'sprites.js', 'audio.js', 'data.js', 'meta.js', 'entities.js', 'rooms.js', 'ui.js', 'game.js', 'storage.js'];
 for (const f of files) {
   const src = fs.readFileSync(path.join(__dirname, '..', 'js', f), 'utf8');
   vm.runInContext(src, sandbox, { filename: f });
@@ -156,6 +156,96 @@ check('SPRITES groups & orders animation frames',
       const r2 = aSpr.d === true && A._pixiSprite === null && SPRITES._tracked.size === 0;
       return r1 && r2;
     })()`) === true);
+}
+
+// ---------------- STORE (js/storage.js) checks ----------------
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+
+  check('STORE.resolveMode(true, true) -> desktop', R("STORE.resolveMode(true, true)") === 'desktop');
+  check('STORE.resolveMode(true, false) -> desktop', R("STORE.resolveMode(true, false)") === 'desktop');
+  check('STORE.resolveMode(false, true) -> browser', R("STORE.resolveMode(false, true)") === 'browser');
+  check('STORE.resolveMode(false, false) -> headless', R("STORE.resolveMode(false, false)") === 'headless');
+
+  vm.runInContext(`
+    globalThis.__storeResults = {};
+    const __savedMode = STORE._mode;
+    const __savedChakra = window.chakraNative;
+
+    // fallback for a missing key, in every mode
+    __storeResults.fallback = ['desktop', 'browser', 'headless'].map(m => {
+      STORE._mode = m;
+      delete STORE._cache['__smoke_missing__'];
+      return STORE.get('__smoke_missing__', 'fallback');
+    });
+
+    // browser mode round-trip
+    STORE._mode = 'browser';
+    delete STORE._cache['__smoke_browser__'];
+    STORE.set('__smoke_browser__', { a: 1 });
+    delete STORE._cache['__smoke_browser__'];
+    __storeResults.browserRoundtrip = STORE.get('__smoke_browser__');
+    localStorage.removeItem('__smoke_browser__');
+
+    // headless mode round-trip (via _memory, not just cache)
+    STORE._mode = 'headless';
+    delete STORE._cache['__smoke_headless__'];
+    STORE.set('__smoke_headless__', { b: 2 });
+    delete STORE._cache['__smoke_headless__'];
+    __storeResults.headlessRoundtrip = STORE.get('__smoke_headless__');
+    __storeResults.headlessInMemory = STORE._memory['__smoke_headless__'];
+
+    // desktop mode: legacy migration (chakraNative miss, localStorage hit)
+    STORE._mode = 'desktop';
+    delete STORE._cache['__smoke_migrate__'];
+    localStorage.setItem('__smoke_migrate__', JSON.stringify({ legacy: true }));
+    __storeResults.migrateCalls = [];
+    window.chakraNative = {
+      saveRead: () => null,
+      saveWrite: (n, j) => { __storeResults.migrateCalls.push([n, JSON.parse(j)]); },
+    };
+    __storeResults.migrateValue = STORE.get('__smoke_migrate__', 'fallback');
+    localStorage.removeItem('__smoke_migrate__');
+
+    // desktop mode: normal read (chakraNative hit) must not touch localStorage or call saveWrite
+    delete STORE._cache['__smoke_native__'];
+    __storeResults.nativeWriteCalls = 0;
+    __storeResults.legacyReadCalls = 0;
+    const __origGetItem = localStorage.getItem;
+    localStorage.getItem = function(k) { __storeResults.legacyReadCalls++; return __origGetItem.call(localStorage, k); };
+    window.chakraNative = {
+      saveRead: (n) => n === '__smoke_native__' ? JSON.stringify({ native: true }) : null,
+      saveWrite: () => { __storeResults.nativeWriteCalls++; },
+    };
+    __storeResults.nativeValue = STORE.get('__smoke_native__', 'fallback');
+    localStorage.getItem = __origGetItem;
+
+    // restore original mode/chakraNative/cache so later tests (meta save/load) are unaffected
+    if (__savedChakra === undefined) delete window.chakraNative; else window.chakraNative = __savedChakra;
+    STORE._mode = __savedMode;
+    delete STORE._cache['__smoke_missing__'];
+    delete STORE._cache['__smoke_browser__'];
+    delete STORE._cache['__smoke_headless__'];
+    delete STORE._cache['__smoke_migrate__'];
+    delete STORE._cache['__smoke_native__'];
+  `, sandbox);
+
+  const storeResults = vm.runInContext('__storeResults', sandbox);
+  check('STORE.get returns fallback for a missing key in every mode',
+    JSON.stringify(storeResults.fallback) === JSON.stringify(['fallback', 'fallback', 'fallback']));
+  check('STORE browser-mode round-trip via localStorage',
+    JSON.stringify(storeResults.browserRoundtrip) === JSON.stringify({ a: 1 }));
+  check('STORE headless-mode round-trip via _memory (nothing throws)',
+    JSON.stringify(storeResults.headlessRoundtrip) === JSON.stringify({ b: 2 }) &&
+    JSON.stringify(storeResults.headlessInMemory) === JSON.stringify({ b: 2 }));
+  check('STORE desktop-mode migrates legacy localStorage value (returns parsed legacy value)',
+    JSON.stringify(storeResults.migrateValue) === JSON.stringify({ legacy: true }));
+  check('STORE desktop-mode migration writes through to chakraNative exactly once',
+    JSON.stringify(storeResults.migrateCalls) === JSON.stringify([['__smoke_migrate__', { legacy: true }]]));
+  check('STORE desktop-mode normal read returns parsed chakraNative value',
+    JSON.stringify(storeResults.nativeValue) === JSON.stringify({ native: true }));
+  check('STORE desktop-mode normal read does not touch localStorage or call saveWrite',
+    storeResults.legacyReadCalls === 0 && storeResults.nativeWriteCalls === 0);
 }
 
 // ---------------- data integrity ----------------

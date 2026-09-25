@@ -20,9 +20,8 @@ const META = {
 
   load() {
     try {
-      const raw = localStorage.getItem(this.KEY);
-      if (raw) {
-        const s = JSON.parse(raw);
+      const s = STORE.get(this.KEY, null);
+      if (s) {
         Object.assign(this, {
           punya: s.punya | 0,
           upgrades: s.upgrades || {},
@@ -42,12 +41,12 @@ const META = {
 
   save() {
     try {
-      localStorage.setItem(this.KEY, JSON.stringify({
+      STORE.set(this.KEY, {
         punya: this.punya, upgrades: this.upgrades, weapons: this.weapons,
         lastWeapon: this.lastWeapon, deaths: this.deaths, wins: this.wins,
         runs: this.runs, bestBiome: this.bestBiome, bestTime: this.bestTime,
         codexSeen: this.codexSeen,
-      }));
+      });
     } catch (e) { /* storage unavailable; play session-only */ }
   },
 
@@ -87,7 +86,7 @@ const META = {
   defianceCount()  { return this.rank('sanjeevani'); },
 
   wipe() {
-    try { localStorage.removeItem(this.KEY); } catch (e) {}
+    try { STORE.remove(this.KEY); } catch (e) {}
     Object.assign(this, {
       punya: 0, upgrades: {}, weapons: ['khanda'], lastWeapon: 'khanda',
       deaths: 0, wins: 0, runs: 0, bestBiome: 0, bestTime: 0, codexSeen: false,

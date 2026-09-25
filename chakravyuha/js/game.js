@@ -338,8 +338,7 @@ const GAME = {
     }
 
     // cosmetic arrays
-    for (const p of this.particles) { p.t -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.96; p.vy *= 0.96; }
-    this.particles = this.particles.filter(p => p.t > 0);
+    VFX.update(dt);
     for (const t of this.texts) { t.t -= dt; t.y -= 36 * dt; }
     this.texts = this.texts.filter(t => t.t > 0);
     for (const r of this.rings) r.t -= dt;
@@ -362,7 +361,7 @@ const GAME = {
     if (inRun) {
       this.renderEntities(ctx);
       this.renderEffects(ctx);
-    }
+    } else VFX.render(ctx);
     // Sweep sprites whose entities were not drawn this frame (G.enemies = [] on room change, hub state).
     SPRITES.endEntities();
     CAMERA.end();
@@ -566,12 +565,7 @@ const GAME = {
     }
 
     // particles
-    for (const p of this.particles) {
-      ctx.globalAlpha = U.clamp(p.t / p.max, 0, 1);
-      ctx.fillStyle = p.color;
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, U.TAU); ctx.fill();
-    }
-    ctx.globalAlpha = 1;
+    VFX.render(ctx);
 
     // damage texts
     for (const t of this.texts) {

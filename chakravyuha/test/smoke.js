@@ -469,6 +469,23 @@ for (const w of ['gandiva', 'gada']) {
     r.errors.length === 0 && r.final === 'victory');
 }
 
+// ---- pooled particles wired through combat ----
+console.log('\n— pooled particles wired through combat —');
+vm.runInContext(`
+  GAME.startRun();
+  for (let f = 0; f < 300; f++) {
+    const living = GAME.enemies.filter(e => !e.dead && e.spawnT <= 0);
+    if (living.length) hitEnemy(living[0], 20, 'attack');
+    GAME.update(1/60);
+    GAME.render();
+  }
+`, sandbox);
+check('GAME.particles stays empty (pooled VFX replaces push/filter)',
+  vm.runInContext('GAME.particles.length', sandbox) === 0);
+check('combat produces pooled particles (VFX.stats().peak > 0)',
+  vm.runInContext('VFX.stats().peak', sandbox) > 0);
+vm.runInContext('for (let i = 0; i < 200; i++) VFX.update(1/60);', sandbox); // drain the pool
+
 // ---------------- VFX + SETTINGS (Phase 3) ----------------
 vm.runInContext(`
 globalThis.__vfxResults = {};

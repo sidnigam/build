@@ -6,11 +6,7 @@
 
 // ---------------- particles & floating text ----------------
 function burst(x, y, color, n = 8, spd = 160, life = 0.4, r = 3) {
-  for (let i = 0; i < n; i++) {
-    const a = U.rand(U.TAU), s = U.rand(spd * 0.3, spd);
-    GAME.particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s,
-      t: U.rand(life * 0.5, life), max: life, color, r: U.rand(r * 0.5, r) });
-  }
+  VFX.burst(x, y, color, n, spd, life, r);
 }
 function dmgText(x, y, str, color = '#fff', size = 16) {
   GAME.texts.push({ x: x + U.rand(-10, 10), y, str, color, size, t: 0.8 });

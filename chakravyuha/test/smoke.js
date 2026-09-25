@@ -883,6 +883,35 @@ check('SETTINGS.applyFromDom() applies boolean checkbox values', dr.applyBoolean
 check('SETTINGS.applyFromDom() applies range-slider values as 0..1 floats', dr.applyNumber);
 check('SETTINGS.applyFromDom()/bindDom() with an unknown id does not throw', dr.missingElOk);
 
+// ---------------- Worst-case stress run (Phase 3 Plan 3 Task 3) ----------------
+console.log('\n— worst-case stress run (flooded pool, all 4 bosses) —');
+vm.runInContext(`META.lastWeapon = 'gandiva'; VFX.stress = true;`, sandbox);
+const stressT0 = Date.now();
+const rs = vm.runInContext('simulateRun({ godMode: true })', sandbox);
+const stressMs = Date.now() - stressT0;
+vm.runInContext('VFX.stress = false;', sandbox);
+console.log(`  (stress run took ${stressMs}ms wall clock)`);
+check('stress run: no runtime errors' + (rs.errors.length ? ' — ' + rs.errors[0] : ''), rs.errors.length === 0);
+check(`stress run: reaches victory (final=${rs.final})`, rs.final === 'victory');
+check(`stress run: fights all 4 bosses (${[...rs.bosses].join(', ')})`, rs.bosses.size === 4);
+check('stress run: VFX.pool.length === CAP (no growth under sustained saturation)',
+  vm.runInContext('VFX.pool.length === VFX.CAP', sandbox) === true);
+check('stress run: VFX.stats().peak <= CAP', vm.runInContext('VFX.stats().peak <= VFX.CAP', sandbox) === true);
+check('stress run: VFX.stats().dropped > 0 (pool was genuinely saturated)',
+  vm.runInContext('VFX.stats().dropped > 0', sandbox) === true);
+
+check('VFX.renderDebug is a function', vm.runInContext('typeof VFX.renderDebug', sandbox) === 'function');
+vm.runInContext(`
+  globalThis.__debugOverlayOk = true;
+  try {
+    VFX.debug = true;
+    VFX.renderDebug(document.getElementById('__vfxdebugcv').getContext('2d'));
+  } catch (e) { __debugOverlayOk = false; }
+  VFX.debug = false;
+`, sandbox);
+check('VFX.renderDebug(ctx) does not throw when VFX.debug is on', vm.runInContext('__debugOverlayOk', sandbox));
+vm.runInContext('for (let i = 0; i < 600; i++) VFX.update(1/60);', sandbox); // drain fully
+
 // ---------------- provenance completeness (ART-06) ----------------
 const { checkProvenance } = require('../tools/check-provenance.js');
 const prov = checkProvenance(path.join(__dirname, '..', 'assets', 'sprites'));

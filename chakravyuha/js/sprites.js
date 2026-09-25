@@ -201,24 +201,120 @@ const SPRITES = {
     return spr;
   },
 
+  // ---------------- Tunables (quick-260924-tka) ----------------
+  CFG: {
+    HEIGHT_PER_R: 4,            // tunable: on-screen sprite height = r * HEIGHT_PER_R (player r13 -> ~52px)
+    BOSS_HEIGHT_PER_R: 4,       // tunable: same, for bosses (e.boss truthy)
+    HEIGHT_PER_R_OVERRIDE: {},  // tunable: per-atlas-key override, e.g. { bhuta: 3.2 }
+    FEET_ANCHOR_Y: 0.9,         // tunable: anchor Y (0..1 of frame) used when a texture carries no trim data
+    FEET_OFFSET_R: 1,           // tunable: feet sit this many r below entity centre (bottom of hitbox circle)
+    DEFAULT_FACING: 1,          // tunable: +1 = source art faces right/front; set -1 if a sheet faces left
+    FACING_DEADZONE: 0.08,      // tunable: |cos(angle)| below this keeps the previous facing (no flicker at vertical aim)
+    MOVE_EPS: 0.4,              // tunable: |dx|+|dy| per frame above which an entity counts as moving
+  },
+
+  ATTACK_STATES: new Set(['wind', 'lunge', 'strike', 'charge', 'charging', 'noose', 'spiral', 'summon', 'slam', 'cast', 'sweep']),
+
   /**
-   * _animFor(e)
-   * Map entity state to animation name.
+   * pickAnim(available, requested) — pure.
+   * requested if present, else 'idle', else first available, else null.
    */
-  _animFor(e) {
-    // Player animation mapping
+  pickAnim(available, requested) {
+    if (!available || !available.length) return null;
+    if (available.indexOf(requested) !== -1) return requested;
+    if (available.indexOf('idle') !== -1) return 'idle';
+    return available[0];
+  },
+
+  /**
+   * animForEntity(e, moved) — pure.
+   * Entities have no vx/vy, so movement is detected from position change (movedSince).
+   */
+  animForEntity(e, moved) {
     if (e.spriteKey === 'player' || e.type === undefined) {
       if (e.dashT > 0) return 'dash';
       if (e.swing && e.swing.t > 0) return 'attack';
-      if (e.vx !== undefined && (Math.abs(e.vx) > 1 || Math.abs(e.vy) > 1)) return 'run';
+      if (moved) return 'run';
       return 'idle';
     }
-    // Enemy / boss animation mapping
     const s = e.state || '';
-    if (s === 'wind' || s === 'lunge' || s === 'strike' || s === 'charge' ||
-        s === 'slam' || s === 'cast' || s === 'spin' || s === 'sweep') return 'attack';
-    if (s === 'chase' || s === 'approach' || s === 'retreat') return 'run';
+    if (this.ATTACK_STATES.has(s) || /Wind$/.test(s)) return 'attack';
+    if (moved) return 'run';
     return 'idle';
+  },
+
+  /**
+   * movedSince(e) — compares against the position stored on the previous call.
+   * Returns false on the first call.
+   */
+  movedSince(e) {
+    const px = e._sprLastX, py = e._sprLastY;
+    e._sprLastX = e.x;
+    e._sprLastY = e.y;
+    if (px === undefined || py === undefined) return false;
+    return Math.abs(e.x - px) + Math.abs(e.y - py) > this.CFG.MOVE_EPS;
+  },
+
+  /**
+   * facingSign(angle, prev) — pure. +/-DEFAULT_FACING; inside the vertical deadzone keeps prev.
+   */
+  facingSign(angle, prev) {
+    const c = Math.cos(angle);
+    if (Math.abs(c) < this.CFG.FACING_DEADZONE && prev) return prev;
+    return c < 0 ? -this.CFG.DEFAULT_FACING : this.CFG.DEFAULT_FACING;
+  },
+
+  /**
+   * spriteLayout({ r, frameH, trimY, trimH, heightPerR }) — pure.
+   * Scales visible content to r * heightPerR; with trim, anchors exactly at the bottom of visible pixels.
+   */
+  spriteLayout({ r, frameH, trimY, trimH, heightPerR }) {
+    const hpr = heightPerR || this.CFG.HEIGHT_PER_R;
+    let contentH, anchorY;
+    if (trimH > 0) {
+      contentH = trimH;
+      anchorY = ((trimY || 0) + trimH) / frameH;
+    } else {
+      contentH = frameH;
+      anchorY = this.CFG.FEET_ANCHOR_Y;
+    }
+    return { scale: (r * hpr) / contentH, anchorY, dy: r * this.CFG.FEET_OFFSET_R };
+  },
+
+  /**
+   * heightPerRFor(key, e) — pure.
+   */
+  heightPerRFor(key, e) {
+    const o = this.CFG.HEIGHT_PER_R_OVERRIDE[key];
+    if (o) return o;
+    return e && e.boss ? this.CFG.BOSS_HEIGHT_PER_R : this.CFG.HEIGHT_PER_R;
+  },
+
+  // ---------------- Mark-and-sweep bookkeeping (no Pixi dependency) ----------------
+  _frameId: 0,
+  _tracked: new Set(),
+
+  beginEntities() {
+    this._frameId++;
+  },
+
+  _markSeen(e) {
+    e._sprSeen = this._frameId;
+    this._tracked.add(e);
+  },
+
+  /**
+   * endEntities() — destroy sprites of entities not drawn this frame
+   * (replaced via G.enemies = [], or not rendered because we are in the hub).
+   */
+  endEntities() {
+    for (const e of Array.from(this._tracked)) {
+      if (e._sprSeen !== this._frameId) this.removeEntity(e);
+    }
+  },
+
+  clearEntities() {
+    for (const e of Array.from(this._tracked)) this.removeEntity(e);
   },
 
   /**
@@ -231,7 +327,7 @@ const SPRITES = {
     if (!key || !this.has(key) || !this.entityContainer) return;
 
     const PIXI = window.PIXI;
-    const animName = this._animFor(e);
+    const animName = this.animForEntity(e, this.movedSince(e));
 
     if (!e._pixiSprite || e._pixiAnim !== animName) {
       // Remove old sprite if animation changed
@@ -253,16 +349,17 @@ const SPRITES = {
 
   /**
    * removeEntity(e)
-   * Remove a dead entity's sprite from the scene graph.
+   * Detach + destroy an entity's sprite (always destroys, even when unparented) and stop tracking it.
    */
   removeEntity(e) {
-    if (e._pixiSprite) {
-      if (e._pixiSprite.parent) {
-        e._pixiSprite.parent.removeChild(e._pixiSprite);
-        e._pixiSprite.destroy();
-      }
-      e._pixiSprite = null;
-      e._pixiAnim   = null;
+    const spr = e._pixiSprite;
+    if (spr) {
+      if (spr.parent) spr.parent.removeChild(spr);
+      if (typeof spr.destroy === 'function') spr.destroy();
     }
+    e._pixiSprite = null;
+    e._pixiAnim   = null;
+    e._pixiLayout = null;
+    this._tracked.delete(e);
   },
 };

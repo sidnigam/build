@@ -106,6 +106,58 @@ const __spritesGrouped = vm.runInContext("JSON.stringify(SPRITES.groupFramesByAn
 check('SPRITES groups & orders animation frames',
   __spritesGrouped === JSON.stringify({idle:['player_idle_0.png','player_idle_1.png'], run:['player_run_0.png','player_run_1.png','player_run_2.png']}));
 
+// ---------------- SPRITES pure helpers (quick-260924-tka) ----------------
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+  check('SPRITES.pickAnim falls back to idle when requested anim missing',
+    R("SPRITES.pickAnim(['idle'], 'run')") === 'idle');
+  check('SPRITES.pickAnim returns requested anim when present',
+    R("SPRITES.pickAnim(['idle','run'], 'run')") === 'run');
+  check('SPRITES.pickAnim falls back to first available when no idle',
+    R("SPRITES.pickAnim(['walk'], 'attack')") === 'walk');
+  check('SPRITES.pickAnim returns null for empty atlas',
+    R("SPRITES.pickAnim([], 'idle')") === null);
+
+  check('SPRITES.animForEntity player: dash/attack/run/idle',
+    R("JSON.stringify([SPRITES.animForEntity({dashT:0.1}, false), SPRITES.animForEntity({dashT:0, swing:{t:0.05}}, false), SPRITES.animForEntity({dashT:0}, true), SPRITES.animForEntity({dashT:0, swing:{t:0}}, false)])")
+      === JSON.stringify(['dash', 'attack', 'run', 'idle']));
+  check('SPRITES.animForEntity enemy/boss attack states map to attack',
+    R("['wind','lunge','strike','charge','charging','noose','spiral','summon','radialWind','chargeWind','slamWind'].every(s => SPRITES.animForEntity({type:'rakshasa', state:s}, false) === 'attack')") === true);
+  check('SPRITES.animForEntity enemy: moving idle -> run; intro/rest still -> idle',
+    R("JSON.stringify([SPRITES.animForEntity({type:'rakshasa', state:'idle'}, true), SPRITES.animForEntity({type:'tataka', boss:true, state:'intro'}, false), SPRITES.animForEntity({type:'tataka', boss:true, state:'rest'}, false)])")
+      === JSON.stringify(['run', 'idle', 'idle']));
+
+  check('SPRITES.movedSince: first false, moved true, still false',
+    R("(() => { const e = {x:10, y:10}; const a = SPRITES.movedSince(e); e.x += SPRITES.CFG.MOVE_EPS + 1; const b = SPRITES.movedSince(e); const c = SPRITES.movedSince(e); return JSON.stringify([a, b, c]); })()")
+      === JSON.stringify([false, true, false]));
+
+  check('SPRITES.facingSign: right/left/deadzone keeps prev',
+    R("JSON.stringify([SPRITES.facingSign(0) === SPRITES.CFG.DEFAULT_FACING, SPRITES.facingSign(Math.PI) === -SPRITES.CFG.DEFAULT_FACING, SPRITES.facingSign(Math.PI/2 + 0.01, -1) === -1, SPRITES.facingSign(Math.PI/2 + 0.01, 1) === 1])")
+      === JSON.stringify([true, true, true, true]));
+
+  check('SPRITES.spriteLayout untrimmed: r-based scale, feet anchor, offset',
+    R("(() => { const C = SPRITES.CFG; const L = SPRITES.spriteLayout({ r:13, frameH:128 }); return Math.abs(L.scale - 13*C.HEIGHT_PER_R/128) < 1e-9 && L.anchorY === C.FEET_ANCHOR_Y && Math.abs(L.dy - 13*C.FEET_OFFSET_R) < 1e-9; })()") === true);
+  check('SPRITES.spriteLayout trimmed: scale from trim height, anchor at trim bottom',
+    R("(() => { const C = SPRITES.CFG; const L = SPRITES.spriteLayout({ r:13, frameH:128, trimY:10, trimH:100 }); return Math.abs(L.scale - 13*C.HEIGHT_PER_R/100) < 1e-9 && Math.abs(L.anchorY - 110/128) < 1e-9; })()") === true);
+
+  check('SPRITES sweep: endEntities destroys unseen, keeps seen; clearEntities empties',
+    R(`(() => {
+      const mk = () => ({ parent: null, d: false, destroy() { this.d = true; } });
+      const A = { _pixiSprite: mk() }, B = { _pixiSprite: mk() };
+      SPRITES._tracked.add(A); SPRITES._tracked.add(B);
+      SPRITES.beginEntities();
+      SPRITES._markSeen(A);
+      const bSpr = B._pixiSprite;
+      SPRITES.endEntities();
+      const r1 = bSpr.d === true && B._pixiSprite === null && !SPRITES._tracked.has(B)
+        && A._pixiSprite && A._pixiSprite.d === false && SPRITES._tracked.has(A);
+      const aSpr = A._pixiSprite;
+      SPRITES.clearEntities();
+      const r2 = aSpr.d === true && A._pixiSprite === null && SPRITES._tracked.size === 0;
+      return r1 && r2;
+    })()`) === true);
+}
+
 // ---------------- data integrity ----------------
 vm.runInContext(`
   globalThis.__dataErrors = [];

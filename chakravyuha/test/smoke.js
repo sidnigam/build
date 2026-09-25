@@ -80,7 +80,7 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 
 // ---------------- load game scripts ----------------
-const files = ['utils.js', 'renderer.js', 'sprites.js', 'audio.js', 'data.js', 'meta.js', 'entities.js', 'rooms.js', 'ui.js', 'game.js', 'storage.js'];
+const files = ['utils.js', 'renderer.js', 'sprites.js', 'audio.js', 'data.js', 'meta.js', 'entities.js', 'rooms.js', 'ui.js', 'game.js', 'storage.js', 'gamepad.js'];
 for (const f of files) {
   const src = fs.readFileSync(path.join(__dirname, '..', 'js', f), 'utf8');
   vm.runInContext(src, sandbox, { filename: f });
@@ -246,6 +246,49 @@ check('SPRITES groups & orders animation frames',
     JSON.stringify(storeResults.nativeValue) === JSON.stringify({ native: true }));
   check('STORE desktop-mode normal read does not touch localStorage or call saveWrite',
     storeResults.legacyReadCalls === 0 && storeResults.nativeWriteCalls === 0);
+}
+
+// ---------------- PAD (js/gamepad.js) pure helpers ----------------
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+  // Local default bindings mirroring js/game.js's INPUT.bindings — inlined
+  // here rather than referencing INPUT.bindings because this task (05-02
+  // Task 1) executes before Task 2 adds that field to game.js.
+  const DEFAULT_BINDINGS_LITERAL = `{
+    moveUp: ['w', 'arrowup'], moveDown: ['s', 'arrowdown'],
+    moveLeft: ['a', 'arrowleft'], moveRight: ['d', 'arrowright'],
+    dash: [' '], cast: ['q'], special: ['e'], pause: ['escape'],
+  }`;
+
+  check('PAD.applyDeadzone(0,0,0.2) -> zero',
+    R("JSON.stringify(PAD.applyDeadzone(0, 0, 0.2))") === JSON.stringify({ x: 0, y: 0, mag: 0 }));
+  check('PAD.applyDeadzone below deadzone -> zero',
+    R("JSON.stringify(PAD.applyDeadzone(0.1, 0, 0.2))") === JSON.stringify({ x: 0, y: 0, mag: 0 }));
+  check('PAD.applyDeadzone at full deflection -> unaffected',
+    R("JSON.stringify(PAD.applyDeadzone(1, 0, 0.2))") === JSON.stringify({ x: 1, y: 0, mag: 1 }));
+  check('PAD.applyDeadzone rescales mid-range deflection',
+    R("(() => { const r = PAD.applyDeadzone(0.6, 0, 0.2); return Math.abs(r.mag - 0.5) < 1e-9 && Math.abs(r.x - 0.5) < 1e-9 && r.y === 0; })()") === true);
+
+  check('PAD.mapGamepad reads axes + A button',
+    R(`(() => {
+      const gp = { axes: [0.5, -0.5, 0, 1], buttons: Array(16).fill({ pressed: false }).map((b, i) => i === 0 ? { pressed: true } : b) };
+      const m = PAD.mapGamepad(gp);
+      return m.lx === 0.5 && m.ly === -0.5 && m.rx === 0 && m.ry === 1 && m.buttons.A === true && m.buttons.B === false;
+    })()`) === true);
+
+  check('PAD.digitalMoveVector: no keys held -> zero',
+    R(`JSON.stringify(PAD.digitalMoveVector({}, ${DEFAULT_BINDINGS_LITERAL}))`) === JSON.stringify({ dx: 0, dy: 0 }));
+  check('PAD.digitalMoveVector: w held -> dy=-1',
+    R(`JSON.stringify(PAD.digitalMoveVector({ w: true }, ${DEFAULT_BINDINGS_LITERAL}))`) === JSON.stringify({ dx: 0, dy: -1 }));
+  check('PAD.digitalMoveVector: w+d held -> normalized diagonal',
+    R(`(() => { const r = PAD.digitalMoveVector({ w: true, d: true }, ${DEFAULT_BINDINGS_LITERAL}); return Math.abs(r.dx - 0.7071) < 1e-3 && Math.abs(r.dy + 0.7071) < 1e-3; })()`) === true);
+  check('PAD.digitalMoveVector respects a custom bindings map (rebinding works)',
+    R("JSON.stringify(PAD.digitalMoveVector({ i: true }, { moveUp: ['i'], moveDown: [], moveLeft: [], moveRight: [] }))") === JSON.stringify({ dx: 0, dy: -1 }));
+
+  // navigator is undefined in this headless sandbox — poll() must not throw
+  let padPollThrew = false;
+  try { R("PAD.poll()"); } catch (e) { padPollThrew = true; }
+  check('PAD.poll() does not throw when navigator is undefined (headless guard)', padPollThrew === false);
 }
 
 // ---------------- data integrity ----------------

@@ -237,12 +237,13 @@ class Player {
 
     // movement
     let dx = 0, dy = 0;
-    if (I.keys['w'] || I.keys['arrowup']) dy -= 1;
-    if (I.keys['s'] || I.keys['arrowdown']) dy += 1;
-    if (I.keys['a'] || I.keys['arrowleft']) dx -= 1;
-    if (I.keys['d'] || I.keys['arrowright']) dx += 1;
-    const mag = Math.hypot(dx, dy);
-    if (mag > 0) { dx /= mag; dy /= mag; }
+    const analogMag = Math.hypot(I.ax || 0, I.ay || 0);
+    if (analogMag > 0) {
+      dx = I.ax; dy = I.ay;
+    } else {
+      const kb = PAD.digitalMoveVector(I.keys, I.bindings);
+      dx = kb.dx; dy = kb.dy;
+    }
 
     if (this.dashT > 0) {
       this.dashT -= dt;

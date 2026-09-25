@@ -80,7 +80,7 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 
 // ---------------- load game scripts ----------------
-const files = ['utils.js', 'renderer.js', 'sprites.js', 'audio.js', 'data.js', 'meta.js', 'entities.js', 'rooms.js', 'ui.js', 'game.js'];
+const files = ['utils.js', 'renderer.js', 'sprites.js', 'audio.js', 'data.js', 'meta.js', 'entities.js', 'rooms.js', 'ui.js', 'game.js', 'storage.js', 'gamepad.js'];
 for (const f of files) {
   const src = fs.readFileSync(path.join(__dirname, '..', 'js', f), 'utf8');
   vm.runInContext(src, sandbox, { filename: f });
@@ -156,6 +156,139 @@ check('SPRITES groups & orders animation frames',
       const r2 = aSpr.d === true && A._pixiSprite === null && SPRITES._tracked.size === 0;
       return r1 && r2;
     })()`) === true);
+}
+
+// ---------------- STORE (js/storage.js) checks ----------------
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+
+  check('STORE.resolveMode(true, true) -> desktop', R("STORE.resolveMode(true, true)") === 'desktop');
+  check('STORE.resolveMode(true, false) -> desktop', R("STORE.resolveMode(true, false)") === 'desktop');
+  check('STORE.resolveMode(false, true) -> browser', R("STORE.resolveMode(false, true)") === 'browser');
+  check('STORE.resolveMode(false, false) -> headless', R("STORE.resolveMode(false, false)") === 'headless');
+
+  vm.runInContext(`
+    globalThis.__storeResults = {};
+    const __savedMode = STORE._mode;
+    const __savedChakra = window.chakraNative;
+
+    // fallback for a missing key, in every mode
+    __storeResults.fallback = ['desktop', 'browser', 'headless'].map(m => {
+      STORE._mode = m;
+      delete STORE._cache['__smoke_missing__'];
+      return STORE.get('__smoke_missing__', 'fallback');
+    });
+
+    // browser mode round-trip
+    STORE._mode = 'browser';
+    delete STORE._cache['__smoke_browser__'];
+    STORE.set('__smoke_browser__', { a: 1 });
+    delete STORE._cache['__smoke_browser__'];
+    __storeResults.browserRoundtrip = STORE.get('__smoke_browser__');
+    localStorage.removeItem('__smoke_browser__');
+
+    // headless mode round-trip (via _memory, not just cache)
+    STORE._mode = 'headless';
+    delete STORE._cache['__smoke_headless__'];
+    STORE.set('__smoke_headless__', { b: 2 });
+    delete STORE._cache['__smoke_headless__'];
+    __storeResults.headlessRoundtrip = STORE.get('__smoke_headless__');
+    __storeResults.headlessInMemory = STORE._memory['__smoke_headless__'];
+
+    // desktop mode: legacy migration (chakraNative miss, localStorage hit)
+    STORE._mode = 'desktop';
+    delete STORE._cache['__smoke_migrate__'];
+    localStorage.setItem('__smoke_migrate__', JSON.stringify({ legacy: true }));
+    __storeResults.migrateCalls = [];
+    window.chakraNative = {
+      saveRead: () => null,
+      saveWrite: (n, j) => { __storeResults.migrateCalls.push([n, JSON.parse(j)]); },
+    };
+    __storeResults.migrateValue = STORE.get('__smoke_migrate__', 'fallback');
+    localStorage.removeItem('__smoke_migrate__');
+
+    // desktop mode: normal read (chakraNative hit) must not touch localStorage or call saveWrite
+    delete STORE._cache['__smoke_native__'];
+    __storeResults.nativeWriteCalls = 0;
+    __storeResults.legacyReadCalls = 0;
+    const __origGetItem = localStorage.getItem;
+    localStorage.getItem = function(k) { __storeResults.legacyReadCalls++; return __origGetItem.call(localStorage, k); };
+    window.chakraNative = {
+      saveRead: (n) => n === '__smoke_native__' ? JSON.stringify({ native: true }) : null,
+      saveWrite: () => { __storeResults.nativeWriteCalls++; },
+    };
+    __storeResults.nativeValue = STORE.get('__smoke_native__', 'fallback');
+    localStorage.getItem = __origGetItem;
+
+    // restore original mode/chakraNative/cache so later tests (meta save/load) are unaffected
+    if (__savedChakra === undefined) delete window.chakraNative; else window.chakraNative = __savedChakra;
+    STORE._mode = __savedMode;
+    delete STORE._cache['__smoke_missing__'];
+    delete STORE._cache['__smoke_browser__'];
+    delete STORE._cache['__smoke_headless__'];
+    delete STORE._cache['__smoke_migrate__'];
+    delete STORE._cache['__smoke_native__'];
+  `, sandbox);
+
+  const storeResults = vm.runInContext('__storeResults', sandbox);
+  check('STORE.get returns fallback for a missing key in every mode',
+    JSON.stringify(storeResults.fallback) === JSON.stringify(['fallback', 'fallback', 'fallback']));
+  check('STORE browser-mode round-trip via localStorage',
+    JSON.stringify(storeResults.browserRoundtrip) === JSON.stringify({ a: 1 }));
+  check('STORE headless-mode round-trip via _memory (nothing throws)',
+    JSON.stringify(storeResults.headlessRoundtrip) === JSON.stringify({ b: 2 }) &&
+    JSON.stringify(storeResults.headlessInMemory) === JSON.stringify({ b: 2 }));
+  check('STORE desktop-mode migrates legacy localStorage value (returns parsed legacy value)',
+    JSON.stringify(storeResults.migrateValue) === JSON.stringify({ legacy: true }));
+  check('STORE desktop-mode migration writes through to chakraNative exactly once',
+    JSON.stringify(storeResults.migrateCalls) === JSON.stringify([['__smoke_migrate__', { legacy: true }]]));
+  check('STORE desktop-mode normal read returns parsed chakraNative value',
+    JSON.stringify(storeResults.nativeValue) === JSON.stringify({ native: true }));
+  check('STORE desktop-mode normal read does not touch localStorage or call saveWrite',
+    storeResults.legacyReadCalls === 0 && storeResults.nativeWriteCalls === 0);
+}
+
+// ---------------- PAD (js/gamepad.js) pure helpers ----------------
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+  // Local default bindings mirroring js/game.js's INPUT.bindings — inlined
+  // here rather than referencing INPUT.bindings because this task (05-02
+  // Task 1) executes before Task 2 adds that field to game.js.
+  const DEFAULT_BINDINGS_LITERAL = `{
+    moveUp: ['w', 'arrowup'], moveDown: ['s', 'arrowdown'],
+    moveLeft: ['a', 'arrowleft'], moveRight: ['d', 'arrowright'],
+    dash: [' '], cast: ['q'], special: ['e'], pause: ['escape'],
+  }`;
+
+  check('PAD.applyDeadzone(0,0,0.2) -> zero',
+    R("JSON.stringify(PAD.applyDeadzone(0, 0, 0.2))") === JSON.stringify({ x: 0, y: 0, mag: 0 }));
+  check('PAD.applyDeadzone below deadzone -> zero',
+    R("JSON.stringify(PAD.applyDeadzone(0.1, 0, 0.2))") === JSON.stringify({ x: 0, y: 0, mag: 0 }));
+  check('PAD.applyDeadzone at full deflection -> unaffected',
+    R("JSON.stringify(PAD.applyDeadzone(1, 0, 0.2))") === JSON.stringify({ x: 1, y: 0, mag: 1 }));
+  check('PAD.applyDeadzone rescales mid-range deflection',
+    R("(() => { const r = PAD.applyDeadzone(0.6, 0, 0.2); return Math.abs(r.mag - 0.5) < 1e-9 && Math.abs(r.x - 0.5) < 1e-9 && r.y === 0; })()") === true);
+
+  check('PAD.mapGamepad reads axes + A button',
+    R(`(() => {
+      const gp = { axes: [0.5, -0.5, 0, 1], buttons: Array(16).fill({ pressed: false }).map((b, i) => i === 0 ? { pressed: true } : b) };
+      const m = PAD.mapGamepad(gp);
+      return m.lx === 0.5 && m.ly === -0.5 && m.rx === 0 && m.ry === 1 && m.buttons.A === true && m.buttons.B === false;
+    })()`) === true);
+
+  check('PAD.digitalMoveVector: no keys held -> zero',
+    R(`JSON.stringify(PAD.digitalMoveVector({}, ${DEFAULT_BINDINGS_LITERAL}))`) === JSON.stringify({ dx: 0, dy: 0 }));
+  check('PAD.digitalMoveVector: w held -> dy=-1',
+    R(`JSON.stringify(PAD.digitalMoveVector({ w: true }, ${DEFAULT_BINDINGS_LITERAL}))`) === JSON.stringify({ dx: 0, dy: -1 }));
+  check('PAD.digitalMoveVector: w+d held -> normalized diagonal',
+    R(`(() => { const r = PAD.digitalMoveVector({ w: true, d: true }, ${DEFAULT_BINDINGS_LITERAL}); return Math.abs(r.dx - 0.7071) < 1e-3 && Math.abs(r.dy + 0.7071) < 1e-3; })()`) === true);
+  check('PAD.digitalMoveVector respects a custom bindings map (rebinding works)',
+    R("JSON.stringify(PAD.digitalMoveVector({ i: true }, { moveUp: ['i'], moveDown: [], moveLeft: [], moveRight: [] }))") === JSON.stringify({ dx: 0, dy: -1 }));
+
+  // navigator is undefined in this headless sandbox — poll() must not throw
+  let padPollThrew = false;
+  try { R("PAD.poll()"); } catch (e) { padPollThrew = true; }
+  check('PAD.poll() does not throw when navigator is undefined (headless guard)', padPollThrew === false);
 }
 
 // ---------------- data integrity ----------------

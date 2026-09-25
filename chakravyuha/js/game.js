@@ -5,6 +5,12 @@
 
 const INPUT = {
   keys: {}, mx: 640, my: 360, lmb: false, rmb: false,
+  ax: 0, ay: 0, device: 'kbm',
+  bindings: {
+    moveUp: ['w', 'arrowup'], moveDown: ['s', 'arrowdown'],
+    moveLeft: ['a', 'arrowleft'], moveRight: ['d', 'arrowright'],
+    dash: [' '], cast: ['q'], special: ['e'], pause: ['escape'],
+  },
 };
 
 const GAME = {
@@ -52,16 +58,17 @@ const GAME = {
     window.addEventListener('keydown', firstTouch, { once: true });
 
     window.addEventListener('keydown', e => {
+      INPUT.device = 'kbm';
       const k = e.key.toLowerCase();
       INPUT.keys[k] = true;
-      if (k === ' ') { e.preventDefault(); if (this.playing()) this.player.tryDash(); }
-      if (k === 'q' && this.playing()) this.player.tryCast();
-      if (k === 'e' && this.playing()) this.player.trySpecial();
+      if (INPUT.bindings.dash.includes(k)) { e.preventDefault(); if (this.playing()) this.player.tryDash(); }
+      if (INPUT.bindings.cast.includes(k) && this.playing()) this.player.tryCast();
+      if (INPUT.bindings.special.includes(k) && this.playing()) this.player.trySpecial();
       if (k === 'm') {
         const m = AUDIO.toggleMute();
         UI.banner(m ? 'SOUND OFF' : 'SOUND ON', '#cfcfcf');
       }
-      if (k === 'escape') {
+      if (INPUT.bindings.pause.includes(k)) {
         if (this.state === 'paused') UI.resume();
         else UI.pause();
       }
@@ -69,11 +76,13 @@ const GAME = {
     window.addEventListener('keyup', e => { INPUT.keys[e.key.toLowerCase()] = false; });
 
     cv.addEventListener('mousemove', e => {
+      INPUT.device = 'kbm';
       const r = cv.getBoundingClientRect();
       INPUT.mx = (e.clientX - r.left) * (this.W / r.width);
       INPUT.my = (e.clientY - r.top) * (this.H / r.height);
     });
     cv.addEventListener('mousedown', e => {
+      INPUT.device = 'kbm';
       if (e.button === 0) INPUT.lmb = true;
       if (e.button === 2) { INPUT.rmb = true; if (this.playing()) this.player.trySpecial(); }
     });
@@ -154,6 +163,7 @@ const GAME = {
 
   // ---------------- frame ----------------
   frame(tms) {
+    PAD.poll();
     const t = tms / 1000;
     this.dt = Math.min(0.033, t - (this._last || t));
     this._last = t;

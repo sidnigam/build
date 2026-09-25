@@ -233,6 +233,32 @@ const SPRITES = {
     DEFAULT_FACING: 1,          // tunable: +1 = source art faces right/front; set -1 if a sheet faces left
     FACING_DEADZONE: 0.08,      // tunable: |cos(angle)| below this keeps the previous facing (no flicker at vertical aim)
     MOVE_EPS: 0.4,              // tunable: |dx|+|dy| per frame above which an entity counts as moving
+
+    // ---------------- Tunables (02-07 procedural animation) ----------------
+    IDLE_BREATH: 0.035,         // tunable: idle breathing squash/stretch amplitude
+    IDLE_HZ: 1.1,                // tunable: idle breathing frequency
+    ASLEEP_SLOW: 0.35,           // tunable: breathing frequency multiplier while e.asleep
+    RUN_HZ: 3.2,                 // tunable: run footfall frequency
+    RUN_BOB_R: 0.22,             // tunable: run vertical bob, in units of r
+    RUN_LEAN: 0.09,              // tunable: run lean rotation (radians) at |lean|=1
+    DASH_STRETCH: 0.28,          // tunable: dash horizontal stretch fraction
+    ATTACK_STRETCH: 0.14,        // tunable: attack lunge stretch fraction
+    WINDUP_SQUASH: 0.08,         // tunable: enemy wind-up crouch squash fraction
+    WINDUP_TREMBLE: 0.03,        // tunable: enemy wind-up tremble rotation (radians)
+    HIT_SQUASH: 0.12,            // tunable: hit-flash squash fraction
+    FLASH_MAX: 0.85,             // tunable: max white-flash blend amount (0..1)
+    PLAYER_HURT_DUR: 0.25,       // tunable: player hurtT duration used to ramp flash down
+    SPAWN_DUR: 0.6,              // tunable: spawn fade/scale-in duration, mirrors legacy spawnT
+    SPAWN_MIN_SCALE: 0.6,        // tunable: sprite scale at the start of spawn-in
+    DEATH_DUR: 0.3,              // tunable: death shrink/fade duration
+    PHASE_FLASH_DUR: 0.3,        // tunable: boss phase-transition white flash duration
+    SWING_DUR: 0.12,             // tunable: melee swing duration, mirrors Player.meleeAttack swing.t
+    MAX_WIDTH_PER_R: 5,          // tunable: clamp on-screen sprite width to r * MAX_WIDTH_PER_R (wide single-pose art)
+    GHOST_ALPHA: 0.45,           // tunable: dash afterimage peak alpha
+    GHOST_TINT: 0x7fdcb7,        // tunable: dash afterimage tint color
+    GHOST_MAX: 6,                // tunable: max simultaneous dash afterimages
+    TRAIL_LIFE: 0.25,            // tunable: dash trail point lifetime (mirrors Player trail push at t:0.25)
+    SHADOW_ALPHA: 0.35,          // tunable: ground shadow alpha under sprite-rendered actors
   },
 
   ATTACK_STATES: new Set(['wind', 'lunge', 'strike', 'charge', 'charging', 'noose', 'spiral', 'summon', 'slam', 'cast', 'sweep']),
@@ -290,7 +316,7 @@ const SPRITES = {
    * spriteLayout({ r, frameH, trimY, trimH, heightPerR }) — pure.
    * Scales visible content to r * heightPerR; with trim, anchors exactly at the bottom of visible pixels.
    */
-  spriteLayout({ r, frameH, trimY, trimH, heightPerR }) {
+  spriteLayout({ r, frameH, trimY, trimH, trimW, heightPerR }) {
     const hpr = heightPerR || this.CFG.HEIGHT_PER_R;
     let contentH, anchorY;
     if (trimH > 0) {
@@ -300,7 +326,10 @@ const SPRITES = {
       contentH = frameH;
       anchorY = this.CFG.FEET_ANCHOR_Y;
     }
-    return { scale: (r * hpr) / contentH, anchorY, dy: r * this.CFG.FEET_OFFSET_R };
+    let scale = (r * hpr) / contentH;
+    // 02-07 D-08a: clamp width for wide single-pose art (coiled naga, hulking bhuta) so it doesn't balloon.
+    if (trimW > 0) scale = Math.min(scale, (r * this.CFG.MAX_WIDTH_PER_R) / trimW);
+    return { scale, anchorY, dy: r * this.CFG.FEET_OFFSET_R };
   },
 
   /**
@@ -310,6 +339,139 @@ const SPRITES = {
     const o = this.CFG.HEIGHT_PER_R_OVERRIDE[key];
     if (o) return o;
     return e && e.boss ? this.CFG.BOSS_HEIGHT_PER_R : this.CFG.HEIGHT_PER_R;
+  },
+
+  // ---------------- Procedural animation (02-07, pure — no Pixi) ----------------
+
+  /** Non-player states that read as a wind-up crouch (explicit set + any state ending in "Wind"). */
+  WINDUP_STATES: new Set(['wind', 'charging']),
+
+  /**
+   * procStateFor(e, moved) — pure.
+   * Maps enemy/boss wind-up states to 'windup'; otherwise defers to animForEntity (unchanged).
+   */
+  procStateFor(e, moved) {
+    const isPlayer = e.spriteKey === 'player' || e.type === undefined;
+    if (!isPlayer) {
+      const s = e.state || '';
+      if (this.WINDUP_STATES.has(s) || /Wind$/.test(s)) return 'windup';
+    }
+    return this.animForEntity(e, moved);
+  },
+
+  /**
+   * procAnim(state, t, o) — pure. Returns { sx, sy, dyR, rot } for the given procedural state.
+   * dyR is in units of r; the caller multiplies by e.r. Always breathes underneath (idle base),
+   * except 'dash'/'windup' which fully override sx/sy, and 'stunned' which locks the transform.
+   */
+  procAnim(state, t, o = {}) {
+    const { phase = 0, lean = 0, hit = 0, attackT = 0, asleep = false, stunned = false } = o;
+    const C = this.CFG;
+    const TAU = Math.PI * 2;
+    const clamp1 = (v) => Math.max(-1, Math.min(1, v));
+
+    const b = Math.sin(TAU * C.IDLE_HZ * (asleep ? C.ASLEEP_SLOW : 1) * t + phase);
+    let sx = 1 - C.IDLE_BREATH * 0.5 * b;
+    let sy = 1 + C.IDLE_BREATH * b;
+    let dyR = 0;
+    let rot = 0;
+
+    if (state === 'run') {
+      const s = Math.abs(Math.sin(TAU * C.RUN_HZ * t * 0.5 + phase));
+      dyR = -C.RUN_BOB_R * s;
+      sy *= 1 - 0.04 * (1 - s);
+      rot = C.RUN_LEAN * clamp1(lean);
+    } else if (state === 'dash') {
+      sx = 1 + C.DASH_STRETCH;
+      sy = 1 - C.DASH_STRETCH * 0.6;
+      rot = C.RUN_LEAN * 1.5 * clamp1(lean);
+      dyR = 0;
+    } else if (state === 'attack') {
+      const k = Math.max(0, Math.min(1, attackT));
+      sx *= 1 + C.ATTACK_STRETCH * k;
+      sy *= 1 - C.ATTACK_STRETCH * 0.6 * k;
+    } else if (state === 'windup') {
+      sy = 1 - C.WINDUP_SQUASH;
+      sx = 1 + C.WINDUP_SQUASH * 0.6;
+      rot = C.WINDUP_TREMBLE * Math.sin(t * TAU * 20 + phase);
+    }
+
+    if (stunned) { sx = 1; sy = 1; dyR = 0; rot = 0; }
+
+    sx *= 1 + C.HIT_SQUASH * hit;
+    sy *= 1 - C.HIT_SQUASH * hit;
+
+    return { sx, sy, dyR, rot };
+  },
+
+  /**
+   * flashAmount(e) — pure. Returns 0..1 white-flash blend: player ramps down over hurtT,
+   * others are a flat hit flash while e.flash>0; boss phase-transition flash takes the max.
+   */
+  flashAmount(e) {
+    const C = this.CFG;
+    const isPlayer = e.spriteKey === 'player' || e.type === undefined;
+    const v = isPlayer
+      ? (e.hurtT > 0 ? C.FLASH_MAX * Math.min(1, e.hurtT / C.PLAYER_HURT_DUR) : 0)
+      : (e.flash > 0 ? C.FLASH_MAX : 0);
+    const phaseFlash = e._sprPhaseFlashT > 0 ? C.FLASH_MAX * Math.min(1, e._sprPhaseFlashT / C.PHASE_FLASH_DUR) : 0;
+    return Math.max(v, phaseFlash);
+  },
+
+  /**
+   * blinkAlpha(e, t) — pure. Mirrors the legacy semi-transparent iframes blink; 1 when not invincible.
+   */
+  blinkAlpha(e, t) {
+    if (e.iframes > 0) {
+      const v = 0.675 + 0.325 * Math.sin(t * 40);
+      return Math.max(0.35, Math.min(0.999, v));
+    }
+    return 1;
+  },
+
+  /**
+   * spawnPose(e) — pure. Fade + scale in over CFG.SPAWN_DUR while e.spawnT>0; passthrough otherwise.
+   */
+  spawnPose(e) {
+    const C = this.CFG;
+    if (!(e.spawnT > 0)) return { alpha: 1, scale: 1 };
+    const p = Math.max(0, Math.min(1, 1 - e.spawnT / C.SPAWN_DUR));
+    return { alpha: p, scale: C.SPAWN_MIN_SCALE + (1 - C.SPAWN_MIN_SCALE) * p };
+  },
+
+  /**
+   * deathPose(t) — pure. Shrink + fade over CFG.DEATH_DUR; done=true once complete.
+   */
+  deathPose(t) {
+    const C = this.CFG;
+    const p = Math.max(0, Math.min(1, t / C.DEATH_DUR));
+    return { alpha: 1 - p, scale: 1 - 0.6 * p, rot: 0.35 * p, done: p >= 1 };
+  },
+
+  /**
+   * textureAnimFor(e, available, procState) — pure. Picks the boss 'phase2' texture at 50% hp
+   * when the atlas has one; otherwise falls back through pickAnim (idle when procState is missing).
+   */
+  textureAnimFor(e, available, procState) {
+    if (e.boss && e.phase === 2 && available.indexOf('phase2') !== -1) return 'phase2';
+    return this.pickAnim(available, procState);
+  },
+
+  /**
+   * headY(e, key) — pure. Screen y of the sprite's head, used by game.js overlays to place
+   * pips/text above a sprite-rendered actor without touching entities.js.
+   */
+  headY(e, key) {
+    return e.y + e.r * this.CFG.FEET_OFFSET_R - e.r * this.heightPerRFor(key, e);
+  },
+
+  /**
+   * ghostAlpha(t) — pure. Dash afterimage alpha, ramping to CFG.GHOST_ALPHA over CFG.TRAIL_LIFE.
+   */
+  ghostAlpha(t) {
+    const C = this.CFG;
+    const p = Math.max(0, Math.min(1, t / C.TRAIL_LIFE));
+    return p * C.GHOST_ALPHA;
   },
 
   // ---------------- Mark-and-sweep bookkeeping (no Pixi dependency) ----------------

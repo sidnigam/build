@@ -158,6 +158,182 @@ check('SPRITES groups & orders animation frames',
     })()`) === true);
 }
 
+// ---------------- SPRITES procedural animation (02-07) ----------------
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+
+  check('SPRITES.procAnim idle: breathing bounded, no shift/rotation, not constant',
+    R(`(() => {
+      const C = SPRITES.CFG;
+      let allBounded = true, sawChange = false, first = null;
+      for (let i = 0; i <= 20; i++) {
+        const t = i / 20;
+        const p = SPRITES.procAnim('idle', t, {});
+        if (Math.abs(p.sy - 1) > C.IDLE_BREATH + 1e-9) allBounded = false;
+        if (Math.abs(p.sx - 1) > C.IDLE_BREATH + 1e-9) allBounded = false;
+        if (p.dyR !== 0 || p.rot !== 0) allBounded = false;
+        if (first === null) first = p.sy; else if (Math.abs(p.sy - first) > 1e-9) sawChange = true;
+      }
+      return allBounded && sawChange;
+    })()`) === true);
+
+  check('SPRITES.procAnim run: bobs down, leans with sign of lean',
+    R(`(() => {
+      const C = SPRITES.CFG;
+      let allNonPositive = true, minDy = 0;
+      for (let i = 0; i <= 40; i++) {
+        const t = i / 40;
+        const p = SPRITES.procAnim('run', t, { lean: 1 });
+        if (p.dyR > 1e-9) allNonPositive = false;
+        if (p.dyR < minDy) minDy = p.dyR;
+      }
+      const rotPos = SPRITES.procAnim('run', 0.1, { lean: 1 }).rot;
+      const rotNeg = SPRITES.procAnim('run', 0.1, { lean: -1 }).rot;
+      return allNonPositive && minDy < -0.5 * C.RUN_BOB_R && rotPos === C.RUN_LEAN && rotNeg === -C.RUN_LEAN;
+    })()`) === true);
+
+  check('SPRITES.procAnim dash: stretches wide and short',
+    R(`(() => { const p = SPRITES.procAnim('dash', 0, {}); return p.sx > 1.1 && p.sy < 1; })()`) === true);
+
+  check('SPRITES.procAnim attack: stretches with attackT, matches idle at attackT 0',
+    R(`(() => {
+      const idle = SPRITES.procAnim('idle', 0, {});
+      const atk1 = SPRITES.procAnim('attack', 0, { attackT: 1 });
+      const atk0 = SPRITES.procAnim('attack', 0, { attackT: 0 });
+      return atk1.sx > idle.sx && atk1.sy < 1 && atk0.sx === idle.sx && atk0.sy === idle.sy;
+    })()`) === true);
+
+  check('SPRITES.procAnim windup: crouch anticipation, minimal rotation',
+    R(`(() => {
+      let ok = true;
+      for (let i = 0; i <= 20; i++) {
+        const t = i / 20;
+        const p = SPRITES.procAnim('windup', t, {});
+        if (!(p.sy < 1 && p.sx > 1 && Math.abs(p.rot) <= 0.05)) ok = false;
+      }
+      return ok;
+    })()`) === true);
+
+  check('SPRITES.procAnim stunned: locks transform regardless of state',
+    R(`(() => {
+      const a = SPRITES.procAnim('run', 0.3, { stunned: true, lean: 1 });
+      const b = SPRITES.procAnim('dash', 0.7, { stunned: true });
+      return a.sx === 1 && a.sy === 1 && a.dyR === 0 && a.rot === 0
+          && b.sx === 1 && b.sy === 1 && b.dyR === 0 && b.rot === 0;
+    })()`) === true);
+
+  check('SPRITES.procAnim idle hit squash: sx up, sy down',
+    R(`(() => { const p = SPRITES.procAnim('idle', 0, { hit: 1 }); return p.sx > 1 && p.sy < 1; })()`) === true);
+
+  check('SPRITES.procAnim asleep breathes slower (later first peak)',
+    R(`(() => {
+      const C = SPRITES.CFG;
+      const peak = (slow) => (Math.PI / 2) / (2 * Math.PI * C.IDLE_HZ * slow);
+      return peak(C.ASLEEP_SLOW) > peak(1);
+    })()`) === true);
+
+  check('SPRITES.procStateFor: windup/attack/run mapping',
+    R(`(() => {
+      const w1 = SPRITES.procStateFor({ type: 'rakshasa', state: 'wind' }, false) === 'windup';
+      const w2 = SPRITES.procStateFor({ type: 'tataka', state: 'radialWind' }, false) === 'windup';
+      const w3 = SPRITES.procStateFor({ type: 'kumbhakarna', state: 'chargeWind' }, false) === 'windup';
+      const w4 = SPRITES.procStateFor({ type: 'yama', state: 'slamWind' }, false) === 'windup';
+      const w5 = SPRITES.procStateFor({ type: 'rakshasa', state: 'charging' }, false) === 'windup';
+      const lunge = SPRITES.procStateFor({ type: 'rakshasa', state: 'lunge' }, false) === 'attack';
+      const run = SPRITES.procStateFor({ type: 'preta', state: 'idle' }, true) === 'run';
+      const dash = SPRITES.procStateFor({ spriteKey: 'player', dashT: 0.1 }, false) === 'dash';
+      const parity = SPRITES.procStateFor({ type: 'preta', state: 'idle' }, false) === SPRITES.animForEntity({ type: 'preta', state: 'idle' }, false);
+      return w1 && w2 && w3 && w4 && w5 && lunge && run && dash && parity;
+    })()`) === true);
+
+  check('SPRITES.flashAmount: enemy/player/phase flash, all within [0,1]',
+    R(`(() => {
+      const vals = [
+        SPRITES.flashAmount({ type: 'preta', flash: 0.05 }),
+        SPRITES.flashAmount({ type: 'preta', flash: 0 }),
+        SPRITES.flashAmount({ spriteKey: 'player', hurtT: 0.2 }),
+        SPRITES.flashAmount({ spriteKey: 'player', hurtT: 0 }),
+        SPRITES.flashAmount({ type: 'tataka', boss: true, flash: 0, _sprPhaseFlashT: 0.2 }),
+      ];
+      const inRange = vals.every(v => v >= 0 && v <= 1);
+      return vals[0] > 0 && vals[1] === 0 && vals[2] > 0 && vals[3] === 0 && vals[4] > 0 && inRange;
+    })()`) === true);
+
+  check('SPRITES.blinkAlpha: steady without iframes, dips within range while blinking',
+    R(`(() => {
+      const steady = [0, 0.1, 0.5, 1].every(t => SPRITES.blinkAlpha({ iframes: 0 }, t) === 1);
+      let inRange = true;
+      for (let i = 0; i <= 20; i++) {
+        const t = i / 20;
+        const v = SPRITES.blinkAlpha({ iframes: 0.3 }, t);
+        if (v < 0.35 || v >= 1) inRange = false;
+      }
+      return steady && inRange;
+    })()`) === true);
+
+  check('SPRITES.spawnPose: fade+scale in over SPAWN_DUR, passthrough when not spawning',
+    R(`(() => {
+      const C = SPRITES.CFG;
+      const a = SPRITES.spawnPose({ spawnT: 0 });
+      const b = SPRITES.spawnPose({ spawnT: C.SPAWN_DUR });
+      const c = SPRITES.spawnPose({ spawnT: C.SPAWN_DUR / 2 });
+      const d = SPRITES.spawnPose({});
+      return a.alpha === 1 && a.scale === 1
+        && b.alpha === 0 && b.scale === C.SPAWN_MIN_SCALE
+        && Math.abs(c.alpha - 0.5) < 1e-9
+        && d.alpha === 1 && d.scale === 1;
+    })()`) === true);
+
+  check('SPRITES.deathPose: shrink+fade over DEATH_DUR, alpha strictly decreasing',
+    R(`(() => {
+      const C = SPRITES.CFG;
+      const a = SPRITES.deathPose(0);
+      const b = SPRITES.deathPose(C.DEATH_DUR);
+      let dec = true, prev = 2;
+      for (let i = 0; i <= 4; i++) {
+        const t = (i / 4) * C.DEATH_DUR;
+        const p = SPRITES.deathPose(t);
+        if (p.alpha >= prev) dec = false;
+        prev = p.alpha;
+      }
+      return a.alpha === 1 && a.scale === 1 && a.done === false
+        && b.alpha === 0 && b.done === true && dec;
+    })()`) === true);
+
+  check('SPRITES.textureAnimFor: phase2 selection + pickAnim fallback',
+    R(`(() => {
+      return SPRITES.textureAnimFor({ boss: true, phase: 2 }, ['idle', 'phase2'], 'run') === 'phase2'
+        && SPRITES.textureAnimFor({ boss: true, phase: 2 }, ['idle'], 'run') === 'idle'
+        && SPRITES.textureAnimFor({ boss: true, phase: 1 }, ['idle', 'phase2'], 'idle') === 'idle'
+        && SPRITES.textureAnimFor({ type: 'preta' }, ['idle'], 'attack') === 'idle'
+        && SPRITES.textureAnimFor({ spriteKey: 'player' }, ['idle', 'run'], 'run') === 'run';
+    })()`) === true);
+
+  check('SPRITES.headY: head sits above feet by heightPerR * r',
+    R(`(() => {
+      const e = { x: 0, y: 100, r: 10 };
+      const expected = 100 + 10 * SPRITES.CFG.FEET_OFFSET_R - 10 * SPRITES.heightPerRFor('preta', e);
+      return SPRITES.headY(e, 'preta') === expected;
+    })()`) === true);
+
+  check('SPRITES.ghostAlpha: ramps to GHOST_ALPHA and clamps',
+    R(`(() => {
+      const C = SPRITES.CFG;
+      return SPRITES.ghostAlpha(C.TRAIL_LIFE) === C.GHOST_ALPHA
+        && SPRITES.ghostAlpha(0) === 0
+        && SPRITES.ghostAlpha(1) === C.GHOST_ALPHA;
+    })()`) === true);
+
+  check('SPRITES.spriteLayout: trimW clamps wide art, unaffected without trimW',
+    R(`(() => {
+      const C = SPRITES.CFG;
+      const L = SPRITES.spriteLayout({ r: 10, frameH: 128, trimY: 0, trimH: 64, trimW: 128, heightPerR: 4 });
+      const expected = Math.min(40 / 64, 10 * C.MAX_WIDTH_PER_R / 128);
+      const untrimmedSame = SPRITES.spriteLayout({ r: 13, frameH: 128 }).scale === Math.abs(13 * C.HEIGHT_PER_R / 128);
+      return Math.abs(L.scale - expected) < 1e-9 && untrimmedSame;
+    })()`) === true);
+}
+
 // ---------------- data integrity ----------------
 vm.runInContext(`
   globalThis.__dataErrors = [];

@@ -1,0 +1,119 @@
+{
+  "frames": {
+    "player_idle_0.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 46,
+        "h": 127
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 41,
+        "y": 0,
+        "w": 46,
+        "h": 127
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 128
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "player_idle_1.png": {
+      "frame": {
+        "x": 2,
+        "y": 133,
+        "w": 46,
+        "h": 127
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 41,
+        "y": 0,
+        "w": 46,
+        "h": 127
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 128
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "player_idle_2.png": {
+      "frame": {
+        "x": 2,
+        "y": 264,
+        "w": 46,
+        "h": 127
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 41,
+        "y": 0,
+        "w": 46,
+        "h": 127
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 128
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "player_idle_3.png": {
+      "frame": {
+        "x": 2,
+        "y": 395,
+        "w": 46,
+        "h": 127
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 41,
+        "y": 0,
+        "w": 46,
+        "h": 127
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 128
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  },
+  "meta": {
+    "app": "http://github.com/odrick/free-tex-packer-core",
+    "version": "0.3.8",
+    "image": "player-atlas.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 50,
+      "h": 524
+    },
+    "scale": 1
+  },
+  "animations": {
+    "idle": [
+      "player_idle_0.png",
+      "player_idle_1.png",
+      "player_idle_2.png",
+      "player_idle_3.png"
+    ]
+  }
+}

@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Ready to execute
-stopped_at: Completed 02-02-PLAN.md
-last_updated: "2026-06-20T20:46:39.629Z"
+status: Paused
+stopped_at: "02-04 paused at task 2/2 — idle frames only (4/4); run/attack/dash blocked on pose-consistency"
+last_updated: "2026-09-25T01:23:06Z"
 progress:
   total_phases: 7
   completed_phases: 1
@@ -23,8 +23,11 @@ See: .planning/PROJECT.md (updated 2026-06-17)
 
 ## Current Position
 
-Phase: 02 (asset-pipeline-sprite-system) — EXECUTING
-Plan: 4 of 6
+Phase: 02 (asset-pipeline-sprite-system) — PAUSED
+Plan: 4 of 6 — PAUSED at task 2 (idle frames 4/4 generated; run/attack/dash blocked on pose-consistency)
+
+- Idle player atlas (assets/sprites/player/player-atlas.{png,json}) is packed, provenance-recorded, and wired into the Pixi runtime via quick-260924-tka (runtime hardened: idle fallback, r-based scale, facing, y-sort, sweep, steady HUD).
+- Art-direction pivot under consideration: a single illustrated pose per actor plus procedural animation (squash/bob/lean/flip), instead of per-pose AI frames.
 
 ## Performance Metrics
 
@@ -71,6 +74,7 @@ Recent decisions affecting current work:
 - [Phase 02]: Bridge canvas at worldContainer z-index 0 — primitives form base layer below entity/fx containers for fallback fidelity
 - [Phase 02]: CAMERA.begin() takes no ctx arg — worldContainer transform persists, end() is a no-op
 - [Phase 02]: SPRITES.ready=false until first atlas loads — has(key) stays false until art files land in Plans 04-06
+- [quick-260924-tka]: Sprite runtime hardened — idle fallback, r-based scale with feet anchor, facing flip, y-sort, per-frame mark-and-sweep, HUD on separate un-shaken bridge; game canvas no longer takes a 2D context.
 
 ### Pending Todos
 
@@ -82,13 +86,14 @@ None yet.
 
 [Issues that affect future work]
 
-- [Phase 2]: Renderer of record unresolved (PixiJS vs Canvas2D) — resolve via worst-case-density benchmark (boss phase 2 + max particles) before committing. Default to Canvas2D + offscreen pre-render unless it bottlenecks. Likely needs /gsd:research-phase.
 - [Phase 2]: AI art commercial-license + consistency tooling needs validation before mass generation.
+- [Phase 2]: Run/attack/dash frame generation has no working pose-consistency technique (img2img cannot move legs; ControlNet OpenPose attempt drifted outfit) — see HANDOFF.json.
+- [QA-04]: QA-04 is marked complete but assets/sprites/AI-DISCLOSURE.md covers zero shipped assets and describes a ControlNet reference-sheet workflow (D-07) that was not actually used (idle frames were plain img2img from the locked reference). Revisit the disclosure before the Phase 7 store page.
 - [Phase 6]: Steam overlay on macOS is a known-broken combo with steamworks.js; steamworks-ffi-node fallback is unverified on this build. Likely needs /gsd:research-phase.
 - [Phase 7]: macOS hardened-runtime entitlements for Steamworks dylibs are undocumented; bake into CI early, not launch week. Likely needs /gsd:research-phase.
 
 ## Session Continuity
 
-Last session: 2026-06-20T20:46:39.625Z
-Stopped at: Completed 02-02-PLAN.md
-Resume file: None
+Last session: 2026-09-24
+Stopped at: 02-04 paused at task 2/2 — idle frames only (4/4); quick-260924-tka hardened sprite runtime + packed idle atlas
+Resume file: .planning/HANDOFF.json

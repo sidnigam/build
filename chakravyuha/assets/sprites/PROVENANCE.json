@@ -6,5 +6,34 @@
     "commercial_use": true,
     "confirmed_date": "2026-06-20"
   },
-  "assets": []
+  "assets": [
+    {
+      "filename": "player-atlas.png",
+      "path": "assets/sprites/player/player-atlas.png",
+      "actor": "player",
+      "animations": {
+        "idle": 4
+      },
+      "status": "partial — idle only; run/attack/dash blocked on pose-consistency (see HANDOFF.json)",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "img2img",
+      "init_image": "assets/sprites/reference/_derived/abhimanyu-char-base.png",
+      "init_image_note": "border-cropped derivative of the locked reference assets/sprites/reference/abhimanyu-reference.png",
+      "denoise": 0.35,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7,
+      "prompt_source": "assets/sprites/comfyui-workflow.json positive/negative prompt",
+      "seeds": "not recorded per-frame",
+      "post_processing": [
+        "rembg u2net background removal",
+        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+      ],
+      "raw_frames": "assets/sprites/_raw/player/player_idle_{0..3}.png",
+      "generated_date": "2026-09-13",
+      "packed_date": "2026-09-24"
+    }
+  ]
 }

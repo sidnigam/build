@@ -872,6 +872,55 @@ check(`VFX: timing — 600 full-pool updates < 3000ms (${vr.timingMs}ms)`, vr.ti
 check('VFX: reducedParticles scales burst count by 0.35 (min 1)', vr.reduced);
 check('VFX: render(ctx) does not throw in headless fallback', vr.render);
 
+// ---------------- SETTINGS: volume/resolution keys + STORE persistence (05-03) ----------------
+vm.runInContext(`
+globalThis.__settingsV2Results = {};
+(function() {
+  const R = __settingsV2Results;
+  SETTINGS.reset();
+
+  // 1. fresh defaults for the new keys
+  R.freshVolumeDefaults = SETTINGS.get('masterVolume') === 1 && SETTINGS.get('musicVolume') === 1 &&
+    SETTINGS.get('sfxVolume') === 1 && SETTINGS.get('resolutionMode') === 'auto';
+
+  // 2. clamping
+  SETTINGS.set('masterVolume', 5);
+  R.clampHigh = SETTINGS.get('masterVolume') === 1;
+  SETTINGS.set('masterVolume', -1);
+  R.clampLow = SETTINGS.get('masterVolume') === 0;
+  SETTINGS.reset();
+
+  // 3. resolutionMode enum validation
+  SETTINGS.set('resolutionMode', 'bogus');
+  R.resolutionRejected = SETTINGS.get('resolutionMode') === 'auto';
+  SETTINGS.set('resolutionMode', '1600x900');
+  R.resolutionAccepted = SETTINGS.get('resolutionMode') === '1600x900';
+  SETTINGS.reset();
+
+  // 4. persistence round-trip via STORE (not raw localStorage)
+  SETTINGS.set('masterVolume', 0.6);
+  SETTINGS._v = null;
+  R.volumePersist = SETTINGS.load().masterVolume === 0.6;
+  SETTINGS.reset();
+
+  // 5. Phase 3's existing keys are untouched by the extension
+  R.phase3Untouched = SETTINGS.get('screenShake') === true && SETTINGS.get('shakeIntensity') === 1 &&
+    SETTINGS.get('screenFlash') === true && SETTINGS.get('hitstop') === true &&
+    SETTINGS.get('reducedParticles') === false;
+
+  SETTINGS.reset();
+})();
+`, sandbox);
+const svr = vm.runInContext('__settingsV2Results', sandbox);
+console.log('\n— SETTINGS: volume/resolution + STORE persistence (05-03) —');
+check('SETTINGS: masterVolume/musicVolume/sfxVolume/resolutionMode defaults on fresh storage', svr.freshVolumeDefaults);
+check('SETTINGS: set(masterVolume, 5) clamps to 1', svr.clampHigh);
+check('SETTINGS: set(masterVolume, -1) clamps to 0', svr.clampLow);
+check("SETTINGS: set(resolutionMode, 'bogus') is rejected (unchanged)", svr.resolutionRejected);
+check("SETTINGS: set(resolutionMode, '1600x900') is accepted", svr.resolutionAccepted);
+check('SETTINGS: masterVolume persists across a reload via STORE', svr.volumePersist);
+check("SETTINGS: Phase 3's screenShake/shakeIntensity/screenFlash/hitstop/reducedParticles are unaffected", svr.phase3Untouched);
+
 // ---------------- Hitstop + CAMERA punch/kick/shake-scaling (Phase 3 Plan 2) ----------------
 vm.runInContext(`
 globalThis.__hitstopResults = {};
@@ -1185,6 +1234,109 @@ vm.runInContext(`
 `, sandbox);
 check('VFX.renderDebug(ctx) does not throw when VFX.debug is on', vm.runInContext('__debugOverlayOk', sandbox));
 vm.runInContext('for (let i = 0; i < 600; i++) VFX.update(1/60);', sandbox); // drain fully
+
+// ---------------- Settings menu: AUDIO volume hooks + rebinding (05-03 Task 2) ----------------
+vm.runInContext(`
+globalThis.__settingsMenuResults = {};
+(function() {
+  const R = __settingsMenuResults;
+  SETTINGS.reset();
+
+  // 1. AUDIO.getVolume reflects SETTINGS
+  R.getMaster = AUDIO.getVolume('master') === 1;
+  R.getMusic = AUDIO.getVolume('music') === 1;
+  R.getSfx = AUDIO.getVolume('sfx') === 1;
+
+  // 2. AUDIO.setVolume updates SETTINGS and doesn't throw (headless -> ctx is null)
+  let setThrew = false;
+  try { AUDIO.setVolume('sfx', 0.4); } catch (e) { setThrew = true; }
+  R.setNoThrow = !setThrew;
+  R.setPersists = SETTINGS.get('sfxVolume') === 0.4;
+
+  // 3. AUDIO.setVolume with a bogus kind is a safe no-op
+  let bogusThrew = false;
+  try { AUDIO.setVolume('bogus', 0.4); } catch (e) { bogusThrew = true; }
+  R.bogusNoThrow = !bogusThrew;
+
+  SETTINGS.reset();
+
+  // 4. UI.settings('hub') / UI.closeSettings() from the hub
+  UI.hub();
+  UI.settings('hub');
+  R.hubSettingsShown = GAME.state === 'hub' && document.getElementById('settings').classList.contains('hidden') === false;
+  UI.closeSettings();
+  R.hubSettingsClosed = document.getElementById('settings').classList.contains('hidden') === true;
+
+  // 5. UI.settings('pause') / UI.closeSettings() from pause
+  GAME.state = 'combat';
+  UI.pause();
+  UI.settings('pause');
+  R.pauseSettingsShown = GAME.state === 'paused' && document.getElementById('settings').classList.contains('hidden') === false;
+  UI.closeSettings();
+  R.pauseSettingsClosed = document.getElementById('settings').classList.contains('hidden') === true &&
+    GAME.state === 'paused' && document.getElementById('pause').classList.contains('hidden') === false;
+  UI.resume();
+
+  // 6. UI.applyRebind mutates INPUT.bindings live and persists via STORE
+  UI.applyRebind('dash', 'j');
+  R.rebindApplied = JSON.stringify(INPUT.bindings.dash) === JSON.stringify(['j']);
+  R.rebindPersisted = JSON.stringify(STORE.get('chakravyuha_bindings_v1', {}).dash) === JSON.stringify(['j']);
+
+  // 7. rebinding a move action takes effect immediately for movement
+  UI.applyRebind('moveUp', 'i');
+  R.moveRebindWorks = JSON.stringify(PAD.digitalMoveVector({ i: true }, INPUT.bindings)) === JSON.stringify({ dx: 0, dy: -1 });
+
+  // restore defaults for the rest of the suite
+  INPUT.bindings.dash = [' '];
+  INPUT.bindings.moveUp = ['w', 'arrowup'];
+  STORE.set('chakravyuha_bindings_v1', INPUT.bindings);
+  UI.hub();
+})();
+`, sandbox);
+const smr = vm.runInContext('__settingsMenuResults', sandbox);
+console.log('\n— Settings menu: AUDIO volume hooks + rebinding (05-03) —');
+check("AUDIO.getVolume('master'/'music'/'sfx') reflects SETTINGS defaults", smr.getMaster && smr.getMusic && smr.getSfx);
+check('AUDIO.setVolume does not throw headless (ctx is null) and persists to SETTINGS', smr.setNoThrow && smr.setPersists);
+check('AUDIO.setVolume with an unknown kind is a safe no-op', smr.bogusNoThrow);
+check("UI.settings('hub') shows the panel without leaving GAME.state='hub'", smr.hubSettingsShown);
+check('UI.closeSettings() hides the settings panel (returned to hub)', smr.hubSettingsClosed);
+check("UI.settings('pause') shows the panel while GAME.state='paused'", smr.pauseSettingsShown);
+check('UI.closeSettings() re-shows #pause and leaves GAME.state="paused"', smr.pauseSettingsClosed);
+check("UI.applyRebind('dash','j') sets INPUT.bindings.dash", smr.rebindApplied);
+check('UI.applyRebind persists the binding via STORE', smr.rebindPersisted);
+check('Rebinding a move* action takes effect immediately for PAD.digitalMoveVector', smr.moveRebindWorks);
+
+// ---------------- Settings panel: full boot + open/close + AUDIO round-trip (05-03 Task 3) ----------------
+vm.runInContext(`
+globalThis.__settingsPanelResults = {};
+(function() {
+  const R = __settingsPanelResults;
+  let threw = null;
+  try {
+    META.load();
+    GAME.init();
+    UI.hub();
+    UI.settings('hub');
+    R.openHiddenFalse = document.getElementById('settings').classList.contains('hidden') === false;
+    UI.closeSettings();
+    R.closeHiddenTrue = document.getElementById('settings').classList.contains('hidden') === true;
+  } catch (e) { threw = e.message; }
+  R.noThrow = threw === null;
+  R.threwMsg = threw;
+
+  R.volDefault = AUDIO.getVolume('master') === 1;
+  AUDIO.setVolume('master', 0.3);
+  R.volSet = AUDIO.getVolume('master') === 0.3;
+  AUDIO.setVolume('master', 1); // reset so it doesn't affect anything after this point
+})();
+`, sandbox);
+const spr = vm.runInContext('__settingsPanelResults', sandbox);
+console.log('\n— Settings panel: full boot + open/close (05-03 Task 3) —');
+check('a full boot + UI.settings("hub") + UI.closeSettings() sequence throws nothing' + (spr.threwMsg ? ' — ' + spr.threwMsg : ''), spr.noThrow);
+check('UI.settings("hub") leaves #settings not hidden', spr.openHiddenFalse);
+check('UI.closeSettings() leaves #settings hidden', spr.closeHiddenTrue);
+check("AUDIO.getVolume('master') === 1 by default", spr.volDefault);
+check("AUDIO.setVolume('master', 0.3) -> AUDIO.getVolume('master') === 0.3", spr.volSet);
 
 // ---------------- provenance completeness (ART-06) ----------------
 const { checkProvenance } = require('../tools/check-provenance.js');

@@ -9,6 +9,7 @@ const AUDIO = {
   ctx: null,
   master: null,
   musicGain: null,
+  sfxGain: null,
   musicNodes: [],
   muted: false,
   currentDrone: null,
@@ -23,15 +24,42 @@ const AUDIO = {
       this.musicGain = this.ctx.createGain();
       this.musicGain.gain.value = 0.16;
       this.musicGain.connect(this.master);
+      this.sfxGain = this.ctx.createGain();
+      this.sfxGain.gain.value = 1;
+      this.sfxGain.connect(this.master);
     } catch (e) { this.ctx = null; }
+    this._applyVolumes();
   },
 
   resume() { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); },
 
   toggleMute() {
     this.muted = !this.muted;
-    if (this.master) this.master.gain.value = this.muted ? 0 : 0.5;
+    this._applyVolumes();
     return this.muted;
+  },
+
+  // --- volume hooks (Phase 5 Plan 3 — settings menu) ---
+  setVolume(kind, value) {
+    const v = Math.min(1, Math.max(0, value));
+    const key = kind === 'master' ? 'masterVolume' : kind === 'music' ? 'musicVolume' : kind === 'sfx' ? 'sfxVolume' : null;
+    if (!key || typeof SETTINGS === 'undefined') return;
+    SETTINGS.set(key, v);
+    this._applyVolumes();
+  },
+
+  getVolume(kind) {
+    const key = kind === 'master' ? 'masterVolume' : kind === 'music' ? 'musicVolume' : kind === 'sfx' ? 'sfxVolume' : null;
+    if (!key || typeof SETTINGS === 'undefined') return 1;
+    return SETTINGS.get(key);
+  },
+
+  _applyVolumes() {
+    if (!this.ctx || typeof SETTINGS === 'undefined') return;
+    const mv = SETTINGS.get('masterVolume'), mu = SETTINGS.get('musicVolume'), sv = SETTINGS.get('sfxVolume');
+    if (this.master) this.master.gain.value = this.muted ? 0 : 0.5 * mv;
+    if (this.musicGain) this.musicGain.gain.value = 0.16 * mu;
+    if (this.sfxGain) this.sfxGain.gain.value = sv;
   },
 
   // --- low-level blip builder ---
@@ -46,7 +74,7 @@ const AUDIO = {
     g.gain.setValueAtTime(0.0001, t0);
     g.gain.linearRampToValueAtTime(vol, t0 + attack);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-    osc.connect(g); g.connect(this.master);
+    osc.connect(g); g.connect(this.sfxGain);
     osc.start(t0); osc.stop(t0 + dur + 0.05);
   },
 
@@ -64,7 +92,7 @@ const AUDIO = {
     const g = this.ctx.createGain();
     g.gain.setValueAtTime(vol, t0);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-    src.connect(filt); filt.connect(g); g.connect(this.master);
+    src.connect(filt); filt.connect(g); g.connect(this.sfxGain);
     src.start(t0);
   },
 

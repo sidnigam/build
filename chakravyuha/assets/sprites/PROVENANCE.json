@@ -81,11 +81,13 @@
       "cfg": 7.0,
       "width": 1344,
       "height": 768,
-      "seed": 41100,
-      "prompt": "top-down orthographic view looking straight down at ancient carved jade-green stone tiles with serpent-scale relief patterns in an underworld palace, faint bioluminescent moss in the grout, painted game arena floor texture, even evenly distributed detail, low contrast, no focal point, Hades-adjacent painterly illustration, deep teal and dark green with soft jade glow, no characters, no text",
+      "seed": 41101,
+      "prompt": "top-down orthographic view looking straight down at worn dark stone tiles in a dim underground cavern, subtle low-relief carving barely visible in dim light, faint dim bioluminescent moss in the grout, heavily shadowed, painted game arena floor texture, even evenly distributed detail, low contrast, no focal point, Hades-adjacent painterly illustration, dark, muted, low contrast, deep teal-black, almost no color saturation, dim and subtle, no bright highlights, no characters, no text",
       "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, horizon, sky, perspective view, walls, buildings, doorway, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point",
-      "rejected_seeds": [],
-      "rejected_count": 0,
+      "rejected_seeds": [
+        41100
+      ],
+      "rejected_count": 1,
       "post_processing": [
         "cover-scale 1344x768 -> 1280x731 LANCZOS",
         "center-crop 1280x720",
@@ -93,11 +95,11 @@
       ],
       "raw_image": "(not committed; reproducible from gen sidecar)",
       "gen_sidecar": "assets/sprites/_raw/biomes/patala-bg.gen.json",
-      "generated_date": "2026-09-25",
-      "recorded_date": "2026-09-25",
+      "generated_date": "2026-09-26",
+      "recorded_date": "2026-09-26",
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "Accepted on attempt 0: jade-green carved serpent-scale relief tiles, even top-down maze-like detail, no figures/text/horizon, reads clearly as underworld palace floor."
+      "self_review": "Regenerated per orchestrator art-direction feedback: seed 41100 was too saturated/high-contrast (bright green circuit-maze pattern) and would compete with sprites/telegraphs. Accepted seed 41101 with prompt pushed toward dark, muted, low-contrast deep teal-black underground stone with faint dim bioluminescent moss; calmer and reads clearly as dim underground floor."
     }
   ]
 }

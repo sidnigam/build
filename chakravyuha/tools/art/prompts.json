@@ -18,20 +18,20 @@
     },
     "patala": {
       "kind": "biome",
-      "ground": "ancient carved jade-green stone tiles with serpent-scale relief patterns in an underworld palace, faint bioluminescent moss in the grout",
-      "palette": "deep teal and dark green with soft jade glow",
+      "ground": "worn dark stone tiles in a dim underground cavern, subtle low-relief carving barely visible in dim light, faint dim bioluminescent moss in the grout, heavily shadowed",
+      "palette": "dark, muted, low contrast, deep teal-black, almost no color saturation, dim and subtle, no bright highlights",
       "base_seed": 41100
     },
     "ranabhoomi": {
       "kind": "biome",
-      "ground": "trampled dry ochre battlefield earth with scattered broken arrows, splintered chariot-wheel spokes and dust",
-      "palette": "dusty ochre and burnt umber with golden highlights",
+      "ground": "trampled dry earth of an old battlefield, scattered broken arrows and splintered chariot-wheel spokes half-buried in dust, heavily overcast and shadowed",
+      "palette": "dark, muted, low contrast, desaturated umber and grey-brown, dim and subtle, no bright highlights",
       "base_seed": 41200
     },
     "vaitarani": {
       "kind": "biome",
-      "ground": "wet dark slate river stones with a shallow misty water sheen between them, underworld riverbed",
-      "palette": "deep indigo and blue-grey with pale moonlit blue glints",
+      "ground": "wet dark slate river stones with a faint dim water sheen between them, underworld riverbed, heavily shadowed",
+      "palette": "dark, muted, low contrast, deep indigo-black and slate grey, dim and subtle, no bright highlights",
       "base_seed": 41300
     },
     "tataka": {

@@ -240,8 +240,7 @@ const GAME = {
       p.x += p.vx * dt; p.y += p.vy * dt; p.t -= dt;
       const A = this.arena;
       if (p.x < A.x || p.x > A.x + A.w || p.y < A.y || p.y > A.y + A.h) p.t = 0;
-      for (const pil of this.pillars)
-        if (U.dist(p.x, p.y, pil.x, pil.y) < pil.r + p.r) p.t = 0;
+      if (ROOMS.blocksProjectile(p)) p.t = 0;
       if (p.chakra) {
         if (!p._vfx) { p._vfx = true; VFX.emit('castGlow', p.x, p.y, Math.atan2(p.vy, p.vx)); }
         VFX.emit('astraTrail', p.x, p.y);
@@ -277,8 +276,7 @@ const GAME = {
       p.x += p.vx * dt; p.y += p.vy * dt; p.t -= dt;
       const A = this.arena;
       if (p.x < A.x || p.x > A.x + A.w || p.y < A.y || p.y > A.y + A.h) p.t = 0;
-      for (const pil of this.pillars)
-        if (U.dist(p.x, p.y, pil.x, pil.y) < pil.r + p.r) p.t = 0;
+      if (ROOMS.blocksProjectile(p)) p.t = 0;
       if (p.t > 0 && U.dist(p.x, p.y, P.x, P.y) < P.r + p.r) {
         P.takeDamage(p.dmg);
         p.t = 0;
@@ -466,15 +464,7 @@ const GAME = {
       }
     }
 
-    // pillars
-    for (const p of this.pillars) {
-      ctx.fillStyle = biome.wall;
-      ctx.beginPath(); ctx.arc(p.x, p.y + 4, p.r, 0, U.TAU); ctx.fill();
-      ctx.fillStyle = this.shadeMix(biome.wall, biome.accent, 0.25);
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, U.TAU); ctx.fill();
-      ctx.strokeStyle = biome.accent + '55'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 0.6, 0, U.TAU); ctx.stroke();
-    }
+    this.renderObstacles(ctx);
 
     // doors
     for (const d of this.doors) {
@@ -607,6 +597,45 @@ const GAME = {
     }
     ctx.globalAlpha = 1;
   },
+
+  // ---- Phase 4: obstacles (pillar/wall/pit) — renderObstacles ----
+  renderObstacles(ctx) {
+    const biome = this.biome;
+    for (const o of this.pillars) {
+      const kind = o.kind || 'pillar';
+      if (kind === 'pit') {
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        if (o.shape === 'rect') ctx.fillRect(o.x, o.y, o.w, o.h);
+        else { ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, U.TAU); ctx.fill(); }
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        if (o.shape === 'rect') ctx.fillRect(o.x + 6, o.y + 6, Math.max(0, o.w - 12), Math.max(0, o.h - 12));
+        else { ctx.beginPath(); ctx.arc(o.x, o.y, Math.max(0, o.r - 6), 0, U.TAU); ctx.fill(); }
+        ctx.strokeStyle = biome.accent + '66';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 5]);
+        if (o.shape === 'rect') ctx.strokeRect(o.x, o.y, o.w, o.h);
+        else { ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, U.TAU); ctx.stroke(); }
+        ctx.setLineDash([]);
+      } else if (o.shape === 'rect') {
+        ctx.fillStyle = biome.wall;
+        ctx.fillRect(o.x, o.y + 4, o.w, o.h);
+        ctx.fillStyle = this.shadeMix(biome.wall, biome.accent, 0.25);
+        ctx.fillRect(o.x, o.y, o.w, o.h);
+        ctx.strokeStyle = biome.accent + '55';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(o.x + 4, o.y + 4, Math.max(0, o.w - 8), Math.max(0, o.h - 8));
+      } else {
+        // pillar (circle) — existing look
+        ctx.fillStyle = biome.wall;
+        ctx.beginPath(); ctx.arc(o.x, o.y + 4, o.r, 0, U.TAU); ctx.fill();
+        ctx.fillStyle = this.shadeMix(biome.wall, biome.accent, 0.25);
+        ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, U.TAU); ctx.fill();
+        ctx.strokeStyle = biome.accent + '55'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(o.x, o.y, o.r * 0.6, 0, U.TAU); ctx.stroke();
+      }
+    }
+  },
+  // ---- end Phase 4 obstacles ----
 
   renderHubBg(ctx) {
     // slowly turning mandala behind the hub menu

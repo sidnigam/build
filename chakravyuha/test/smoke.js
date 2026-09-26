@@ -1424,5 +1424,81 @@ check('room layouts: >=3 templates/biome, unique ids, bounds, spawn/door clearan
   + (layoutErrors.length ? ' — ' + layoutErrors.slice(0, 6).join('; ') + (layoutErrors.length > 6 ? ` (+${layoutErrors.length - 6} more)` : '') : ''),
   layoutErrors.length === 0);
 
+vm.runInContext(`
+globalThis.__collisionErrors = [];
+try {
+  // Rect push-out
+  GAME.pillars = [{shape:'rect',kind:'wall',x:400,y:300,w:100,h:60}];
+  { const ent = {x:450,y:330,r:13};
+    clampToArena(ent);
+    const cx = U.clamp(ent.x, 400, 500), cy = U.clamp(ent.y, 300, 360);
+    const d = U.dist(ent.x, ent.y, cx, cy);
+    if (d < 12.9) __collisionErrors.push('rect push-out: entity still inside inflated rect (d=' + d + ')');
+  }
+
+  // Circle legacy compat (no shape field)
+  GAME.pillars = [{x:400,y:300,r:30}];
+  { const ent = {x:405,y:300,r:13};
+    clampToArena(ent);
+    const d = U.dist(ent.x, ent.y, 400, 300);
+    if (d < 42.9) __collisionErrors.push('legacy circle push-out: distance too small (d=' + d + ')');
+  }
+
+  // Pit blocks movement like a wall, but not projectiles
+  GAME.pillars = [{shape:'rect',kind:'pit',x:400,y:300,w:100,h:60}];
+  { const ent = {x:450,y:330,r:13};
+    clampToArena(ent);
+    const cx = U.clamp(ent.x, 400, 500), cy = U.clamp(ent.y, 300, 360);
+    const d = U.dist(ent.x, ent.y, cx, cy);
+    if (d < 12.9) __collisionErrors.push('pit push-out: entity still inside inflated pit (d=' + d + ')');
+  }
+  if (ROOMS.blocksProjectile({x:450,y:330,r:5}) !== false) __collisionErrors.push('pit should not block projectiles');
+  GAME.pillars = [{shape:'rect',kind:'wall',x:400,y:300,w:100,h:60}];
+  if (ROOMS.blocksProjectile({x:450,y:330,r:5}) !== true) __collisionErrors.push('wall should block projectiles');
+} catch (e) { __collisionErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const collisionErrors = vm.runInContext('__collisionErrors', sandbox);
+check('obstacle collision: rect push-out, legacy circle compat, pit vs wall projectile blocking'
+  + (collisionErrors.length ? ' — ' + collisionErrors.join('; ') : ''), collisionErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__projErrors = [];
+try {
+  GAME.startRun();
+  GAME.enemies = [];
+  const A = GAME.arena;
+  const px = A.x + 900, py = A.y + 500; // far from player spawn (A.x+90, A.y+A.h/2)
+
+  GAME.pillars = [{shape:'rect',kind:'pit',x:px-20,y:py-20,w:40,h:40}];
+  GAME.eprojectiles = [{x:px,y:py,vx:0,vy:0,dmg:0,color:'#fff',r:5,t:4}];
+  GAME.update(1/60);
+  if (GAME.eprojectiles.length !== 1) __projErrors.push('projectile over a pit was incorrectly removed');
+
+  GAME.pillars = [{shape:'rect',kind:'wall',x:px-20,y:py-20,w:40,h:40}];
+  GAME.eprojectiles = [{x:px,y:py,vx:0,vy:0,dmg:0,color:'#fff',r:5,t:4}];
+  GAME.update(1/60);
+  if (GAME.eprojectiles.length !== 0) __projErrors.push('projectile over a wall was not removed');
+} catch (e) { __projErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const projErrors = vm.runInContext('__projErrors', sandbox);
+check('projectile blocking: pit lets enemy projectiles through, wall stops them'
+  + (projErrors.length ? ' — ' + projErrors.join('; ') : ''), projErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__drawObstacleErrors = [];
+try {
+  GAME.pillars = [
+    {shape:'circle',kind:'pillar',x:400,y:300,r:30},
+    {shape:'rect',kind:'wall',x:500,y:300,w:80,h:40},
+    {shape:'rect',kind:'pit',x:650,y:300,w:80,h:40},
+    {shape:'circle',kind:'pit',x:800,y:300,r:30},
+  ];
+  GAME.renderBackground(__ctx);
+} catch (e) { __drawObstacleErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const drawObstacleErrors = vm.runInContext('__drawObstacleErrors', sandbox);
+check('renderObstacles draws pillar/wall/pit (circle+rect) without throwing'
+  + (drawObstacleErrors.length ? ' — ' + drawObstacleErrors.join('; ') : ''), drawObstacleErrors.length === 0);
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

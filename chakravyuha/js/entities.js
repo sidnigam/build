@@ -1489,14 +1489,37 @@ function clampToArena(ent) {
   const A = GAME.arena;
   ent.x = U.clamp(ent.x, A.x + ent.r, A.x + A.w - ent.r);
   ent.y = U.clamp(ent.y, A.y + ent.r, A.y + A.h - ent.r);
-  // push out of pillars
+  // push out of obstacles (pillar/wall/pit all block movement)
   for (const p of GAME.pillars) {
-    const d = U.dist(ent.x, ent.y, p.x, p.y);
-    const min = p.r + ent.r;
-    if (d < min && d > 0.001) {
-      const a = U.angle(p.x, p.y, ent.x, ent.y);
-      ent.x = p.x + Math.cos(a) * min;
-      ent.y = p.y + Math.sin(a) * min;
+    if (p.shape === 'rect') {
+      const cx = U.clamp(ent.x, p.x, p.x + p.w);
+      const cy = U.clamp(ent.y, p.y, p.y + p.h);
+      const d = U.dist(ent.x, ent.y, cx, cy);
+      if (d > 0.001 && d < ent.r) {
+        const a = Math.atan2(ent.y - cy, ent.x - cx);
+        ent.x = cx + Math.cos(a) * ent.r;
+        ent.y = cy + Math.sin(a) * ent.r;
+      } else if (d <= 0.001) {
+        // center is inside the rect: push out through the nearest side
+        const distLeft = ent.x - p.x, distRight = (p.x + p.w) - ent.x;
+        const distTop = ent.y - p.y, distBottom = (p.y + p.h) - ent.y;
+        const min = Math.min(distLeft, distRight, distTop, distBottom);
+        if (min === distLeft) ent.x = p.x - ent.r;
+        else if (min === distRight) ent.x = p.x + p.w + ent.r;
+        else if (min === distTop) ent.y = p.y - ent.r;
+        else ent.y = p.y + p.h + ent.r;
+      }
+    } else {
+      const d = U.dist(ent.x, ent.y, p.x, p.y);
+      const min = p.r + ent.r;
+      if (d < min && d > 0.001) {
+        const a = U.angle(p.x, p.y, ent.x, ent.y);
+        ent.x = p.x + Math.cos(a) * min;
+        ent.y = p.y + Math.sin(a) * min;
+      }
     }
   }
+  // re-clamp to arena bounds so pushes never leave the arena
+  ent.x = U.clamp(ent.x, A.x + ent.r, A.x + A.w - ent.r);
+  ent.y = U.clamp(ent.y, A.y + ent.r, A.y + A.h - ent.r);
 }

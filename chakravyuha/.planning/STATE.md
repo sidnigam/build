@@ -101,6 +101,7 @@ None yet.
 |---|-------------|------|--------|--------|-----------|
 | 260924-tka | Harden sprite runtime and pack idle player atlas for in-game scale check | 2026-09-25 | 622f143 | Needs Review (browser check deferred by user) | [260924-tka-harden-sprite-runtime-and-pack-idle-play](./quick/260924-tka-harden-sprite-runtime-and-pack-idle-play/) |
 | 260926-d5o | HUD motif pass and duo card style reconciliation | 2026-09-26 | 168d20d | Needs Review (visual) | [260926-d5o-hud-motif-pass-and-duo-card-style-reconc](./quick/260926-d5o-hud-motif-pass-and-duo-card-style-reconc/) |
+| 260926-dcz | Arena readability polish: floor dimming, stone obstacles, HUD label fixes | 2026-09-26 | a5f516a | Verified (headless Chrome screenshot) | [260926-dcz-arena-readability-polish-floor-dimming-s](./quick/260926-dcz-arena-readability-polish-floor-dimming-s/) |
 
 ## Session Continuity
 

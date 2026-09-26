@@ -979,33 +979,67 @@ const GAME = {
     for (const o of this.pillars) {
       const kind = o.kind || 'pillar';
       if (kind === 'pit') {
-        ctx.fillStyle = 'rgba(0,0,0,0.6)';
-        if (o.shape === 'rect') ctx.fillRect(o.x, o.y, o.w, o.h);
+        const isRect = o.shape === 'rect';
+        const pcx = isRect ? o.x + o.w / 2 : o.x, pcy = isRect ? o.y + o.h / 2 : o.y;
+        const pr = isRect ? Math.max(o.w, o.h) / 2 : o.r;
+        const pgrad = ctx.createRadialGradient && ctx.createRadialGradient(pcx, pcy, 0, pcx, pcy, pr);
+        if (pgrad && pgrad.addColorStop) {
+          pgrad.addColorStop(0, '#000000'); pgrad.addColorStop(1, biome.bg);
+          ctx.fillStyle = pgrad;
+        } else ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        if (isRect) ctx.fillRect(o.x, o.y, o.w, o.h);
         else { ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, U.TAU); ctx.fill(); }
-        ctx.fillStyle = 'rgba(0,0,0,0.35)';
-        if (o.shape === 'rect') ctx.fillRect(o.x + 6, o.y + 6, Math.max(0, o.w - 12), Math.max(0, o.h - 12));
-        else { ctx.beginPath(); ctx.arc(o.x, o.y, Math.max(0, o.r - 6), 0, U.TAU); ctx.fill(); }
-        ctx.strokeStyle = biome.accent + '66';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([6, 5]);
-        if (o.shape === 'rect') ctx.strokeRect(o.x, o.y, o.w, o.h);
+        // thin inner shadow ring
+        ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 3;
+        if (isRect) ctx.strokeRect(o.x + 3, o.y + 3, Math.max(0, o.w - 6), Math.max(0, o.h - 6));
+        else { ctx.beginPath(); ctx.arc(o.x, o.y, Math.max(0, o.r - 3), 0, U.TAU); ctx.stroke(); }
+        // subtler dashed accent rim
+        ctx.strokeStyle = biome.accent + '40';
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([5, 6]);
+        if (isRect) ctx.strokeRect(o.x, o.y, o.w, o.h);
         else { ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, U.TAU); ctx.stroke(); }
         ctx.setLineDash([]);
       } else if (o.shape === 'rect') {
+        // carved-stone wall: drop shadow, body, beveled edges, deterministic mortar lines
+        ctx.fillStyle = 'rgba(0,0,0,0.45)';
+        ctx.fillRect(o.x, o.y + 6, o.w, o.h);
         ctx.fillStyle = biome.wall;
-        ctx.fillRect(o.x, o.y + 4, o.w, o.h);
-        ctx.fillStyle = this.shadeMix(biome.wall, biome.accent, 0.25);
         ctx.fillRect(o.x, o.y, o.w, o.h);
-        ctx.strokeStyle = biome.accent + '55';
+        ctx.fillStyle = this.shadeMix(biome.wall, '#ffffff', 0.35);
+        ctx.fillRect(o.x, o.y, o.w, 3);
+        ctx.fillRect(o.x, o.y, 3, o.h);
+        ctx.fillStyle = this.shadeMix(biome.wall, '#000000', 0.35);
+        ctx.fillRect(o.x, o.y + o.h - 3, o.w, 3);
+        ctx.fillRect(o.x + o.w - 3, o.y, 3, o.h);
+        // deterministic mortar lines, seeded from position (not per-frame random)
+        const seed = Math.floor(o.x) * 13 + Math.floor(o.y) * 7;
+        const lines = 2 + (Math.abs(seed) % 2);
+        ctx.strokeStyle = biome.accent + '30';
+        ctx.lineWidth = 1;
+        for (let i = 1; i <= lines; i++) {
+          const ly = o.y + (o.h * i) / (lines + 1);
+          ctx.beginPath(); ctx.moveTo(o.x + 2, ly); ctx.lineTo(o.x + o.w - 2, ly); ctx.stroke();
+        }
+        ctx.strokeStyle = biome.accent + '40';
         ctx.lineWidth = 2;
         ctx.strokeRect(o.x + 4, o.y + 4, Math.max(0, o.w - 8), Math.max(0, o.h - 8));
       } else {
-        // pillar (circle) — existing look
+        // carved-stone pillar: drop shadow, radial inner shading, capital ring + accent hairline
+        ctx.fillStyle = 'rgba(0,0,0,0.45)';
+        ctx.beginPath(); ctx.arc(o.x, o.y + 6, o.r, 0, U.TAU); ctx.fill();
         ctx.fillStyle = biome.wall;
-        ctx.beginPath(); ctx.arc(o.x, o.y + 4, o.r, 0, U.TAU); ctx.fill();
-        ctx.fillStyle = this.shadeMix(biome.wall, biome.accent, 0.25);
         ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, U.TAU); ctx.fill();
-        ctx.strokeStyle = biome.accent + '55'; ctx.lineWidth = 2;
+        const pillGrad = ctx.createRadialGradient && ctx.createRadialGradient(o.x - o.r * 0.3, o.y - o.r * 0.3, o.r * 0.1, o.x, o.y, o.r);
+        if (pillGrad && pillGrad.addColorStop) {
+          pillGrad.addColorStop(0, this.shadeMix(biome.wall, '#ffffff', 0.35));
+          pillGrad.addColorStop(1, this.shadeMix(biome.wall, '#000000', 0.3));
+          ctx.fillStyle = pillGrad;
+        } else ctx.fillStyle = this.shadeMix(biome.wall, biome.accent, 0.25);
+        ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, U.TAU); ctx.fill();
+        ctx.strokeStyle = biome.accent + '30'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(o.x, o.y, o.r * 0.82, 0, U.TAU); ctx.stroke();
+        ctx.strokeStyle = biome.accent + '40'; ctx.lineWidth = 1.5;
         ctx.beginPath(); ctx.arc(o.x, o.y, o.r * 0.6, 0, U.TAU); ctx.stroke();
       }
     }

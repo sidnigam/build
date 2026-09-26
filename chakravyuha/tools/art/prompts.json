@@ -91,9 +91,9 @@
     },
     "naga": {
       "kind": "enemy",
-      "subject": "a naga warrior of the serpent folk, human torso with a coiled green serpent tail instead of legs, emerald scales, single cobra-hood crest, holding a spear",
+      "subject": "a naga warrior of the serpent folk, body shaped exactly like a merman: fully human muscular male torso, human arms, completely human face with no snout, human hair, standing upright, and below the waist his body seamlessly becomes one single continuous green serpent tail fin instead of legs, like a mermaid's tail, coiling on the ground, a small flared cobra-hood fan behind the neck, holding one spear, green scale patterning only on the tail",
       "palette": "",
-      "negative_extra": "halo, many heads, multiple hoods, thousand-headed, Shesha, Vasuki, divine",
+      "negative_extra": "halo, many heads, multiple hoods, thousand-headed, Shesha, Vasuki, divine, reptile head, lizard head, dragon head, snout, animal face, legs, feet, two legs, standing on legs, frame, border, ornate border",
       "base_seed": 63300,
       "out_size": 128
     },

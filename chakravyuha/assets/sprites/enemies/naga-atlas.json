@@ -1,0 +1,44 @@
+{
+  "frames": {
+    "naga_idle_0.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 120,
+        "h": 115
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 9,
+        "w": 120,
+        "h": 115
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 128
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  },
+  "meta": {
+    "app": "http://github.com/odrick/free-tex-packer-core",
+    "version": "0.3.8",
+    "image": "naga-atlas.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 124,
+      "h": 119
+    },
+    "scale": 1
+  },
+  "animations": {
+    "idle": [
+      "naga_idle_0.png"
+    ]
+  }
+}

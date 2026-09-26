@@ -483,6 +483,42 @@
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Naga needed all 5 attempts to get the D-15a body plan right (human torso with a serpent tail instead of legs, not a divine multi-hooded Naga). Seed 63300 had an ornate corner border/frame and a full dragon head (not a humanoid face). 63301 and 63302 both grew a separate reptilian/dragon head plus legs AND a tail (a lizardman, not 'tail instead of legs'). 63303 again kept legs+sandaled feet with an ambiguous double-fin hood shape. Reworded the prompt around a merman analogy (human torso, single continuous tail, no legs) and accepted seed 63304: fully human face and muscular torso, no legs, one continuous green serpent tail, holding a single spear with a serpent-head ornament on the haft (not a second head on the character), no cobra-hood iconography that reads as multi-headed/divine. A soft white circular glow behind the figure in the raw generation was cleanly removed by rembg (not a solid halo shape) and does not appear in the finished frame. Clean readable silhouette."
+    },
+    {
+      "filename": "vetala-atlas.png",
+      "path": "assets/sprites/enemies/vetala-atlas.png",
+      "actor": "vetala",
+      "kind": "enemy",
+      "animations": {
+        "idle": 1
+      },
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 63400,
+      "prompt": "a vetala, vampiric corpse-spirit from Indian folklore, hunched undead figure with long claws and ragged cloth wings, violet ghostly aura, Hades-adjacent illustrated 2D game character art, painterly digital illustration, bold clean linework, strong readable silhouette, chunky proportions, 3/4 top-down game sprite, full body, entire figure visible from head to feet, single character, solo, centered, Indian mythology, warm earth tones, high detail, concept art, plain flat pale grey background",
+      "negative_prompt": "pixel art, 3d render, photorealistic, photo, blurry, lowres, low quality, jpeg artifacts, extra limbs, extra arms, extra legs, extra heads, deformed hands, fused fingers, bad anatomy, watermark, text, signature, logo, letters, caption, cropped, cut off, close-up, portrait, bust, headshot, multiple characters, crowd, collage, duplicate, extra views, character sheet, turnaround, floating objects, disembodied, busy background, scenery, landscape, frame, border, western medieval armor, roman armor, samurai armor, halo, deity, god, goddess, divine aura, religious icon, worship, multiple arms, extra arms, four arms, six arms, eight arms, crown, tiara, diadem, lotus, trident",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "rembg u2net background removal",
+        "alpha despeckle + trim",
+        "bottom-aligned LANCZOS fit to 128x128",
+        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+      ],
+      "raw_image": "assets/sprites/_raw/enemies/vetala/",
+      "gen_sidecar": "assets/sprites/_raw/enemies/vetala/vetala.gen.json",
+      "generated_date": "2026-09-26",
+      "recorded_date": "2026-09-26",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "Accepted on attempt 0: gaunt vampiric corpse-spirit, wide ragged cloth/bat wings, long claws, violet ghostly palette, skull-like face with red eyes. The wide wingspan gives a distinct, highly readable silhouette that stands apart from the other enemy archetypes. No halo, no text, clean cutout."
     }
   ]
 }

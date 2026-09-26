@@ -268,6 +268,18 @@ const SPRITES = {
     BG_DIM_OUTER: 0.6,           // tunable: darken-overlay alpha outside the arena when a biome bg shows
     BG_FLOOR_TINT: 0.55,         // tunable: biome-floor color wash alpha over the illustrated bg inside the arena
     BG_FLOOR_DARKEN: 0.25,       // tunable: extra flat-black wash over the arena floor (quick-260926-dcz readability)
+
+    // ---------------- Tunables (quick-260926-djs: character readability ground markers) ----------------
+    RING_PLAYER_COLOR: 0xffd34d, // tunable: gold ground ring/glow color under the player
+    RING_PLAYER_ALPHA: 0.55,     // tunable: peak alpha of the player's gold ring/glow (also drives the pulse range)
+    RING_W_PER_R: 1.9,           // tunable: marker ellipse full-width = r * RING_W_PER_R (half-width = /2, i.e. rx)
+    RING_H_RATIO: 0.38,          // tunable: marker ellipse height (ry) = r * RING_H_RATIO
+    MARKER_SHADOW_ALPHA: 0.45,   // tunable: dark contact-shadow alpha baked into every ground marker (distinct
+                                 // from CFG.SHADOW_ALPHA, which is the separate ctx-drawn shadow in game.js —
+                                 // kept as its own key so this quick task never alters that already-tuned path)
+    RIM_ALPHA: 0.35,             // tunable: faint DATA-color rim alpha for enemy/boss ground markers
+    PLAYER_LIFT: 1.12,           // tunable: steady-state brightness multiplier applied only to the player sprite
+    BOSS_MARKER_SCALE: 1.15,     // tunable: extra ground-marker size multiplier for bosses (beyond their larger r)
   },
 
   ATTACK_STATES: new Set(['wind', 'lunge', 'strike', 'charge', 'charging', 'noose', 'spiral', 'summon', 'slam', 'cast', 'sweep']),
@@ -482,6 +494,42 @@ const SPRITES = {
     const C = this.CFG;
     const p = Math.max(0, Math.min(1, t / C.TRAIL_LIFE));
     return p * C.GHOST_ALPHA;
+  },
+
+  // ---------------- Ground markers (quick-260926-djs, pure — no Pixi) ----------------
+
+  /**
+   * parseColor(c) — pure. Converts a '#rrggbb' CSS hex string (the format DATA.color / e.color
+   * already use for ctx.fillStyle) into a 0xRRGGBB number for Pixi Graphics fill/stroke. Passes
+   * numbers through unchanged; falls back to white for anything else (missing/malformed color).
+   */
+  parseColor(c) {
+    if (typeof c === 'number') return c;
+    if (typeof c === 'string' && c.charCodeAt(0) === 35 /* '#' */) {
+      const n = parseInt(c.slice(1), 16);
+      if (Number.isFinite(n)) return n;
+    }
+    return 0xffffff;
+  },
+
+  /**
+   * groundMarkerSpec(e, phase) — pure. Sizing/color spec for the ground-plane readability marker
+   * (drawMarker): a soft gold pulsing ring under the player, a dark contact shadow + faint
+   * DATA-color rim under sprite-rendered enemies/bosses. `phase` is a plain number (GAME.time
+   * when available) driving only the player's pulse — safe to omit (defaults to 0, no pulse).
+   */
+  groundMarkerSpec(e, phase = 0) {
+    const C = this.CFG;
+    const isPlayer = e.spriteKey === 'player' || e.type === undefined;
+    const kind = isPlayer ? 'player' : (e.boss ? 'boss' : 'enemy');
+    const sizeMul = kind === 'boss' ? C.BOSS_MARKER_SCALE : 1;
+    const rx = e.r * (C.RING_W_PER_R / 2) * sizeMul;
+    const ry = e.r * C.RING_H_RATIO * sizeMul;
+    const color = isPlayer ? C.RING_PLAYER_COLOR : this.parseColor(e.color);
+    const alpha = isPlayer ? C.RING_PLAYER_ALPHA : C.RIM_ALPHA;
+    const shadowAlpha = C.MARKER_SHADOW_ALPHA;
+    const pulse = isPlayer ? 1 + 0.15 * Math.sin(phase * Math.PI * 2 * 0.9) : 1;
+    return { kind, rx, ry, color, alpha, shadowAlpha, pulse };
   },
 
   // ---------------- Weapon overlay + biome bg (02-10, pure — no Pixi) ----------------

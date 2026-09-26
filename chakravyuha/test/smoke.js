@@ -2283,5 +2283,48 @@ const readabilityErrors = vm.runInContext('__readabilityErrors', sandbox);
 check('renderBackground + renderObstacles + renderHUD run without throwing for each biome (rect walls, circle pillars, pits)'
   + (readabilityErrors.length ? ' — ' + readabilityErrors.join('; ') : ''), readabilityErrors.length === 0);
 
+// ---------------- Quick 260926-djs: character readability — ground rings + rim lift ----------------
+console.log('\n— character readability: ground marker spec (quick 260926-djs) —');
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+
+  check('SPRITES.parseColor: hex string, number passthrough, malformed fallback',
+    R("JSON.stringify([SPRITES.parseColor('#ff8800'), SPRITES.parseColor(0x123456), SPRITES.parseColor(undefined), SPRITES.parseColor('nope')])")
+      === JSON.stringify([0xff8800, 0x123456, 0xffffff, 0xffffff]));
+
+  check('SPRITES.groundMarkerSpec: sizes scale with r',
+    R(`(() => {
+      const g10 = SPRITES.groundMarkerSpec({ r: 10, type: 'rakshasa', color: '#ff0000' }, 0);
+      const g20 = SPRITES.groundMarkerSpec({ r: 20, type: 'rakshasa', color: '#ff0000' }, 0);
+      return g20.rx > g10.rx && g20.ry > g10.ry;
+    })()`) === true);
+
+  check('SPRITES.groundMarkerSpec: player kind is gold',
+    R("(() => { const gp = SPRITES.groundMarkerSpec({ r: 13 }, 0); return gp.kind === 'player' && gp.color === SPRITES.CFG.RING_PLAYER_COLOR; })()") === true);
+
+  check('SPRITES.groundMarkerSpec: boss rx > enemy rx for larger r',
+    R(`(() => {
+      const genemy = SPRITES.groundMarkerSpec({ r: 14, type: 'rakshasa', color: '#ff0000', boss: false }, 0);
+      const gboss  = SPRITES.groundMarkerSpec({ r: 30, type: 'tataka', color: '#ff0000', boss: true }, 0);
+      return gboss.kind === 'boss' && genemy.kind === 'enemy' && gboss.rx > genemy.rx && gboss.ry > genemy.ry;
+    })()`) === true);
+
+  check('SPRITES.groundMarkerSpec: alpha and shadowAlpha in (0,1] for player/enemy/boss',
+    R(`(() => {
+      const gp = SPRITES.groundMarkerSpec({ r: 13 }, 0);
+      const ge = SPRITES.groundMarkerSpec({ r: 14, type: 'rakshasa', color: '#ff0000' }, 0);
+      const gb = SPRITES.groundMarkerSpec({ r: 30, type: 'tataka', color: '#ff0000', boss: true }, 0);
+      return [gp, ge, gb].every(s => s.alpha > 0 && s.alpha <= 1 && s.shadowAlpha > 0 && s.shadowAlpha <= 1);
+    })()`) === true);
+
+  check('SPRITES.groundMarkerSpec: player pulse oscillates with phase, enemy/boss pulse is flat 1',
+    R(`(() => {
+      const p0 = SPRITES.groundMarkerSpec({ r: 13 }, 0).pulse;
+      const p1 = SPRITES.groundMarkerSpec({ r: 13 }, 0.5).pulse;
+      const e0 = SPRITES.groundMarkerSpec({ r: 14, type: 'rakshasa', color: '#ff0000' }, 0.5).pulse;
+      return p0 !== p1 && e0 === 1;
+    })()`) === true);
+}
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

@@ -7,6 +7,43 @@
 
 const ROOMS = {
 
+  // ---- Phase 4: room layout geometry helpers (GAME-03) ----
+  layoutsFor(biomeId) { return DATA.LAYOUTS[biomeId] || []; },
+
+  materializeLayout(tpl) {
+    const A = GAME.arena;
+    return tpl.obstacles.map(o => {
+      if (o.kind === 'wall' || (o.w !== undefined && o.h !== undefined)) {
+        return { shape: 'rect', kind: o.kind, x: A.x + o.x * A.w, y: A.y + o.y * A.h,
+          w: o.w * A.w, h: o.h * A.h, tpl: tpl.id };
+      }
+      return { shape: 'circle', kind: o.kind || 'pillar', x: A.x + o.x * A.w, y: A.y + o.y * A.h,
+        r: o.r, tpl: tpl.id };
+    });
+  },
+
+  // Distance from (x,y) to an obstacle's surface (0 or negative-equivalent when inside).
+  obstacleDist(o, x, y) {
+    const shape = o.shape || 'circle';
+    if (shape === 'rect') {
+      const cx = U.clamp(x, o.x, o.x + o.w);
+      const cy = U.clamp(y, o.y, o.y + o.h);
+      return U.dist(x, y, cx, cy);
+    }
+    return U.dist(x, y, o.x, o.y) - o.r;
+  },
+
+  pointBlocked(x, y, r, opts = {}) {
+    const obstacles = opts.obstacles || GAME.pillars;
+    for (const o of obstacles) {
+      if (opts.projectile && o.kind === 'pit') continue;
+      if (this.obstacleDist(o, x, y) < r) return true;
+    }
+    return false;
+  },
+
+  blocksProjectile(p) { return this.pointBlocked(p.x, p.y, p.r, { projectile: true }); },
+
   // Build the arena geometry for a new room (pillars vary per room)
   buildArena(isBoss) {
     GAME.pillars = [];

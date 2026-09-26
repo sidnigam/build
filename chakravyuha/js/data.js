@@ -250,6 +250,51 @@ DATA.BIOMES = [
   },
 ];
 
+// ---------- ROOM LAYOUT TEMPLATES ----------
+// Normalized arena coordinates: circles x/y = center fraction, r in px;
+// rects x/y = top-left fraction, w/h = size fraction.
+DATA.LAYOUTS = {
+  naraka: [
+    { id: 'naraka_colonnade', name: 'Iron Colonnade', obstacles: [
+      {kind:'pillar',x:.32,y:.25,r:30},{kind:'pillar',x:.52,y:.25,r:30},{kind:'pillar',x:.72,y:.25,r:30},
+      {kind:'pillar',x:.32,y:.75,r:30},{kind:'pillar',x:.52,y:.75,r:30},{kind:'pillar',x:.72,y:.75,r:30} ] },
+    { id: 'naraka_forge', name: 'Forge Cross', obstacles: [
+      {kind:'wall',x:.42,y:.46,w:.20,h:.08},{kind:'wall',x:.49,y:.22,w:.06,h:.56} ] },
+    { id: 'naraka_chains', name: 'Chained Pits', obstacles: [
+      {kind:'pit',x:.42,y:.28,r:60},{kind:'pit',x:.60,y:.72,r:60},{kind:'pillar',x:.74,y:.40,r:34} ] },
+  ],
+  patala: [
+    { id: 'patala_coil', name: 'Serpent Coil', obstacles: [
+      {kind:'pillar',x:.30,y:.22,r:26},{kind:'pillar',x:.40,y:.36,r:26},{kind:'pillar',x:.50,y:.50,r:26},
+      {kind:'pillar',x:.60,y:.64,r:26},{kind:'pillar',x:.70,y:.78,r:26} ] },
+    { id: 'patala_abyss', name: 'Twin Abyss', obstacles: [
+      {kind:'pit',x:.28,y:.08,w:.16,h:.30},{kind:'pit',x:.56,y:.62,w:.16,h:.30} ] },
+    { id: 'patala_halls', name: 'Naga Halls', obstacles: [
+      {kind:'wall',x:.28,y:.27,w:.48,h:.05},{kind:'wall',x:.28,y:.68,w:.48,h:.05} ] },
+  ],
+  ranabhoomi: [
+    { id: 'rana_chariots', name: 'Broken Chariots', obstacles: [
+      {kind:'wall',x:.30,y:.15,w:.08,h:.14},{kind:'wall',x:.52,y:.58,w:.10,h:.12},
+      {kind:'wall',x:.70,y:.22,w:.07,h:.16},{kind:'pillar',x:.42,y:.80,r:22} ] },
+    { id: 'rana_trench', name: 'The Trench', obstacles: [
+      {kind:'pit',x:.50,y:.04,w:.04,h:.34},{kind:'pit',x:.50,y:.62,w:.04,h:.34} ] },
+    { id: 'rana_banners', name: 'Ring of Banners', obstacles: [
+      {kind:'pillar',x:.687,y:.5,r:22},{kind:'pillar',x:.62,y:.724,r:22},{kind:'pillar',x:.497,y:.724,r:22},
+      {kind:'pillar',x:.433,y:.5,r:22},{kind:'pillar',x:.497,y:.276,r:22},{kind:'pillar',x:.62,y:.276,r:22} ] },
+  ],
+  vaitarani: [
+    { id: 'vait_fords', name: 'The Fords', obstacles: [
+      {kind:'pit',x:.46,y:0,w:.07,h:.20},{kind:'pit',x:.46,y:.32,w:.07,h:.36},{kind:'pit',x:.46,y:.80,w:.07,h:.20} ] },
+    { id: 'vait_islands', name: 'Bone Islands', obstacles: [
+      {kind:'pit',x:.34,y:.28,r:50},{kind:'pit',x:.34,y:.72,r:50},{kind:'pit',x:.64,y:.28,r:50},
+      {kind:'pit',x:.64,y:.72,r:50},{kind:'pillar',x:.49,y:.50,r:34} ] },
+    { id: 'vait_posts', name: 'Ferry Posts', obstacles: [
+      {kind:'pillar',x:.30,y:.20,r:20},{kind:'pillar',x:.30,y:.50,r:20},{kind:'pillar',x:.30,y:.80,r:20},
+      {kind:'pillar',x:.55,y:.35,r:20},{kind:'pillar',x:.55,y:.65,r:20},
+      {kind:'pillar',x:.78,y:.20,r:20},{kind:'pillar',x:.78,y:.50,r:20},{kind:'pillar',x:.78,y:.80,r:20} ] },
+  ],
+};
+
 // ---------- DOOR REWARDS ----------
 DATA.REWARDS = {
   boon:   { id: 'boon',   name: 'Divine Boon',   sym: '✦', color: '#ffd34d', w: 30 },

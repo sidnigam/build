@@ -1352,5 +1352,77 @@ const duoNegErrors = vm.runInContext('__duoNegErrors', sandbox);
 check('duo offer: never shown before prerequisites are met'
   + (duoNegErrors.length ? ' — ' + duoNegErrors.join('; ') : ''), duoNegErrors.length === 0);
 
+// ---------------- Phase 4: room layouts (GAME-03) ----------------
+console.log('\n— room layouts (Phase 4, GAME-03) —');
+
+vm.runInContext(`
+globalThis.__layoutErrors = [];
+try {
+  const A = GAME.arena;
+  const spawnX = A.x + 90, spawnY = A.y + A.h / 2;
+  const doorX = A.x + A.w - 36;
+  const doorYs = [1/3, 1/2, 2/3].map(f => A.y + A.h * f);
+
+  const seenIds = new Set();
+  for (const biomeId of Object.keys(DATA.LAYOUTS)) {
+    const list = ROOMS.layoutsFor(biomeId);
+    if (list.length < 3) __layoutErrors.push(biomeId + ': fewer than 3 templates (' + list.length + ')');
+    for (const tpl of list) {
+      if (seenIds.has(tpl.id)) __layoutErrors.push(tpl.id + ': duplicate template id');
+      seenIds.add(tpl.id);
+
+      const obs = ROOMS.materializeLayout(tpl);
+      for (const o of obs) {
+        if (o.shape === 'circle') {
+          if (o.x - o.r < A.x || o.x + o.r > A.x + A.w || o.y - o.r < A.y || o.y + o.r > A.y + A.h)
+            __layoutErrors.push(tpl.id + ': circle obstacle out of bounds');
+        } else {
+          if (o.x < A.x || o.x + o.w > A.x + A.w || o.y < A.y || o.y + o.h > A.y + A.h)
+            __layoutErrors.push(tpl.id + ': rect obstacle out of bounds');
+        }
+        if (ROOMS.obstacleDist(o, spawnX, spawnY) < 80)
+          __layoutErrors.push(tpl.id + ': obstacle too close to spawn');
+        for (const dy of doorYs) {
+          if (ROOMS.obstacleDist(o, doorX, dy) < 34 + 24)
+            __layoutErrors.push(tpl.id + ': obstacle too close to a door candidate');
+        }
+      }
+
+      // reachability flood-fill (10px grid, player radius 13)
+      const cell = 10, pr = 13;
+      const cols = Math.floor(A.w / cell), rows = Math.floor(A.h / cell);
+      const idx = (c, r) => r * cols + c;
+      const walkable = (px, py) => px >= A.x + pr && px <= A.x + A.w - pr && py >= A.y + pr && py <= A.y + A.h - pr
+        && !ROOMS.pointBlocked(px, py, pr, { obstacles: obs });
+      const visited = new Uint8Array(cols * rows);
+      const startCol = Math.floor((spawnX - A.x) / cell), startRow = Math.floor((spawnY - A.y) / cell);
+      visited[idx(startCol, startRow)] = 1;
+      const stack = [[startCol, startRow]];
+      while (stack.length) {
+        const [c, r] = stack.pop();
+        for (const [dc, dr] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+          const nc = c + dc, nr = r + dr;
+          if (nc < 0 || nc >= cols || nr < 0 || nr >= rows) continue;
+          if (visited[idx(nc, nr)]) continue;
+          const px = A.x + (nc + 0.5) * cell, py = A.y + (nr + 0.5) * cell;
+          if (!walkable(px, py)) continue;
+          visited[idx(nc, nr)] = 1;
+          stack.push([nc, nr]);
+        }
+      }
+      for (const dy of doorYs) {
+        const dc = Math.floor((doorX - A.x) / cell), dr = Math.floor((dy - A.y) / cell);
+        if (dc < 0 || dc >= cols || dr < 0 || dr >= rows || !visited[idx(dc, dr)])
+          __layoutErrors.push(tpl.id + ': a door candidate is unreachable from spawn');
+      }
+    }
+  }
+} catch (e) { __layoutErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const layoutErrors = vm.runInContext('__layoutErrors', sandbox);
+check('room layouts: >=3 templates/biome, unique ids, bounds, spawn/door clearance, reachability'
+  + (layoutErrors.length ? ' — ' + layoutErrors.slice(0, 6).join('; ') + (layoutErrors.length > 6 ? ` (+${layoutErrors.length - 6} more)` : '') : ''),
+  layoutErrors.length === 0);
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

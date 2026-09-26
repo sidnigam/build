@@ -623,6 +623,17 @@ const GAME = {
       ctx.clearRect(A.x, A.y, A.w, A.h);                                              // undo the outer dim inside the arena
       ctx.globalAlpha = SPRITES.CFG.BG_FLOOR_TINT; ctx.fillStyle = biome.floor;       // biome-tinted readability wash
       ctx.fillRect(A.x, A.y, A.w, A.h); ctx.globalAlpha = 1;
+      ctx.fillStyle = `rgba(0,0,0,${SPRITES.CFG.BG_FLOOR_DARKEN})`;                    // flat-black darken so sprites/telegraphs pop off busy illustrated floors
+      ctx.fillRect(A.x, A.y, A.w, A.h);
+      const vcx = A.x + A.w / 2, vcy = A.y + A.h / 2;                                  // soft radial vignette: calm the floor center-out, guarded for the smoke ctx stub
+      const vr = Math.max(A.w, A.h) * 0.62;
+      const vgrad = ctx.createRadialGradient && ctx.createRadialGradient(vcx, vcy, vr * 0.35, vcx, vcy, vr);
+      if (vgrad && vgrad.addColorStop) {
+        vgrad.addColorStop(0, 'rgba(0,0,0,0)');
+        vgrad.addColorStop(1, 'rgba(0,0,0,0.35)');
+        ctx.fillStyle = vgrad;
+        ctx.fillRect(A.x, A.y, A.w, A.h);
+      }
     } else {
       ctx.fillStyle = biome.floor;
       ctx.fillRect(A.x, A.y, A.w, A.h);

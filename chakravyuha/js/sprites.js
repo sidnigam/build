@@ -266,7 +266,8 @@ const SPRITES = {
     WEAPON_SCALE_PER_R: 1 / 13,  // tunable: weapon art is authored for r=13
     WEAPON_REACH_BULGE: 0.15,    // tunable: mid-swing reach bulge fraction
     BG_DIM_OUTER: 0.6,           // tunable: darken-overlay alpha outside the arena when a biome bg shows
-    BG_FLOOR_TINT: 0.35,         // tunable: biome-floor color wash alpha over the illustrated bg inside the arena
+    BG_FLOOR_TINT: 0.55,         // tunable: biome-floor color wash alpha over the illustrated bg inside the arena
+    BG_FLOOR_DARKEN: 0.25,       // tunable: extra flat-black wash over the arena floor (quick-260926-dcz readability)
   },
 
   ATTACK_STATES: new Set(['wind', 'lunge', 'strike', 'charge', 'charging', 'noose', 'spiral', 'summon', 'slam', 'cast', 'sweep']),

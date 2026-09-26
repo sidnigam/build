@@ -249,6 +249,46 @@
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Accepted on attempt 0: full body head-to-feet, jade-teal sorcerer-king with a topknot (in place of the prompted crown), swirling green sorcerous smoke, a bowl of green flame in one hand. A faint sketchy background doodle in the corner of the raw image was cleanly removed by rembg (not present in the finished frame). Silhouette reads clearly, no halo."
+    },
+    {
+      "filename": "kumbhakarna-atlas.png",
+      "path": "assets/sprites/bosses/kumbhakarna-atlas.png",
+      "actor": "kumbhakarna",
+      "kind": "boss",
+      "animations": {
+        "idle": 1,
+        "phase2": 1
+      },
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 52201,
+      "prompt": "Kumbhakarna, colossal rakshasa giant, huge round belly, heavy-lidded sleepy eyes, tusks, golden-yellow armor and ornaments, massive iron mace, golden-yellow ochre and bronze, Hades-adjacent illustrated 2D game character art, painterly digital illustration, bold clean linework, strong readable silhouette, chunky proportions, 3/4 top-down game sprite, full body, entire figure visible from head to feet, single character, solo, centered, Indian mythology, warm earth tones, high detail, concept art, plain flat pale grey background",
+      "negative_prompt": "pixel art, 3d render, photorealistic, photo, blurry, lowres, low quality, jpeg artifacts, extra limbs, extra arms, extra legs, extra heads, deformed hands, fused fingers, bad anatomy, watermark, text, signature, logo, letters, caption, cropped, cut off, close-up, portrait, bust, headshot, multiple characters, crowd, collage, duplicate, extra views, character sheet, turnaround, floating objects, disembodied, busy background, scenery, landscape, frame, border, western medieval armor, roman armor, samurai armor, halo, deity, god, goddess, divine aura, religious icon, worship",
+      "rejected_seeds": [
+        52200
+      ],
+      "rejected_count": 1,
+      "post_processing": [
+        "rembg u2net background removal",
+        "alpha despeckle + trim",
+        "bottom-aligned LANCZOS fit to 256x256",
+        "phase2: tools/art/phase2_variant.py --mode ember (deterministic post-process, no generation)",
+        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+      ],
+      "raw_image": "assets/sprites/_raw/bosses/kumbhakarna/",
+      "gen_sidecar": "assets/sprites/_raw/bosses/kumbhakarna/kumbhakarna.gen.json",
+      "generated_date": "2026-09-26",
+      "recorded_date": "2026-09-26",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "Attempt 0 (seed 52200) had a large sun-disc glow directly behind the figure that reads as a halo/divine aura, a cultural-guard violation for an asura boss. Accepted attempt 1 (seed 52201): two arms only, no crown/halo/lotus, huge round belly, fanged lion-maned face, golden-yellow/bronze palette, holding a single mace-staff. Clean cutout, chunky readable silhouette."
     }
   ]
 }

@@ -4,8 +4,14 @@
   "enemy_negative_extra": "halo, deity, god, goddess, divine aura, religious icon, worship, multiple arms, extra arms, four arms, six arms, eight arms, crown, tiara, diadem, lotus, trident",
   "biome_positive_template": "top-down orthographic view looking straight down at {ground}, painted game arena floor texture, even evenly distributed detail, low contrast, no focal point, Hades-adjacent painterly illustration, {palette}, no characters, no text",
   "biome_negative": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, horizon, sky, perspective view, walls, buildings, doorway, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point",
-  "character_size": [1024, 1024],
-  "biome_size": [1344, 768],
+  "character_size": [
+    1024,
+    1024
+  ],
+  "biome_size": [
+    1344,
+    768
+  ],
   "steps": 32,
   "cfg": 7.0,
   "max_retries": 4,
@@ -124,6 +130,72 @@
       "palette": "magenta-pink and dark purple",
       "base_seed": 63700,
       "out_size": 128
+    },
+    "hanuman": {
+      "kind": "god",
+      "subject": "the vanara deity Hanuman with a noble, gentle monkey face (as in classical Indian temple art), muscular divine warrior, saffron-orange/golden fur-toned skin, golden crown (mukuta), vermilion tilak, golden gada mace resting on his shoulder, curled tail visible behind, devoted serene expression, hand on heart",
+      "palette": "saffron orange, vermilion and gold",
+      "negative_extra": "realistic ape, chimpanzee, gorilla, cartoon monkey, animal, fur-covered beast, aggressive, open chest, heart imagery, five faces, blue skin, four arms, Vishnu",
+      "base_seed": 71000,
+      "out_w": 600,
+      "out_h": 768
+    },
+    "agni": {
+      "kind": "god",
+      "subject": "Agni the Vedic god of fire, radiant red-gold skin, hair and crown made of rising flames, calm wise bearded face, sacred thread, holding a golden ladle (sruva) or a flaming torch, warm inner glow, two arms",
+      "palette": "flame red, ember orange and gold",
+      "negative_extra": "demon, fire demon, ifrit, balrog, burning man, charred skin, horns, ram horns, skeleton, blue skin, four arms, Vishnu, two heads",
+      "base_seed": 71100,
+      "out_w": 600,
+      "out_h": 768
+    },
+    "indra": {
+      "kind": "god",
+      "subject": "Indra, king of the devas, regal proud youthful face with fine moustache, tall golden jeweled kirita crown, fair golden skin, gleaming golden armor and jewels, holding the Vajra (a double-ended diamond thunderbolt mace, symmetrical, pronged at both ends), crackling light around the Vajra, storm clouds suggested only by rim light",
+      "palette": "royal gold, storm indigo and white",
+      "negative_extra": "Zeus, Thor, hammer, zigzag lightning bolt, greek god, roman emperor, western king, toga, many eyes, blue skin, four arms, Vishnu, elephant",
+      "base_seed": 71200,
+      "out_w": 600,
+      "out_h": 768
+    },
+    "vayu": {
+      "kind": "god",
+      "subject": "Vayu, the Vedic god of wind and breath, graceful serene face, windswept flowing hair, long flowing silk scarves and a white pennant banner on a staff streaming in the wind, pale fair skin with a cool sea-green tint in the light, light silver jewelry, two arms, airy motion",
+      "palette": "pale sea-green, silver-white and soft gold",
+      "negative_extra": "ghost, spectral, translucent body, skeleton, air elemental, cloud monster, bag of winds, blue skin, four arms, Vishnu, deer",
+      "base_seed": 71300,
+      "out_w": 600,
+      "out_h": 768
+    },
+    "krishna": {
+      "kind": "god",
+      "subject": "adult Lord Krishna as Parthasarathi, dark blue skin, gentle knowing smile, peacock feather in a golden crown, holding a bansuri flute, yellow silk pitambara garment, vaijayanti flower garland, kaustubha jewel, U-shaped tilak, two arms",
+      "palette": "deep blue skin, peacock teal and pitambara yellow",
+      "negative_extra": "four arms, extra arms, child, baby, infant, feminine, woman, trident, snake around neck, third eye, ash, Shiva, crescent moon, conch, discus",
+      "base_seed": 71400,
+      "out_w": 600,
+      "out_h": 768,
+      "no_mirror": true
+    },
+    "durga": {
+      "kind": "god",
+      "subject": "Goddess Durga as Mahishasuramardini, serene yet fierce compassionate face, eight arms arranged symmetrically radiating behind her like a fan, holding the weapons given by the gods (trishula, chakra discus, sword, bow, conch, lotus, vajra) with one right hand raised in abhaya mudra blessing, red silk sari with gold border, tall golden crown, the head and mane of her lion beside her shoulder",
+      "palette": "crimson red sari, gold and lion tawny",
+      "negative_extra": "Kali, black skin, blue skin, tongue out, garland of skulls, severed heads, blood, buffalo, demon, corpse, trampling, sexualized, cleavage, messy arms, fused arms, broken arms",
+      "base_seed": 71500,
+      "out_w": 600,
+      "out_h": 768,
+      "no_mirror": true
     }
-  }
+  },
+  "checkpoint": "sd_xl_base_1.0.safetensors",
+  "checkpoint_label": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+  "god_size": [
+    896,
+    1152
+  ],
+  "max_retries_god": 6,
+  "god_style_positive": "Hades-inspired illustrated character portrait, half-body bust from head to waist, three-quarter view turned slightly to the right, facing the viewer, painterly digital illustration with bold confident ink linework, richly detailed rendering, luminous warm rim lighting, divine serene presence, ornate traditional Indian gold jewelry and silk textiles, inspired by the Mahabharata and Ramayana and classical Indian temple murals and Pahari miniature painting, single figure, centered, head fully in frame with space above, plain flat solid pale grey background, high detail, concept art",
+  "god_style_negative": "pixel art, 3d render, photorealistic, photo, blurry, lowres, jpeg artifacts, deformed, bad anatomy, fused fingers, extra fingers, mutated hands, watermark, text, letters, signature, logo, caption, cropped head, out of frame, full body, legs, multiple characters, crowd, collage, character sheet, turnaround, busy background, scenery, landscape, frame, border, halo disc, circular background, sun disc, mandala background, western medieval armor, roman armor, greek toga, samurai armor",
+  "god_negative_extra": "sexualized, seductive, cleavage, revealing clothing, nudity, pin-up, demonic, demon, evil, menacing, snarl, fangs, horns, claws, glowing red eyes, skull, skulls, blood, gore, severed head, horror, creepy, zombie, grotesque, cartoon, chibi, caricature, meme, mocking, swastika symbol"
 }

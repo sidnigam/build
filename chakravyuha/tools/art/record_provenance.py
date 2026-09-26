@@ -25,13 +25,15 @@ def main():
     ap.add_argument("--filename", required=True)
     ap.add_argument("--path", required=True)
     ap.add_argument("--actor", required=True)
-    ap.add_argument("--kind", required=True, choices=["biome", "boss", "enemy"])
+    ap.add_argument("--kind", required=True, choices=["biome", "boss", "enemy", "god"])
     ap.add_argument("--sidecar", required=True)
     ap.add_argument("--rejected-seeds", dest="rejected_seeds", default="")
     ap.add_argument("--post", dest="post_processing", default="")
     ap.add_argument("--self-review", dest="self_review", default="")
     ap.add_argument("--animations", default=None)
     ap.add_argument("--raw", dest="raw_image", default=None)
+    ap.add_argument("--iconography", dest="iconography", default=None,
+                     help="(kind=god only) one-line note of attributes verified present.")
     ap.add_argument("--provenance-path", dest="provenance_path", default="assets/sprites/PROVENANCE.json")
     args = ap.parse_args()
 
@@ -60,7 +62,7 @@ def main():
         entry["animations"] = animations
     entry.update({
         "tool": "ComfyUI (local)",
-        "checkpoint": CHECKPOINT_LABEL,
+        "checkpoint": params.get("checkpoint_label") or CHECKPOINT_LABEL,
         "method": "txt2img",
         "sampler": params.get("sampler"),
         "scheduler": params.get("scheduler"),
@@ -82,6 +84,9 @@ def main():
         "review_note": "provisional — awaiting human art review",
         "self_review": args.self_review,
     })
+    if args.kind == "god":
+        entry["cultural_review"] = "pending — human cultural reviewer (QA-03)"
+        entry["iconography_notes"] = args.iconography or ""
 
     prov_path = Path(args.provenance_path)
     if prov_path.exists():

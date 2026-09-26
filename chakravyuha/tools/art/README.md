@@ -100,6 +100,73 @@ assets/sprites/_review/contact-sheet.png               human review contact shee
 - (h) cultural guard respected (see below)
 - (i) biomes: reads as ground seen from above, even detail, no strong focal point or horizon
 
+## God portraits (Phase 05.5)
+
+The 6 boon gods (Hanuman, Agni, Indra, Vayu, Krishna, Durga) get one illustrated half-body
+bust portrait each, via the same ComfyUI/SDXL pipeline extended with a `god` subject kind
+(`.planning/phases/05.5-god-portraits-and-boon-dialogue/05.5-CONTEXT.md`, D-01 to D-11).
+
+Pipeline order per god:
+
+1. **Generate** — `~/ComfyUI/venv/bin/python tools/art/gen_subject.py <god_id> --attempt N`.
+   `gen_subject.py` branches on `kind == "god"` (not on the key name) and builds
+   `god_style_positive/negative` + `god_negative_extra` + the per-subject `negative_extra`.
+   It never appends `enemy_negative_extra` for gods — that guard bans multiple arms, crowns
+   and deity markers, which would break Durga's eight arms and Hanuman's crown.
+   Generation size is `god_size` (896x1152, an SDXL-native ~1MP bucket).
+   Before queueing, it polls `/queue` and waits (up to `--busy-wait`, default 600s) if
+   another job is running — **never run concurrently with Phase 05.4** (environment art);
+   the orchestrator serializes the two.
+2. **Self-review** — Read the raw PNG with the Read tool against the full 05.5-CONTEXT
+   Iconography Bible checklist: H1-H7 (correct deity, benevolent expression, no
+   sexualization, no horror, no conflated deity iconography, no text/watermark/swastika,
+   one primary figure) plus the per-god H-god row, plus S1-S5 (bust composition, hands,
+   clean cutout, house style, 64px readability). Up to `max_retries_god` retries (7 attempts
+   total, `base_seed + 0..6`). **A hard (H) check failure is never shipped, at any retry
+   count.** If a repeated failure pattern emerges, rewrite the subject's prompt toward a
+   positive anchor phrase rather than piling on more negatives (02-11 lesson).
+3. **Finish** — `~/ComfyUI/venv/bin/python tools/art/finish_portrait.py --in <raw> \
+   --out assets/sprites/gods/<id>-portrait.png --subject <id> \
+   --silhouette assets/sprites/_gen/gods/<id>/<id>_sil.png [--mirror]`.
+   rembg u2net cutout -> alpha clean -> despeckle (2% min, keeps thin elements like Vayu's
+   scarves and Agni's flame-crown) -> crop to bbox -> fit into 600x768 (12px top margin,
+   bottom-aligned, crop allowed) -> bottom 12% alpha feather (so the bust fades into the
+   in-game panel; there is deliberately no generated halo disc — the divine aura is
+   CSS-drawn in-game) -> optional silhouette.
+   **Never pass `--mirror` for krishna or durga** — the tool itself refuses this (exit 2)
+   because flute/abhaya-mudra handedness is iconographic. Regenerate a right-facing attempt
+   instead. Re-read the finished PNG and silhouette afterward: confirm the cutout did not
+   remove a required attribute (Krishna's flute/feather, Durga's lion/arm count, Hanuman's
+   gada/tail) — if it did, treat the attempt as a failed H1.
+4. **Record provenance**:
+   ```
+   ~/ComfyUI/venv/bin/python tools/art/record_provenance.py --filename <id>-portrait.png \
+       --path assets/sprites/gods/<id>-portrait.png --actor <id> --kind god \
+       --sidecar assets/sprites/_raw/gods/<id>/<id>-portrait.gen.json \
+       --rejected-seeds <csv> --post "step|step|step" --self-review "<note>" \
+       --iconography "<attributes verified present>" --raw assets/sprites/_raw/gods/<id>/
+   ```
+   `--kind god` entries additionally get `cultural_review: "pending — human cultural
+   reviewer (QA-03)"` and `iconography_notes` (from `--iconography`).
+5. **Review sheet** — once all 6 gods are resolved (shipped or not), run
+   `~/ComfyUI/venv/bin/python tools/art/gods_sheet.py --out assets/sprites/_review/gods-contact-sheet.png`.
+   This upserts the top-level `review_sheet_gods` key into `PROVENANCE.json`. It does not
+   touch `contact_sheet.py` or `contact-sheet.png`.
+6. Run `node tools/check-provenance.js` (now matches `*-portrait.png` and completeness-checks
+   `kind: "god"`) and `node test/smoke.js` — both must stay green.
+
+**Checkpoint as config.** `prompts.json` has top-level `checkpoint` (filename) and
+`checkpoint_label` (provenance label, including the license). `gen_subject.py` passes it to
+`build_txt2img_graph(ckpt=...)` and records `params.checkpoint` / `params.checkpoint_label`
+in the sidecar; `record_provenance.py` prefers the sidecar's `checkpoint_label`, falling
+back to its own constant for older sidecars. Swapping checkpoints is therefore a
+`prompts.json` edit only — no code change — as long as the new checkpoint's license is
+recorded in `checkpoint_label`.
+
+**Never run this pipeline concurrently with Phase 05.4's environment-art generation.**
+ComfyUI is single-tenant; `gen_subject.py`'s busy-wait guard reduces but does not replace
+the orchestrator serializing the two phases' art executors.
+
 ## Cultural guards (CLAUDE.md, D-15a — hard constraints)
 
 - Gods are allies only, never enemies. Enemies are asuras, rakshasas, pretas, nagas

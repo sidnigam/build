@@ -1784,65 +1784,71 @@ console.log('\n— room layouts (Phase 4, GAME-03) —');
 vm.runInContext(`
 globalThis.__layoutErrors = [];
 try {
-  const A = GAME.arena;
-  const spawnX = A.x + 90, spawnY = A.y + A.h / 2;
-  const doorX = A.x + A.w - 36;
-  const doorYs = [1/3, 1/2, 2/3].map(f => A.y + A.h * f);
-
   const seenIds = new Set();
-  for (const biomeId of Object.keys(DATA.LAYOUTS)) {
-    const list = ROOMS.layoutsFor(biomeId);
-    if (list.length < 3) __layoutErrors.push(biomeId + ': fewer than 3 templates (' + list.length + ')');
-    for (const tpl of list) {
-      if (seenIds.has(tpl.id)) __layoutErrors.push(tpl.id + ': duplicate template id');
-      seenIds.add(tpl.id);
+  for (const kind of ['combat', 'rest']) {
+    ROOMS.setArena(kind);
+    const A = GAME.arena;
+    const spawnX = A.x + 90, spawnY = A.y + A.h / 2;
+    const doorX = A.x + A.w - 36;
+    const doorYs = [1/3, 1/2, 2/3].map(f => A.y + A.h * f);
 
-      const obs = ROOMS.materializeLayout(tpl);
-      for (const o of obs) {
-        if (o.shape === 'circle') {
-          if (o.x - o.r < A.x || o.x + o.r > A.x + A.w || o.y - o.r < A.y || o.y + o.r > A.y + A.h)
-            __layoutErrors.push(tpl.id + ': circle obstacle out of bounds');
-        } else {
-          if (o.x < A.x || o.x + o.w > A.x + A.w || o.y < A.y || o.y + o.h > A.y + A.h)
-            __layoutErrors.push(tpl.id + ': rect obstacle out of bounds');
+    for (const biomeId of Object.keys(DATA.LAYOUTS)) {
+      const list = ROOMS.layoutsFor(biomeId);
+      if (list.length < 3) __layoutErrors.push(kind + '/' + biomeId + ': fewer than 3 templates (' + list.length + ')');
+      for (const tpl of list) {
+        if (kind === 'combat') { // only count each id once, on the first pass
+          if (seenIds.has(tpl.id)) __layoutErrors.push(tpl.id + ': duplicate template id');
+          seenIds.add(tpl.id);
         }
-        if (ROOMS.obstacleDist(o, spawnX, spawnY) < 80)
-          __layoutErrors.push(tpl.id + ': obstacle too close to spawn');
+
+        const obs = ROOMS.materializeLayout(tpl);
+        for (const o of obs) {
+          if (o.shape === 'circle') {
+            if (o.x - o.r < A.x || o.x + o.r > A.x + A.w || o.y - o.r < A.y || o.y + o.r > A.y + A.h)
+              __layoutErrors.push(kind + '/' + tpl.id + ': circle obstacle out of bounds');
+          } else {
+            if (o.x < A.x || o.x + o.w > A.x + A.w || o.y < A.y || o.y + o.h > A.y + A.h)
+              __layoutErrors.push(kind + '/' + tpl.id + ': rect obstacle out of bounds');
+          }
+          if (ROOMS.obstacleDist(o, spawnX, spawnY) < 80)
+            __layoutErrors.push(kind + '/' + tpl.id + ': obstacle too close to spawn');
+          for (const dy of doorYs) {
+            if (ROOMS.obstacleDist(o, doorX, dy) < 34 + 24)
+              __layoutErrors.push(kind + '/' + tpl.id + ': obstacle too close to a door candidate');
+          }
+        }
+
+        // reachability flood-fill (10px grid, player radius 13)
+        const cell = 10, pr = 13;
+        const cols = Math.floor(A.w / cell), rows = Math.floor(A.h / cell);
+        const idx = (c, r) => r * cols + c;
+        const walkable = (px, py) => px >= A.x + pr && px <= A.x + A.w - pr && py >= A.y + pr && py <= A.y + A.h - pr
+          && !ROOMS.pointBlocked(px, py, pr, { obstacles: obs });
+        const visited = new Uint8Array(cols * rows);
+        const startCol = Math.floor((spawnX - A.x) / cell), startRow = Math.floor((spawnY - A.y) / cell);
+        visited[idx(startCol, startRow)] = 1;
+        const stack = [[startCol, startRow]];
+        while (stack.length) {
+          const [c, r] = stack.pop();
+          for (const [dc, dr] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+            const nc = c + dc, nr = r + dr;
+            if (nc < 0 || nc >= cols || nr < 0 || nr >= rows) continue;
+            if (visited[idx(nc, nr)]) continue;
+            const px = A.x + (nc + 0.5) * cell, py = A.y + (nr + 0.5) * cell;
+            if (!walkable(px, py)) continue;
+            visited[idx(nc, nr)] = 1;
+            stack.push([nc, nr]);
+          }
+        }
         for (const dy of doorYs) {
-          if (ROOMS.obstacleDist(o, doorX, dy) < 34 + 24)
-            __layoutErrors.push(tpl.id + ': obstacle too close to a door candidate');
+          const dc = Math.floor((doorX - A.x) / cell), dr = Math.floor((dy - A.y) / cell);
+          if (dc < 0 || dc >= cols || dr < 0 || dr >= rows || !visited[idx(dc, dr)])
+            __layoutErrors.push(kind + '/' + tpl.id + ': a door candidate is unreachable from spawn');
         }
-      }
-
-      // reachability flood-fill (10px grid, player radius 13)
-      const cell = 10, pr = 13;
-      const cols = Math.floor(A.w / cell), rows = Math.floor(A.h / cell);
-      const idx = (c, r) => r * cols + c;
-      const walkable = (px, py) => px >= A.x + pr && px <= A.x + A.w - pr && py >= A.y + pr && py <= A.y + A.h - pr
-        && !ROOMS.pointBlocked(px, py, pr, { obstacles: obs });
-      const visited = new Uint8Array(cols * rows);
-      const startCol = Math.floor((spawnX - A.x) / cell), startRow = Math.floor((spawnY - A.y) / cell);
-      visited[idx(startCol, startRow)] = 1;
-      const stack = [[startCol, startRow]];
-      while (stack.length) {
-        const [c, r] = stack.pop();
-        for (const [dc, dr] of [[1,0],[-1,0],[0,1],[0,-1]]) {
-          const nc = c + dc, nr = r + dr;
-          if (nc < 0 || nc >= cols || nr < 0 || nr >= rows) continue;
-          if (visited[idx(nc, nr)]) continue;
-          const px = A.x + (nc + 0.5) * cell, py = A.y + (nr + 0.5) * cell;
-          if (!walkable(px, py)) continue;
-          visited[idx(nc, nr)] = 1;
-          stack.push([nc, nr]);
-        }
-      }
-      for (const dy of doorYs) {
-        const dc = Math.floor((doorX - A.x) / cell), dr = Math.floor((dy - A.y) / cell);
-        if (dc < 0 || dc >= cols || dr < 0 || dr >= rows || !visited[idx(dc, dr)])
-          __layoutErrors.push(tpl.id + ': a door candidate is unreachable from spawn');
       }
     }
   }
+  ROOMS.setArena('rest');
 } catch (e) { __layoutErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
 `, sandbox);
 const layoutErrors = vm.runInContext('__layoutErrors', sandbox);
@@ -2006,14 +2012,15 @@ check('hazards: every biome maps to a valid, distinct hazard; damaging hazards t
 vm.runInContext(`
 globalThis.__hazardPlacementErrors = [];
 try {
-  const A = GAME.arena;
-  const spawnX = A.x + 90, spawnY = A.y + A.h / 2;
   for (let bi = 0; bi < DATA.BIOMES.length; bi++) {
     const biome = DATA.BIOMES[bi];
     for (let trial = 0; trial < 10; trial++) {
       GAME.startRun();
       GAME.biomeIdx = bi; GAME.biome = biome;
       ROOMS.enterRoom('mudra');
+      // arena is sized (and may resize) by enterRoom — recompute AFTER, never cache before a room change.
+      const A = GAME.arena;
+      const spawnX = A.x + 90, spawnY = A.y + A.h / 2;
       if (GAME.hazards.length < 1) __hazardPlacementErrors.push(biome.id + ': no hazards spawned in a combat room');
       for (const h of GAME.hazards) {
         if (h.type !== biome.hazard) __hazardPlacementErrors.push(biome.id + ': wrong hazard type ' + h.type);
@@ -2033,6 +2040,74 @@ const hazardPlacementErrors = vm.runInContext('__hazardPlacementErrors', sandbox
 check('hazards: placed correctly per biome (type, spawn clearance, obstacle clearance, river band)'
   + (hazardPlacementErrors.length ? ' — ' + hazardPlacementErrors.slice(0, 5).join('; ') + (hazardPlacementErrors.length > 5 ? ` (+${hazardPlacementErrors.length - 5} more)` : '') : ''),
   hazardPlacementErrors.length === 0);
+
+// ---------------- Phase 05.1: arena sizing + camera snap on room entry ----------------
+console.log('\n— arena sizing + camera snap on room entry (Phase 05.1) —');
+vm.runInContext(`
+globalThis.__arenaResults = {};
+(function() {
+  const R = __arenaResults;
+
+  // (a) first room of a run is a combat arena at 2240x1300; worldRect matches the 05.4 art budget
+  GAME.startRun();
+  const A1 = GAME.arena;
+  const wr = ROOMS.worldRect();
+  R.firstRoomCombat = A1.w === 2240 && A1.h === 1300
+    && wr.x === 0 && wr.y === 0 && wr.w === 2340 && wr.h === 1440;
+
+  // (b) sarovar room is legacy-size (rest) and the camera transform is exactly identity
+  ROOMS.enterRoom('sarovar');
+  const A2 = GAME.arena;
+  R.sarovarRestIdentity = A2.w === 1180 && A2.h === 580 && CAMERA.tx === 0 && CAMERA.ty === 0 && CAMERA.tz === 1;
+
+  // (c) boss room is 1600x960
+  GAME.startRun();
+  ROOMS.enterRoom('boss');
+  const A3 = GAME.arena;
+  R.bossSize = A3.w === 1600 && A3.h === 960;
+
+  // (d) a held reference to GAME.arena sees setArena's in-place mutation
+  const heldA = GAME.arena;
+  ROOMS.setArena('combat');
+  R.inPlaceMutation = heldA === GAME.arena && heldA.w === 2240 && heldA.h === 1300;
+  ROOMS.setArena('rest');
+
+  // (e) fireVent count scales up in the (large) combat arena; Vaitarani combat rooms get 2 river bands
+  let fireVentTotal = 0, fireVentTrials = 0;
+  for (let i = 0; i < 20; i++) {
+    GAME.startRun();
+    GAME.biomeIdx = 0; GAME.biome = DATA.BIOMES[0]; // naraka -> fireVent
+    ROOMS.enterRoom('mudra');
+    fireVentTotal += GAME.hazards.filter(h => h.type === 'fireVent').length;
+    fireVentTrials++;
+  }
+  const fireVentAvgOk = (fireVentTotal / fireVentTrials) >= 4;
+
+  GAME.startRun();
+  GAME.biomeIdx = 3; GAME.biome = DATA.BIOMES[3]; // vaitarani -> riverCurrent
+  ROOMS.enterRoom('mudra');
+  const Av = GAME.arena;
+  const spawnYv = Av.y + Av.h / 2;
+  const rivers = GAME.hazards.filter(h => h.type === 'riverCurrent');
+  const twoBandsOk = rivers.length === 2
+    && rivers.every(h => !(spawnYv >= h.y && spawnYv <= h.y + h.h));
+  R.hazardScaling = fireVentAvgOk && twoBandsOk;
+
+  // (f) after entering a combat room the camera scroll is clamped inside the world rect
+  GAME.startRun();
+  ROOMS.enterRoom('mudra');
+  R.cameraClampedOnEntry = CAMERA.sx >= 0 && CAMERA.sx <= 1060 && CAMERA.sy >= 0 && CAMERA.sy <= 720;
+
+  ROOMS.setArena('rest');
+})();
+`, sandbox);
+const arn = vm.runInContext('__arenaResults', sandbox);
+check('ROOMS.setArena: first run room is a 2240x1300 combat arena; ROOMS.worldRect() is {0,0,2340,1440}', arn.firstRoomCombat);
+check('ROOMS.setArena: sarovar room is legacy 1180x580; camera transform is exactly identity', arn.sarovarRestIdentity);
+check('ROOMS.setArena: boss room is 1600x960', arn.bossSize);
+check('ROOMS.setArena mutates GAME.arena in place (a held reference sees the new size)', arn.inPlaceMutation);
+check('hazards scale with arena size: fireVent count >=4 on average over 20 Naraka rooms; Vaitarani combat rooms get 2 river bands clear of spawn', arn.hazardScaling);
+check('CAMERA.snap() on room entry leaves the scroll clamped to the world rect', arn.cameraClampedOnEntry);
 
 vm.runInContext(`
 globalThis.__hazardNonCombatErrors = [];

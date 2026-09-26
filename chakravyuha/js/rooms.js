@@ -7,18 +7,45 @@
 
 const ROOMS = {
 
+  // ---- Phase 05.1: arena sizing (CAM-01/CAM-07, D-01/D-02/D-03) ----
+  setArena(kind) {
+    const s = DATA.ARENA.sizes[kind] || DATA.ARENA.sizes.rest;
+    // D-02: mutate GAME.arena in place — any code/test holding `const A = GAME.arena` keeps a live reference.
+    Object.assign(GAME.arena, { x: DATA.ARENA.origin.x, y: DATA.ARENA.origin.y, w: s.w, h: s.h });
+    GAME.arenaKind = kind;
+  },
+
+  worldRect() { return CAMERA.worldRectFor(GAME.arena, DATA.ARENA.pad); },
+
+  obstacleScale() {
+    const A = GAME.arena;
+    return U.clamp(Math.sqrt(Math.min(A.w / 1180, A.h / 580)), 1, DATA.ARENA.maxObstacleScale);
+  },
+
+  isLargeArena() {
+    const A = GAME.arena;
+    return A.w * A.h >= DATA.ARENA.largeArea;
+  },
+
+  hazardCountScale() {
+    const A = GAME.arena;
+    return U.clamp(Math.sqrt((A.w * A.h) / DATA.ARENA.legacyArea), 1, 2.2);
+  },
+
   // ---- Phase 4: room layout geometry helpers (GAME-03) ----
   layoutsFor(biomeId) { return DATA.LAYOUTS[biomeId] || []; },
 
   materializeLayout(tpl) {
     const A = GAME.arena;
-    return tpl.obstacles.map(o => {
+    const scale = this.obstacleScale();
+    const list = tpl.obstacles.concat(this.isLargeArena() && tpl.large ? tpl.large : []);
+    return list.map(o => {
       if (o.kind === 'wall' || (o.w !== undefined && o.h !== undefined)) {
         return { shape: 'rect', kind: o.kind, x: A.x + o.x * A.w, y: A.y + o.y * A.h,
           w: o.w * A.w, h: o.h * A.h, tpl: tpl.id };
       }
       return { shape: 'circle', kind: o.kind || 'pillar', x: A.x + o.x * A.w, y: A.y + o.y * A.h,
-        r: o.r, tpl: tpl.id };
+        r: o.r * scale, tpl: tpl.id };
     });
   },
 
@@ -87,8 +114,9 @@ const ROOMS = {
     const def = DATA.HAZARDS[GAME.biome.hazard];
     if (!def) return;
     const A = GAME.arena;
+    const hcs = this.hazardCountScale();
     if (def.id === 'fireVent') {
-      const n = U.randInt(def.count[0], def.count[1]);
+      const n = Math.round(U.randInt(def.count[0], def.count[1]) * hcs);
       const placed = [];
       for (let i = 0; i < n; i++) {
         const p = this.freePoint(def.r, { avoid: placed, minSep: 30 });
@@ -99,7 +127,7 @@ const ROOMS = {
           warnShown: 0, hitSet: null, age: 0 });
       }
     } else if (def.id === 'venomPool') {
-      const n = U.randInt(def.count[0], def.count[1]);
+      const n = Math.round(U.randInt(def.count[0], def.count[1]) * hcs);
       const placed = [];
       for (let i = 0; i < n; i++) {
         const r = U.rand(def.r[0], def.r[1]);
@@ -111,13 +139,22 @@ const ROOMS = {
     } else if (def.id === 'arrowVolley') {
       GAME.hazards.push({ type: 'arrowVolley', t: def.firstDelay, markers: [] });
     } else if (def.id === 'riverCurrent') {
-      const h = U.rand(def.h[0], def.h[1]);
-      const upper = U.chance(0.5);
-      const y = upper
-        ? U.rand(A.y + 30, A.y + A.h * 0.5 - h - 40)
-        : U.rand(A.y + A.h * 0.5 + 40, A.y + A.h - h - 30);
-      GAME.hazards.push({ type: 'riverCurrent', x: A.x, y, w: A.w, h,
-        dir: U.chance(0.5) ? 1 : -1, phase: 'calm', t: U.rand(def.surgeEvery[0], def.surgeEvery[1]), age: 0 });
+      // D-CAM-07: tall (combat-sized) arenas get a second river band; both formulas already
+      // exclude the spawn row (A.y + A.h/2 +/- 40).
+      const makeBand = (upper) => {
+        const h = U.rand(def.h[0], def.h[1]);
+        const y = upper
+          ? U.rand(A.y + 30, A.y + A.h * 0.5 - h - 40)
+          : U.rand(A.y + A.h * 0.5 + 40, A.y + A.h - h - 30);
+        return { type: 'riverCurrent', x: A.x, y, w: A.w, h,
+          dir: U.chance(0.5) ? 1 : -1, phase: 'calm', t: U.rand(def.surgeEvery[0], def.surgeEvery[1]), age: 0 };
+      };
+      if (A.h >= 1000) {
+        GAME.hazards.push(makeBand(true));
+        GAME.hazards.push(makeBand(false));
+      } else {
+        GAME.hazards.push(makeBand(U.chance(0.5)));
+      }
     }
   },
 
@@ -227,10 +264,15 @@ const ROOMS = {
     G.bolts = []; G.dangerZones = []; G.doors = []; G.hazards = [];
     G.nooseT = 0; G.bossRewarded = false;
 
+    // D-02: size the arena for this room kind BEFORE the player is placed.
+    const kind = rewardId === 'boss' ? 'boss' : (rewardId === 'sarovar' || rewardId === 'kubera') ? 'rest' : 'combat';
+    this.setArena(kind);
+
     const P = G.player;
     P.x = G.arena.x + 90;
     P.y = G.arena.y + G.arena.h / 2;
     P.iframes = Math.max(P.iframes, 0.8);
+    if (typeof CAMERA !== 'undefined') CAMERA.snap();   // D-08: room changes never swoop
 
     if (rewardId === 'boss') {
       G.roomIdx++; // boss room

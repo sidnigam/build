@@ -262,48 +262,93 @@ DATA.HAZARDS = {
                  surgeEvery:[5,8], surgeWarn:0.8, surgeDur:1.5, color:'#9fb8ff', damaging:false },
 };
 
+// ---------- ARENA SIZING (Phase 05.1) ----------
+// D-01: arena top-left stays fixed at `origin`; only w/h change per room kind.
+// `pad` is the wall/HUD framing around the arena — rest arena + pad == exactly 1280x720.
+DATA.ARENA = {
+  origin: { x: 50, y: 84 },
+  sizes: { combat: { w: 2240, h: 1300 }, boss: { w: 1600, h: 960 }, rest: { w: 1180, h: 580 } },  // tunable
+  pad: { l: 50, r: 50, t: 84, b: 56 },
+  legacyArea: 1180 * 580,
+  largeArea: 1180 * 580 * 1.5,              // arenas at/above this area get template `large` extras
+  maxObstacleScale: 1.4,                    // cap for circle-obstacle radius scaling
+};
+
 // ---------- ROOM LAYOUT TEMPLATES ----------
 // Normalized arena coordinates: circles x/y = center fraction, r in px;
 // rects x/y = top-left fraction, w/h = size fraction.
+// Optional `large` list (same fraction format): extra obstacles that only materialize when the
+// arena area is at/above DATA.ARENA.largeArea (i.e. combat rooms), filling the outer bands that
+// feel empty at 2240x1300. Kept well clear of the spawn (left edge) and door candidates (right
+// edge) by staying inside x fraction [0.12, 0.88].
 DATA.LAYOUTS = {
   naraka: [
     { id: 'naraka_colonnade', name: 'Iron Colonnade', obstacles: [
       {kind:'pillar',x:.32,y:.25,r:30},{kind:'pillar',x:.52,y:.25,r:30},{kind:'pillar',x:.72,y:.25,r:30},
-      {kind:'pillar',x:.32,y:.75,r:30},{kind:'pillar',x:.52,y:.75,r:30},{kind:'pillar',x:.72,y:.75,r:30} ] },
+      {kind:'pillar',x:.32,y:.75,r:30},{kind:'pillar',x:.52,y:.75,r:30},{kind:'pillar',x:.72,y:.75,r:30} ],
+      large: [
+        {kind:'pillar',x:.16,y:.15,r:26},{kind:'pillar',x:.84,y:.15,r:26},
+        {kind:'pillar',x:.16,y:.85,r:26},{kind:'pillar',x:.84,y:.85,r:26} ] },
     { id: 'naraka_forge', name: 'Forge Cross', obstacles: [
-      {kind:'wall',x:.42,y:.46,w:.20,h:.08},{kind:'wall',x:.49,y:.22,w:.06,h:.56} ] },
+      {kind:'wall',x:.42,y:.46,w:.20,h:.08},{kind:'wall',x:.49,y:.22,w:.06,h:.56} ],
+      large: [
+        {kind:'wall',x:.15,y:.10,w:.14,h:.06},{kind:'wall',x:.70,y:.10,w:.14,h:.06},
+        {kind:'wall',x:.15,y:.84,w:.14,h:.06},{kind:'wall',x:.70,y:.84,w:.14,h:.06} ] },
     { id: 'naraka_chains', name: 'Chained Pits', obstacles: [
-      {kind:'pit',x:.42,y:.28,r:60},{kind:'pit',x:.60,y:.72,r:60},{kind:'pillar',x:.74,y:.40,r:34} ] },
+      {kind:'pit',x:.42,y:.28,r:60},{kind:'pit',x:.60,y:.72,r:60},{kind:'pillar',x:.74,y:.40,r:34} ],
+      large: [
+        {kind:'pit',x:.20,y:.85,r:38},{kind:'pit',x:.80,y:.15,r:38} ] },
   ],
   patala: [
     { id: 'patala_coil', name: 'Serpent Coil', obstacles: [
       {kind:'pillar',x:.30,y:.22,r:26},{kind:'pillar',x:.40,y:.36,r:26},{kind:'pillar',x:.50,y:.50,r:26},
-      {kind:'pillar',x:.60,y:.64,r:26},{kind:'pillar',x:.70,y:.78,r:26} ] },
+      {kind:'pillar',x:.60,y:.64,r:26},{kind:'pillar',x:.70,y:.78,r:26} ],
+      large: [
+        {kind:'pillar',x:.18,y:.14,r:22},{kind:'pillar',x:.80,y:.86,r:22},{kind:'pillar',x:.84,y:.30,r:22} ] },
     { id: 'patala_abyss', name: 'Twin Abyss', obstacles: [
-      {kind:'pit',x:.28,y:.08,w:.16,h:.30},{kind:'pit',x:.56,y:.62,w:.16,h:.30} ] },
+      {kind:'pit',x:.28,y:.08,w:.16,h:.30},{kind:'pit',x:.56,y:.62,w:.16,h:.30} ],
+      large: [
+        {kind:'pit',x:.16,y:.62,w:.14,h:.28},{kind:'pit',x:.72,y:.08,w:.14,h:.28} ] },
     { id: 'patala_halls', name: 'Naga Halls', obstacles: [
-      {kind:'wall',x:.28,y:.27,w:.48,h:.05},{kind:'wall',x:.28,y:.68,w:.48,h:.05} ] },
+      {kind:'wall',x:.28,y:.27,w:.48,h:.05},{kind:'wall',x:.28,y:.68,w:.48,h:.05} ],
+      large: [
+        {kind:'wall',x:.14,y:.14,w:.10,h:.05},{kind:'wall',x:.14,y:.81,w:.10,h:.05},
+        {kind:'wall',x:.76,y:.14,w:.10,h:.05},{kind:'wall',x:.76,y:.81,w:.10,h:.05} ] },
   ],
   ranabhoomi: [
     { id: 'rana_chariots', name: 'Broken Chariots', obstacles: [
       {kind:'wall',x:.30,y:.15,w:.08,h:.14},{kind:'wall',x:.52,y:.58,w:.10,h:.12},
-      {kind:'wall',x:.70,y:.22,w:.07,h:.16},{kind:'pillar',x:.42,y:.80,r:22} ] },
+      {kind:'wall',x:.70,y:.22,w:.07,h:.16},{kind:'pillar',x:.42,y:.80,r:22} ],
+      large: [
+        {kind:'wall',x:.16,y:.60,w:.08,h:.12},{kind:'pillar',x:.80,y:.42,r:24} ] },
     { id: 'rana_trench', name: 'The Trench', obstacles: [
-      {kind:'pit',x:.50,y:.04,w:.04,h:.34},{kind:'pit',x:.50,y:.62,w:.04,h:.34} ] },
+      {kind:'pit',x:.50,y:.04,w:.04,h:.34},{kind:'pit',x:.50,y:.62,w:.04,h:.34} ],
+      large: [
+        {kind:'pit',x:.18,y:.30,w:.05,h:.40},{kind:'pit',x:.78,y:.30,w:.05,h:.40} ] },
     { id: 'rana_banners', name: 'Ring of Banners', obstacles: [
       {kind:'pillar',x:.687,y:.5,r:22},{kind:'pillar',x:.62,y:.724,r:22},{kind:'pillar',x:.497,y:.724,r:22},
-      {kind:'pillar',x:.433,y:.5,r:22},{kind:'pillar',x:.497,y:.276,r:22},{kind:'pillar',x:.62,y:.276,r:22} ] },
+      {kind:'pillar',x:.433,y:.5,r:22},{kind:'pillar',x:.497,y:.276,r:22},{kind:'pillar',x:.62,y:.276,r:22} ],
+      large: [
+        {kind:'pillar',x:.15,y:.35,r:20},{kind:'pillar',x:.15,y:.65,r:20},
+        {kind:'pillar',x:.85,y:.35,r:20},{kind:'pillar',x:.85,y:.65,r:20} ] },
   ],
   vaitarani: [
     { id: 'vait_fords', name: 'The Fords', obstacles: [
-      {kind:'pit',x:.46,y:0,w:.07,h:.20},{kind:'pit',x:.46,y:.32,w:.07,h:.36},{kind:'pit',x:.46,y:.80,w:.07,h:.20} ] },
+      {kind:'pit',x:.46,y:0,w:.07,h:.20},{kind:'pit',x:.46,y:.32,w:.07,h:.36},{kind:'pit',x:.46,y:.80,w:.07,h:.20} ],
+      large: [
+        {kind:'pit',x:.18,y:.40,w:.06,h:.25},{kind:'pit',x:.78,y:.40,w:.06,h:.25} ] },
     { id: 'vait_islands', name: 'Bone Islands', obstacles: [
       {kind:'pit',x:.34,y:.28,r:50},{kind:'pit',x:.34,y:.72,r:50},{kind:'pit',x:.64,y:.28,r:50},
-      {kind:'pit',x:.64,y:.72,r:50},{kind:'pillar',x:.49,y:.50,r:34} ] },
+      {kind:'pit',x:.64,y:.72,r:50},{kind:'pillar',x:.49,y:.50,r:34} ],
+      large: [
+        {kind:'pit',x:.16,y:.50,r:34},{kind:'pit',x:.82,y:.50,r:34} ] },
     { id: 'vait_posts', name: 'Ferry Posts', obstacles: [
       {kind:'pillar',x:.30,y:.20,r:20},{kind:'pillar',x:.30,y:.50,r:20},{kind:'pillar',x:.30,y:.80,r:20},
       {kind:'pillar',x:.55,y:.35,r:20},{kind:'pillar',x:.55,y:.65,r:20},
-      {kind:'pillar',x:.78,y:.20,r:20},{kind:'pillar',x:.78,y:.50,r:20},{kind:'pillar',x:.78,y:.80,r:20} ] },
+      {kind:'pillar',x:.78,y:.20,r:20},{kind:'pillar',x:.78,y:.50,r:20},{kind:'pillar',x:.78,y:.80,r:20} ],
+      large: [
+        {kind:'pillar',x:.16,y:.35,r:18},{kind:'pillar',x:.16,y:.65,r:18},
+        {kind:'pillar',x:.86,y:.35,r:18},{kind:'pillar',x:.86,y:.65,r:18} ] },
   ],
 };
 

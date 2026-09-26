@@ -60,6 +60,67 @@ const ROOMS = {
     return null;
   },
 
+  // ---- Phase 4: hazard placement (GAME-04) ----
+  // A random point clear of obstacles, player spawn, doors and (optionally) other placed points.
+  freePoint(r, opts = {}) {
+    const A = GAME.arena;
+    const spawnX = A.x + 90, spawnY = A.y + A.h / 2;
+    const doorX = A.x + A.w - 36;
+    const doorYs = [1 / 3, 1 / 2, 2 / 3].map(f => A.y + A.h * f);
+    const spawnClear = opts.spawnClear ?? 140;
+    const avoid = opts.avoid || [];
+    const minSep = opts.minSep ?? 0;
+    for (let tries = 0; tries < 60; tries++) {
+      const x = U.rand(A.x + r + 20, A.x + A.w - r - 20);
+      const y = U.rand(A.y + r + 20, A.y + A.h - r - 20);
+      if (this.pointBlocked(x, y, r + 8)) continue;
+      if (U.dist(x, y, spawnX, spawnY) < spawnClear) continue;
+      if (doorYs.some(dy => U.dist(x, y, doorX, dy) < r + 70)) continue;
+      if (avoid.some(o => U.dist(x, y, o.x, o.y) < minSep + r + (o.r || 0))) continue;
+      return { x, y };
+    }
+    return null;
+  },
+
+  spawnHazards() {
+    GAME.hazards = [];
+    const def = DATA.HAZARDS[GAME.biome.hazard];
+    if (!def) return;
+    const A = GAME.arena;
+    if (def.id === 'fireVent') {
+      const n = U.randInt(def.count[0], def.count[1]);
+      const placed = [];
+      for (let i = 0; i < n; i++) {
+        const p = this.freePoint(def.r, { avoid: placed, minSep: 30 });
+        if (!p) continue;
+        placed.push({ x: p.x, y: p.y, r: def.r });
+        GAME.hazards.push({ type: 'fireVent', x: p.x, y: p.y, r: def.r, phase: 'dormant',
+          t: def.firstDelay + U.rand(def.dormant[0], def.dormant[1]) * U.rand(0.3, 1),
+          warnShown: 0, hitSet: null, age: 0 });
+      }
+    } else if (def.id === 'venomPool') {
+      const n = U.randInt(def.count[0], def.count[1]);
+      const placed = [];
+      for (let i = 0; i < n; i++) {
+        const r = U.rand(def.r[0], def.r[1]);
+        const p = this.freePoint(r, { avoid: placed, minSep: 30 });
+        if (!p) continue;
+        placed.push({ x: p.x, y: p.y, r });
+        GAME.hazards.push({ type: 'venomPool', x: p.x, y: p.y, r, age: 0, tickT: 0 });
+      }
+    } else if (def.id === 'arrowVolley') {
+      GAME.hazards.push({ type: 'arrowVolley', t: def.firstDelay, markers: [] });
+    } else if (def.id === 'riverCurrent') {
+      const h = U.rand(def.h[0], def.h[1]);
+      const upper = U.chance(0.5);
+      const y = upper
+        ? U.rand(A.y + 30, A.y + A.h * 0.5 - h - 40)
+        : U.rand(A.y + A.h * 0.5 + 40, A.y + A.h - h - 30);
+      GAME.hazards.push({ type: 'riverCurrent', x: A.x, y, w: A.w, h,
+        dir: U.chance(0.5) ? 1 : -1, phase: 'calm', t: U.rand(def.surgeEvery[0], def.surgeEvery[1]), age: 0 });
+    }
+  },
+
   // Build the arena geometry for a new room (a per-biome layout template, or open for boss rooms)
   buildArena(isBoss, forceId) {
     GAME.pillars = [];
@@ -163,7 +224,7 @@ const ROOMS = {
     G.reward = rewardId;
     G.enemies = []; G.eprojectiles = []; G.pprojectiles = [];
     G.pickups = []; G.zones = []; G.orbits = []; G.rings = [];
-    G.bolts = []; G.dangerZones = []; G.doors = [];
+    G.bolts = []; G.dangerZones = []; G.doors = []; G.hazards = [];
     G.nooseT = 0; G.bossRewarded = false;
 
     const P = G.player;
@@ -211,6 +272,7 @@ const ROOMS = {
 
     // combat room
     this.buildArena(false);
+    this.spawnHazards();
     G.waves = this.planWaves();
     this.spawnWave(G.waves.shift());
     G.state = 'combat';

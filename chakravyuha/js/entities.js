@@ -183,6 +183,9 @@ class Player {
     this.pavanaT = 0;            // duo_pavanaputra: post-dash damage window
     this.kapiHits = 0;           // duo_kapidhvaja: attack-hit counter
 
+    // environmental hazards
+    this.hazardSlowT = 0; this.hazardSlowF = 1;
+
     // boons: slot -> {def, rarity} ; passives: array
     this.slots = {};             // attack/special/dash/cast
     this.passives = [];
@@ -239,6 +242,7 @@ class Player {
   moveSpeed() {
     let s = this.speed;
     if (this.has('vayu_speed')) s *= 1 + this.val('vayu_speed') / 100;
+    if (this.hazardSlowT > 0) s *= this.hazardSlowF;
     return s;
   }
 
@@ -256,6 +260,7 @@ class Player {
     U.cool(this, 'atkCd', dt); U.cool(this, 'specialCd', dt);
     U.cool(this, 'iframes', dt); U.cool(this, 'hurtT', dt);
     U.cool(this, 'comboT', dt); U.cool(this, 'pavanaT', dt);
+    U.cool(this, 'hazardSlowT', dt);
     if (this.comboT <= 0) this.comboIdx = 0;
     if (this.has('han_bhakti') && !this.bhaktiReady) {
       this.bhaktiT -= dt;

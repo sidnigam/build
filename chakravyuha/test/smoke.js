@@ -1555,5 +1555,89 @@ check('forced-template rooms: player spawn clear, enemies never spawn inside/nea
   + (spawnErrors.length ? ' — ' + spawnErrors.slice(0, 5).join('; ') + (spawnErrors.length > 5 ? ` (+${spawnErrors.length - 5} more)` : '') : ''),
   spawnErrors.length === 0);
 
+// ---------------- Phase 4: hazards (GAME-04) ----------------
+console.log('\n— environmental hazards (Phase 4, GAME-04) —');
+
+vm.runInContext(`
+globalThis.__hazardStaticErrors = [];
+try {
+  const ids = new Set();
+  for (const b of DATA.BIOMES) {
+    if (!DATA.HAZARDS[b.hazard]) __hazardStaticErrors.push(b.id + ': hazard id missing from DATA.HAZARDS (' + b.hazard + ')');
+    ids.add(b.hazard);
+  }
+  if (ids.size !== 4) __hazardStaticErrors.push('expected 4 distinct hazard ids, got ' + ids.size);
+  for (const def of Object.values(DATA.HAZARDS)) {
+    if (def.damaging && !((def.warn || 0) >= 0.6 || (def.grace || 0) >= 0.6))
+      __hazardStaticErrors.push(def.id + ': damaging hazard has no >=0.6s warn/grace');
+  }
+} catch (e) { __hazardStaticErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const hazardStaticErrors = vm.runInContext('__hazardStaticErrors', sandbox);
+check('hazards: every biome maps to a valid, distinct hazard; damaging hazards telegraph >=0.6s'
+  + (hazardStaticErrors.length ? ' — ' + hazardStaticErrors.join('; ') : ''), hazardStaticErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__hazardPlacementErrors = [];
+try {
+  const A = GAME.arena;
+  const spawnX = A.x + 90, spawnY = A.y + A.h / 2;
+  for (let bi = 0; bi < DATA.BIOMES.length; bi++) {
+    const biome = DATA.BIOMES[bi];
+    for (let trial = 0; trial < 10; trial++) {
+      GAME.startRun();
+      GAME.biomeIdx = bi; GAME.biome = biome;
+      ROOMS.enterRoom('mudra');
+      if (GAME.hazards.length < 1) __hazardPlacementErrors.push(biome.id + ': no hazards spawned in a combat room');
+      for (const h of GAME.hazards) {
+        if (h.type !== biome.hazard) __hazardPlacementErrors.push(biome.id + ': wrong hazard type ' + h.type);
+        if (h.type === 'fireVent' || h.type === 'venomPool') {
+          if (U.dist(h.x, h.y, spawnX, spawnY) < 80) __hazardPlacementErrors.push(h.type + ': too close to spawn');
+          if (ROOMS.pointBlocked(h.x, h.y, h.r)) __hazardPlacementErrors.push(h.type + ': placed inside an obstacle');
+        }
+        if (h.type === 'riverCurrent') {
+          if (spawnY >= h.y && spawnY <= h.y + h.h) __hazardPlacementErrors.push('riverCurrent band contains the spawn point');
+        }
+      }
+    }
+  }
+} catch (e) { __hazardPlacementErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const hazardPlacementErrors = vm.runInContext('__hazardPlacementErrors', sandbox);
+check('hazards: placed correctly per biome (type, spawn clearance, obstacle clearance, river band)'
+  + (hazardPlacementErrors.length ? ' — ' + hazardPlacementErrors.slice(0, 5).join('; ') + (hazardPlacementErrors.length > 5 ? ` (+${hazardPlacementErrors.length - 5} more)` : '') : ''),
+  hazardPlacementErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__hazardNonCombatErrors = [];
+try {
+  GAME.startRun();
+  ROOMS.enterRoom('sarovar');
+  if (GAME.hazards.length !== 0) __hazardNonCombatErrors.push('sarovar room has hazards');
+  GAME.startRun();
+  ROOMS.enterRoom('boss');
+  if (GAME.hazards.length !== 0) __hazardNonCombatErrors.push('boss room has hazards');
+} catch (e) { __hazardNonCombatErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const hazardNonCombatErrors = vm.runInContext('__hazardNonCombatErrors', sandbox);
+check('hazards: never spawned in sarovar or boss rooms'
+  + (hazardNonCombatErrors.length ? ' — ' + hazardNonCombatErrors.join('; ') : ''), hazardNonCombatErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__hazardSlowErrors = [];
+try {
+  GAME.startRun();
+  const P = GAME.player;
+  const base = P.moveSpeed();
+  P.hazardSlowT = 0.2; P.hazardSlowF = 0.6;
+  const slowed = P.moveSpeed();
+  if (Math.abs(slowed - base * 0.6) > 0.01)
+    __hazardSlowErrors.push('moveSpeed not scaled by hazardSlowF (base=' + base + ', slowed=' + slowed + ')');
+} catch (e) { __hazardSlowErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const hazardSlowErrors = vm.runInContext('__hazardSlowErrors', sandbox);
+check('hazards: player hazardSlowT/hazardSlowF scale moveSpeed'
+  + (hazardSlowErrors.length ? ' — ' + hazardSlowErrors.join('; ') : ''), hazardSlowErrors.length === 0);
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

@@ -227,28 +227,40 @@ DATA.BIOMES = [
   {
     id: 'naraka', name: 'NARAKA', sub: 'The Iron City of Yama', rooms: 5,
     bg: '#160a0e', floor: '#241016', accent: '#ff5533', wall: '#3d1a20',
-    enemies: ['preta', 'rakshasa', 'archer'], boss: 'tataka',
+    enemies: ['preta', 'rakshasa', 'archer'], boss: 'tataka', hazard: 'fireVent',
     scale: 1.0, budget: [4, 9], droneHz: 110,
   },
   {
     id: 'patala', name: 'PATALA', sub: 'Realm of the Serpent Kings', rooms: 6,
     bg: '#061412', floor: '#0b201c', accent: '#2ee6a8', wall: '#143830',
-    enemies: ['naga', 'vetala', 'archer', 'rakshasa'], boss: 'ahiravana',
+    enemies: ['naga', 'vetala', 'archer', 'rakshasa'], boss: 'ahiravana', hazard: 'venomPool',
     scale: 1.35, budget: [7, 12], droneHz: 98,
   },
   {
     id: 'ranabhoomi', name: 'RANABHOOMI', sub: 'Field of the Fallen Warriors', rooms: 6,
     bg: '#171107', floor: '#241b0d', accent: '#ffcf5c', wall: '#403018',
-    enemies: ['daitya', 'bhuta', 'yatudhana', 'vetala'], boss: 'kumbhakarna',
+    enemies: ['daitya', 'bhuta', 'yatudhana', 'vetala'], boss: 'kumbhakarna', hazard: 'arrowVolley',
     scale: 1.8, budget: [9, 15], droneHz: 123,
   },
   {
     id: 'vaitarani', name: 'VAITARANI', sub: 'The River Between Worlds', rooms: 2,
     bg: '#0a0e16', floor: '#121828', accent: '#9fb8ff', wall: '#222c4a',
-    enemies: ['preta', 'rakshasa', 'naga', 'vetala', 'bhuta', 'daitya'], boss: 'yama',
+    enemies: ['preta', 'rakshasa', 'naga', 'vetala', 'bhuta', 'daitya'], boss: 'yama', hazard: 'riverCurrent',
     scale: 2.1, budget: [12, 16], droneHz: 82,
   },
 ];
+
+// ---------- ENVIRONMENTAL HAZARDS ----------
+DATA.HAZARDS = {
+  fireVent:    { id:'fireVent', name:'Vents of Kumbhipaka', count:[3,5], r:42, dormant:[2.5,4], firstDelay:1.5,
+                 warn:0.9, active:0.6, dmgP:12, dmgE:25, color:'#ff7a2a', damaging:true },
+  venomPool:   { id:'venomPool', name:'Pools of Naga Venom', count:[2,3], r:[55,75], slow:0.4, tick:1.0,
+                 grace:0.6, dmgP:6, enemySlow:0.5, immune:['naga'], color:'#7dff5a', damaging:true },
+  arrowVolley: { id:'arrowVolley', name:'Arrows of Kurukshetra', every:[4,6], firstDelay:2.0, warn:1.1, r:70,
+                 jitter:60, max:2, dmgP:14, dmgE:30, color:'#ffcf5c', damaging:true },
+  riverCurrent:{ id:'riverCurrent', name:'Current of the Vaitarani', h:[90,120], push:120, surgePush:260,
+                 surgeEvery:[5,8], surgeWarn:0.8, surgeDur:1.5, color:'#9fb8ff', damaging:false },
+};
 
 // ---------- ROOM LAYOUT TEMPLATES ----------
 // Normalized arena coordinates: circles x/y = center fraction, r in px;

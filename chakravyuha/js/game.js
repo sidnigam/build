@@ -31,7 +31,7 @@ const GAME = {
   // world arrays
   enemies: [], eprojectiles: [], pprojectiles: [], pickups: [],
   particles: [], texts: [], zones: [], orbits: [], rings: [],
-  bolts: [], dangerZones: [], doors: [], pillars: [],
+  bolts: [], dangerZones: [], doors: [], pillars: [], hazards: [],
 
   init() {
     this.canvas = document.getElementById('game');

@@ -1,7 +1,7 @@
 {
   "style_positive": "Hades-adjacent illustrated 2D game character art, painterly digital illustration, bold clean linework, strong readable silhouette, chunky proportions, 3/4 top-down game sprite, full body, entire figure visible from head to feet, single character, solo, centered, Indian mythology, warm earth tones, high detail, concept art, plain flat pale grey background",
   "style_negative": "pixel art, 3d render, photorealistic, photo, blurry, lowres, low quality, jpeg artifacts, extra limbs, extra arms, extra legs, extra heads, deformed hands, fused fingers, bad anatomy, watermark, text, signature, logo, letters, caption, cropped, cut off, close-up, portrait, bust, headshot, multiple characters, crowd, collage, duplicate, extra views, character sheet, turnaround, floating objects, disembodied, busy background, scenery, landscape, frame, border, western medieval armor, roman armor, samurai armor",
-  "enemy_negative_extra": "halo, deity, god, goddess, divine aura, religious icon, worship",
+  "enemy_negative_extra": "halo, deity, god, goddess, divine aura, religious icon, worship, multiple arms, extra arms, four arms, six arms, eight arms, crown, tiara, diadem, lotus, trident",
   "biome_positive_template": "top-down orthographic view looking straight down at {ground}, painted game arena floor texture, even evenly distributed detail, low contrast, no focal point, Hades-adjacent painterly illustration, {palette}, no characters, no text",
   "biome_negative": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, horizon, sky, perspective view, walls, buildings, doorway, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point",
   "character_size": [1024, 1024],
@@ -36,8 +36,9 @@
     },
     "tataka": {
       "kind": "boss",
-      "subject": "full-length standing full-body view from head to feet, distant view showing entire figure, Tataka, a towering fearsome rakshasi demoness, a yaksha princess cursed into a demoness, wild flame-red hair, tusks, forest-vine and bone ornaments, tattered red-orange garments, clawed hands, legs and feet visible, standing on a plain flat solid background with no ground, no scenery, no smoke, no rocks",
-      "palette": "red-orange and charcoal",
+      "subject": "full-length standing full-body view from head to feet, distant view showing entire figure, Tataka, a towering fearsome rakshasi forest demoness from the Ramayana, a woman with a clearly feminine face and feminine curved body shape, long wild tangled hair, exactly two arms only, hunched feral predatory stance, snarling open mouth with two visible sharp tusks jutting up from the lower jaw, sharp fangs, sharp curved black claws on her fingers clearly visible, bone and vine ornaments, no headwear, tattered dark red-orange garments wrapped around her torso and hips, legs and feet visible, standing on a plain flat solid background with no ground, no scenery, no smoke, no rocks, no trees",
+      "palette": "dark forest red-orange and charcoal with ember accents",
+      "negative_extra": "multiple arms, extra arms, six arms, four arms, third arm, extra hands, crown, tiara, diadem, halo, sun disc, moon disc, circular glow, goddess, deity, divine, lotus, trident, multiple weapons, weapon in each hand, male, man, masculine physique, beard, moustache, stubble, birds, trees, scenery, character sheet, turnaround, multiple views",
       "base_seed": 52000,
       "out_size": 256,
       "phase2_mode": "ember"

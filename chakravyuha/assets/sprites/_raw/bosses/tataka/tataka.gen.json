@@ -9,7 +9,7 @@
     "6": {
       "class_type": "CLIPTextEncode",
       "inputs": {
-        "text": "full-length standing full-body view from head to feet, distant view showing entire figure, Tataka, a towering fearsome rakshasi demoness, a yaksha princess cursed into a demoness, wild flame-red hair, tusks, forest-vine and bone ornaments, tattered red-orange garments, clawed hands, legs and feet visible, plain flat background, red-orange and charcoal, Hades-adjacent illustrated 2D game character art, painterly digital illustration, bold clean linework, strong readable silhouette, chunky proportions, 3/4 top-down game sprite, full body, entire figure visible from head to feet, single character, solo, centered, Indian mythology, warm earth tones, high detail, concept art, plain flat pale grey background",
+        "text": "full-length standing full-body view from head to feet, distant view showing entire figure, Tataka, a towering fearsome rakshasi forest demoness from the Ramayana, a woman with a clearly feminine face and feminine curved body shape, long wild tangled hair, exactly two arms only, hunched feral predatory stance, tusks, fangs, bone and vine ornaments, no headwear, tattered dark red-orange garments wrapped around her torso and hips, clawed hands, legs and feet visible, standing on a plain flat solid background with no ground, no scenery, no smoke, no rocks, no trees, dark forest red-orange and charcoal with ember accents, Hades-adjacent illustrated 2D game character art, painterly digital illustration, bold clean linework, strong readable silhouette, chunky proportions, 3/4 top-down game sprite, full body, entire figure visible from head to feet, single character, solo, centered, Indian mythology, warm earth tones, high detail, concept art, plain flat pale grey background",
         "clip": [
           "4",
           1
@@ -19,7 +19,7 @@
     "7": {
       "class_type": "CLIPTextEncode",
       "inputs": {
-        "text": "pixel art, 3d render, photorealistic, photo, blurry, lowres, low quality, jpeg artifacts, extra limbs, extra arms, extra legs, extra heads, deformed hands, fused fingers, bad anatomy, watermark, text, signature, logo, letters, caption, cropped, cut off, close-up, portrait, bust, headshot, multiple characters, crowd, collage, duplicate, extra views, character sheet, turnaround, floating objects, disembodied, busy background, scenery, landscape, frame, border, western medieval armor, roman armor, samurai armor, halo, deity, god, goddess, divine aura, religious icon, worship",
+        "text": "pixel art, 3d render, photorealistic, photo, blurry, lowres, low quality, jpeg artifacts, extra limbs, extra arms, extra legs, extra heads, deformed hands, fused fingers, bad anatomy, watermark, text, signature, logo, letters, caption, cropped, cut off, close-up, portrait, bust, headshot, multiple characters, crowd, collage, duplicate, extra views, character sheet, turnaround, floating objects, disembodied, busy background, scenery, landscape, frame, border, western medieval armor, roman armor, samurai armor, halo, deity, god, goddess, divine aura, religious icon, worship, multiple arms, extra arms, four arms, six arms, eight arms, crown, tiara, diadem, lotus, trident, multiple arms, extra arms, six arms, four arms, third arm, extra hands, crown, tiara, diadem, halo, sun disc, moon disc, circular glow, goddess, deity, divine, lotus, trident, multiple weapons, weapon in each hand, male, man, masculine physique, beard, moustache, stubble, birds, trees, scenery, character sheet, turnaround, multiple views",
         "clip": [
           "4",
           1
@@ -86,8 +86,8 @@
     }
   },
   "params": {
-    "positive": "full-length standing full-body view from head to feet, distant view showing entire figure, Tataka, a towering fearsome rakshasi demoness, a yaksha princess cursed into a demoness, wild flame-red hair, tusks, forest-vine and bone ornaments, tattered red-orange garments, clawed hands, legs and feet visible, plain flat background, red-orange and charcoal, Hades-adjacent illustrated 2D game character art, painterly digital illustration, bold clean linework, strong readable silhouette, chunky proportions, 3/4 top-down game sprite, full body, entire figure visible from head to feet, single character, solo, centered, Indian mythology, warm earth tones, high detail, concept art, plain flat pale grey background",
-    "negative": "pixel art, 3d render, photorealistic, photo, blurry, lowres, low quality, jpeg artifacts, extra limbs, extra arms, extra legs, extra heads, deformed hands, fused fingers, bad anatomy, watermark, text, signature, logo, letters, caption, cropped, cut off, close-up, portrait, bust, headshot, multiple characters, crowd, collage, duplicate, extra views, character sheet, turnaround, floating objects, disembodied, busy background, scenery, landscape, frame, border, western medieval armor, roman armor, samurai armor, halo, deity, god, goddess, divine aura, religious icon, worship",
+    "positive": "full-length standing full-body view from head to feet, distant view showing entire figure, Tataka, a towering fearsome rakshasi forest demoness from the Ramayana, a woman with a clearly feminine face and feminine curved body shape, long wild tangled hair, exactly two arms only, hunched feral predatory stance, tusks, fangs, bone and vine ornaments, no headwear, tattered dark red-orange garments wrapped around her torso and hips, clawed hands, legs and feet visible, standing on a plain flat solid background with no ground, no scenery, no smoke, no rocks, no trees, dark forest red-orange and charcoal with ember accents, Hades-adjacent illustrated 2D game character art, painterly digital illustration, bold clean linework, strong readable silhouette, chunky proportions, 3/4 top-down game sprite, full body, entire figure visible from head to feet, single character, solo, centered, Indian mythology, warm earth tones, high detail, concept art, plain flat pale grey background",
+    "negative": "pixel art, 3d render, photorealistic, photo, blurry, lowres, low quality, jpeg artifacts, extra limbs, extra arms, extra legs, extra heads, deformed hands, fused fingers, bad anatomy, watermark, text, signature, logo, letters, caption, cropped, cut off, close-up, portrait, bust, headshot, multiple characters, crowd, collage, duplicate, extra views, character sheet, turnaround, floating objects, disembodied, busy background, scenery, landscape, frame, border, western medieval armor, roman armor, samurai armor, halo, deity, god, goddess, divine aura, religious icon, worship, multiple arms, extra arms, four arms, six arms, eight arms, crown, tiara, diadem, lotus, trident, multiple arms, extra arms, six arms, four arms, third arm, extra hands, crown, tiara, diadem, halo, sun disc, moon disc, circular glow, goddess, deity, divine, lotus, trident, multiple weapons, weapon in each hand, male, man, masculine physique, beard, moustache, stubble, birds, trees, scenery, character sheet, turnaround, multiple views",
     "seed": 52003,
     "width": 1024,
     "height": 1024,
@@ -97,7 +97,7 @@
     "scheduler": "karras",
     "checkpoint": "sd_xl_base_1.0.safetensors"
   },
-  "prompt_id": "8d03855a-b0a1-4b07-957c-03aab0b8a471",
+  "prompt_id": "299f37c7-5230-4956-ae3e-01a53490c15e",
   "comfyui_version": "0.35.0",
-  "generated_at": "2026-09-26T13:42:55Z"
+  "generated_at": "2026-09-26T14:16:34Z"
 }

@@ -4,15 +4,15 @@
       "frame": {
         "x": 2,
         "y": 2,
-        "w": 197,
+        "w": 204,
         "h": 256
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 29,
+        "x": 25,
         "y": 0,
-        "w": 197,
+        "w": 204,
         "h": 256
       },
       "sourceSize": {
@@ -28,15 +28,15 @@
       "frame": {
         "x": 2,
         "y": 262,
-        "w": 162,
+        "w": 168,
         "h": 248
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 47,
+        "x": 43,
         "y": 4,
-        "w": 162,
+        "w": 168,
         "h": 248
       },
       "sourceSize": {
@@ -55,7 +55,7 @@
     "image": "tataka-atlas.png",
     "format": "RGBA8888",
     "size": {
-      "w": 201,
+      "w": 208,
       "h": 512
     },
     "scale": 1

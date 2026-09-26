@@ -211,6 +211,44 @@
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "FLAGGED: attempts 0-2 failed the full-body/clean-background checklist (busy tree scenery not cleanly cut out; bust-only portrait crops twice). Attempt 4 added a large moon-disc behind the figure that reads as a halo/divine aura, which is a cultural-guard violation for an asura enemy boss. Accepted attempt 3 (seed 52003): full body head-to-feet, fearsome horned demoness with staff and clawed hands, red-orange/charcoal palette, no halo. A small residual background wisp near the foot survived cutout (reads as a smoke/ember puff, blends acceptably with the ember phase2 glow); flagged for optional manual cleanup on human review."
+    },
+    {
+      "filename": "ahiravana-atlas.png",
+      "path": "assets/sprites/bosses/ahiravana-atlas.png",
+      "actor": "ahiravana",
+      "kind": "boss",
+      "animations": {
+        "idle": 1,
+        "phase2": 1
+      },
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 52100,
+      "prompt": "Ahiravana, asura sorcerer-king of the underworld Patala, dark crown, flowing dark jade-teal robes with serpent ornaments, holding a curved blade in one hand and a green sorcerous flame in the other, jade-teal and black with gold trim, Hades-adjacent illustrated 2D game character art, painterly digital illustration, bold clean linework, strong readable silhouette, chunky proportions, 3/4 top-down game sprite, full body, entire figure visible from head to feet, single character, solo, centered, Indian mythology, warm earth tones, high detail, concept art, plain flat pale grey background",
+      "negative_prompt": "pixel art, 3d render, photorealistic, photo, blurry, lowres, low quality, jpeg artifacts, extra limbs, extra arms, extra legs, extra heads, deformed hands, fused fingers, bad anatomy, watermark, text, signature, logo, letters, caption, cropped, cut off, close-up, portrait, bust, headshot, multiple characters, crowd, collage, duplicate, extra views, character sheet, turnaround, floating objects, disembodied, busy background, scenery, landscape, frame, border, western medieval armor, roman armor, samurai armor, halo, deity, god, goddess, divine aura, religious icon, worship",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "rembg u2net background removal",
+        "alpha despeckle + trim",
+        "bottom-aligned LANCZOS fit to 256x256",
+        "phase2: tools/art/phase2_variant.py --mode ember (deterministic post-process, no generation)",
+        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+      ],
+      "raw_image": "assets/sprites/_raw/bosses/ahiravana/",
+      "gen_sidecar": "assets/sprites/_raw/bosses/ahiravana/ahiravana.gen.json",
+      "generated_date": "2026-09-26",
+      "recorded_date": "2026-09-26",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "Accepted on attempt 0: full body head-to-feet, jade-teal sorcerer-king with a topknot (in place of the prompted crown), swirling green sorcerous smoke, a bowl of green flame in one hand. A faint sketchy background doodle in the corner of the raw image was cleanly removed by rembg (not present in the finished frame). Silhouette reads clearly, no halo."
     }
   ]
 }

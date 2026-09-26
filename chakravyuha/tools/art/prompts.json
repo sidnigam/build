@@ -1,7 +1,7 @@
 {
   "style_positive": "Hades-adjacent illustrated 2D game character art, painterly digital illustration, bold clean linework, strong readable silhouette, chunky proportions, 3/4 top-down game sprite, full body, entire figure visible from head to feet, single character, solo, centered, Indian mythology, warm earth tones, high detail, concept art, plain flat pale grey background",
   "style_negative": "pixel art, 3d render, photorealistic, photo, blurry, lowres, low quality, jpeg artifacts, extra limbs, extra arms, extra legs, extra heads, deformed hands, fused fingers, bad anatomy, watermark, text, signature, logo, letters, caption, cropped, cut off, close-up, portrait, bust, headshot, multiple characters, crowd, collage, duplicate, extra views, character sheet, turnaround, floating objects, disembodied, busy background, scenery, landscape, frame, border, western medieval armor, roman armor, samurai armor",
-  "enemy_negative_extra": "halo, deity, god, goddess, divine aura, religious icon, worship",
+  "enemy_negative_extra": "halo, deity, god, goddess, divine aura, religious icon, worship, multiple arms, extra arms, four arms, six arms, eight arms, crown, tiara, diadem, lotus, trident",
   "biome_positive_template": "top-down orthographic view looking straight down at {ground}, painted game arena floor texture, even evenly distributed detail, low contrast, no focal point, Hades-adjacent painterly illustration, {palette}, no characters, no text",
   "biome_negative": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, horizon, sky, perspective view, walls, buildings, doorway, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point",
   "character_size": [1024, 1024],
@@ -36,8 +36,9 @@
     },
     "tataka": {
       "kind": "boss",
-      "subject": "Tataka, a towering fearsome rakshasi demoness, a yaksha princess cursed into a demoness, wild flame-red hair, tusks, forest-vine and bone ornaments, tattered red-orange garments, clawed hands",
-      "palette": "red-orange and charcoal",
+      "subject": "full-length standing full-body view from head to feet, distant view showing entire figure, Tataka, a towering fearsome rakshasi forest demoness from the Ramayana, a woman with a clearly feminine face and feminine curved body shape, long wild tangled hair, exactly two arms only, hunched feral predatory stance, snarling open mouth with two visible sharp tusks jutting up from the lower jaw, sharp fangs, sharp curved black claws on her fingers clearly visible, bone and vine ornaments, no headwear, tattered dark red-orange garments wrapped around her torso and hips, legs and feet visible, standing on a plain flat solid background with no ground, no scenery, no smoke, no rocks, no trees",
+      "palette": "dark forest red-orange and charcoal with ember accents",
+      "negative_extra": "multiple arms, extra arms, six arms, four arms, third arm, extra hands, crown, tiara, diadem, halo, sun disc, moon disc, circular glow, goddess, deity, divine, lotus, trident, multiple weapons, weapon in each hand, male, man, masculine physique, beard, moustache, stubble, birds, trees, scenery, character sheet, turnaround, multiple views",
       "base_seed": 52000,
       "out_size": 256,
       "phase2_mode": "ember"
@@ -60,9 +61,9 @@
     },
     "yama": {
       "kind": "boss",
-      "subject": "Yama Dharmaraja, the dignified Hindu god of death and righteous judge of the dead, stern regal noble expression, dark blue-grey skin, tall golden crown, royal indigo and pale blue silk garments, holding a noose (pasha) in one hand and a golden staff (danda) in the other, serene authority, divine",
+      "subject": "full-length standing full-body view from head to feet, exactly two arms only, Yama Dharmaraja, the dignified Hindu god of death and righteous judge of the dead, standing upright, stern regal noble expression, dark blue-grey skin, tall golden crown, small simple circular halo directly behind the head only (not covering the body), royal indigo and pale blue silk garments, holding a noose (pasha) in one hand and a golden staff (danda) in the other, serene authority, divine, standing in front of a plain flat solid pale grey background that is much larger than the character, character occupies the center of the frame with plenty of plain background around the whole body",
       "palette": "indigo, pale blue and gold",
-      "negative_extra": "demon, monster, monstrous, grotesque, fangs, tusks, horns, skull face, evil grin, menacing, blood, gore, asura",
+      "negative_extra": "demon, monster, monstrous, grotesque, fangs, tusks, horns, skull face, evil grin, menacing, blood, gore, asura, picture frame, ornate border, decorative border, vignette border, framed illustration, four arms, six arms, extra arms, temple building, architecture, landscape, clouds, seated, sitting, lotus throne, cropped legs, large background medallion, full-body aureole, mandala disc, circular background pattern, background covering entire image, sun disc filling frame",
       "base_seed": 52300,
       "out_size": 256,
       "phase2_mode": "divine"
@@ -90,9 +91,9 @@
     },
     "naga": {
       "kind": "enemy",
-      "subject": "a naga warrior of the serpent folk, human torso with a coiled green serpent tail instead of legs, emerald scales, single cobra-hood crest, holding a spear",
+      "subject": "a naga warrior of the serpent folk, body shaped exactly like a merman: fully human muscular male torso, human arms, completely human face with no snout, human hair, standing upright, and below the waist his body seamlessly becomes one single continuous green serpent tail fin instead of legs, like a mermaid's tail, coiling on the ground, a small flared cobra-hood fan behind the neck, holding one spear, green scale patterning only on the tail",
       "palette": "",
-      "negative_extra": "halo, many heads, multiple hoods, thousand-headed, Shesha, Vasuki, divine",
+      "negative_extra": "halo, many heads, multiple hoods, thousand-headed, Shesha, Vasuki, divine, reptile head, lizard head, dragon head, snout, animal face, legs, feet, two legs, standing on legs, frame, border, ornate border",
       "base_seed": 63300,
       "out_size": 128
     },

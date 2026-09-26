@@ -1,0 +1,103 @@
+{
+  "graph": {
+    "4": {
+      "class_type": "CheckpointLoaderSimple",
+      "inputs": {
+        "ckpt_name": "sd_xl_base_1.0.safetensors"
+      }
+    },
+    "6": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "a vetala, vampiric corpse-spirit from Indian folklore, hunched undead figure with long claws and ragged cloth wings, violet ghostly aura, Hades-adjacent illustrated 2D game character art, painterly digital illustration, bold clean linework, strong readable silhouette, chunky proportions, 3/4 top-down game sprite, full body, entire figure visible from head to feet, single character, solo, centered, Indian mythology, warm earth tones, high detail, concept art, plain flat pale grey background",
+        "clip": [
+          "4",
+          1
+        ]
+      }
+    },
+    "7": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "pixel art, 3d render, photorealistic, photo, blurry, lowres, low quality, jpeg artifacts, extra limbs, extra arms, extra legs, extra heads, deformed hands, fused fingers, bad anatomy, watermark, text, signature, logo, letters, caption, cropped, cut off, close-up, portrait, bust, headshot, multiple characters, crowd, collage, duplicate, extra views, character sheet, turnaround, floating objects, disembodied, busy background, scenery, landscape, frame, border, western medieval armor, roman armor, samurai armor, halo, deity, god, goddess, divine aura, religious icon, worship, multiple arms, extra arms, four arms, six arms, eight arms, crown, tiara, diadem, lotus, trident",
+        "clip": [
+          "4",
+          1
+        ]
+      }
+    },
+    "5": {
+      "class_type": "EmptyLatentImage",
+      "inputs": {
+        "width": 1024,
+        "height": 1024,
+        "batch_size": 1
+      }
+    },
+    "3": {
+      "class_type": "KSampler",
+      "inputs": {
+        "seed": 63400,
+        "steps": 32,
+        "cfg": 7.0,
+        "sampler_name": "dpmpp_2m",
+        "scheduler": "karras",
+        "denoise": 1.0,
+        "model": [
+          "4",
+          0
+        ],
+        "positive": [
+          "6",
+          0
+        ],
+        "negative": [
+          "7",
+          0
+        ],
+        "latent_image": [
+          "5",
+          0
+        ]
+      }
+    },
+    "8": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "3",
+          0
+        ],
+        "vae": [
+          "4",
+          2
+        ]
+      }
+    },
+    "9": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "filename_prefix": "chakravyuha",
+        "images": [
+          "8",
+          0
+        ]
+      }
+    }
+  },
+  "params": {
+    "positive": "a vetala, vampiric corpse-spirit from Indian folklore, hunched undead figure with long claws and ragged cloth wings, violet ghostly aura, Hades-adjacent illustrated 2D game character art, painterly digital illustration, bold clean linework, strong readable silhouette, chunky proportions, 3/4 top-down game sprite, full body, entire figure visible from head to feet, single character, solo, centered, Indian mythology, warm earth tones, high detail, concept art, plain flat pale grey background",
+    "negative": "pixel art, 3d render, photorealistic, photo, blurry, lowres, low quality, jpeg artifacts, extra limbs, extra arms, extra legs, extra heads, deformed hands, fused fingers, bad anatomy, watermark, text, signature, logo, letters, caption, cropped, cut off, close-up, portrait, bust, headshot, multiple characters, crowd, collage, duplicate, extra views, character sheet, turnaround, floating objects, disembodied, busy background, scenery, landscape, frame, border, western medieval armor, roman armor, samurai armor, halo, deity, god, goddess, divine aura, religious icon, worship, multiple arms, extra arms, four arms, six arms, eight arms, crown, tiara, diadem, lotus, trident",
+    "seed": 63400,
+    "width": 1024,
+    "height": 1024,
+    "steps": 32,
+    "cfg": 7.0,
+    "sampler": "dpmpp_2m",
+    "scheduler": "karras",
+    "checkpoint": "sd_xl_base_1.0.safetensors"
+  },
+  "prompt_id": "80579646-7a13-475c-ae32-7ed1dceea713",
+  "comfyui_version": "0.35.0",
+  "generated_at": "2026-09-26T15:18:19Z"
+}

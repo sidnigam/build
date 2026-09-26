@@ -14,7 +14,7 @@
       "animations": {
         "idle": 4
       },
-      "status": "partial — idle only; run/attack/dash blocked on pose-consistency (see HANDOFF.json)",
+      "status": "partial \u2014 idle only; run/attack/dash blocked on pose-consistency (see HANDOFF.json)",
       "tool": "ComfyUI (local)",
       "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
       "method": "img2img",
@@ -34,6 +34,70 @@
       "raw_frames": "assets/sprites/_raw/player/player_idle_{0..3}.png",
       "generated_date": "2026-09-13",
       "packed_date": "2026-09-24"
+    },
+    {
+      "filename": "naraka-bg.png",
+      "path": "assets/sprites/biomes/naraka-bg.png",
+      "actor": "naraka",
+      "kind": "biome",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1344,
+      "height": 768,
+      "seed": 41000,
+      "prompt": "top-down orthographic view looking straight down at cracked dark iron-grey basalt flagstones of an infernal iron city, thin glowing ember seams in the cracks, soot and ash, painted game arena floor texture, even evenly distributed detail, low contrast, no focal point, Hades-adjacent painterly illustration, deep maroon and charcoal with ember red-orange accents, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, horizon, sky, perspective view, walls, buildings, doorway, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "cover-scale 1344x768 -> 1280x731 LANCZOS",
+        "center-crop 1280x720",
+        "PNG optimize"
+      ],
+      "raw_image": "(not committed; reproducible from gen sidecar)",
+      "gen_sidecar": "assets/sprites/_raw/biomes/naraka-bg.gen.json",
+      "generated_date": "2026-09-25",
+      "recorded_date": "2026-09-25",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "Accepted on attempt 0: cracked iron-grey basalt flagstones with ember seams, even top-down detail, no figures/text/horizon, reads clearly as infernal ground."
+    },
+    {
+      "filename": "patala-bg.png",
+      "path": "assets/sprites/biomes/patala-bg.png",
+      "actor": "patala",
+      "kind": "biome",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1344,
+      "height": 768,
+      "seed": 41100,
+      "prompt": "top-down orthographic view looking straight down at ancient carved jade-green stone tiles with serpent-scale relief patterns in an underworld palace, faint bioluminescent moss in the grout, painted game arena floor texture, even evenly distributed detail, low contrast, no focal point, Hades-adjacent painterly illustration, deep teal and dark green with soft jade glow, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, horizon, sky, perspective view, walls, buildings, doorway, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "cover-scale 1344x768 -> 1280x731 LANCZOS",
+        "center-crop 1280x720",
+        "PNG optimize"
+      ],
+      "raw_image": "(not committed; reproducible from gen sidecar)",
+      "gen_sidecar": "assets/sprites/_raw/biomes/patala-bg.gen.json",
+      "generated_date": "2026-09-25",
+      "recorded_date": "2026-09-25",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "Accepted on attempt 0: jade-green carved serpent-scale relief tiles, even top-down maze-like detail, no figures/text/horizon, reads clearly as underworld palace floor."
     }
   ]
 }

@@ -14,9 +14,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Render Abstraction Seam** - Camera + named draw passes over untouched game logic, zero visual change (completed 2026-06-19)
 - [ ] **Phase 2: Asset Pipeline + Sprite System** - AI-art consistency/provenance pipeline, asset loader, sprite manager, cohesive illustrated actors
-- [ ] **Phase 3: VFX + Combat Juice** - Pooled particles, hitstop, screen shake/flash, kill-zoom with accessibility toggles
+- [x] **Phase 3: VFX + Combat Juice** - Pooled particles, hitstop, screen shake/flash, kill-zoom with accessibility toggles
 - [ ] **Phase 4: Gameplay Depth** - 24 boons + Duo synergies, multi-phase telegraphed bosses, room/hazard variety
-- [ ] **Phase 5: Desktop Wrapper + Gamepad + Settings** - Electron Win/macOS shell, input abstraction, full gamepad, save migration, settings menu
+- [x] **Phase 5: Desktop Wrapper + Gamepad + Settings** - Electron Win/macOS shell, input abstraction, full gamepad, save migration, settings menu
 - [ ] **Phase 6: Steam Integration** - Steamworks SDK, 15+ achievements, Cloud saves, validated overlay
 - [ ] **Phase 7: CI/CD + Store Submission + Cultural Review** - Signed CI binaries, store assets, telemetry, AI survey, cultural sign-off, Deck Verified
 
@@ -50,8 +50,13 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] 02-02-PLAN.md — PixiJS 8 renderer migration: CAMERA→Container, primitive bridge, sprite-or-fallback (RENDER-02, RENDER-03)
 - [x] 02-03-PLAN.md — Atlas pack tool (animations injection) + provenance tooling + AI disclosure draft (ART-06, QA-04)
 - [ ] 02-04-PLAN.md — Checkpoint license gate + Abhimanyu reference/workflow lock + player art (ART-01, ART-06)
-- [ ] 02-05-PLAN.md — 8 enemy archetypes + 4 bosses with phase-2 art variants (ART-02, ART-03, ART-06)
-- [ ] 02-06-PLAN.md — 4 biome bg/floor sets + UI atlas + finalized provenance/disclosure (ART-04, ART-05, ART-06, QA-04)
+- [~] 02-05-PLAN.md — SUPERSEDED by 02-08/02-11 (art pivot, see 02-CONTEXT-AMENDMENT)
+- [~] 02-06-PLAN.md — SUPERSEDED by 02-08/02-09
+- [x] 02-07-PLAN.md — Procedural animation core, hit flash, spawn/death, dash ghosts
+- [ ] 02-08-PLAN.md — ComfyUI art tooling + 4 biome backgrounds
+- [ ] 02-09-PLAN.md — CSS/SVG Indian-motif UI pass
+- [x] 02-10-PLAN.md — Code-drawn weapon overlay + biome background rendering
+- [ ] 02-11-PLAN.md — 4 bosses (+phase-2) + 8 enemies + review contact sheet
 **UI hint**: yes
 
 ### Phase 3: VFX + Combat Juice
@@ -64,7 +69,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Player damage flashes the screen and biome-specific ambient particles play per biome
   4. Players can disable screen shake and screen flash via toggles
   5. Frame rate holds at target during worst-case load (boss phase 2 + max particles) and the smoke test stays green
-**Plans**: TBD
+**Plans**: 3 plans
+- [x] 03-01-PLAN.md — SETTINGS global + pooled VFX particle core, burst() routed through VFX
+- [x] 03-02-PLAN.md — Hitstop, camera punch/kick, combat presets, screen flash, hook points
+- [x] 03-03-PLAN.md — Biome ambient particles, F3 debug overlay, accessibility toggles, worst-case stress run
 **UI hint**: yes
 
 ### Phase 4: Gameplay Depth
@@ -77,7 +85,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. All 4 bosses have 2+ distinct phases with changed behavior at a health threshold
   4. Every boss attack shows a visible wind-up before dealing damage
   5. `node test/smoke.js` completes full runs green with the expanded content
-**Plans**: TBD
+**Plans**: 4 plans
+- [x] 04-01-PLAN.md — Boss telegraph invariant + phase-2 movesets
+- [ ] 04-02-PLAN.md — Boon-count guard + 6 Duo Boons
+- [ ] 04-03-PLAN.md — Room layout templates + obstacle collision
+- [ ] 04-04-PLAN.md — Biome hazards
 
 ### Phase 5: Desktop Wrapper + Gamepad + Settings
 **Goal**: The browser build becomes a real desktop app — an Electron shell produces Win/macOS binaries, an input abstraction makes keyboard/mouse/gamepad interchangeable for a fully controller-playable experience, saves migrate to a userData file, and a settings menu exposes all options.
@@ -89,7 +101,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Players can adjust volume, fullscreen, resolution, rebind controls, and toggle screen shake/flash from a settings menu
   4. Existing localStorage save data migrates to a JSON file in the Electron userData path with no progress loss
   5. `node test/smoke.js` stays green and the browser build still runs
-**Plans**: TBD
+**Plans**: 3 plans
+- [x] 05-01-PLAN.md — Electron shell + packaging + STORE + save migration
+- [x] 05-02-PLAN.md — Gamepad + input abstraction + rebinding model
+- [x] 05-03-PLAN.md — Settings menu
 **UI hint**: yes
 
 ### Phase 6: Steam Integration
@@ -124,9 +139,9 @@ Phases execute in numeric order. After Phase 1, the rendering track (2 → 3 →
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Render Abstraction Seam | 1/1 | Complete   | 2026-06-19 |
-| 2. Asset Pipeline + Sprite System | 3/6 | In Progress|  |
-| 3. VFX + Combat Juice | 0/TBD | Not started | - |
-| 4. Gameplay Depth | 0/TBD | Not started | - |
-| 5. Desktop Wrapper + Gamepad + Settings | 0/TBD | Not started | - |
+| 2. Asset Pipeline + Sprite System | 5/9 active (2 superseded) | In Progress |  |
+| 3. VFX + Combat Juice | 3/3 | Complete | 2026-09-25 |
+| 4. Gameplay Depth | 1/4 | In Progress |  |
+| 5. Desktop Wrapper + Gamepad + Settings | 3/3 | Complete | 2026-09-25 |
 | 6. Steam Integration | 0/TBD | Not started | - |
 | 7. CI/CD + Store Submission + Cultural Review | 0/TBD | Not started | - |

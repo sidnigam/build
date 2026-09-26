@@ -1,0 +1,44 @@
+{
+  "frames": {
+    "yatudhana_idle_0.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 104,
+        "h": 120
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 12,
+        "y": 4,
+        "w": 104,
+        "h": 120
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 128
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  },
+  "meta": {
+    "app": "http://github.com/odrick/free-tex-packer-core",
+    "version": "0.3.8",
+    "image": "yatudhana-atlas.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 108,
+      "h": 124
+    },
+    "scale": 1
+  },
+  "animations": {
+    "idle": [
+      "yatudhana_idle_0.png"
+    ]
+  }
+}

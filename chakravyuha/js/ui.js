@@ -5,6 +5,13 @@
 'use strict';
 
 const UI = {
+  DEVANAGARI: {
+    gods:   { hanuman: 'हनुमान', agni: 'अग्नि', indra: 'इन्द्र', vayu: 'वायु', krishna: 'कृष्ण', durga: 'दुर्गा' },
+    biomes: { naraka: 'नरक', patala: 'पाताल', ranabhoomi: 'रणभूमि', vaitarani: 'वैतरणी' },
+    bosses: { tataka: 'ताटका', ahiravana: 'अहिरावण', kumbhakarna: 'कुम्भकर्ण', yama: 'यम धर्मराज' },
+    amrit: 'अमृत',
+  },
+
   el(id) { return document.getElementById(id); },
   show(id) { this.el(id).classList.remove('hidden'); },
   hide(id) { this.el(id).classList.add('hidden'); },
@@ -26,7 +33,7 @@ const UI = {
 
   biomeTitle(biome) {
     const t = this.el('biome-title');
-    t.innerHTML = `<div class="bt-name">${biome.name}</div><div class="bt-sub">${biome.sub}</div>`;
+    t.innerHTML = `<div class="bt-name">${biome.name}</div><div class="bt-dev">${this.DEVANAGARI.biomes[biome.id] || ''}</div><div class="bt-sub">${biome.sub}</div>`;
     t.style.color = biome.accent;
     t.classList.remove('hidden');
     clearTimeout(this._biomeT);
@@ -36,6 +43,7 @@ const UI = {
   bossIntro(def) {
     const t = this.el('boss-intro');
     t.innerHTML = `<div class="bt-name" style="color:${def.color}">${def.name}</div>
+      <div class="bt-dev" style="color:${def.color}">${this.DEVANAGARI.bosses[def.id] || ''}</div>
       <div class="bt-sub">${def.sub}</div><div class="bt-quote">${def.intro}</div>`;
     t.classList.remove('hidden');
     clearTimeout(this._bossT);
@@ -91,8 +99,10 @@ const UI = {
     const g = DATA.GODS[god];
     const pool = U.shuffle(this.offerableBoons(god)).slice(0, META.boonChoices());
     GAME.state = 'choosing';
+    this.el('boon-god').style.cssText = '--god:' + g.color;
     this.el('boon-god').innerHTML =
       `<span class="god-sym">${g.sym}</span><div><div class="god-name" style="color:${g.color}">${g.name}</div>
+       <div class="god-dev">${this.DEVANAGARI.gods[g.id] || ''}</div>
        <div class="god-title">${g.title}</div><div class="god-greet">${g.greet}</div></div>`;
     const cards = this.el('boon-cards');
     cards.innerHTML = '';
@@ -101,7 +111,8 @@ const UI = {
       const R = DATA.RARITIES[rarity];
       const v = def.base * R.mult;
       const card = document.createElement('div');
-      card.className = 'card boon-card';
+      card.className = ['card', 'boon-card', 'god-' + def.god, 'rarity-' + rarity].join(' ');
+      card.style.cssText = '--god:' + g.color + ';--rarity:' + R.color;
       card.style.borderColor = R.color;
       card.innerHTML = `<div class="card-rarity" style="color:${R.color}">${R.name} · ${def.slot.toUpperCase()}</div>
         <div class="card-name" style="color:${g.color}">${def.name}</div>
@@ -124,8 +135,10 @@ const UI = {
       return;
     }
     GAME.state = 'choosing';
+    this.el('boon-god').style.cssText = '--god:#5cb8ff';
     this.el('boon-god').innerHTML =
       `<span class="god-sym">◈</span><div><div class="god-name" style="color:#5cb8ff">Amrit</div>
+       <div class="god-dev">${this.DEVANAGARI.amrit}</div>
        <div class="god-title">Nectar of the Churning Ocean</div>
        <div class="god-greet">"One drop, and the divine grows more divine still."</div></div>`;
     const cards = this.el('boon-cards');
@@ -135,7 +148,8 @@ const UI = {
       const next = DATA.RARITIES[entry.rarity + 1];
       const v = entry.def.base * next.mult;
       const card = document.createElement('div');
-      card.className = 'card boon-card';
+      card.className = ['card', 'boon-card', 'god-' + entry.def.god, 'rarity-' + (entry.rarity + 1)].join(' ');
+      card.style.cssText = '--god:' + g.color + ';--rarity:' + next.color;
       card.style.borderColor = next.color;
       card.innerHTML = `<div class="card-rarity" style="color:${next.color}">→ ${next.name}</div>
         <div class="card-name" style="color:${g.color}">${entry.def.name}</div>
@@ -168,6 +182,7 @@ const UI = {
       const afford = P.mudra >= item.cost;
       const card = document.createElement('div');
       card.className = 'card shop-card' + (afford ? '' : ' disabled');
+      card.style.cssText = '--god:#ffcf5c';
       card.innerHTML = `<div class="card-name">${item.name}</div>
         <div class="card-desc">${item.desc}</div>
         <div class="card-cost">¤ ${item.cost}</div>`;
@@ -226,6 +241,7 @@ const UI = {
       const afford = !maxed && META.punya >= cost;
       const card = document.createElement('div');
       card.className = 'card meta-card' + (maxed ? ' maxed' : (afford ? '' : ' disabled'));
+      card.style.cssText = '--god:#c77dff';
       const pips = Array.from({ length: def.max }, (_, i) =>
         `<span class="pip ${i < r ? 'full' : ''}"></span>`).join('');
       card.innerHTML = `<div class="card-name">${def.name} <span class="pips">${pips}</span></div>
@@ -253,6 +269,7 @@ const UI = {
       const selected = META.lastWeapon === id;
       const card = document.createElement('div');
       card.className = 'card weapon-card' + (selected ? ' selected' : '') + (owned ? '' : ' locked');
+      card.style.cssText = '--god:#ffd34d';
       card.innerHTML = `<div class="card-name">${w.sym} ${w.name}</div>
         <div class="card-desc">${w.blurb}</div>
         <div class="card-cost">${owned ? (selected ? 'WIELDED' : 'Select') : 'Unlock — ॐ ' + w.unlock}</div>`;

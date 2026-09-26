@@ -7,7 +7,7 @@
   "plan": 4,
   "task": 2,
   "total_tasks": 2,
-  "status": "paused",
+  "status": "resolved",
   "completed_tasks": [
     {"id": "checkpoint-license", "name": "Confirm commercial-safe SDXL checkpoint license", "status": "done", "commit": "89ef48a"},
     {"id": 1, "name": "Record confirmed checkpoint license in PROVENANCE.json", "status": "done", "commit": "89ef48a"},

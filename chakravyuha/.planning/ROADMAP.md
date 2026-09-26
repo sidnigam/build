@@ -13,7 +13,7 @@ Chakravyuha is a working vanilla-JS/HTML5-Canvas action roguelite being upgraded
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Render Abstraction Seam** - Camera + named draw passes over untouched game logic, zero visual change (completed 2026-06-19)
-- [ ] **Phase 2: Asset Pipeline + Sprite System** - AI-art consistency/provenance pipeline, asset loader, sprite manager, cohesive illustrated actors
+- [x] **Phase 2: Asset Pipeline + Sprite System** - AI-art consistency/provenance pipeline, asset loader, sprite manager, cohesive illustrated actors
 - [x] **Phase 3: VFX + Combat Juice** - Pooled particles, hitstop, screen shake/flash, kill-zoom with accessibility toggles
 - [x] **Phase 4: Gameplay Depth** - 24 boons + Duo synergies, multi-phase telegraphed bosses, room/hazard variety
 - [x] **Phase 5: Desktop Wrapper + Gamepad + Settings** - Electron Win/macOS shell, input abstraction, full gamepad, save migration, settings menu
@@ -49,14 +49,14 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] 02-01-PLAN.md — Bootstrap: package.json + headless-safe SPRITES global + smoke harness extensions (RENDER-02, RENDER-03)
 - [x] 02-02-PLAN.md — PixiJS 8 renderer migration: CAMERA→Container, primitive bridge, sprite-or-fallback (RENDER-02, RENDER-03)
 - [x] 02-03-PLAN.md — Atlas pack tool (animations injection) + provenance tooling + AI disclosure draft (ART-06, QA-04)
-- [ ] 02-04-PLAN.md — Checkpoint license gate + Abhimanyu reference/workflow lock + player art (ART-01, ART-06)
+- [x] 02-04-PLAN.md — License gate + reference lock + idle frames (run/attack/dash SUPERSEDED by 02-07 procedural animation)
 - [~] 02-05-PLAN.md — SUPERSEDED by 02-08/02-11 (art pivot, see 02-CONTEXT-AMENDMENT)
 - [~] 02-06-PLAN.md — SUPERSEDED by 02-08/02-09
 - [x] 02-07-PLAN.md — Procedural animation core, hit flash, spawn/death, dash ghosts
-- [ ] 02-08-PLAN.md — ComfyUI art tooling + 4 biome backgrounds
+- [x] 02-08-PLAN.md — ComfyUI art tooling + 4 biome backgrounds
 - [x] 02-09-PLAN.md — CSS/SVG Indian-motif UI pass
 - [x] 02-10-PLAN.md — Code-drawn weapon overlay + biome background rendering
-- [ ] 02-11-PLAN.md — 4 bosses (+phase-2) + 8 enemies + review contact sheet
+- [x] 02-11-PLAN.md — 4 bosses (+phase-2) + 8 enemies + review contact sheet
 **UI hint**: yes
 
 ### Phase 3: VFX + Combat Juice
@@ -139,7 +139,7 @@ Phases execute in numeric order. After Phase 1, the rendering track (2 → 3 →
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Render Abstraction Seam | 1/1 | Complete   | 2026-06-19 |
-| 2. Asset Pipeline + Sprite System | 6/9 active (2 superseded) | In Progress |  |
+| 2. Asset Pipeline + Sprite System | 9/9 active (2 superseded) | Complete (art provisional — human review pending) | 2026-09-26 |
 | 3. VFX + Combat Juice | 3/3 | Complete | 2026-09-25 |
 | 4. Gameplay Depth | 4/4 | Complete | 2026-09-26 |
 | 5. Desktop Wrapper + Gamepad + Settings | 3/3 | Complete | 2026-09-25 |

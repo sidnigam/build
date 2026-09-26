@@ -15,37 +15,37 @@ Source: PROJECT.md + Research (STACK, FEATURES, ARCHITECTURE, PITFALLS)
 
 ### ART — Visual Assets
 
-- [ ] **ART-01**: Player sprite — Abhimanyu with at least 4 animation states (idle, run/walk, attack, dash) generated via AI tools with provenance log
-- [ ] **ART-02**: Enemy sprites — each distinct enemy archetype has a unique sprite (minimum 6 variants across biomes)
-- [ ] **ART-03**: Boss sprites — all 4 bosses (Tataka, Ahiravana, Kumbhakarna, Yama) have large illustrated sprites with a phase-2 variant
-- [ ] **ART-04**: Environmental art — biome-specific background and floor tile sets for all 4 biomes (Naraka, Patala, Ranabhoomi, Vaitarani)
-- [ ] **ART-05**: UI art — styled boon card art, HUD elements, and overlay panels with Indian visual motifs
+- [x] **ART-01**: Player sprite — Abhimanyu with at least 4 animation states (idle, run/walk, attack, dash) generated via AI tools with provenance log
+- [x] **ART-02**: Enemy sprites — each distinct enemy archetype has a unique sprite (minimum 6 variants across biomes)
+- [x] **ART-03**: Boss sprites — all 4 bosses (Tataka, Ahiravana, Kumbhakarna, Yama) have large illustrated sprites with a phase-2 variant
+- [x] **ART-04**: Environmental art — biome-specific background and floor tile sets for all 4 biomes (Naraka, Patala, Ranabhoomi, Vaitarani)
+- [x] **ART-05**: UI art — styled boon card art, HUD elements, and overlay panels with Indian visual motifs
 - [x] **ART-06**: AI provenance log — every generated asset has a record of prompt, model, and post-processing steps (IP defensibility + Steam AI survey)
 
 ### VFX — Visual Effects & Combat Feel
 
-- [ ] **VFX-01**: Particle system with object pooling — hit sparks, astra trails, death bursts, environmental ambiance
-- [ ] **VFX-02**: Camera shake system with adjustable intensity and opt-out accessibility toggle in settings
-- [ ] **VFX-03**: Hitstop (freeze frame) on significant impacts — 3–8 frame pause on heavy hits and kills
-- [ ] **VFX-04**: Screen flash on player damage/death with opt-out accessibility toggle
-- [ ] **VFX-05**: Biome-specific ambient particles (embers in Naraka, mist in Vaitarani, etc.)
+- [x] **VFX-01**: Particle system with object pooling — hit sparks, astra trails, death bursts, environmental ambiance
+- [x] **VFX-02**: Camera shake system with adjustable intensity and opt-out accessibility toggle in settings
+- [x] **VFX-03**: Hitstop (freeze frame) on significant impacts — 3–8 frame pause on heavy hits and kills
+- [x] **VFX-04**: Screen flash on player damage/death with opt-out accessibility toggle
+- [x] **VFX-05**: Biome-specific ambient particles (embers in Naraka, mist in Vaitarani, etc.)
 
 ### GAMEPLAY — Game Depth
 
-- [ ] **GAME-01**: Boon pool expanded to minimum 24 total boons — at least 4 boons per god (Hanuman, Krishna, Agni, Indra, Vayu, Durga)
-- [ ] **GAME-02**: At least 3 Duo Boon synergy combinations — named synergies unlocked by holding 2 specific god boons
-- [ ] **GAME-03**: Room layout variety — at least 3 distinct procedural layout templates per biome (12 total new templates)
-- [ ] **GAME-04**: Environmental hazards — at least 1 unique biome hazard per biome (spike traps, lava pools, river currents, etc.)
-- [ ] **GAME-05**: Multi-phase bosses — all 4 bosses have at least 2 distinct phases with changed behavior at health threshold
-- [ ] **GAME-06**: Boss telegraphing — all boss attacks have a visible wind-up (animation anticipation frame or indicator) before dealing damage
+- [x] **GAME-01**: Boon pool expanded to minimum 24 total boons — at least 4 boons per god (Hanuman, Krishna, Agni, Indra, Vayu, Durga)
+- [x] **GAME-02**: At least 3 Duo Boon synergy combinations — named synergies unlocked by holding 2 specific god boons
+- [x] **GAME-03**: Room layout variety — at least 3 distinct procedural layout templates per biome (12 total new templates)
+- [x] **GAME-04**: Environmental hazards — at least 1 unique biome hazard per biome (spike traps, lava pools, river currents, etc.)
+- [x] **GAME-05**: Multi-phase bosses — all 4 bosses have at least 2 distinct phases with changed behavior at health threshold
+- [x] **GAME-06**: Boss telegraphing — all boss attacks have a visible wind-up (animation anticipation frame or indicator) before dealing damage
 
 ### PLATFORM — Desktop & Input
 
-- [ ] **PLAT-01**: Electron desktop app producing Windows (.exe installer) and macOS (.dmg) binaries from the existing HTML5 game
-- [ ] **PLAT-02**: Input abstraction layer supporting keyboard, mouse, and gamepad as interchangeable input sources
-- [ ] **PLAT-03**: Full gamepad support — all actions bindable to controller buttons, analog stick for movement, works on Steam Deck
-- [ ] **PLAT-04**: Save migration — localStorage data migrated to JSON file in Electron `app.getPath('userData')` before Steam Cloud phase
-- [ ] **PLAT-05**: Settings menu — volume (music/SFX), fullscreen toggle, resolution options, control rebinding, screen-shake toggle, screen-flash toggle
+- [x] **PLAT-01**: Electron desktop app producing Windows (.exe installer) and macOS (.dmg) binaries from the existing HTML5 game
+- [x] **PLAT-02**: Input abstraction layer supporting keyboard, mouse, and gamepad as interchangeable input sources
+- [x] **PLAT-03**: Full gamepad support — all actions bindable to controller buttons, analog stick for movement, works on Steam Deck
+- [x] **PLAT-04**: Save migration — localStorage data migrated to JSON file in Electron `app.getPath('userData')` before Steam Cloud phase
+- [x] **PLAT-05**: Settings menu — volume (music/SFX), fullscreen toggle, resolution options, control rebinding, screen-shake toggle, screen-flash toggle
 
 ### STEAM — Steam Integration
 
@@ -96,28 +96,28 @@ Source: PROJECT.md + Research (STACK, FEATURES, ARCHITECTURE, PITFALLS)
 | RENDER-01 | Phase 1 | Complete |
 | RENDER-02 | Phase 2 | Complete |
 | RENDER-03 | Phase 2 | Complete |
-| ART-01 | Phase 2 | Pending |
-| ART-02 | Phase 2 | Pending |
-| ART-03 | Phase 2 | Pending |
-| ART-04 | Phase 2 | Pending |
-| ART-05 | Phase 2 | Pending |
+| ART-01 | Phase 2 | Complete (human verify pending) |
+| ART-02 | Phase 2 | Complete (human verify pending) |
+| ART-03 | Phase 2 | Complete (human verify pending) |
+| ART-04 | Phase 2 | Complete (human verify pending) |
+| ART-05 | Phase 2 | Complete (human verify pending) |
 | ART-06 | Phase 2 | Complete |
-| VFX-01 | Phase 3 | Pending |
-| VFX-02 | Phase 3 | Pending |
-| VFX-03 | Phase 3 | Pending |
-| VFX-04 | Phase 3 | Pending |
-| VFX-05 | Phase 3 | Pending |
-| GAME-01 | Phase 4 | Pending |
-| GAME-02 | Phase 4 | Pending |
-| GAME-03 | Phase 4 | Pending |
-| GAME-04 | Phase 4 | Pending |
-| GAME-05 | Phase 4 | Pending |
-| GAME-06 | Phase 4 | Pending |
-| PLAT-01 | Phase 5 | Pending |
-| PLAT-02 | Phase 5 | Pending |
-| PLAT-03 | Phase 5 | Pending |
-| PLAT-04 | Phase 5 | Pending |
-| PLAT-05 | Phase 5 | Pending |
+| VFX-01 | Phase 3 | Complete (human verify pending) |
+| VFX-02 | Phase 3 | Complete (human verify pending) |
+| VFX-03 | Phase 3 | Complete (human verify pending) |
+| VFX-04 | Phase 3 | Complete (human verify pending) |
+| VFX-05 | Phase 3 | Complete (human verify pending) |
+| GAME-01 | Phase 4 | Complete (human verify pending) |
+| GAME-02 | Phase 4 | Complete (human verify pending) |
+| GAME-03 | Phase 4 | Complete (human verify pending) |
+| GAME-04 | Phase 4 | Complete (human verify pending) |
+| GAME-05 | Phase 4 | Complete (human verify pending) |
+| GAME-06 | Phase 4 | Complete (human verify pending) |
+| PLAT-01 | Phase 5 | Complete (human verify pending) |
+| PLAT-02 | Phase 5 | Complete (human verify pending) |
+| PLAT-03 | Phase 5 | Complete (human verify pending) |
+| PLAT-04 | Phase 5 | Complete (human verify pending) |
+| PLAT-05 | Phase 5 | Complete (human verify pending) |
 | STEAM-01 | Phase 6 | Pending |
 | STEAM-02 | Phase 6 | Pending |
 | STEAM-03 | Phase 6 | Pending |

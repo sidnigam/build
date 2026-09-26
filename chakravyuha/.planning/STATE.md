@@ -86,10 +86,11 @@ None yet.
 
 [Issues that affect future work]
 
+- [Cultural review]: yama-atlas.png (blue skin + golden crown) reads as Vishnu/Krishna iconography rather than Yama; kumbhakarna carries a trident-like staff (Shiva association). Both provisional — review before any public screenshots. Tataka regenerated to remove deity iconography.
+
 - [Verification]: No browser/Electron GUI run has happened yet for any of the 2026-09-25/26 work (Pixi sprite path, VFX feel, settings panel, Electron launch, gamepad). All smoke tests are headless. A human play session is the next gate.
 
 - [Phase 2]: AI art commercial-license + consistency tooling needs validation before mass generation.
-- [Phase 2]: Run/attack/dash frame generation has no working pose-consistency technique (img2img cannot move legs; ControlNet OpenPose attempt drifted outfit) — see HANDOFF.json.
 - [QA-04]: QA-04 is marked complete but assets/sprites/AI-DISCLOSURE.md covers zero shipped assets and describes a ControlNet reference-sheet workflow (D-07) that was not actually used (idle frames were plain img2img from the locked reference). Revisit the disclosure before the Phase 7 store page.
 - [Phase 2 / Design]: Yama as a boss may conflict with "gods are allies only" — needs a design/cultural decision (e.g. reframe as a trial). Phase 2 art depicts Yama as a dignified, stern judge-deity (never monstrous); see 02-CONTEXT-AMENDMENT.md D-15a.
 - [Phase 6]: Steam overlay on macOS is a known-broken combo with steamworks.js; steamworks-ffi-node fallback is unverified on this build. Likely needs /gsd:research-phase.
@@ -107,6 +108,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-09-25
-Last activity: 2026-09-26 - Phases 3 and 5 merged; Phase 2 plans 07+10 merged; 04-01 done; 02-08/02-09/02-11 and 04-02..04 executing in parallel worktrees
-Stopped at: 02-04 paused at task 2/2 — idle frames only (4/4); quick-260924-tka hardened sprite runtime + packed idle atlas
-Resume file: .planning/HANDOFF.json
+Last activity: 2026-09-26 - Phases 2, 3, 4, 5 complete and merged; 3 polish quick tasks; headless-Chrome verified
+Stopped at: Phases 1-5 complete. Next: human playtest + art/cultural review, then Phase 6 (Steam)
+Resume file: None

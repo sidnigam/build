@@ -2259,5 +2259,29 @@ const duoStyleErrors = vm.runInContext('__duoStyleErrors', sandbox);
 check('duo boon card carries the duo class and a --god2 CSS var (02-09 .card.duo reconciliation)'
   + (duoStyleErrors.length ? ' — ' + duoStyleErrors.join('; ') : ''), duoStyleErrors.length === 0);
 
+// ---------------- Quick 260926-dcz: arena readability polish ----------------
+console.log('\n— arena readability polish: floor/obstacles/HUD render for all biomes (quick 260926-dcz) —');
+vm.runInContext(`
+globalThis.__readabilityErrors = [];
+try {
+  GAME.startRun();
+  GAME.pillars = [
+    {shape:'rect',kind:'wall',x:400,y:300,w:100,h:60},
+    {shape:'circle',kind:'pillar',x:600,y:300,r:30},
+    {shape:'rect',kind:'pit',x:750,y:300,w:80,h:40},
+    {shape:'circle',kind:'pit',x:900,y:300,r:30},
+  ];
+  for (const b of DATA.BIOMES) {
+    GAME.biome = b;
+    GAME.renderBackground(__ctx);
+    GAME.renderObstacles(__ctx);
+    GAME.renderHUD(__ctx);
+  }
+} catch (e) { __readabilityErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const readabilityErrors = vm.runInContext('__readabilityErrors', sandbox);
+check('renderBackground + renderObstacles + renderHUD run without throwing for each biome (rect walls, circle pillars, pits)'
+  + (readabilityErrors.length ? ' — ' + readabilityErrors.join('; ') : ''), readabilityErrors.length === 0);
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

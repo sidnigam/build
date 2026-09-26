@@ -1129,7 +1129,7 @@ const GAME = {
     ctx.strokeRect(sx, by + 30, sw, 10);
     ctx.fillStyle = 'rgba(255,255,255,0.7)';
     ctx.font = '10px Georgia';
-    ctx.fillText(INPUT.device === 'pad' ? 'SPECIAL [LT / X]' : 'SPECIAL [E / RMB]', sx, by + 26);
+    ctx.fillText(INPUT.device === 'pad' ? 'SPECIAL [LT / X]' : 'SPECIAL [E / RMB]', sx, by + 58);
 
     // currencies — dark backing plate with gold hairline, positions unchanged
     ctx.textAlign = 'right';
@@ -1154,13 +1154,13 @@ const GAME = {
     if (devBiome) {
       ctx.fillStyle = 'rgba(255,211,77,0.75)';
       ctx.font = '11px Georgia';
-      ctx.fillText(devBiome, this.W / 2, 52);
+      ctx.fillText(devBiome, this.W / 2, 58);
     }
     // run clock
     const t = Math.floor(this.runTime);
     ctx.fillStyle = 'rgba(255,255,255,0.5)';
     ctx.font = '12px Georgia';
-    ctx.fillText(`${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`, this.W / 2, devBiome ? 66 : 52);
+    ctx.fillText(`${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`, this.W / 2, devBiome ? 72 : 52);
     ctx.textAlign = 'left';
 
     // boon icons (left column) — gold hairline frame per icon, god color fill kept

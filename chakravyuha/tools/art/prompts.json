@@ -24,7 +24,7 @@
     },
     "ranabhoomi": {
       "kind": "biome",
-      "ground": "trampled dry earth of an old battlefield, scattered broken arrows and splintered chariot-wheel spokes half-buried in dust, heavily overcast and shadowed",
+      "ground": "trampled dry cracked earth with scattered pebbles and dry dust patches, seamless repeating texture, evenly scattered small debris, heavily overcast and shadowed",
       "palette": "dark, muted, low contrast, desaturated umber and grey-brown, dim and subtle, no bright highlights",
       "base_seed": 41200
     },

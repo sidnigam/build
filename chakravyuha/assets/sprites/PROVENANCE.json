@@ -100,6 +100,42 @@
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Regenerated per orchestrator art-direction feedback: seed 41100 was too saturated/high-contrast (bright green circuit-maze pattern) and would compete with sprites/telegraphs. Accepted seed 41101 with prompt pushed toward dark, muted, low-contrast deep teal-black underground stone with faint dim bioluminescent moss; calmer and reads clearly as dim underground floor."
+    },
+    {
+      "filename": "ranabhoomi-bg.png",
+      "path": "assets/sprites/biomes/ranabhoomi-bg.png",
+      "actor": "ranabhoomi",
+      "kind": "biome",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1344,
+      "height": 768,
+      "seed": 41203,
+      "prompt": "top-down orthographic view looking straight down at trampled dry cracked earth with scattered pebbles and dry dust patches, seamless repeating texture, evenly scattered small debris, heavily overcast and shadowed, painted game arena floor texture, even evenly distributed detail, low contrast, no focal point, Hades-adjacent painterly illustration, dark, muted, low contrast, desaturated umber and grey-brown, dim and subtle, no bright highlights, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, horizon, sky, perspective view, walls, buildings, doorway, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point",
+      "rejected_seeds": [
+        41200,
+        41201,
+        41202
+      ],
+      "rejected_count": 3,
+      "post_processing": [
+        "cover-scale 1344x768 -> 1280x731 LANCZOS",
+        "center-crop 1280x720",
+        "PNG optimize"
+      ],
+      "raw_image": "(not committed; reproducible from gen sidecar)",
+      "gen_sidecar": "assets/sprites/_raw/biomes/ranabhoomi-bg.gen.json",
+      "generated_date": "2026-09-26",
+      "recorded_date": "2026-09-26",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "Attempts 0-2 composed the battlefield elements into circular/radial arrangements (a wheel-and-spear emblem, an arc of arrows) or a corner wall fragment, which reads as a scene with a strong focal point rather than an even ground texture. Prompt was tightened toward seamless repeating texture with evenly scattered debris. Accepted seed 41203: cracked pebbled dry earth, even detail throughout, no focal object, no walls/characters/text. Muted desaturated tan-umber; reads as dry battlefield ground."
     }
   ]
 }

@@ -1032,15 +1032,25 @@ const GAME = {
     if (!P) return;
     ctx.textAlign = 'left';
 
-    // HP bar
+    // HP bar — plum/black backing panel, gold double-line border, diamond end-caps
     const bx = 50, by = 26, bw = 240, bh = 18;
-    ctx.fillStyle = 'rgba(0,0,0,0.55)';
-    ctx.fillRect(bx - 2, by - 2, bw + 4, bh + 4);
+    this._hudPanel(ctx, bx - 4, by - 4, bw + 8, bh + 8, 5, true);
     const frac = U.clamp(P.hp / P.maxhp, 0, 1);
-    ctx.fillStyle = frac > 0.35 ? '#c0392b' : '#ff2222';
+    const low = frac < 0.35;
+    const flashOk = (typeof SETTINGS === 'undefined') || SETTINGS.get('screenFlash') !== false;
+    const pulse = (low && flashOk) ? 0.7 + 0.3 * Math.sin(this.runTime * 7) : 1;
+    const hpGrad = ctx.createLinearGradient && ctx.createLinearGradient(bx, by, bx, by + bh);
+    ctx.fillStyle = (hpGrad && hpGrad.addColorStop)
+      ? (hpGrad.addColorStop(0, low ? '#ff5b4a' : '#d1483a'), hpGrad.addColorStop(1, low ? '#7a1710' : '#7a2015'), hpGrad)
+      : (low ? '#ff2222' : '#c0392b');
+    ctx.save();
+    ctx.globalAlpha = pulse;
     ctx.fillRect(bx, by, bw * frac, bh);
-    ctx.strokeStyle = '#ffe9b3'; ctx.lineWidth = 1.5;
-    ctx.strokeRect(bx - 2, by - 2, bw + 4, bh + 4);
+    ctx.restore();
+    ctx.strokeStyle = 'rgba(255,211,77,0.85)'; ctx.lineWidth = 1.2;
+    ctx.strokeRect(bx - 1, by - 1, bw + 2, bh + 2);
+    this._hudDiamond(ctx, bx - 4, by + bh / 2, 4, true, '#ffd34d');
+    this._hudDiamond(ctx, bx + bw + 4, by + bh / 2, 4, true, '#ffd34d');
     ctx.fillStyle = '#fff';
     ctx.font = 'bold 13px Georgia';
     ctx.fillText(`${Math.max(0, Math.ceil(P.hp))} / ${P.maxhp}`, bx + 8, by + 14);
@@ -1052,56 +1062,63 @@ const GAME = {
       ctx.fillText('✿', bx + bw + 12 + i * 18, by + 15);
     }
 
-    // dash pips
+    // dash pips — gold-outlined diamonds, teal fill when charged
     for (let i = 0; i < P.dashMax; i++) {
-      ctx.fillStyle = i < P.dashCharges ? '#7fdcb7' : 'rgba(127,220,183,0.2)';
-      ctx.save();
-      ctx.translate(bx + 8 + i * 22, by + 36);
-      ctx.rotate(Math.PI / 4);
-      ctx.fillRect(-6, -6, 12, 12);
-      ctx.restore();
+      const on = i < P.dashCharges;
+      this._hudDiamond(ctx, bx + 8 + i * 22, by + 36, 6, on, '#7fdcb7', 'rgba(255,211,77,0.65)');
     }
-    // cast pips
+    // cast pips — 8-petal lotus rosette, filled when charged, outline-only when empty
     for (let i = 0; i < P.castMax; i++) {
-      ctx.fillStyle = i < P.castCharges ? '#ffd34d' : 'rgba(255,211,77,0.2)';
-      ctx.beginPath();
-      ctx.arc(bx + 8 + P.dashMax * 22 + 20 + i * 22, by + 36, 7, 0, U.TAU);
-      ctx.fill();
+      const on = i < P.castCharges;
+      this._hudLotus(ctx, bx + 8 + P.dashMax * 22 + 20 + i * 22, by + 36, 8, on, on ? '#ffd34d' : 'rgba(255,211,77,0.35)');
     }
-    // special cooldown
+    // special cooldown — gold-bordered, gold fill when ready
     const sw = 70;
     const sx = bx + 8 + P.dashMax * 22 + 20 + P.castMax * 22 + 18;
-    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
     ctx.fillRect(sx, by + 30, sw, 10);
     const sFrac = 1 - U.clamp(P.specialCd / P.weapon.special.cd, 0, 1);
-    ctx.fillStyle = sFrac >= 1 ? '#fff' : 'rgba(255,255,255,0.45)';
+    ctx.fillStyle = sFrac >= 1 ? '#ffd34d' : 'rgba(255,211,77,0.45)';
     ctx.fillRect(sx, by + 30, sw * sFrac, 10);
+    ctx.strokeStyle = 'rgba(255,211,77,0.8)'; ctx.lineWidth = 1;
+    ctx.strokeRect(sx, by + 30, sw, 10);
     ctx.fillStyle = 'rgba(255,255,255,0.7)';
     ctx.font = '10px Georgia';
-    ctx.fillText('SPECIAL [E / RMB]', sx, by + 26);
+    ctx.fillText(INPUT.device === 'pad' ? 'SPECIAL [LT / X]' : 'SPECIAL [E / RMB]', sx, by + 26);
 
-    // currencies
+    // currencies — dark backing plate with gold hairline, positions unchanged
     ctx.textAlign = 'right';
+    ctx.fillStyle = 'rgba(18,8,22,0.55)';
+    ctx.strokeStyle = 'rgba(255,211,77,0.4)'; ctx.lineWidth = 1;
+    ctx.fillRect(this.W - 150, 20, 100, 46);
+    ctx.strokeRect(this.W - 150, 20, 100, 46);
     ctx.font = 'bold 16px Georgia';
     ctx.fillStyle = '#ffcf5c';
     ctx.fillText(`¤ ${U.fmt(P.mudra)}`, this.W - 56, 36);
     ctx.fillStyle = '#c77dff';
     ctx.fillText(`ॐ ${U.fmt(META.punya)}`, this.W - 56, 60);
 
-    // biome / room
+    // biome / room — ornament rule + Devanagari biome name
     ctx.textAlign = 'center';
     ctx.fillStyle = this.biome.accent;
     ctx.font = 'bold 15px Georgia';
     const roomLabel = this.bossRef ? 'THE WARDEN' : `Chamber ${this.roomIdx} / ${this.biome.rooms}`;
     ctx.fillText(`${this.biome.name} — ${roomLabel}`, this.W / 2, 32);
+    this._hudOrnament(ctx, this.W / 2, 40, 160, 'rgba(255,211,77,0.65)');
+    const devBiome = (typeof UI !== 'undefined' && UI.DEVANAGARI && UI.DEVANAGARI.biomes) ? UI.DEVANAGARI.biomes[this.biome.id] : '';
+    if (devBiome) {
+      ctx.fillStyle = 'rgba(255,211,77,0.75)';
+      ctx.font = '11px Georgia';
+      ctx.fillText(devBiome, this.W / 2, 52);
+    }
     // run clock
     const t = Math.floor(this.runTime);
     ctx.fillStyle = 'rgba(255,255,255,0.5)';
     ctx.font = '12px Georgia';
-    ctx.fillText(`${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`, this.W / 2, 52);
+    ctx.fillText(`${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`, this.W / 2, devBiome ? 66 : 52);
     ctx.textAlign = 'left';
 
-    // boon icons (left column)
+    // boon icons (left column) — gold hairline frame per icon, god color fill kept
     const boons = P.allBoons();
     for (let i = 0; i < boons.length; i++) {
       const b = boons[i];
@@ -1109,6 +1126,8 @@ const GAME = {
       const y = 120 + i * 30;
       ctx.fillStyle = 'rgba(0,0,0,0.5)';
       ctx.fillRect(10, y, 24, 24);
+      ctx.strokeStyle = 'rgba(255,211,77,0.7)'; ctx.lineWidth = 1;
+      ctx.strokeRect(9, y - 1, 26, 26);
       ctx.strokeStyle = DATA.RARITIES[b.rarity].color;
       ctx.lineWidth = 2;
       ctx.strokeRect(10, y, 24, 24);
@@ -1160,6 +1179,66 @@ const GAME = {
     ctx.moveTo(INPUT.mx, INPUT.my - 12); ctx.lineTo(INPUT.mx, INPUT.my - 4);
     ctx.moveTo(INPUT.mx, INPUT.my + 4); ctx.lineTo(INPUT.mx, INPUT.my + 12);
     ctx.stroke();
+  },
+
+  // -- HUD motif helpers (Indian-motif pass, quick-260926-d5o) --
+  _hudPanel(ctx, x, y, w, h, r, double) {
+    r = r || 4;
+    ctx.fillStyle = 'rgba(18,8,22,0.68)';
+    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fill(); }
+    else ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = 'rgba(255,211,77,0.8)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+    if (double) ctx.strokeRect(x + 3, y + 3, w - 6, h - 6);
+  },
+
+  _hudOrnament(ctx, cx, y, w, color) {
+    color = color || 'rgba(255,211,77,0.7)';
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx - w / 2, y);
+    ctx.lineTo(cx - 6, y);
+    ctx.moveTo(cx + 6, y);
+    ctx.lineTo(cx + w / 2, y);
+    ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.translate(cx, y);
+    ctx.rotate(Math.PI / 4);
+    ctx.fillRect(-4, -4, 8, 8);
+    ctx.restore();
+  },
+
+  _hudDiamond(ctx, x, y, size, filled, fillColor, outlineColor) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(Math.PI / 4);
+    if (filled) { ctx.fillStyle = fillColor; ctx.fillRect(-size, -size, size * 2, size * 2); }
+    ctx.strokeStyle = outlineColor || 'rgba(255,211,77,0.85)';
+    ctx.lineWidth = 1.2;
+    ctx.strokeRect(-size, -size, size * 2, size * 2);
+    ctx.restore();
+  },
+
+  _hudLotus(ctx, x, y, r, filled, color) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.fillStyle = color;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * U.TAU;
+      ctx.save();
+      ctx.rotate(a);
+      ctx.beginPath();
+      if (ctx.ellipse) ctx.ellipse(0, -r * 0.55, r * 0.32, r * 0.55, 0, 0, U.TAU);
+      else ctx.arc(0, -r * 0.55, r * 0.32, 0, U.TAU);
+      if (filled) ctx.fill(); else ctx.stroke();
+      ctx.restore();
+    }
+    ctx.restore();
   },
 };
 

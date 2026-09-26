@@ -76,6 +76,11 @@ Recent decisions affecting current work:
 - [Phase 02]: SPRITES.ready=false until first atlas loads — has(key) stays false until art files land in Plans 04-06
 - [quick-260924-tka]: Sprite runtime hardened — idle fallback, r-based scale with feet anchor, facing flip, y-sort, per-frame mark-and-sweep, HUD on separate un-shaken bridge; game canvas no longer takes a 2D context.
 
+
+### Roadmap Evolution
+
+- Phases 5.1–5.6 inserted after Phase 5 (2026-09-26, user playtest feedback): scrolling camera + larger arenas + denser waves; PS5 DualSense support; adaptive Indian classical score; epic-inspired environment art; god portraits + dialogue; graphics polish.
+
 ### Pending Todos
 
 [From .planning/todos/pending/ — ideas captured during sessions]

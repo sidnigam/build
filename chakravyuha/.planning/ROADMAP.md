@@ -17,6 +17,12 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: VFX + Combat Juice** - Pooled particles, hitstop, screen shake/flash, kill-zoom with accessibility toggles
 - [x] **Phase 4: Gameplay Depth** - 24 boons + Duo synergies, multi-phase telegraphed bosses, room/hazard variety
 - [x] **Phase 5: Desktop Wrapper + Gamepad + Settings** - Electron Win/macOS shell, input abstraction, full gamepad, save migration, settings menu
+- [ ] **Phase 5.1: Scrolling Camera + Larger Arenas + Denser Waves** (INSERTED)
+- [ ] **Phase 5.2: PS5 DualSense Controller Support** (INSERTED)
+- [ ] **Phase 5.3: Adaptive Indian Classical Score** (INSERTED)
+- [ ] **Phase 5.4: Epic-Inspired Environment Art Upgrade** (INSERTED)
+- [ ] **Phase 5.5: God Portraits + Boon Dialogue** (INSERTED)
+- [ ] **Phase 5.6: Graphics Polish (Lighting, Bloom, Sprite Quality)** (INSERTED)
 - [ ] **Phase 6: Steam Integration** - Steamworks SDK, 15+ achievements, Cloud saves, validated overlay
 - [ ] **Phase 7: CI/CD + Store Submission + Cultural Review** - Signed CI binaries, store assets, telemetry, AI survey, cultural sign-off, Deck Verified
 
@@ -106,6 +112,68 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] 05-02-PLAN.md — Gamepad + input abstraction + rebinding model
 - [x] 05-03-PLAN.md — Settings menu
 **UI hint**: yes
+
+### Phase 05.1: Scrolling camera, larger arenas and denser waves (INSERTED)
+**Goal**: Rooms become larger than the screen with a smooth follow camera, and combat pacing shifts to more enemies per room — easy, numerous early waves ramping to intense later ones.
+**Depends on**: Phase 5
+**Success Criteria** (what must be TRUE):
+  1. Arenas are larger than the 1280x720 viewport and the camera follows the player smoothly, clamped to arena bounds; HUD stays fixed
+  2. Mouse aim, gamepad aim, projectiles, telegraphs, hazards, obstacles and doors all work in world space under the moving camera
+  3. Off-screen enemies and doors are signposted (edge indicators)
+  4. Early waves spawn more but weaker enemies; density and difficulty ramp per room and biome; boss arenas stay readable
+  5. `node test/smoke.js` stays green with full-run simulations on the larger arenas
+**Plans**: TBD
+
+### Phase 05.2: PS5 DualSense controller support and controller UX (INSERTED)
+**Goal**: A PS5 DualSense controller plays the whole game — PlayStation glyphs, menu navigation, aim indicator, rumble — in both the browser build and Electron.
+**Depends on**: Phase 05.1 (world-space aim)
+**Success Criteria** (what must be TRUE):
+  1. A DualSense connected over USB or Bluetooth is detected and mapped (standard mapping) with correct sticks, triggers and face buttons
+  2. On-screen prompts switch to PlayStation glyphs (Cross/Circle/Square/Triangle, L1/R1/L2/R2) when a DualSense is the active device
+  3. Every menu (hub, boon pick, shop, shrine, armory, codex, settings, pause, death) is navigable with the controller alone
+  4. Gamepad aim shows an aim indicator instead of the mouse crosshair; rumble fires on hits, damage and boss events (toggleable)
+  5. A controller test screen shows live inputs for troubleshooting
+**Plans**: TBD
+
+### Phase 05.3: Adaptive Indian classical score (INSERTED)
+**Goal**: Music rooted in Indian classical forms — raga-based melody over tanpura drone and tala-driven percussion — that intensifies with combat and bosses to build a thrilling atmosphere.
+**Depends on**: Phase 5
+**Success Criteria** (what must be TRUE):
+  1. Each biome has its own raga/tala identity with drone, melodic and percussion layers
+  2. Music intensity adapts to game state (explore/cleared, combat, low HP, boss, boss phase 2) with smooth transitions
+  3. Hub and boon/menu screens have calmer themes
+  4. Music respects the Phase 5 music volume setting, and all sources are license-clean for commercial release
+**Plans**: TBD
+
+### Phase 05.4: Epic-inspired environment art upgrade (INSERTED)
+**Goal**: Hades-style, richly detailed arenas inspired by the Mahabharata and Ramayana — architecture, props and lighting that fill the larger arenas while keeping combat readable.
+**Depends on**: Phase 05.1 (arena size)
+**Success Criteria** (what must be TRUE):
+  1. Each of the 4 biomes has detailed floor art sized for the larger arenas plus architectural borders (walls, pillars, arches) framing the play space
+  2. Biome-specific props and set dressing drawn from the epics (e.g. Kurukshetra chariots and banners, naga palaces of Patala, the Vaitarani river crossing)
+  3. Obstacles and hazards are visually integrated with the environment art
+  4. Player, enemies and telegraphs remain readable on every biome; provenance recorded for every new asset
+**Plans**: TBD
+
+### Phase 05.5: God portraits and boon dialogue (INSERTED)
+**Goal**: Each boon-granting god appears with a reverent, illustrated portrait and speaks to Abhimanyu with contextual dialogue when offering boons.
+**Depends on**: Phase 5
+**Success Criteria** (what must be TRUE):
+  1. All 6 gods (Hanuman, Agni, Indra, Vayu, Krishna, Durga) have illustrated portraits true to traditional iconography, shown on the boon screen
+  2. Gods deliver contextual lines (first meeting, repeat, low HP, after bosses, duo boons, deaths) that never repeat back-to-back
+  3. Portraits and dialogue pass a reverence check — gods as wise, powerful allies, consistent with the epics
+  4. Provenance recorded for every portrait; dialogue is data-driven
+**Plans**: TBD
+
+### Phase 05.6: Graphics polish: lighting, bloom and sprite quality (INSERTED)
+**Goal**: A final visual pass — dynamic lighting, bloom, color grading and higher-fidelity character sprites — so the game reads as a polished commercial title.
+**Depends on**: Phase 05.4, Phase 05.5
+**Success Criteria** (what must be TRUE):
+  1. Light sources (fire, astra casts, hazards, boons) glow and light their surroundings; bloom and per-biome color grading are applied
+  2. Character sprites are sharper and more detailed at game scale (higher-res source, clean outlines)
+  3. Graphics quality settings let lower-end machines disable expensive effects
+  4. Frame rate holds at target in worst-case combat on the dev machine
+**Plans**: TBD
 
 ### Phase 6: Steam Integration
 **Goal**: The desktop build talks to Steam — achievements unlock and persist, saves sync via Steam Cloud across machines, and the overlay is validated on both Windows and macOS.

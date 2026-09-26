@@ -61,9 +61,9 @@
     },
     "yama": {
       "kind": "boss",
-      "subject": "Yama Dharmaraja, the dignified Hindu god of death and righteous judge of the dead, stern regal noble expression, dark blue-grey skin, tall golden crown, royal indigo and pale blue silk garments, holding a noose (pasha) in one hand and a golden staff (danda) in the other, serene authority, divine",
+      "subject": "full-length standing full-body view from head to feet, exactly two arms only, Yama Dharmaraja, the dignified Hindu god of death and righteous judge of the dead, standing upright, stern regal noble expression, dark blue-grey skin, tall golden crown, small simple circular halo directly behind the head only (not covering the body), royal indigo and pale blue silk garments, holding a noose (pasha) in one hand and a golden staff (danda) in the other, serene authority, divine, standing in front of a plain flat solid pale grey background that is much larger than the character, character occupies the center of the frame with plenty of plain background around the whole body",
       "palette": "indigo, pale blue and gold",
-      "negative_extra": "demon, monster, monstrous, grotesque, fangs, tusks, horns, skull face, evil grin, menacing, blood, gore, asura",
+      "negative_extra": "demon, monster, monstrous, grotesque, fangs, tusks, horns, skull face, evil grin, menacing, blood, gore, asura, picture frame, ornate border, decorative border, vignette border, framed illustration, four arms, six arms, extra arms, temple building, architecture, landscape, clouds, seated, sitting, lotus throne, cropped legs, large background medallion, full-body aureole, mandala disc, circular background pattern, background covering entire image, sun disc filling frame",
       "base_seed": 52300,
       "out_size": 256,
       "phase2_mode": "divine"

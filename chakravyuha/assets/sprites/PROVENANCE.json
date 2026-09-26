@@ -289,6 +289,49 @@
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Attempt 0 (seed 52200) had a large sun-disc glow directly behind the figure that reads as a halo/divine aura, a cultural-guard violation for an asura boss. Accepted attempt 1 (seed 52201): two arms only, no crown/halo/lotus, huge round belly, fanged lion-maned face, golden-yellow/bronze palette, holding a single mace-staff. Clean cutout, chunky readable silhouette."
+    },
+    {
+      "filename": "yama-atlas.png",
+      "path": "assets/sprites/bosses/yama-atlas.png",
+      "actor": "yama",
+      "kind": "boss",
+      "animations": {
+        "idle": 1,
+        "phase2": 1
+      },
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 52304,
+      "prompt": "full-length standing full-body view from head to feet, exactly two arms only, Yama Dharmaraja, the dignified Hindu god of death and righteous judge of the dead, standing upright, stern regal noble expression, dark blue-grey skin, tall golden crown, small simple circular halo directly behind the head only (not covering the body), royal indigo and pale blue silk garments, holding a noose (pasha) in one hand and a golden staff (danda) in the other, serene authority, divine, standing in front of a plain flat solid pale grey background that is much larger than the character, character occupies the center of the frame with plenty of plain background around the whole body, indigo, pale blue and gold, Hades-adjacent illustrated 2D game character art, painterly digital illustration, bold clean linework, strong readable silhouette, chunky proportions, 3/4 top-down game sprite, full body, entire figure visible from head to feet, single character, solo, centered, Indian mythology, warm earth tones, high detail, concept art, plain flat pale grey background",
+      "negative_prompt": "pixel art, 3d render, photorealistic, photo, blurry, lowres, low quality, jpeg artifacts, extra limbs, extra arms, extra legs, extra heads, deformed hands, fused fingers, bad anatomy, watermark, text, signature, logo, letters, caption, cropped, cut off, close-up, portrait, bust, headshot, multiple characters, crowd, collage, duplicate, extra views, character sheet, turnaround, floating objects, disembodied, busy background, scenery, landscape, frame, border, western medieval armor, roman armor, samurai armor, demon, monster, monstrous, grotesque, fangs, tusks, horns, skull face, evil grin, menacing, blood, gore, asura, picture frame, ornate border, decorative border, vignette border, framed illustration, four arms, six arms, extra arms, temple building, architecture, landscape, clouds, seated, sitting, lotus throne, cropped legs, large background medallion, full-body aureole, mandala disc, circular background pattern, background covering entire image, sun disc filling frame",
+      "rejected_seeds": [
+        52300,
+        52301,
+        52302,
+        52303
+      ],
+      "rejected_count": 4,
+      "post_processing": [
+        "rembg u2net background removal",
+        "alpha despeckle + trim",
+        "bottom-aligned LANCZOS fit to 256x256",
+        "phase2: tools/art/phase2_variant.py --mode divine (deterministic post-process, no generation)",
+        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+      ],
+      "raw_image": "assets/sprites/_raw/bosses/yama/",
+      "gen_sidecar": "assets/sprites/_raw/bosses/yama/yama.gen.json",
+      "generated_date": "2026-09-26",
+      "recorded_date": "2026-09-26",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "FLAGGED: Yama needed all 5 attempts. Seed 52300 (seated, floating scepters) lost both arms during rembg cutout -- a segmentation failure, not a cultural issue. Seed 52301 and seed 52302 both rendered a decorative picture-frame border around the whole image, which violates the no-frame/no-border constraint (52301 also had 4 arms). Seed 52303 correctly avoided a border and read as dignified and serene, but its background halo/aureole disc was so large it dominated the 256x256 canvas and made the cutout silhouette read as a solid circle rather than a person -- fails gameplay readability. Accepted seed 52304 as least-bad: standing, two arms, crown, dignified serene closed-mouth-smile expression, no fangs/horns/grotesque features, no border, plain background, readable humanoid silhouette. The staff (danda) prop held in one hand was a thin disconnected shape that did not survive rembg's alpha-despeckle step and is missing from the finished frame; he is shown holding only the round disc/shield prop. Dignity check passed: no demonic, monstrous or menacing features at any point across all 5 attempts."
     }
   ]
 }

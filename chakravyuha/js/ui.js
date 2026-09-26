@@ -118,11 +118,9 @@ const UI = {
       card.style.borderColor = R.color;
       if (def.duo) {
         const gA = DATA.GODS[def.gods[0]], gB = DATA.GODS[def.gods[1]];
-        card.className = 'card boon-card duo';
+        card.className = ['card', 'boon-card', 'duo', 'god-' + def.gods[0], 'rarity-' + rarity].join(' ');
+        card.style.cssText = '--god:' + gA.color + ';--god2:' + gB.color + ';--rarity:' + R.color;
         card.duo = true;
-        card.style.borderColor = gA.color;
-        card.style.boxShadow = `0 0 0 2px ${gB.color}, 0 0 22px ${gA.color}88`;
-        card.style.background = `linear-gradient(160deg, ${gA.color}26, ${gB.color}26)`;
         card.innerHTML = `<div class="card-rarity" style="color:${R.color}">DUO · ${gA.sym} ${gA.name} + ${gB.sym} ${gB.name} · ${R.name}</div>
           <div class="card-name" style="color:${gA.color}">${def.name}</div>
           <div class="card-desc">${def.desc(v)}</div>`;

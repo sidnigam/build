@@ -136,6 +136,38 @@
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Attempts 0-2 composed the battlefield elements into circular/radial arrangements (a wheel-and-spear emblem, an arc of arrows) or a corner wall fragment, which reads as a scene with a strong focal point rather than an even ground texture. Prompt was tightened toward seamless repeating texture with evenly scattered debris. Accepted seed 41203: cracked pebbled dry earth, even detail throughout, no focal object, no walls/characters/text. Muted desaturated tan-umber; reads as dry battlefield ground."
+    },
+    {
+      "filename": "vaitarani-bg.png",
+      "path": "assets/sprites/biomes/vaitarani-bg.png",
+      "actor": "vaitarani",
+      "kind": "biome",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1344,
+      "height": 768,
+      "seed": 41300,
+      "prompt": "top-down orthographic view looking straight down at wet dark slate river stones with a faint dim water sheen between them, underworld riverbed, heavily shadowed, painted game arena floor texture, even evenly distributed detail, low contrast, no focal point, Hades-adjacent painterly illustration, dark, muted, low contrast, deep indigo-black and slate grey, dim and subtle, no bright highlights, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, horizon, sky, perspective view, walls, buildings, doorway, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "cover-scale 1344x768 -> 1280x731 LANCZOS",
+        "center-crop 1280x720",
+        "PNG optimize"
+      ],
+      "raw_image": "(not committed; reproducible from gen sidecar)",
+      "gen_sidecar": "assets/sprites/_raw/biomes/vaitarani-bg.gen.json",
+      "generated_date": "2026-09-26",
+      "recorded_date": "2026-09-26",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "Accepted on attempt 0: dark slate-grey river stones, even top-down detail, no figures/text/horizon/focal object, muted and low-contrast per art-direction guidance to favor dark/subtle floors."
     }
   ]
 }

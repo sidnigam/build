@@ -1,0 +1,103 @@
+{
+  "graph": {
+    "4": {
+      "class_type": "CheckpointLoaderSimple",
+      "inputs": {
+        "ckpt_name": "sd_xl_base_1.0.safetensors"
+      }
+    },
+    "6": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "top-down orthographic view looking straight down at wet dark slate river stones with a faint dim water sheen between them, underworld riverbed, heavily shadowed, painted game arena floor texture, even evenly distributed detail, low contrast, no focal point, Hades-adjacent painterly illustration, dark, muted, low contrast, deep indigo-black and slate grey, dim and subtle, no bright highlights, no characters, no text",
+        "clip": [
+          "4",
+          1
+        ]
+      }
+    },
+    "7": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, horizon, sky, perspective view, walls, buildings, doorway, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point",
+        "clip": [
+          "4",
+          1
+        ]
+      }
+    },
+    "5": {
+      "class_type": "EmptyLatentImage",
+      "inputs": {
+        "width": 1344,
+        "height": 768,
+        "batch_size": 1
+      }
+    },
+    "3": {
+      "class_type": "KSampler",
+      "inputs": {
+        "seed": 41300,
+        "steps": 32,
+        "cfg": 7.0,
+        "sampler_name": "dpmpp_2m",
+        "scheduler": "karras",
+        "denoise": 1.0,
+        "model": [
+          "4",
+          0
+        ],
+        "positive": [
+          "6",
+          0
+        ],
+        "negative": [
+          "7",
+          0
+        ],
+        "latent_image": [
+          "5",
+          0
+        ]
+      }
+    },
+    "8": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "3",
+          0
+        ],
+        "vae": [
+          "4",
+          2
+        ]
+      }
+    },
+    "9": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "filename_prefix": "chakravyuha",
+        "images": [
+          "8",
+          0
+        ]
+      }
+    }
+  },
+  "params": {
+    "positive": "top-down orthographic view looking straight down at wet dark slate river stones with a faint dim water sheen between them, underworld riverbed, heavily shadowed, painted game arena floor texture, even evenly distributed detail, low contrast, no focal point, Hades-adjacent painterly illustration, dark, muted, low contrast, deep indigo-black and slate grey, dim and subtle, no bright highlights, no characters, no text",
+    "negative": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, horizon, sky, perspective view, walls, buildings, doorway, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point",
+    "seed": 41300,
+    "width": 1344,
+    "height": 768,
+    "steps": 32,
+    "cfg": 7.0,
+    "sampler": "dpmpp_2m",
+    "scheduler": "karras",
+    "checkpoint": "sd_xl_base_1.0.safetensors"
+  },
+  "prompt_id": "a07a48a6-d0e4-4d8d-b6da-cda3f4fecd13",
+  "comfyui_version": "0.35.0",
+  "generated_at": "2026-09-26T13:24:22Z"
+}

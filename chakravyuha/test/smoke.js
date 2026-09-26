@@ -1212,5 +1212,103 @@ const duoEligibilityErrors = vm.runInContext('__duoEligibilityErrors', sandbox);
 check('duo boons: eligibility gating, offer targeting, post-pick exclusion'
   + (duoEligibilityErrors.length ? ' — ' + duoEligibilityErrors.join('; ') : ''), duoEligibilityErrors.length === 0);
 
+vm.runInContext(`
+globalThis.__duoEffectErrors = [];
+try {
+  function __freshEnemyRun() {
+    GAME.startRun();
+    const P = GAME.player;
+    P.maxhp = 1e9; P.hp = 1e9;
+    GAME.enemies = [];
+    const e = new Enemy('bhuta', P.x + 60, P.y, 1);
+    e.spawnT = 0; e.hp = e.maxhp = 1e6;
+    GAME.enemies.push(e);
+    return { P, e };
+  }
+
+  { const { P, e } = __freshEnemyRun();
+    P.addBoon(DATA.findBoon('duo_pavanaputra'), 0);
+    P.tryDash();
+    if (!(P.pavanaT > 0)) __duoEffectErrors.push('pavanaputra: pavanaT not set after dash');
+  }
+
+  { const { P, e } = __freshEnemyRun();
+    P.addBoon(DATA.findBoon('duo_khandava'), 0);
+    chainLightning(e, 10, 0);
+    if (!(e.burns.length > 0)) __duoEffectErrors.push('khandava: no burn applied via chain');
+  }
+
+  { const { P, e } = __freshEnemyRun();
+    P.addBoon(DATA.findBoon('duo_yogamaya'), 0);
+    P.iframes = 0; P.dashT = 0;
+    P.takeDamage(5);
+    if (!(P.iframes >= 1.1)) __duoEffectErrors.push('yogamaya: iframes not extended (' + P.iframes + ')');
+    if (!(e.maya > 0)) __duoEffectErrors.push('yogamaya: enemy not marked with maya');
+  }
+
+  { const { P, e } = __freshEnemyRun();
+    P.addBoon(DATA.findBoon('duo_marut'), 0);
+    const h0 = e.hp;
+    P.tryDash();
+    if (!(e.hp < h0)) __duoEffectErrors.push('marut: enemy hp unchanged after dash');
+  }
+
+  { const { P, e } = __freshEnemyRun();
+    P.addBoon(DATA.findBoon('duo_jwalamukhi'), 0);
+    P.iframes = 0; P.dashT = 0;
+    P.takeDamage(5);
+    if (!(e.burns.length > 0)) __duoEffectErrors.push('jwalamukhi: no burn applied on hit');
+  }
+
+  { const { P, e } = __freshEnemyRun();
+    const e2 = new Enemy('bhuta', e.x + 40, e.y, 1);
+    e2.spawnT = 0; e2.hp = e2.maxhp = 1e6;
+    GAME.enemies.push(e2);
+    P.addBoon(DATA.findBoon('duo_kapidhvaja'), 0);
+    for (let i = 0; i < 6; i++) hitEnemy(e, 1, 'attack');
+    if (!(e2.maya > 0)) __duoEffectErrors.push('kapidhvaja: e2 not marked with maya');
+    if (P.kapiHits !== 0) __duoEffectErrors.push('kapidhvaja: kapiHits not reset (' + P.kapiHits + ')');
+  }
+} catch (e) { __duoEffectErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const duoEffectErrors = vm.runInContext('__duoEffectErrors', sandbox);
+check('duo boons: targeted synergy effects fire correctly in the real pipeline'
+  + (duoEffectErrors.length ? ' — ' + duoEffectErrors.join('; ') : ''), duoEffectErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__duoStressErrors = [];
+try {
+  META.lastWeapon = 'khanda'; // melee weapon (a prior VFX stress block leaves lastWeapon = 'gandiva'/bow)
+  GAME.startRun();
+  const P = GAME.player;
+  P.maxhp = 1e9; P.hp = 1e9;
+  for (const def of DATA.BOONS) P.addBoon(def, Math.floor(Math.random() * 3));
+  for (const def of DATA.DUO_BOONS) P.addBoon(def, Math.floor(Math.random() * 3));
+  for (let frame = 0; frame < 4000; frame++) {
+    if (frame % 9 === 0) P.meleeAttack();
+    if (frame % 40 === 0) P.tryDash();
+    if (frame % 80 === 0) P.trySpecial();
+    if (frame % 100 === 0) P.tryCast();
+    if (frame % 60 === 0) { P.iframes = 0; P.dashT = 0; P.takeDamage(3); }
+    const living = GAME.enemies.filter(e => !e.dead && e.spawnT <= 0);
+    if (living.length && frame % 3 === 0) hitEnemy(living[0], 30, 'attack');
+    GAME.update(1/60);
+    GAME.render();
+    if (GAME.state === 'cleared' && GAME.doors.length) {
+      GAME.player.x = GAME.doors[0].x; GAME.player.y = GAME.doors[0].y;
+    }
+    if (GAME.state === 'choosing') {
+      const cards = document.getElementById('boon-cards').children;
+      if (cards.length) cards[0].onclick();
+      else if (!document.getElementById('shop').classList.contains('hidden')) UI.closeShop();
+      else GAME.state = 'cleared';
+    }
+  }
+} catch (e) { __duoStressErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const duoStressErrors = vm.runInContext('__duoStressErrors', sandbox);
+check('all boons + all duos active simultaneously, 4000 frames incl. periodic takeDamage'
+  + (duoStressErrors.length ? ' — ' + duoStressErrors[0] : ''), duoStressErrors.length === 0);
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

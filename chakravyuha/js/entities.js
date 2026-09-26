@@ -24,6 +24,7 @@ function hitEnemy(e, base, src = 'attack', opts = {}) {
   if (src === 'special' && P.has('han_special')) dmg *= 1 + P.val('han_special') / 100;
   if (src === 'cast' && P.has('han_cast')) dmg *= 1 + P.val('han_cast') / 100;
   if (src === 'cast' && P.has('dur_cast')) dmg *= 1 + P.val('dur_cast') / 100;
+  if (src === 'attack' && P.pavanaT > 0 && P.has('duo_pavanaputra')) dmg *= 1 + P.val('duo_pavanaputra') / 100;
 
   // bhakti: charged super-attack
   if (src === 'attack' && P.has('han_bhakti') && P.bhaktiReady) {
@@ -39,6 +40,10 @@ function hitEnemy(e, base, src = 'attack', opts = {}) {
   // crit
   let crit = false;
   if (src !== 'burn' && U.chance(META.critChance())) { dmg *= 2; crit = true; }
+
+  // duo_khandava: chain-lightning hits deal more to already-burning foes
+  const khandava = src === 'chain' && P.has('duo_khandava');
+  if (khandava && e.burns.length > 0) dmg *= 1.5;
 
   e.hp -= dmg;
   e.flash = 0.1;
@@ -66,7 +71,20 @@ function hitEnemy(e, base, src = 'attack', opts = {}) {
     if (src === 'special' && P.has('kri_special')) { e.slowT = 4; e.slowF = 1 - Math.min(P.val('kri_special'), 80) / 100; }
     if (src === 'special' && P.has('dur_special')) e.stun = Math.max(e.stun, P.val('dur_special'));
     if (src === 'cast' && P.has('han_cast')) e.stun = Math.max(e.stun, 1);
+    if (src === 'attack' && P.has('duo_kapidhvaja') && ++P.kapiHits >= 6) {
+      P.kapiHits = 0;
+      const v = P.val('duo_kapidhvaja');
+      GAME.rings.push({ x: e.x, y: e.y, r: 130, t: 0.3, color: '#ff8c42' });
+      for (const e2 of GAME.enemies.slice()) {
+        if (!e2.dead && U.dist(e.x, e.y, e2.x, e2.y) < 130 + e2.r) {
+          hitEnemy(e2, v, 'zone');
+          e2.maya = 5; e2.mayaPow = Math.max(e2.mayaPow || 0, 20);
+        }
+      }
+    }
   }
+  // duo_khandava: ignite on chain-lightning hits
+  if (khandava && !e.dead) applyBurn(e, P.val('duo_khandava'));
 
   if (e.hp <= 0) killEnemy(e);
   else if (e.boss) GAME.bossHurtT = 0.15;
@@ -161,6 +179,10 @@ class Player {
     this.swing = null;           // visual arc {a, t}
     this.bhaktiT = 0; this.bhaktiReady = false;
 
+    // duo boons
+    this.pavanaT = 0;            // duo_pavanaputra: post-dash damage window
+    this.kapiHits = 0;           // duo_kapidhvaja: attack-hit counter
+
     // boons: slot -> {def, rarity} ; passives: array
     this.slots = {};             // attack/special/dash/cast
     this.passives = [];
@@ -233,7 +255,7 @@ class Player {
     // timers
     U.cool(this, 'atkCd', dt); U.cool(this, 'specialCd', dt);
     U.cool(this, 'iframes', dt); U.cool(this, 'hurtT', dt);
-    U.cool(this, 'comboT', dt);
+    U.cool(this, 'comboT', dt); U.cool(this, 'pavanaT', dt);
     if (this.comboT <= 0) this.comboIdx = 0;
     if (this.has('han_bhakti') && !this.bhaktiReady) {
       this.bhaktiT -= dt;
@@ -312,6 +334,20 @@ class Player {
     this.dashDir = (mx || my) ? Math.atan2(my, mx) : this.aim;
     for (const e of GAME.enemies) e.galeHit = false;
     AUDIO.sfx('dash');
+
+    if (this.has('duo_pavanaputra')) this.pavanaT = 1.0;
+    if (this.has('duo_marut')) {
+      let best = null, bd = 260;
+      for (const e of GAME.enemies) {
+        if (e.dead || e.spawnT > 0) continue;
+        const d = U.dist(this.x, this.y, e.x, e.y);
+        if (d < bd) { bd = d; best = e; }
+      }
+      if (best) {
+        GAME.bolts.push({ x1: this.x, y1: this.y, x2: best.x, y2: best.y, t: 0.15 });
+        chainLightning(best, this.val('duo_marut'), 2);
+      }
+    }
   }
 
   attackRate() {
@@ -331,6 +367,7 @@ class Player {
     AUDIO.sfx('swing');
     let kb = w.knockback * (isFinisher ? 1.6 : 1);
     if (this.has('han_attack')) kb *= 1.5;
+    if (this.pavanaT > 0 && this.has('duo_pavanaputra')) kb *= 2;
     for (const e of GAME.enemies) {
       if (e.dead) continue;
       const d = U.dist(this.x, this.y, e.x, e.y);
@@ -447,6 +484,21 @@ class Player {
     if (fromX !== undefined) {
       const a = U.angle(fromX, fromY, this.x, this.y);
       CAMERA.kick(Math.cos(a) * 6, Math.sin(a) * 6);
+    }
+    if (this.hp > 0) {
+      if (this.has('duo_yogamaya')) {
+        this.iframes = Math.max(this.iframes, this.val('duo_yogamaya'));
+        for (const e of GAME.enemies) {
+          if (!e.dead && U.dist(this.x, this.y, e.x, e.y) < 180) { e.maya = 5; e.mayaPow = Math.max(e.mayaPow || 0, 20); }
+        }
+        GAME.rings.push({ x: this.x, y: this.y, r: 180, t: 0.3, color: '#5c7cff' });
+      }
+      if (this.has('duo_jwalamukhi')) {
+        const v = this.val('duo_jwalamukhi');
+        for (const e of GAME.enemies) if (!e.dead && U.dist(this.x, this.y, e.x, e.y) < 150) applyBurn(e, v);
+        GAME.rings.push({ x: this.x, y: this.y, r: 150, t: 0.3, color: '#ff4430' });
+        burst(this.x, this.y, '#ff7040', 14, 200, 0.4);
+      }
     }
     if (this.hp <= 0) GAME.onPlayerDeath();
   }

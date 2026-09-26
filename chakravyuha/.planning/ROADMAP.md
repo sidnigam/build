@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Render Abstraction Seam** - Camera + named draw passes over untouched game logic, zero visual change (completed 2026-06-19)
 - [ ] **Phase 2: Asset Pipeline + Sprite System** - AI-art consistency/provenance pipeline, asset loader, sprite manager, cohesive illustrated actors
 - [x] **Phase 3: VFX + Combat Juice** - Pooled particles, hitstop, screen shake/flash, kill-zoom with accessibility toggles
-- [ ] **Phase 4: Gameplay Depth** - 24 boons + Duo synergies, multi-phase telegraphed bosses, room/hazard variety
+- [x] **Phase 4: Gameplay Depth** - 24 boons + Duo synergies, multi-phase telegraphed bosses, room/hazard variety
 - [x] **Phase 5: Desktop Wrapper + Gamepad + Settings** - Electron Win/macOS shell, input abstraction, full gamepad, save migration, settings menu
 - [ ] **Phase 6: Steam Integration** - Steamworks SDK, 15+ achievements, Cloud saves, validated overlay
 - [ ] **Phase 7: CI/CD + Store Submission + Cultural Review** - Signed CI binaries, store assets, telemetry, AI survey, cultural sign-off, Deck Verified
@@ -54,7 +54,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [~] 02-06-PLAN.md — SUPERSEDED by 02-08/02-09
 - [x] 02-07-PLAN.md — Procedural animation core, hit flash, spawn/death, dash ghosts
 - [ ] 02-08-PLAN.md — ComfyUI art tooling + 4 biome backgrounds
-- [ ] 02-09-PLAN.md — CSS/SVG Indian-motif UI pass
+- [x] 02-09-PLAN.md — CSS/SVG Indian-motif UI pass
 - [x] 02-10-PLAN.md — Code-drawn weapon overlay + biome background rendering
 - [ ] 02-11-PLAN.md — 4 bosses (+phase-2) + 8 enemies + review contact sheet
 **UI hint**: yes
@@ -87,9 +87,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. `node test/smoke.js` completes full runs green with the expanded content
 **Plans**: 4 plans
 - [x] 04-01-PLAN.md — Boss telegraph invariant + phase-2 movesets
-- [ ] 04-02-PLAN.md — Boon-count guard + 6 Duo Boons
-- [ ] 04-03-PLAN.md — Room layout templates + obstacle collision
-- [ ] 04-04-PLAN.md — Biome hazards
+- [x] 04-02-PLAN.md — Boon-count guard + 6 Duo Boons
+- [x] 04-03-PLAN.md — Room layout templates + obstacle collision
+- [x] 04-04-PLAN.md — Biome hazards
 
 ### Phase 5: Desktop Wrapper + Gamepad + Settings
 **Goal**: The browser build becomes a real desktop app — an Electron shell produces Win/macOS binaries, an input abstraction makes keyboard/mouse/gamepad interchangeable for a fully controller-playable experience, saves migrate to a userData file, and a settings menu exposes all options.
@@ -139,9 +139,9 @@ Phases execute in numeric order. After Phase 1, the rendering track (2 → 3 →
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Render Abstraction Seam | 1/1 | Complete   | 2026-06-19 |
-| 2. Asset Pipeline + Sprite System | 5/9 active (2 superseded) | In Progress |  |
+| 2. Asset Pipeline + Sprite System | 6/9 active (2 superseded) | In Progress |  |
 | 3. VFX + Combat Juice | 3/3 | Complete | 2026-09-25 |
-| 4. Gameplay Depth | 1/4 | In Progress |  |
+| 4. Gameplay Depth | 4/4 | Complete | 2026-09-26 |
 | 5. Desktop Wrapper + Gamepad + Settings | 3/3 | Complete | 2026-09-25 |
 | 6. Steam Integration | 0/TBD | Not started | - |
 | 7. CI/CD + Store Submission + Cultural Review | 0/TBD | Not started | - |

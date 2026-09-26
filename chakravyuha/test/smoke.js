@@ -1639,5 +1639,164 @@ const hazardSlowErrors = vm.runInContext('__hazardSlowErrors', sandbox);
 check('hazards: player hazardSlowT/hazardSlowF scale moveSpeed'
   + (hazardSlowErrors.length ? ' — ' + hazardSlowErrors.join('; ') : ''), hazardSlowErrors.length === 0);
 
+// ---- per-type hazard behavior (telegraph, damage, slow, push) ----
+vm.runInContext(`
+globalThis.__hazardRoom = function(biomeIdx) {
+  GAME.startRun();
+  const P = GAME.player;
+  P.maxhp = 1e9; P.hp = 1e9;
+  GAME.biomeIdx = biomeIdx; GAME.biome = DATA.BIOMES[biomeIdx];
+  ROOMS.enterRoom('mudra');
+  const A = GAME.arena;
+  for (const e of GAME.enemies) { e.hp = e.maxhp = 1e9; e.stun = 1e9; e.x = A.x + A.w - 20; e.y = A.y + 20; }
+  P.__hits = 0;
+  const orig = P.takeDamage.bind(P);
+  P.takeDamage = function(amount, fx, fy) { P.__hits++; return orig(amount, fx, fy); };
+  return P;
+};
+`, sandbox);
+
+vm.runInContext(`
+globalThis.__fireVentErrors = [];
+try {
+  const P = __hazardRoom(0);
+  const vents = GAME.hazards.filter(h => h.type === 'fireVent');
+  if (!vents.length) __fireVentErrors.push('no fireVent hazards spawned');
+  else {
+    P.x = vents[0].x; P.y = vents[0].y;
+    let testEnemy = null, e0hp = null;
+    if (vents.length > 1) {
+      testEnemy = new Enemy('preta', vents[1].x, vents[1].y, 1);
+      testEnemy.spawnT = 0; testEnemy.stun = 1e9; testEnemy.hp = testEnemy.maxhp = 1e6;
+      GAME.enemies.push(testEnemy);
+      e0hp = testEnemy.hp;
+    }
+    for (let f = 0; f < 600; f++) {
+      P.iframes = 0; P.dashT = 0;
+      GAME.update(1/60);
+      GAME.renderHazards(__ctx);
+    }
+    if (P.__hits < 1) __fireVentErrors.push('fireVent: player never hit within 10s');
+    if (testEnemy && !(testEnemy.hp < e0hp)) __fireVentErrors.push('fireVent: enemy on vent[1] never took damage');
+  }
+} catch (e) { __fireVentErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const fireVentErrors = vm.runInContext('__fireVentErrors', sandbox);
+check('fireVent: telegraphs then hits the player and nearby enemies'
+  + (fireVentErrors.length ? ' — ' + fireVentErrors.join('; ') : ''), fireVentErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__venomErrors = [];
+try {
+  const P = __hazardRoom(1);
+  const pools = GAME.hazards.filter(h => h.type === 'venomPool');
+  if (!pools.length) __venomErrors.push('no venomPool hazards spawned');
+  else {
+    const unslowed = P.moveSpeed();
+    P.x = pools[0].x; P.y = pools[0].y;
+    const testEnemy = new Enemy('preta', pools[0].x, pools[0].y, 1);
+    testEnemy.spawnT = 0; testEnemy.stun = 1e9; testEnemy.slowT = 0; testEnemy.slowF = 1;
+    GAME.enemies.push(testEnemy);
+
+    P.iframes = 0; P.dashT = 0;
+    GAME.update(1/60);
+    if (!(P.moveSpeed() < unslowed * 0.7))
+      __venomErrors.push('venomPool: player not sufficiently slowed after 1 frame (speed=' + P.moveSpeed() + ', unslowed=' + unslowed + ')');
+    if (!(testEnemy.slowT > 0)) __venomErrors.push('venomPool: enemy not slowed');
+
+    for (let f = 0; f < 179; f++) { P.iframes = 0; P.dashT = 0; GAME.update(1/60); GAME.renderHazards(__ctx); }
+    if (P.__hits < 1) __venomErrors.push('venomPool: player never took a tick of damage within 3s');
+  }
+} catch (e) { __venomErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const venomErrors = vm.runInContext('__venomErrors', sandbox);
+check('venomPool: slows player and enemies, ticks damage on the player'
+  + (venomErrors.length ? ' — ' + venomErrors.join('; ') : ''), venomErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__volleyErrors = [];
+try {
+  const P = __hazardRoom(2);
+  for (let f = 0; f < 600; f++) {
+    P.iframes = 0; P.dashT = 0;
+    GAME.update(1/60);
+    GAME.renderHazards(__ctx);
+  }
+  if (P.__hits < 1) __volleyErrors.push('arrowVolley: player never hit within 10s');
+} catch (e) { __volleyErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const volleyErrors = vm.runInContext('__volleyErrors', sandbox);
+check('arrowVolley: ground marker telegraphs then hits a stationary player'
+  + (volleyErrors.length ? ' — ' + volleyErrors.join('; ') : ''), volleyErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__riverErrors = [];
+try {
+  const P = __hazardRoom(3);
+  const river = GAME.hazards.find(h => h.type === 'riverCurrent');
+  if (!river) __riverErrors.push('no riverCurrent hazard spawned');
+  else {
+    const A = GAME.arena;
+    P.x = A.x + A.w / 2; P.y = river.y + river.h / 2;
+    const x0 = P.x;
+    for (let f = 0; f < 60; f++) {
+      P.iframes = 0; P.dashT = 0;
+      GAME.update(1/60);
+      GAME.renderHazards(__ctx);
+    }
+    const dx = (P.x - x0) * river.dir;
+    if (dx < 60) __riverErrors.push('riverCurrent: player displacement too small (' + dx + 'px in 1s)');
+  }
+} catch (e) { __riverErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const riverErrors = vm.runInContext('__riverErrors', sandbox);
+check('riverCurrent: pushes the player along its direction'
+  + (riverErrors.length ? ' — ' + riverErrors.join('; ') : ''), riverErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__dormancyErrors = [];
+try {
+  const P = __hazardRoom(0);
+  const vents = GAME.hazards.filter(h => h.type === 'fireVent');
+  if (!vents.length) __dormancyErrors.push('no fireVent hazards spawned for dormancy check');
+  else {
+    P.x = vents[0].x; P.y = vents[0].y;
+    for (let f = 0; f < 600 && P.__hits < 1; f++) { P.iframes = 0; P.dashT = 0; GAME.update(1/60); }
+    if (P.__hits < 1) __dormancyErrors.push('dormancy: could not get an initial hit to test against');
+    GAME.state = 'cleared';
+    const before = P.__hits;
+    for (let f = 0; f < 180; f++) { P.iframes = 0; P.dashT = 0; GAME.update(1/60); GAME.renderHazards(__ctx); }
+    if (P.__hits !== before) __dormancyErrors.push('dormancy: hazard still dealt damage after the room left combat state');
+  }
+} catch (e) { __dormancyErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const dormancyErrors = vm.runInContext('__dormancyErrors', sandbox);
+check('hazards go dormant once the room leaves combat state (no damage for 3s after clear)'
+  + (dormancyErrors.length ? ' — ' + dormancyErrors.join('; ') : ''), dormancyErrors.length === 0);
+
+const hazardViolationsAfterSims = vm.runInContext('(GAME.hazardViolations || [])', sandbox);
+check('no unwarned hazard damage anywhere in the targeted hazard sims (hazardViolations gate)'
+  + (hazardViolationsAfterSims.length ? ' — ' + hazardViolationsAfterSims.join(', ') : ''),
+  hazardViolationsAfterSims.length === 0);
+
+vm.runInContext('GAME.hazardViolations = [];', sandbox);
+console.log('\n— re-run full runs with hazards active —');
+const r1h = vm.runInContext('simulateRun({ godMode: true })', sandbox);
+check('run 1 (god mode) still reaches victory with hazards active'
+  + (r1h.errors.length ? ' — ' + r1h.errors[0] : ''), r1h.errors.length === 0 && r1h.final === 'victory');
+const r2h = vm.runInContext('simulateRun({ weakPlayer: true })', sandbox);
+// Note: by this point in the file, an earlier meta-progression block has maxed out
+// META (sanjeevani/defiance etc, a process-wide singleton), so a "weak player" run may
+// now survive to victory instead of dying — that's expected meta-progression behavior,
+// not a hazard regression. We only assert it completes cleanly (no errors, reaches an
+// end state), matching this plan's actual concern (hazards don't break full runs).
+check('run 2 (weak player) still completes cleanly with hazards active (final=' + r2h.final + ')'
+  + (r2h.errors.length ? ' — ' + r2h.errors[0] : ''),
+  r2h.errors.length === 0 && (r2h.final === 'dead' || r2h.final === 'victory'));
+const hazardViolationsAfterFullRuns = vm.runInContext('(GAME.hazardViolations || [])', sandbox);
+check('no unwarned hazard damage across full god-mode + weak-player runs'
+  + (hazardViolationsAfterFullRuns.length ? ' — ' + hazardViolationsAfterFullRuns.join(', ') : ''),
+  hazardViolationsAfterFullRuns.length === 0);
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

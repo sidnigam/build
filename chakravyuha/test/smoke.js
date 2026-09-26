@@ -2224,5 +2224,40 @@ check('no unwarned hazard damage across full god-mode + weak-player runs'
   + (hazardViolationsAfterFullRuns.length ? ' — ' + hazardViolationsAfterFullRuns.join(', ') : ''),
   hazardViolationsAfterFullRuns.length === 0);
 
+// ---------------- Quick 260926-d5o: HUD motif pass + duo card style reconciliation ----------------
+console.log('\n— HUD motif pass + duo card style reconciliation (quick 260926-d5o) —');
+vm.runInContext(`
+globalThis.__hudMotifErrors = [];
+try {
+  GAME.startRun();
+  if (GAME.state !== 'combat') __hudMotifErrors.push('expected live run state combat, got ' + GAME.state);
+  INPUT.device = 'pad';
+  GAME.renderHUD(__ctx);
+  INPUT.device = 'kbm';
+  GAME.renderHUD(__ctx);
+} catch (e) { __hudMotifErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const hudMotifErrors = vm.runInContext('__hudMotifErrors', sandbox);
+check('renderHUD does not throw for gamepad or keyboard/mouse INPUT.device during a live run'
+  + (hudMotifErrors.length ? ' — ' + hudMotifErrors.join('; ') : ''), hudMotifErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__duoStyleErrors = [];
+try {
+  const d = DATA.DUO_BOONS[0];
+  GAME.startRun();
+  const P = GAME.player;
+  for (const g of d.gods) P.addBoon(DATA.findBoon(d.req[g][0]), 0);
+  UI.offerBoon(d.gods[0]);
+  const cards = document.getElementById('boon-cards').children;
+  const c0 = cards[0];
+  if (!c0 || !c0.className.includes('duo')) __duoStyleErrors.push('duo card className missing duo: ' + (c0 && c0.className));
+  if (!c0 || !c0.style.cssText.includes('--god2')) __duoStyleErrors.push('duo card cssText missing --god2: ' + (c0 && c0.style.cssText));
+} catch (e) { __duoStyleErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const duoStyleErrors = vm.runInContext('__duoStyleErrors', sandbox);
+check('duo boon card carries the duo class and a --god2 CSS var (02-09 .card.duo reconciliation)'
+  + (duoStyleErrors.length ? ' — ' + duoStyleErrors.join('; ') : ''), duoStyleErrors.length === 0);
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

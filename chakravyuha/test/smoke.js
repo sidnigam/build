@@ -2362,5 +2362,221 @@ console.log('\n— character readability: ground marker spec (quick 260926-djs) 
     })()`) === true);
 }
 
+// ---------------- Phase 05.1: camera math ----------------
+console.log('\n— camera math (Phase 05.1) —');
+vm.runInContext(`
+globalThis.__camResults = {};
+(function() {
+  const R = __camResults;
+  const savedState = GAME.state, savedPlayer = GAME.player;
+  const savedArena = Object.assign({}, GAME.arena);
+  const savedWx = INPUT.wx, savedWy = INPUT.wy, savedAx = INPUT.ax, savedAy = INPUT.ay;
+  SETTINGS.reset();
+
+  // 1. worldRectFor
+  {
+    const legacy = CAMERA.worldRectFor({x:50,y:84,w:1180,h:580}, {l:50,r:50,t:84,b:56});
+    const combat = CAMERA.worldRectFor({x:50,y:84,w:2240,h:1300}, {l:50,r:50,t:84,b:56});
+    R.worldRectFor = legacy.x===0 && legacy.y===0 && legacy.w===1280 && legacy.h===720
+      && combat.x===0 && combat.y===0 && combat.w===2340 && combat.h===1440;
+  }
+
+  // 2. clampScroll
+  {
+    const legacyR = {x:0,y:0,w:1280,h:720};
+    const combatR = {x:0,y:0,w:2340,h:1440};
+    const c1 = CAMERA.clampScroll(500, -300, legacyR);
+    const c2 = CAMERA.clampScroll(-9999, 9999, legacyR);
+    const legacyAlwaysZero = c1.x===0 && c1.y===0 && c2.x===0 && c2.y===0;
+    const c3 = CAMERA.clampScroll(-500, -500, combatR);
+    const c4 = CAMERA.clampScroll(9999, 9999, combatR);
+    const combatClamp = c3.x===0 && c3.y===0 && c4.x===1060 && c4.y===720;
+    const narrowR = {x:100, y:50, w:200, h:100}; // narrower than 1280x720 on both axes
+    const c5 = CAMERA.clampScroll(0, 0, narrowR);
+    const centered = Math.abs(c5.x - (100 + (100+200-1280))/2) < 1e-9 && Math.abs(c5.y - (50 + (50+100-720))/2) < 1e-9;
+    R.clampScroll = legacyAlwaysZero && combatClamp && centered;
+  }
+
+  // 3. desiredScroll / lookAhead
+  {
+    const P = {x: 1170, y: 734}; // combat-arena center: A.x+A.w/2=1170, A.y+A.h/2=734
+    const R2 = {x:0,y:0,w:2340,h:1440};
+    const d0 = CAMERA.desiredScroll(P, {x:P.x,y:P.y}, {x:0,y:0}, R2);
+    const a = CAMERA.anchor();
+    const unclampedMatches = Math.abs(d0.x - (P.x - a.x)) < 1e-9 && Math.abs(d0.y - (P.y - a.y)) < 1e-9;
+    const la = CAMERA.lookAhead(P, {x: P.x+5000, y: P.y+5000}, {x:1, y:0});
+    const lookAheadCapped = Math.hypot(la.x, la.y) <= CAMERA.CFG.LOOK_AIM_MAX + CAMERA.CFG.LOOK_MOVE + 1e-6;
+    R.desiredScroll = unclampedMatches && lookAheadCapped;
+  }
+
+  // 4. xform()
+  {
+    CAMERA.resetFx(); CAMERA.sx = 0; CAMERA.sy = 0;
+    const x0 = CAMERA.xform();
+    const identity = x0.tx===0 && x0.ty===0 && x0.tz===1;
+
+    CAMERA.sx = 300; CAMERA.sy = 200;
+    const x1 = CAMERA.xform();
+    const scrollOnly = x1.tx===-300 && x1.ty===-200 && x1.tz===1;
+
+    CAMERA.fx = 500; CAMERA.fy = 400; CAMERA.zoom = 1.2;
+    CAMERA.sx = 150; CAMERA.sy = 90;
+    CAMERA._store(CAMERA.xform());
+    const proj = CAMERA.worldToScreen(CAMERA.fx, CAMERA.fy);
+    const focusMaps = Math.abs(proj.x - (CAMERA.fx - CAMERA.sx)) < 1e-9 && Math.abs(proj.y - (CAMERA.fy - CAMERA.sy)) < 1e-9;
+
+    CAMERA.resetFx(); CAMERA.sx = 0; CAMERA.sy = 0;
+    R.xform = identity && scrollOnly && focusMaps;
+  }
+
+  // 5. worldToScreen/screenToWorld round-trip under scroll+zoom+kick
+  {
+    SETTINGS.set('screenShake', true);
+    CAMERA.resetFx();
+    CAMERA.sx = 123; CAMERA.sy = -45; CAMERA.zoom = 1.05;
+    CAMERA.kx = 3; CAMERA.ky = -2;
+    CAMERA._store(CAMERA.xform());
+    let ok = true;
+    for (let i = 0; i < 20; i++) {
+      const wx = Math.random() * 3000 - 500, wy = Math.random() * 2000 - 500;
+      const s = CAMERA.worldToScreen(wx, wy);
+      const w2 = CAMERA.screenToWorld(s.x, s.y);
+      if (Math.abs(w2.x - wx) > 1e-9 || Math.abs(w2.y - wy) > 1e-9) ok = false;
+    }
+    R.roundTrip = ok;
+    SETTINGS.reset();
+    CAMERA.resetFx(); CAMERA.sx = 0; CAMERA.sy = 0; CAMERA._store(CAMERA.xform());
+  }
+
+  // 6. follow(): converges, snaps on big jumps, identity in hub/no-player
+  {
+    GAME.state = 'combat';
+    Object.assign(GAME.arena, {x:50,y:84,w:2240,h:1300});
+    GAME.player = { x: GAME.arena.x + 90, y: GAME.arena.y + GAME.arena.h/2 };
+    INPUT.wx = GAME.player.x; INPUT.wy = GAME.player.y; INPUT.ax = 0; INPUT.ay = 0;
+    CAMERA.resetFx(); CAMERA.sx = 0; CAMERA.sy = 0;
+
+    let prevDist = Infinity, monotonic = true;
+    for (let f = 0; f < 180; f++) {
+      CAMERA.follow(1/60);
+      const D = CAMERA._followTarget();
+      const dist = Math.hypot(D.x - CAMERA.sx, D.y - CAMERA.sy);
+      if (f > 0 && dist > prevDist + 1e-9) monotonic = false;
+      prevDist = dist;
+    }
+    const convergedClose = prevDist < 1;
+
+    CAMERA.sx = 0; CAMERA.sy = 0;
+    GAME.player.x = GAME.arena.x + GAME.arena.w - 90;
+    INPUT.wx = GAME.player.x; INPUT.wy = GAME.player.y;
+    const Dsnap = CAMERA._followTarget();
+    const bigJump = Math.hypot(Dsnap.x, Dsnap.y) > CAMERA.CFG.SNAP_DIST;
+    CAMERA.follow(1/60);
+    const snappedImmediately = bigJump && Math.abs(CAMERA.sx - Dsnap.x) < 1e-9 && Math.abs(CAMERA.sy - Dsnap.y) < 1e-9;
+
+    GAME.state = 'hub';
+    CAMERA.sx = 999; CAMERA.sy = 999;
+    CAMERA.follow(1/60);
+    const hubIdentity = CAMERA.sx === 0 && CAMERA.sy === 0 && CAMERA.tx === 0 && CAMERA.ty === 0 && CAMERA.tz === 1;
+
+    R.follow = monotonic && convergedClose && snappedImmediately && hubIdentity;
+  }
+
+  // 7. snap(): S equals clamped desired immediately; tx/ty/tz updated
+  {
+    GAME.state = 'combat';
+    GAME.player = { x: GAME.arena.x + 200, y: GAME.arena.y + 100 };
+    INPUT.wx = GAME.player.x; INPUT.wy = GAME.player.y; INPUT.ax = 0; INPUT.ay = 0;
+    CAMERA.sx = 12345; CAMERA.sy = -6789;
+    CAMERA.snap();
+    const D = CAMERA._followTarget();
+    const snappedExact = Math.abs(CAMERA.sx - D.x) < 1e-9 && Math.abs(CAMERA.sy - D.y) < 1e-9;
+    const xf = CAMERA.xform();
+    const transformUpdated = Math.abs(CAMERA.tx - xf.tx) < 1e-9 && Math.abs(CAMERA.ty - xf.ty) < 1e-9 && CAMERA.tz === xf.tz;
+    R.snap = snappedExact && transformUpdated;
+  }
+
+  // 8. viewRect / visible / visibleRect (identity transform)
+  {
+    GAME.state = 'hub';
+    CAMERA.resetFx(); CAMERA.sx = 0; CAMERA.sy = 0; CAMERA._store(CAMERA.xform());
+    const vr = CAMERA.viewRect(0);
+    const vrIdentity = vr.x===0 && vr.y===0 && vr.w===1280 && vr.h===720;
+    const visIn = CAMERA.visible(640, 360, 10) === true;
+    const visOut = CAMERA.visible(640+2000, 360, 10) === false;
+    const visRectPartial = CAMERA.visibleRect(1250, 700, 100, 100, 0) === true;
+    const visRectFar = CAMERA.visibleRect(5000, 5000, 50, 50, 0) === false;
+    R.viewCull = vrIdentity && visIn && visOut && visRectPartial && visRectFar;
+  }
+
+  // 9. edgePoint
+  {
+    const onScreen = CAMERA.edgePoint(640, 360);
+    const offRight = CAMERA.edgePoint(5000, 360);
+    const inset = CAMERA.CFG.IND_INSET;
+    const a = CAMERA.anchor();
+    const s = CAMERA.worldToScreen(5000, 360);
+    const expectedAngle = Math.atan2(s.y - a.y, s.x - a.x);
+    const rightBoundOk = !!offRight && Math.abs(offRight.x - (CAMERA.VW - inset.r)) < 1e-6;
+    const angleOk = !!offRight && Math.abs(offRight.angle - expectedAngle) < 1e-6;
+    R.edgePoint = onScreen === null && rightBoundOk && angleOk;
+  }
+
+  // 10. clusterIndicators
+  {
+    const dirs = [0.1963, 2.1599, -2.1599]; // sector centers (16 sectors) — well clear of bucket boundaries
+    const items30 = [];
+    for (let i = 0; i < 30; i++) {
+      const ang = dirs[i % 3] + (Math.random() - 0.5) * 0.02;
+      items30.push({ x: 640 + Math.cos(ang)*3000, y: 360 + Math.sin(ang)*3000, kind:'enemy', color:'#fff', sym:'e' });
+    }
+    const res30 = CAMERA.clusterIndicators(items30);
+    const sumCounts30 = res30.reduce((a,b) => a + b.count, 0);
+    const cluster30 = res30.length <= 3 && sumCounts30 === 30;
+
+    const items40 = [];
+    for (let i = 0; i < 40; i++) {
+      const ang = (i/40) * Math.PI * 2;
+      items40.push({ x: 640 + Math.cos(ang)*3000, y: 360 + Math.sin(ang)*3000, kind:'enemy', color:'#fff', sym:'e' });
+    }
+    const res40 = CAMERA.clusterIndicators(items40, { max: 8 });
+    const cluster40 = res40.length <= 8;
+
+    const mixed = [
+      { x: 640, y: 360, kind: 'enemy', color:'#fff', sym:'e' },       // on-screen -> no arrow
+      { x: 5000, y: 360, kind: 'door', color:'#0f0', sym:'d' },
+      { x: 5000, y: 500, kind: 'boss', color:'#f00', sym:'b' },
+      { x: -5000, y: 360, kind: 'enemy', color:'#fff', sym:'e' },
+    ];
+    const resMixed = CAMERA.clusterIndicators(mixed, { max: 8 });
+    const clusterMixed = resMixed.length === 3 && resMixed[0].kind === 'door' && resMixed[1].kind === 'boss';
+
+    R.cluster = cluster30 && cluster40 && clusterMixed;
+  }
+
+  GAME.state = savedState;
+  GAME.player = savedPlayer;
+  Object.assign(GAME.arena, savedArena);
+  if (savedWx === undefined) delete INPUT.wx; else INPUT.wx = savedWx;
+  if (savedWy === undefined) delete INPUT.wy; else INPUT.wy = savedWy;
+  INPUT.ax = savedAx; INPUT.ay = savedAy;
+  CAMERA.resetFx();
+  CAMERA.sx = 0; CAMERA.sy = 0;
+  CAMERA._store(CAMERA.xform());
+  SETTINGS.reset();
+})();
+`, sandbox);
+const cam = vm.runInContext('__camResults', sandbox);
+check('CAMERA.worldRectFor: legacy arena -> 1280x720, combat arena -> 2340x1440', cam.worldRectFor);
+check('CAMERA.clampScroll: legacy always {0,0}, combat clamps to [0,1060]x[0,720], narrow rect centers', cam.clampScroll);
+check('CAMERA.desiredScroll/lookAhead: aim==player+no-move puts P at anchor (unclamped); look-ahead capped', cam.desiredScroll);
+check('CAMERA.xform: identity at sx=sy=0/zoom=1; scroll-only tx/ty; punch focus maps to (F-S)', cam.xform);
+check('CAMERA.worldToScreen/screenToWorld round-trip within 1e-9 under scroll+zoom+kick', cam.roundTrip);
+check('CAMERA.follow: converges monotonically (<1px after 3s), snaps past SNAP_DIST, identity in hub/no-player', cam.follow);
+check('CAMERA.snap: sets S to clamped desired immediately and updates tx/ty/tz', cam.snap);
+check('CAMERA.viewRect/visible/visibleRect: identity view + AABB culling', cam.viewCull);
+check('CAMERA.edgePoint: null on-screen, else ray-to-inset-rect intersection with matching angle', cam.edgePoint);
+check('CAMERA.clusterIndicators: sector clustering, count caps, door-first/boss-next ordering, on-screen excluded', cam.cluster);
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

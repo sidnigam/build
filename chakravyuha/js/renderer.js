@@ -4,12 +4,29 @@
 'use strict';
 
 const CAMERA = {
-  x: 0, y: 0, zoom: 1, shake: 0,   // D-05: neutral init
+  x: 0, y: 0, zoom: 1, shake: 0,   // D-05: neutral init (legacy fields — unused, left at 0)
 
   // kill-zoom punch state (D-14)
   punchAmt: 0, punchT: 0, punchDur: 0, fx: 0, fy: 0,
   // directional kick state (D-13)
   kx: 0, ky: 0,
+
+  // ---- Phase 05.1: scroll/transform state (D-05) ----
+  sx: 0, sy: 0,               // world coord of the view's top-left, pre-shake, zoom 1
+  tx: 0, ty: 0, tz: 1,        // last full transform: screen = world * tz + (tx, ty)
+  VW: 1280, VH: 720,          // viewport size
+
+  CFG: {
+    FOLLOW_RATE: 7,       // tunable: exponential follow damping rate (1/s)
+    LOOK_AIM: 0.2,         // tunable: look-ahead fraction toward aim
+    LOOK_AIM_MAX: 110,     // tunable: max look-ahead-toward-aim magnitude (px)
+    LOOK_MOVE: 40,         // tunable: look-ahead-toward-movement magnitude (px)
+    SNAP_DIST: 900,        // tunable: distance beyond which the camera snaps instead of easing
+    CULL_MARGIN: 48,       // tunable: default AABB cull margin (px)
+    IND_INSET: { l: 28, r: 28, t: 96, b: 64 },  // tunable: off-screen indicator inset rect
+    IND_SECTORS: 16,       // tunable: angular buckets for indicator clustering
+    IND_MAX: 8,            // tunable: max indicator arrows shown at once
+  },
 
   // D-13: 0..1 multiplier applied to GAME.shake and to the kick/punch systems.
   // typeof SETTINGS undefined (should not happen post-Plan-01, but stay defensive) -> full intensity.
@@ -56,6 +73,206 @@ const CAMERA = {
   resetFx() {
     this.punchAmt = 0; this.punchT = 0; this.punchDur = 0; this.fx = 0; this.fy = 0;
     this.kx = 0; this.ky = 0; this.zoom = 1;
+  },
+
+  // ============================================================
+  // Phase 05.1: pure world<->screen camera math (D-05..D-21).
+  // Every method below reads GAME/DATA/INPUT/PAD at call time (typeof-guarded)
+  // so load order (renderer.js loads before data.js/game.js) is irrelevant.
+  // ============================================================
+
+  pad() {
+    return (typeof DATA !== 'undefined' && DATA.ARENA && DATA.ARENA.pad) || { l: 50, r: 50, t: 84, b: 56 };
+  },
+
+  // D-03: {x,y} = arena top-left minus padding; {w,h} = arena size plus padding on both axes.
+  worldRectFor(A, pad) {
+    return { x: A.x - pad.l, y: A.y - pad.t, w: A.w + pad.l + pad.r, h: A.h + pad.t + pad.b };
+  },
+
+  // Playfield center on screen — where the followed point (player + look-ahead) is aimed.
+  anchor() {
+    const pad = this.pad();
+    return { x: this.VW / 2, y: (pad.t + this.VH - pad.b) / 2 };
+  },
+
+  // D-07: clamp a desired scroll (dx,dy) to the world rect R, one axis at a time.
+  // If the world rect is narrower than the viewport on an axis, center it instead of clamping.
+  clampScroll(dx, dy, R) {
+    const loX = R.x, hiX = R.x + R.w - this.VW;
+    const loY = R.y, hiY = R.y + R.h - this.VH;
+    const x = loX > hiX ? (loX + hiX) / 2 : U.clamp(dx, loX, hiX);
+    const y = loY > hiY ? (loY + hiY) / 2 : U.clamp(dy, loY, hiY);
+    return { x, y };
+  },
+
+  // D-08: look-ahead toward the aim point (clamped) plus a small nudge toward movement direction.
+  lookAhead(P, aimW, move) {
+    const C = this.CFG;
+    let vx = (aimW.x - P.x) * C.LOOK_AIM;
+    let vy = (aimW.y - P.y) * C.LOOK_AIM;
+    const len = Math.hypot(vx, vy);
+    if (len > C.LOOK_AIM_MAX) { const k = C.LOOK_AIM_MAX / len; vx *= k; vy *= k; }
+    const mx = (move && move.x) || 0, my = (move && move.y) || 0;
+    return { x: vx + mx * C.LOOK_MOVE, y: vy + my * C.LOOK_MOVE };
+  },
+
+  // D-08: desired (unclamped-then-clamped) scroll so that P + look-ahead sits at the screen anchor.
+  desiredScroll(P, aimW, move, R) {
+    const la = this.lookAhead(P, aimW, move);
+    const a = this.anchor();
+    return this.clampScroll(P.x + la.x - a.x, P.y + la.y - a.y, R);
+  },
+
+  // D-06: pure transform derivation. screen = z*(world - F) + (F - S) + k.
+  // Does not store — call _store(this.xform()) to commit. shx/shy are extra jitter (e.g. bridge shake).
+  xform(shx = 0, shy = 0) {
+    const s = this.shakeScale();
+    const z = this.zoom;
+    const fx = this.fx, fy = this.fy;
+    const kx = this.kx * s + shx, ky = this.ky * s + shy;
+    const tz = z;
+    const tx = fx - z * fx - this.sx + kx;
+    const ty = fy - z * fy - this.sy + ky;
+    return { tx, ty, tz };
+  },
+
+  // Impure: commit a computed transform to CAMERA.tx/ty/tz.
+  _store(x) { this.tx = x.tx; this.ty = x.ty; this.tz = x.tz; },
+
+  worldToScreen(wx, wy) { return { x: wx * this.tz + this.tx, y: wy * this.tz + this.ty }; },
+  screenToWorld(x, y) { return { x: (x - this.tx) / this.tz, y: (y - this.ty) / this.tz }; },
+
+  // World-space rect currently visible on screen, expanded by margin on all sides.
+  viewRect(margin = 0) {
+    const tl = this.screenToWorld(0, 0);
+    const w = this.VW / this.tz, h = this.VH / this.tz;
+    return { x: tl.x - margin, y: tl.y - margin, w: w + margin * 2, h: h + margin * 2 };
+  },
+
+  // D-16: cheap AABB visibility tests used for culling.
+  visible(x, y, r = 0, margin = this.CFG.CULL_MARGIN) {
+    const R = this.viewRect(margin);
+    return x + r >= R.x && x - r <= R.x + R.w && y + r >= R.y && y - r <= R.y + R.h;
+  },
+  visibleRect(x, y, w, h, margin = this.CFG.CULL_MARGIN) {
+    const R = this.viewRect(margin);
+    return x + w >= R.x && x <= R.x + R.w && y + h >= R.y && y <= R.y + R.h;
+  },
+
+  // D-16: null if (wx,wy) projects inside the inset rectangle; else the point where the ray from
+  // the screen anchor to the projected point crosses the inset rectangle border, plus its angle.
+  edgePoint(wx, wy, inset = this.CFG.IND_INSET) {
+    const s = this.worldToScreen(wx, wy);
+    const left = inset.l, right = this.VW - inset.r, top = inset.t, bottom = this.VH - inset.b;
+    if (s.x >= left && s.x <= right && s.y >= top && s.y <= bottom) return null;
+    const a = this.anchor();
+    const dx = s.x - a.x, dy = s.y - a.y;
+    let tMin = Infinity;
+    if (dx !== 0) {
+      for (const bx of [left, right]) {
+        const t = (bx - a.x) / dx;
+        if (t > 0 && t <= 1) {
+          const y = a.y + dy * t;
+          if (y >= top - 0.01 && y <= bottom + 0.01) tMin = Math.min(tMin, t);
+        }
+      }
+    }
+    if (dy !== 0) {
+      for (const by of [top, bottom]) {
+        const t = (by - a.y) / dy;
+        if (t > 0 && t <= 1) {
+          const x = a.x + dx * t;
+          if (x >= left - 0.01 && x <= right + 0.01) tMin = Math.min(tMin, t);
+        }
+      }
+    }
+    if (!isFinite(tMin)) tMin = 1;
+    return { x: a.x + dx * tMin, y: a.y + dy * tMin, angle: Math.atan2(dy, dx) };
+  },
+
+  // D-16/D-17: bucket off-screen items into <= opts.max indicator arrows.
+  // items: [{x, y, kind: 'enemy'|'boss'|'door', color, sym}] (world coords).
+  clusterIndicators(items, opts = {}) {
+    const sectors = opts.sectors ?? this.CFG.IND_SECTORS;
+    const max = opts.max ?? this.CFG.IND_MAX;
+    const doors = [];
+    const buckets = new Map();
+    const vr = this.viewRect(0);
+    const cx = vr.x + vr.w / 2, cy = vr.y + vr.h / 2;
+    for (const it of items) {
+      const ep = this.edgePoint(it.x, it.y);
+      if (!ep) continue;
+      if (it.kind === 'door') {
+        doors.push({ x: ep.x, y: ep.y, angle: ep.angle, count: 1, kind: 'door', color: it.color, sym: it.sym });
+        continue;
+      }
+      let sec = Math.floor(((ep.angle + Math.PI) / U.TAU) * sectors) % sectors;
+      if (sec < 0) sec += sectors;
+      if (!buckets.has(sec)) buckets.set(sec, { items: [], hasBoss: false });
+      const b = buckets.get(sec);
+      b.items.push({ it, ep, dist: U.dist(it.x, it.y, cx, cy) });
+      if (it.kind === 'boss') b.hasBoss = true;
+    }
+    const bucketArr = [];
+    for (const b of buckets.values()) {
+      b.items.sort((p, q) => p.dist - q.dist);
+      const rep = b.items[0];
+      bucketArr.push({
+        x: rep.ep.x, y: rep.ep.y, angle: rep.ep.angle, count: b.items.length,
+        kind: b.hasBoss ? 'boss' : rep.it.kind, color: rep.it.color, sym: rep.it.sym,
+        _dist: rep.dist, _hasBoss: b.hasBoss,
+      });
+    }
+    bucketArr.sort((p, q) => {
+      if (p._hasBoss !== q._hasBoss) return p._hasBoss ? -1 : 1;
+      return p._dist - q._dist;
+    });
+    const truncated = bucketArr.slice(0, Math.max(0, max));
+    const clean = arr => arr.map(o => { const { _dist, _hasBoss, ...rest } = o; return rest; });
+    return [...clean(doors), ...clean(truncated)];
+  },
+
+  // Shared desired-scroll computation for follow()/snap(): identity (0,0) in the hub or with no player.
+  _followTarget() {
+    const G = (typeof GAME !== 'undefined') ? GAME : null;
+    if (!G || !G.player || G.state === 'hub') return null;
+    const P = G.player;
+    const R = this.worldRectFor(G.arena, this.pad());
+    const I = (typeof INPUT !== 'undefined') ? INPUT : { mx: P.x, my: P.y, ax: 0, ay: 0, keys: {}, bindings: null };
+    const aimW = (typeof I.wx === 'number' && typeof I.wy === 'number') ? { x: I.wx, y: I.wy } : { x: I.mx, y: I.my };
+    let move = { x: 0, y: 0 };
+    if (I.ax || I.ay) {
+      const m = Math.hypot(I.ax, I.ay);
+      move = { x: I.ax / m, y: I.ay / m };
+    } else if (typeof PAD !== 'undefined' && I.keys && I.bindings) {
+      const mv = PAD.digitalMoveVector(I.keys, I.bindings);
+      move = { x: mv.dx, y: mv.dy };
+    }
+    return this.desiredScroll(P, aimW, move, R);
+  },
+
+  // D-08: runs every real frame (GAME.frame()) with real dt — keeps animating during hitstop.
+  follow(dt) {
+    const D = this._followTarget();
+    if (!D) { this.sx = 0; this.sy = 0; this._store(this.xform()); return; }
+    const dist = Math.hypot(D.x - this.sx, D.y - this.sy);
+    if (dist > this.CFG.SNAP_DIST) {
+      this.sx = D.x; this.sy = D.y;
+    } else {
+      const k = 1 - Math.exp(-this.CFG.FOLLOW_RATE * dt);
+      this.sx += (D.x - this.sx) * k;
+      this.sy += (D.y - this.sy) * k;
+    }
+    this._store(this.xform());
+  },
+
+  // Called by ROOMS.enterRoom after the player is placed — room changes never swoop.
+  snap() {
+    const D = this._followTarget();
+    if (!D) { this.sx = 0; this.sy = 0; this._store(this.xform()); return; }
+    this.sx = D.x; this.sy = D.y;
+    this._store(this.xform());
   },
 
   // D-03: CAMERA.begin drives worldContainer position/scale instead of ctx transforms.

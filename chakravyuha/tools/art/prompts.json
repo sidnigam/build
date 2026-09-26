@@ -1,0 +1,128 @@
+{
+  "style_positive": "Hades-adjacent illustrated 2D game character art, painterly digital illustration, bold clean linework, strong readable silhouette, chunky proportions, 3/4 top-down game sprite, full body, entire figure visible from head to feet, single character, solo, centered, Indian mythology, warm earth tones, high detail, concept art, plain flat pale grey background",
+  "style_negative": "pixel art, 3d render, photorealistic, photo, blurry, lowres, low quality, jpeg artifacts, extra limbs, extra arms, extra legs, extra heads, deformed hands, fused fingers, bad anatomy, watermark, text, signature, logo, letters, caption, cropped, cut off, close-up, portrait, bust, headshot, multiple characters, crowd, collage, duplicate, extra views, character sheet, turnaround, floating objects, disembodied, busy background, scenery, landscape, frame, border, western medieval armor, roman armor, samurai armor",
+  "enemy_negative_extra": "halo, deity, god, goddess, divine aura, religious icon, worship",
+  "biome_positive_template": "top-down orthographic view looking straight down at {ground}, painted game arena floor texture, even evenly distributed detail, low contrast, no focal point, Hades-adjacent painterly illustration, {palette}, no characters, no text",
+  "biome_negative": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, horizon, sky, perspective view, walls, buildings, doorway, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point",
+  "character_size": [1024, 1024],
+  "biome_size": [1344, 768],
+  "steps": 32,
+  "cfg": 7.0,
+  "max_retries": 4,
+  "subjects": {
+    "naraka": {
+      "kind": "biome",
+      "ground": "cracked dark iron-grey basalt flagstones of an infernal iron city, thin glowing ember seams in the cracks, soot and ash",
+      "palette": "deep maroon and charcoal with ember red-orange accents",
+      "base_seed": 41000
+    },
+    "patala": {
+      "kind": "biome",
+      "ground": "worn dark stone tiles in a dim underground cavern, subtle low-relief carving barely visible in dim light, faint dim bioluminescent moss in the grout, heavily shadowed",
+      "palette": "dark, muted, low contrast, deep teal-black, almost no color saturation, dim and subtle, no bright highlights",
+      "base_seed": 41100
+    },
+    "ranabhoomi": {
+      "kind": "biome",
+      "ground": "trampled dry cracked earth with scattered pebbles and dry dust patches, seamless repeating texture, evenly scattered small debris, heavily overcast and shadowed",
+      "palette": "dark, muted, low contrast, desaturated umber and grey-brown, dim and subtle, no bright highlights",
+      "base_seed": 41200
+    },
+    "vaitarani": {
+      "kind": "biome",
+      "ground": "wet dark slate river stones with a faint dim water sheen between them, underworld riverbed, heavily shadowed",
+      "palette": "dark, muted, low contrast, deep indigo-black and slate grey, dim and subtle, no bright highlights",
+      "base_seed": 41300
+    },
+    "tataka": {
+      "kind": "boss",
+      "subject": "Tataka, a towering fearsome rakshasi demoness, a yaksha princess cursed into a demoness, wild flame-red hair, tusks, forest-vine and bone ornaments, tattered red-orange garments, clawed hands",
+      "palette": "red-orange and charcoal",
+      "base_seed": 52000,
+      "out_size": 256,
+      "phase2_mode": "ember"
+    },
+    "ahiravana": {
+      "kind": "boss",
+      "subject": "Ahiravana, asura sorcerer-king of the underworld Patala, dark crown, flowing dark jade-teal robes with serpent ornaments, holding a curved blade in one hand and a green sorcerous flame in the other",
+      "palette": "jade-teal and black with gold trim",
+      "base_seed": 52100,
+      "out_size": 256,
+      "phase2_mode": "ember"
+    },
+    "kumbhakarna": {
+      "kind": "boss",
+      "subject": "Kumbhakarna, colossal rakshasa giant, huge round belly, heavy-lidded sleepy eyes, tusks, golden-yellow armor and ornaments, massive iron mace",
+      "palette": "golden-yellow ochre and bronze",
+      "base_seed": 52200,
+      "out_size": 256,
+      "phase2_mode": "ember"
+    },
+    "yama": {
+      "kind": "boss",
+      "subject": "Yama Dharmaraja, the dignified Hindu god of death and righteous judge of the dead, stern regal noble expression, dark blue-grey skin, tall golden crown, royal indigo and pale blue silk garments, holding a noose (pasha) in one hand and a golden staff (danda) in the other, serene authority, divine",
+      "palette": "indigo, pale blue and gold",
+      "negative_extra": "demon, monster, monstrous, grotesque, fangs, tusks, horns, skull face, evil grin, menacing, blood, gore, asura",
+      "base_seed": 52300,
+      "out_size": 256,
+      "phase2_mode": "divine"
+    },
+    "preta": {
+      "kind": "enemy",
+      "subject": "a preta, hungry ghost from Hindu lore, emaciated gaunt spectral figure with a swollen belly and thin neck, tattered pale funeral shroud",
+      "palette": "pale sea-green ghostly glow",
+      "base_seed": 63000,
+      "out_size": 128
+    },
+    "rakshasa": {
+      "kind": "enemy",
+      "subject": "a rakshasa blade warrior, fanged demon warrior with small tusks and a topknot, dark red-orange skin, bronze armor, wielding a curved sword",
+      "palette": "",
+      "base_seed": 63100,
+      "out_size": 128
+    },
+    "archer": {
+      "kind": "enemy",
+      "subject": "an asura archer, horned demon bowman in dark bronze and ochre-gold armor, drawing a large recurve bow",
+      "palette": "",
+      "base_seed": 63200,
+      "out_size": 128
+    },
+    "naga": {
+      "kind": "enemy",
+      "subject": "a naga warrior of the serpent folk, human torso with a coiled green serpent tail instead of legs, emerald scales, single cobra-hood crest, holding a spear",
+      "palette": "",
+      "negative_extra": "halo, many heads, multiple hoods, thousand-headed, Shesha, Vasuki, divine",
+      "base_seed": 63300,
+      "out_size": 128
+    },
+    "vetala": {
+      "kind": "enemy",
+      "subject": "a vetala, vampiric corpse-spirit from Indian folklore, hunched undead figure with long claws and ragged cloth wings",
+      "palette": "violet ghostly aura",
+      "base_seed": 63400,
+      "out_size": 128
+    },
+    "bhuta": {
+      "kind": "enemy",
+      "subject": "a bhuta husk, hulking lumbering ghost golem made of ash and grave stones, massive chunky body",
+      "palette": "slate blue-grey",
+      "base_seed": 63500,
+      "out_size": 128
+    },
+    "daitya": {
+      "kind": "enemy",
+      "subject": "a daitya brute, massive horned asura giant with a heavy club, bronze bracers, broad shoulders",
+      "palette": "amber-orange skin",
+      "base_seed": 63600,
+      "out_size": 128
+    },
+    "yatudhana": {
+      "kind": "enemy",
+      "subject": "a yatudhana conjurer, rakshasa sorcerer in magenta-pink robes, bead necklace, holding a smoking bone staff with a glowing orb",
+      "palette": "magenta-pink and dark purple",
+      "base_seed": 63700,
+      "out_size": 128
+    }
+  }
+}

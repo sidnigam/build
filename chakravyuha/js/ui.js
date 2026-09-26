@@ -80,8 +80,8 @@ const UI = {
     return 0;
   },
 
-  offerBoon() {
-    const god = this.pickGod();
+  offerBoon(forceGod) {
+    const god = forceGod || this.pickGod();
     if (!god) { // everything owned: amrit fallback
       if (GAME.player.allBoons().some(b => b.rarity < 2)) return this.offerAmrit();
       GAME.player.mudra += 60; this.banner('+60 MUDRA (the gods have given all they can)', '#ffcf5c');
@@ -89,6 +89,8 @@ const UI = {
     }
     const g = DATA.GODS[god];
     const pool = U.shuffle(this.offerableBoons(god)).slice(0, META.boonChoices());
+    const duo = GAME.player.duoOfferFor(god);
+    if (duo) { if (pool.length >= META.boonChoices()) pool.pop(); pool.unshift(duo); }
     GAME.state = 'choosing';
     this.el('boon-god').innerHTML =
       `<span class="god-sym">${g.sym}</span><div><div class="god-name" style="color:${g.color}">${g.name}</div>
@@ -102,9 +104,21 @@ const UI = {
       const card = document.createElement('div');
       card.className = 'card boon-card';
       card.style.borderColor = R.color;
-      card.innerHTML = `<div class="card-rarity" style="color:${R.color}">${R.name} · ${def.slot.toUpperCase()}</div>
-        <div class="card-name" style="color:${g.color}">${def.name}</div>
-        <div class="card-desc">${def.desc(v)}</div>`;
+      if (def.duo) {
+        const gA = DATA.GODS[def.gods[0]], gB = DATA.GODS[def.gods[1]];
+        card.className = 'card boon-card duo';
+        card.duo = true;
+        card.style.borderColor = gA.color;
+        card.style.boxShadow = `0 0 0 2px ${gB.color}, 0 0 22px ${gA.color}88`;
+        card.style.background = `linear-gradient(160deg, ${gA.color}26, ${gB.color}26)`;
+        card.innerHTML = `<div class="card-rarity" style="color:${R.color}">DUO · ${gA.sym} ${gA.name} + ${gB.sym} ${gB.name} · ${R.name}</div>
+          <div class="card-name" style="color:${gA.color}">${def.name}</div>
+          <div class="card-desc">${def.desc(v)}</div>`;
+      } else {
+        card.innerHTML = `<div class="card-rarity" style="color:${R.color}">${R.name} · ${def.slot.toUpperCase()}</div>
+          <div class="card-name" style="color:${g.color}">${def.name}</div>
+          <div class="card-desc">${def.desc(v)}</div>`;
+      }
       card.onclick = () => {
         GAME.player.addBoon(def, rarity);
         this.hide('boonpick');

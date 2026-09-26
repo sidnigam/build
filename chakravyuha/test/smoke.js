@@ -1310,5 +1310,47 @@ const duoStressErrors = vm.runInContext('__duoStressErrors', sandbox);
 check('all boons + all duos active simultaneously, 4000 frames incl. periodic takeDamage'
   + (duoStressErrors.length ? ' — ' + duoStressErrors[0] : ''), duoStressErrors.length === 0);
 
+vm.runInContext(`
+globalThis.__duoOfferErrors = [];
+try {
+  for (const d of DATA.DUO_BOONS) {
+    GAME.startRun();
+    const P = GAME.player;
+    for (const g of d.gods) P.addBoon(DATA.findBoon(d.req[g][0]), 0);
+    UI.offerBoon(d.gods[0]);
+    if (GAME.state !== 'choosing') __duoOfferErrors.push(d.id + ': state not choosing after offerBoon');
+    const cards = document.getElementById('boon-cards').children;
+    if (cards.length > META.boonChoices()) __duoOfferErrors.push(d.id + ': too many cards (' + cards.length + ')');
+    const c0 = cards[0];
+    if (!c0 || c0.duo !== true) __duoOfferErrors.push(d.id + ': first card not flagged duo');
+    if (!c0 || !c0.className.includes('duo')) __duoOfferErrors.push(d.id + ': first card className missing duo');
+    if (!c0 || !c0.innerHTML.includes('DUO') || !c0.innerHTML.includes(d.name)) __duoOfferErrors.push(d.id + ': first card innerHTML missing DUO/name');
+    c0.onclick();
+    if (!P.has(d.id)) __duoOfferErrors.push(d.id + ': picking card did not grant duo');
+    GAME.state = 'cleared';
+    UI.offerBoon(d.gods[0]);
+    const cards2 = document.getElementById('boon-cards').children;
+    const c02 = cards2[0];
+    if (c02 && c02.duo === true && c02.innerHTML.includes(d.name)) __duoOfferErrors.push(d.id + ': offered again after being taken');
+  }
+} catch (e) { __duoOfferErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const duoOfferErrors = vm.runInContext('__duoOfferErrors', sandbox);
+check('duo offer: styled first card when eligible, grants on pick, not re-offered'
+  + (duoOfferErrors.length ? ' — ' + duoOfferErrors.join('; ') : ''), duoOfferErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__duoNegErrors = [];
+try {
+  GAME.startRun();
+  UI.offerBoon('agni');
+  const cards = document.getElementById('boon-cards').children;
+  for (const c of cards) if (c.duo) __duoNegErrors.push('duo card shown with no prerequisites met');
+} catch (e) { __duoNegErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const duoNegErrors = vm.runInContext('__duoNegErrors', sandbox);
+check('duo offer: never shown before prerequisites are met'
+  + (duoNegErrors.length ? ' — ' + duoNegErrors.join('; ') : ''), duoNegErrors.length === 0);
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

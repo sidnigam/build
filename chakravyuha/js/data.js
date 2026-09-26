@@ -119,6 +119,42 @@ DATA.BOONS = [
     base: 30, desc: v => `Foes that strike you in melee take ${Math.round(v)} damage.` },
 ];
 
+// ---------- DUO BOONS ----------
+// Offered once the player holds >= 1 boon from EACH god's req list.
+DATA.DUO_BOONS = [
+  { id: 'duo_pavanaputra', duo: true, gods: ['hanuman','vayu'], god: 'hanuman', slot: 'passive',
+    name: 'Pavanaputra', base: 60,
+    req: { hanuman: ['han_attack','han_special','han_bhakti'], vayu: ['vayu_dash','vayu_speed','vayu_gust','vayu_attack'] },
+    desc: v => `For 1s after you dash, your attacks deal +${Math.round(v)}% damage and knock foes back twice as far.`,
+    lore: 'The Wind\'s own son. Where the father moves, the son strikes.' },
+  { id: 'duo_khandava', duo: true, gods: ['agni','indra'], god: 'agni', slot: 'passive',
+    name: 'Khandava Firestorm', base: 8,
+    req: { agni: ['agni_attack','agni_special','agni_cast','agni_ghee'], indra: ['indra_attack','indra_special'] },
+    desc: v => `Your lightning ignites foes (Burn ${Math.round(v)} damage/s), and deals +50% damage to foes already burning.`,
+    lore: 'When Agni devoured the Khandava forest, Indra\'s storm raged over it. Here, fire and storm finally agree.' },
+  { id: 'duo_yogamaya', duo: true, gods: ['krishna','durga'], god: 'krishna', slot: 'passive',
+    name: "Yogamaya's Veil", base: 1.2,
+    req: { krishna: ['kri_attack','kri_special','kri_lila'], durga: ['dur_kavacha','dur_special','dur_thorns'] },
+    desc: v => `When struck, you are veiled for ${v.toFixed(1)}s (untouchable) and foes near you are marked with Maya.`,
+    lore: 'The Mother took Krishna\'s place in the cradle the night he was born. She is still covering for him.' },
+  { id: 'duo_marut', duo: true, gods: ['indra','vayu'], god: 'indra', slot: 'passive',
+    name: 'Marut Gana', base: 24,
+    req: { indra: ['indra_attack','indra_special','indra_cast','indra_tribute'], vayu: ['vayu_dash','vayu_gust','vayu_speed'] },
+    desc: v => `Each dash looses lightning at the nearest foe (${Math.round(v)} damage, 2 jumps).`,
+    lore: 'The storm-host rides at Indra\'s side and runs on the wind.' },
+  { id: 'duo_jwalamukhi', duo: true, gods: ['agni','durga'], god: 'agni', slot: 'passive',
+    name: 'Jwalamukhi', base: 10,
+    req: { agni: ['agni_attack','agni_special','agni_ghee'], durga: ['dur_kavacha','dur_thorns','dur_dash'] },
+    desc: v => `When struck, you erupt in flame: foes within reach gain Burn (${Math.round(v)} damage/s).`,
+    lore: 'The Mother whose mouth is flame. Strike her child and learn it.' },
+  { id: 'duo_kapidhvaja', duo: true, gods: ['hanuman','krishna'], god: 'hanuman', slot: 'passive',
+    name: 'Kapidhvaja', base: 30,
+    req: { hanuman: ['han_attack','han_special','han_bhakti'], krishna: ['kri_attack','kri_special','kri_cast'] },
+    desc: v => `Every 6th attack hit raises the Monkey Banner: a shockwave deals ${Math.round(v)} damage nearby and marks foes with Maya.`,
+    lore: 'Hanuman rode on the banner of the chariot Krishna drove for Arjuna — your father\'s chariot.' },
+];
+DATA.findBoon = id => DATA.BOONS.find(b => b.id === id) || DATA.DUO_BOONS.find(b => b.id === id);
+
 // ---------- WEAPONS ----------
 DATA.WEAPONS = {
   khanda: {
@@ -191,28 +227,85 @@ DATA.BIOMES = [
   {
     id: 'naraka', name: 'NARAKA', sub: 'The Iron City of Yama', rooms: 5,
     bg: '#160a0e', floor: '#241016', accent: '#ff5533', wall: '#3d1a20',
-    enemies: ['preta', 'rakshasa', 'archer'], boss: 'tataka',
+    enemies: ['preta', 'rakshasa', 'archer'], boss: 'tataka', hazard: 'fireVent',
     scale: 1.0, budget: [4, 9], droneHz: 110,
   },
   {
     id: 'patala', name: 'PATALA', sub: 'Realm of the Serpent Kings', rooms: 6,
     bg: '#061412', floor: '#0b201c', accent: '#2ee6a8', wall: '#143830',
-    enemies: ['naga', 'vetala', 'archer', 'rakshasa'], boss: 'ahiravana',
+    enemies: ['naga', 'vetala', 'archer', 'rakshasa'], boss: 'ahiravana', hazard: 'venomPool',
     scale: 1.35, budget: [7, 12], droneHz: 98,
   },
   {
     id: 'ranabhoomi', name: 'RANABHOOMI', sub: 'Field of the Fallen Warriors', rooms: 6,
     bg: '#171107', floor: '#241b0d', accent: '#ffcf5c', wall: '#403018',
-    enemies: ['daitya', 'bhuta', 'yatudhana', 'vetala'], boss: 'kumbhakarna',
+    enemies: ['daitya', 'bhuta', 'yatudhana', 'vetala'], boss: 'kumbhakarna', hazard: 'arrowVolley',
     scale: 1.8, budget: [9, 15], droneHz: 123,
   },
   {
     id: 'vaitarani', name: 'VAITARANI', sub: 'The River Between Worlds', rooms: 2,
     bg: '#0a0e16', floor: '#121828', accent: '#9fb8ff', wall: '#222c4a',
-    enemies: ['preta', 'rakshasa', 'naga', 'vetala', 'bhuta', 'daitya'], boss: 'yama',
+    enemies: ['preta', 'rakshasa', 'naga', 'vetala', 'bhuta', 'daitya'], boss: 'yama', hazard: 'riverCurrent',
     scale: 2.1, budget: [12, 16], droneHz: 82,
   },
 ];
+
+// ---------- ENVIRONMENTAL HAZARDS ----------
+DATA.HAZARDS = {
+  fireVent:    { id:'fireVent', name:'Vents of Kumbhipaka', count:[3,5], r:42, dormant:[2.5,4], firstDelay:1.5,
+                 warn:0.9, active:0.6, dmgP:12, dmgE:25, color:'#ff7a2a', damaging:true },
+  venomPool:   { id:'venomPool', name:'Pools of Naga Venom', count:[2,3], r:[55,75], slow:0.4, tick:1.0,
+                 grace:0.6, dmgP:6, enemySlow:0.5, immune:['naga'], color:'#7dff5a', damaging:true },
+  arrowVolley: { id:'arrowVolley', name:'Arrows of Kurukshetra', every:[4,6], firstDelay:2.0, warn:1.1, r:70,
+                 jitter:60, max:2, dmgP:14, dmgE:30, color:'#ffcf5c', damaging:true },
+  riverCurrent:{ id:'riverCurrent', name:'Current of the Vaitarani', h:[90,120], push:120, surgePush:260,
+                 surgeEvery:[5,8], surgeWarn:0.8, surgeDur:1.5, color:'#9fb8ff', damaging:false },
+};
+
+// ---------- ROOM LAYOUT TEMPLATES ----------
+// Normalized arena coordinates: circles x/y = center fraction, r in px;
+// rects x/y = top-left fraction, w/h = size fraction.
+DATA.LAYOUTS = {
+  naraka: [
+    { id: 'naraka_colonnade', name: 'Iron Colonnade', obstacles: [
+      {kind:'pillar',x:.32,y:.25,r:30},{kind:'pillar',x:.52,y:.25,r:30},{kind:'pillar',x:.72,y:.25,r:30},
+      {kind:'pillar',x:.32,y:.75,r:30},{kind:'pillar',x:.52,y:.75,r:30},{kind:'pillar',x:.72,y:.75,r:30} ] },
+    { id: 'naraka_forge', name: 'Forge Cross', obstacles: [
+      {kind:'wall',x:.42,y:.46,w:.20,h:.08},{kind:'wall',x:.49,y:.22,w:.06,h:.56} ] },
+    { id: 'naraka_chains', name: 'Chained Pits', obstacles: [
+      {kind:'pit',x:.42,y:.28,r:60},{kind:'pit',x:.60,y:.72,r:60},{kind:'pillar',x:.74,y:.40,r:34} ] },
+  ],
+  patala: [
+    { id: 'patala_coil', name: 'Serpent Coil', obstacles: [
+      {kind:'pillar',x:.30,y:.22,r:26},{kind:'pillar',x:.40,y:.36,r:26},{kind:'pillar',x:.50,y:.50,r:26},
+      {kind:'pillar',x:.60,y:.64,r:26},{kind:'pillar',x:.70,y:.78,r:26} ] },
+    { id: 'patala_abyss', name: 'Twin Abyss', obstacles: [
+      {kind:'pit',x:.28,y:.08,w:.16,h:.30},{kind:'pit',x:.56,y:.62,w:.16,h:.30} ] },
+    { id: 'patala_halls', name: 'Naga Halls', obstacles: [
+      {kind:'wall',x:.28,y:.27,w:.48,h:.05},{kind:'wall',x:.28,y:.68,w:.48,h:.05} ] },
+  ],
+  ranabhoomi: [
+    { id: 'rana_chariots', name: 'Broken Chariots', obstacles: [
+      {kind:'wall',x:.30,y:.15,w:.08,h:.14},{kind:'wall',x:.52,y:.58,w:.10,h:.12},
+      {kind:'wall',x:.70,y:.22,w:.07,h:.16},{kind:'pillar',x:.42,y:.80,r:22} ] },
+    { id: 'rana_trench', name: 'The Trench', obstacles: [
+      {kind:'pit',x:.50,y:.04,w:.04,h:.34},{kind:'pit',x:.50,y:.62,w:.04,h:.34} ] },
+    { id: 'rana_banners', name: 'Ring of Banners', obstacles: [
+      {kind:'pillar',x:.687,y:.5,r:22},{kind:'pillar',x:.62,y:.724,r:22},{kind:'pillar',x:.497,y:.724,r:22},
+      {kind:'pillar',x:.433,y:.5,r:22},{kind:'pillar',x:.497,y:.276,r:22},{kind:'pillar',x:.62,y:.276,r:22} ] },
+  ],
+  vaitarani: [
+    { id: 'vait_fords', name: 'The Fords', obstacles: [
+      {kind:'pit',x:.46,y:0,w:.07,h:.20},{kind:'pit',x:.46,y:.32,w:.07,h:.36},{kind:'pit',x:.46,y:.80,w:.07,h:.20} ] },
+    { id: 'vait_islands', name: 'Bone Islands', obstacles: [
+      {kind:'pit',x:.34,y:.28,r:50},{kind:'pit',x:.34,y:.72,r:50},{kind:'pit',x:.64,y:.28,r:50},
+      {kind:'pit',x:.64,y:.72,r:50},{kind:'pillar',x:.49,y:.50,r:34} ] },
+    { id: 'vait_posts', name: 'Ferry Posts', obstacles: [
+      {kind:'pillar',x:.30,y:.20,r:20},{kind:'pillar',x:.30,y:.50,r:20},{kind:'pillar',x:.30,y:.80,r:20},
+      {kind:'pillar',x:.55,y:.35,r:20},{kind:'pillar',x:.55,y:.65,r:20},
+      {kind:'pillar',x:.78,y:.20,r:20},{kind:'pillar',x:.78,y:.50,r:20},{kind:'pillar',x:.78,y:.80,r:20} ] },
+  ],
+};
 
 // ---------- DOOR REWARDS ----------
 DATA.REWARDS = {

@@ -7,21 +7,150 @@
 
 const ROOMS = {
 
-  // Build the arena geometry for a new room (pillars vary per room)
-  buildArena(isBoss) {
+  // ---- Phase 4: room layout geometry helpers (GAME-03) ----
+  layoutsFor(biomeId) { return DATA.LAYOUTS[biomeId] || []; },
+
+  materializeLayout(tpl) {
+    const A = GAME.arena;
+    return tpl.obstacles.map(o => {
+      if (o.kind === 'wall' || (o.w !== undefined && o.h !== undefined)) {
+        return { shape: 'rect', kind: o.kind, x: A.x + o.x * A.w, y: A.y + o.y * A.h,
+          w: o.w * A.w, h: o.h * A.h, tpl: tpl.id };
+      }
+      return { shape: 'circle', kind: o.kind || 'pillar', x: A.x + o.x * A.w, y: A.y + o.y * A.h,
+        r: o.r, tpl: tpl.id };
+    });
+  },
+
+  // Distance from (x,y) to an obstacle's surface (0 or negative-equivalent when inside).
+  obstacleDist(o, x, y) {
+    const shape = o.shape || 'circle';
+    if (shape === 'rect') {
+      const cx = U.clamp(x, o.x, o.x + o.w);
+      const cy = U.clamp(y, o.y, o.y + o.h);
+      return U.dist(x, y, cx, cy);
+    }
+    return U.dist(x, y, o.x, o.y) - o.r;
+  },
+
+  pointBlocked(x, y, r, opts = {}) {
+    const obstacles = opts.obstacles || GAME.pillars;
+    for (const o of obstacles) {
+      if (opts.projectile && o.kind === 'pit') continue;
+      if (this.obstacleDist(o, x, y) < r) return true;
+    }
+    return false;
+  },
+
+  blocksProjectile(p) { return this.pointBlocked(p.x, p.y, p.r, { projectile: true }); },
+
+  // Guaranteed-free fallback spawn point: coarse grid scan of the right 70% of the arena.
+  findClearSpawnPoint(r) {
+    const A = GAME.arena, P = GAME.player, step = 40;
+    const xStart = A.x + A.w * 0.3;
+    for (const minDist of [220, 120]) {
+      for (let y = A.y + 60; y <= A.y + A.h - 60; y += step) {
+        for (let x = xStart; x <= A.x + A.w - 60; x += step) {
+          if (U.dist(x, y, P.x, P.y) < minDist) continue;
+          if (this.pointBlocked(x, y, r)) continue;
+          return { x, y };
+        }
+      }
+    }
+    return null;
+  },
+
+  // ---- Phase 4: hazard placement (GAME-04) ----
+  // A random point clear of obstacles, player spawn, doors and (optionally) other placed points.
+  freePoint(r, opts = {}) {
+    const A = GAME.arena;
+    const spawnX = A.x + 90, spawnY = A.y + A.h / 2;
+    const doorX = A.x + A.w - 36;
+    const doorYs = [1 / 3, 1 / 2, 2 / 3].map(f => A.y + A.h * f);
+    const spawnClear = opts.spawnClear ?? 140;
+    const avoid = opts.avoid || [];
+    const minSep = opts.minSep ?? 0;
+    for (let tries = 0; tries < 60; tries++) {
+      const x = U.rand(A.x + r + 20, A.x + A.w - r - 20);
+      const y = U.rand(A.y + r + 20, A.y + A.h - r - 20);
+      if (this.pointBlocked(x, y, r + 8)) continue;
+      if (U.dist(x, y, spawnX, spawnY) < spawnClear) continue;
+      if (doorYs.some(dy => U.dist(x, y, doorX, dy) < r + 70)) continue;
+      if (avoid.some(o => U.dist(x, y, o.x, o.y) < minSep + r + (o.r || 0))) continue;
+      return { x, y };
+    }
+    return null;
+  },
+
+  spawnHazards() {
+    GAME.hazards = [];
+    const def = DATA.HAZARDS[GAME.biome.hazard];
+    if (!def) return;
+    const A = GAME.arena;
+    if (def.id === 'fireVent') {
+      const n = U.randInt(def.count[0], def.count[1]);
+      const placed = [];
+      for (let i = 0; i < n; i++) {
+        const p = this.freePoint(def.r, { avoid: placed, minSep: 30 });
+        if (!p) continue;
+        placed.push({ x: p.x, y: p.y, r: def.r });
+        GAME.hazards.push({ type: 'fireVent', x: p.x, y: p.y, r: def.r, phase: 'dormant',
+          t: def.firstDelay + U.rand(def.dormant[0], def.dormant[1]) * U.rand(0.3, 1),
+          warnShown: 0, hitSet: null, age: 0 });
+      }
+    } else if (def.id === 'venomPool') {
+      const n = U.randInt(def.count[0], def.count[1]);
+      const placed = [];
+      for (let i = 0; i < n; i++) {
+        const r = U.rand(def.r[0], def.r[1]);
+        const p = this.freePoint(r, { avoid: placed, minSep: 30 });
+        if (!p) continue;
+        placed.push({ x: p.x, y: p.y, r });
+        GAME.hazards.push({ type: 'venomPool', x: p.x, y: p.y, r, age: 0, tickT: 0 });
+      }
+    } else if (def.id === 'arrowVolley') {
+      GAME.hazards.push({ type: 'arrowVolley', t: def.firstDelay, markers: [] });
+    } else if (def.id === 'riverCurrent') {
+      const h = U.rand(def.h[0], def.h[1]);
+      const upper = U.chance(0.5);
+      const y = upper
+        ? U.rand(A.y + 30, A.y + A.h * 0.5 - h - 40)
+        : U.rand(A.y + A.h * 0.5 + 40, A.y + A.h - h - 30);
+      GAME.hazards.push({ type: 'riverCurrent', x: A.x, y, w: A.w, h,
+        dir: U.chance(0.5) ? 1 : -1, phase: 'calm', t: U.rand(def.surgeEvery[0], def.surgeEvery[1]), age: 0 });
+    }
+  },
+
+  // Build the arena geometry for a new room (a per-biome layout template, or open for boss rooms)
+  buildArena(isBoss, forceId) {
     GAME.pillars = [];
     if (isBoss) return; // boss arenas are open
-    const n = U.randInt(0, 3);
-    for (let i = 0; i < n; i++) {
-      let x, y, tries = 0;
-      do {
-        x = U.rand(GAME.arena.x + 150, GAME.arena.x + GAME.arena.w - 150);
-        y = U.rand(GAME.arena.y + 110, GAME.arena.y + GAME.arena.h - 110);
-        tries++;
-      } while (tries < 20 && (U.dist(x, y, GAME.player.x, GAME.player.y) < 160 ||
-               GAME.pillars.some(p => U.dist(x, y, p.x, p.y) < 170)));
-      GAME.pillars.push({ x, y, r: U.rand(28, 46) });
+    const list = this.layoutsFor(GAME.biome.id);
+    if (!list.length) {
+      // fallback: legacy random pillars (kept for biomes with no templates yet)
+      const n = U.randInt(0, 3);
+      for (let i = 0; i < n; i++) {
+        let x, y, tries = 0;
+        do {
+          x = U.rand(GAME.arena.x + 150, GAME.arena.x + GAME.arena.w - 150);
+          y = U.rand(GAME.arena.y + 110, GAME.arena.y + GAME.arena.h - 110);
+          tries++;
+        } while (tries < 20 && (U.dist(x, y, GAME.player.x, GAME.player.y) < 160 ||
+                 GAME.pillars.some(p => U.dist(x, y, p.x, p.y) < 170)));
+        GAME.pillars.push({ shape: 'circle', kind: 'pillar', x, y, r: U.rand(28, 46) });
+      }
+      return;
     }
+    let tpl;
+    if (forceId) tpl = list.find(t => t.id === forceId) || U.choice(list);
+    else {
+      const candidates = list.filter(t => t.id !== this.lastLayoutId);
+      tpl = U.choice(candidates.length ? candidates : list);
+    }
+    GAME.pillars = this.materializeLayout(tpl);
+    this.lastLayoutId = tpl.id;
+    (this.layoutHistory = this.layoutHistory || []).push({ biome: GAME.biome.id, id: tpl.id });
+    if (this.layoutHistory.length > 200) this.layoutHistory.shift();
   },
 
   // Encounter plan: total budget split into waves
@@ -48,13 +177,18 @@ const ROOMS = {
       const pool = b.enemies.map(id => DATA.ENEMIES[id]).filter(e => e.cost <= Math.max(left, 1));
       const def = U.choice(pool.length ? pool : b.enemies.map(id => DATA.ENEMIES[id]));
       left -= def.cost;
-      // spawn away from the player
-      let x, y, tries = 0;
+      // spawn away from the player and clear of obstacles
+      let x, y, tries = 0, ok = false;
       do {
         x = U.rand(GAME.arena.x + 60, GAME.arena.x + GAME.arena.w - 60);
         y = U.rand(GAME.arena.y + 60, GAME.arena.y + GAME.arena.h - 60);
         tries++;
-      } while (tries < 25 && U.dist(x, y, GAME.player.x, GAME.player.y) < 220);
+        ok = U.dist(x, y, GAME.player.x, GAME.player.y) >= 220 && !this.pointBlocked(x, y, def.r + 12);
+      } while (tries < 40 && !ok);
+      if (!ok) {
+        const spot = this.findClearSpawnPoint(def.r + 12);
+        if (spot) { x = spot.x; y = spot.y; }
+      }
       GAME.enemies.push(new Enemy(def.id, x, y, b.scale));
     }
   },
@@ -90,7 +224,7 @@ const ROOMS = {
     G.reward = rewardId;
     G.enemies = []; G.eprojectiles = []; G.pprojectiles = [];
     G.pickups = []; G.zones = []; G.orbits = []; G.rings = [];
-    G.bolts = []; G.dangerZones = []; G.doors = [];
+    G.bolts = []; G.dangerZones = []; G.doors = []; G.hazards = [];
     G.nooseT = 0; G.bossRewarded = false;
 
     const P = G.player;
@@ -138,6 +272,7 @@ const ROOMS = {
 
     // combat room
     this.buildArena(false);
+    this.spawnHazards();
     G.waves = this.planWaves();
     this.spawnWave(G.waves.shift());
     G.state = 'combat';

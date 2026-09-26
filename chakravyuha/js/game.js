@@ -31,7 +31,7 @@ const GAME = {
   // world arrays
   enemies: [], eprojectiles: [], pprojectiles: [], pickups: [],
   particles: [], texts: [], zones: [], orbits: [], rings: [],
-  bolts: [], dangerZones: [], doors: [], pillars: [],
+  bolts: [], dangerZones: [], doors: [], pillars: [], hazards: [],
 
   init() {
     this.canvas = document.getElementById('game');
@@ -210,6 +210,7 @@ const GAME = {
 
     // enemies
     for (const e of this.enemies) if (!e.dead) e.update(dt);
+    this.updateHazards(dt);
 
     // boss defeat → reward path
     if (this.bossRef && this.bossRef.dead && !this.bossRewarded) {
@@ -242,8 +243,7 @@ const GAME = {
       p.x += p.vx * dt; p.y += p.vy * dt; p.t -= dt;
       const A = this.arena;
       if (p.x < A.x || p.x > A.x + A.w || p.y < A.y || p.y > A.y + A.h) p.t = 0;
-      for (const pil of this.pillars)
-        if (U.dist(p.x, p.y, pil.x, pil.y) < pil.r + p.r) p.t = 0;
+      if (ROOMS.blocksProjectile(p)) p.t = 0;
       if (p.chakra) {
         if (!p._vfx) { p._vfx = true; VFX.emit('castGlow', p.x, p.y, Math.atan2(p.vy, p.vx)); }
         VFX.emit('astraTrail', p.x, p.y);
@@ -279,8 +279,7 @@ const GAME = {
       p.x += p.vx * dt; p.y += p.vy * dt; p.t -= dt;
       const A = this.arena;
       if (p.x < A.x || p.x > A.x + A.w || p.y < A.y || p.y > A.y + A.h) p.t = 0;
-      for (const pil of this.pillars)
-        if (U.dist(p.x, p.y, pil.x, pil.y) < pil.r + p.r) p.t = 0;
+      if (ROOMS.blocksProjectile(p)) p.t = 0;
       if (p.t > 0 && U.dist(p.x, p.y, P.x, P.y) < P.r + p.r) {
         P.takeDamage(p.dmg);
         p.t = 0;
@@ -378,6 +377,205 @@ const GAME = {
     for (const b of this.bolts) b.t -= dt;
     this.bolts = this.bolts.filter(b => b.t > 0);
   },
+
+  // ---- Phase 4: biome hazards — updateHazards / renderHazards ----
+  updateHazards(dt) {
+    const H = this.hazards || [];
+    if (!H.length) return;
+    this.hazardViolations = this.hazardViolations || [];
+    const P = this.player;
+    const active = this.state === 'combat' && !this.bossRef;
+    const s = Math.sqrt(this.biome.scale);
+
+    const hurtP = (h, amount, shown) => {
+      if (shown < 0.6) this.hazardViolations.push(h.type);
+      P.takeDamage(Math.round(amount * s));
+    };
+
+    if (!active) {
+      for (const h of H) {
+        if (h.type === 'fireVent') { h.phase = 'dormant'; h.hitSet = null; h.warnShown = 0; }
+        else if (h.type === 'arrowVolley') { h.markers = []; }
+        else if (h.type === 'riverCurrent') { h.phase = 'calm'; }
+      }
+      return;
+    }
+
+    for (const h of H) {
+      const def = DATA.HAZARDS[h.type];
+      h.age += dt;
+
+      if (h.type === 'fireVent') {
+        h.t -= dt;
+        if (h.phase === 'dormant') {
+          if (h.t <= 0) { h.phase = 'warn'; h.t = def.warn; h.warnShown = 0; }
+        } else if (h.phase === 'warn') {
+          h.warnShown += dt;
+          if (h.t <= 0) {
+            h.phase = 'erupt'; h.t = def.active; h.hitSet = new Set();
+            burst(h.x, h.y, def.color, 14, 220, 0.5);
+            this.shake = Math.max(this.shake, 3);
+            AUDIO.sfx('burn');
+          }
+        } else if (h.phase === 'erupt') {
+          if (!h.hitSet.has(P) && U.dist(h.x, h.y, P.x, P.y) < h.r + P.r) {
+            hurtP(h, def.dmgP, h.warnShown);
+            h.hitSet.add(P);
+          }
+          for (const e of this.enemies) {
+            if (e.dead || e.boss || e.spawnT > 0 || h.hitSet.has(e)) continue;
+            if (U.dist(h.x, h.y, e.x, e.y) < h.r + e.r) {
+              hitEnemy(e, def.dmgE * s, 'hazard');
+              h.hitSet.add(e);
+            }
+          }
+          if (h.t <= 0) { h.phase = 'dormant'; h.t = U.rand(def.dormant[0], def.dormant[1]); h.warnShown = 0; h.hitSet = null; }
+        }
+      } else if (h.type === 'venomPool') {
+        const dInside = U.dist(P.x, P.y, h.x, h.y) < h.r;
+        if (dInside) {
+          P.hazardSlowT = 0.2; P.hazardSlowF = 1 - def.slow;
+          h.tickT -= dt;
+          // grace: the pool is always visible, but the first tick never fires before
+          // def.grace seconds of room time have passed (telegraph-before-damage floor)
+          if (h.tickT <= 0 && h.age >= def.grace) { hurtP(h, def.dmgP, h.age); h.tickT = def.tick; }
+        } else {
+          h.tickT = 0.35;
+        }
+        for (const e of this.enemies) {
+          if (e.dead || e.boss || e.spawnT > 0 || def.immune.includes(e.type)) continue;
+          if (U.dist(e.x, e.y, h.x, h.y) < h.r) {
+            e.slowT = Math.max(e.slowT, 0.2);
+            e.slowF = Math.min(e.slowF || 1, def.enemySlow);
+          }
+        }
+      } else if (h.type === 'arrowVolley') {
+        h.t -= dt;
+        if (h.t <= 0 && h.markers.length < def.max) {
+          const A = this.arena;
+          const mx = U.clamp(P.x + U.rand(-def.jitter, def.jitter), A.x + def.r, A.x + A.w - def.r);
+          const my = U.clamp(P.y + U.rand(-def.jitter, def.jitter), A.y + def.r, A.y + A.h - def.r);
+          h.markers.push({ x: mx, y: my, r: def.r, t: def.warn, shown: 0 });
+          h.t = U.rand(def.every[0], def.every[1]);
+        }
+        for (const m of h.markers) { m.shown += dt; m.t -= dt; }
+        for (const m of h.markers.slice()) {
+          if (m.t > 0) continue;
+          if (U.dist(m.x, m.y, P.x, P.y) < m.r + P.r) hurtP(h, def.dmgP, m.shown);
+          for (const e of this.enemies) {
+            if (e.dead || e.boss || e.spawnT > 0) continue;
+            if (U.dist(m.x, m.y, e.x, e.y) < m.r + e.r) hitEnemy(e, def.dmgE * s, 'hazard');
+          }
+          this.rings.push({ x: m.x, y: m.y, r: m.r, t: 0.25, color: def.color });
+          burst(m.x, m.y, def.color, 10, 160, 0.35);
+          AUDIO.sfx('bow');
+          h.markers.splice(h.markers.indexOf(m), 1);
+        }
+      } else if (h.type === 'riverCurrent') {
+        h.t -= dt;
+        if (h.phase === 'calm' && h.t <= 0) { h.phase = 'surgeWarn'; h.t = def.surgeWarn; }
+        else if (h.phase === 'surgeWarn' && h.t <= 0) { h.phase = 'surge'; h.t = def.surgeDur; }
+        else if (h.phase === 'surge' && h.t <= 0) { h.phase = 'calm'; h.t = U.rand(def.surgeEvery[0], def.surgeEvery[1]); }
+        const push = h.phase === 'surge' ? def.surgePush : def.push;
+        const inBand = (ent) => ent.x >= h.x && ent.x <= h.x + h.w && ent.y >= h.y && ent.y <= h.y + h.h;
+        if (P.dashT <= 0 && inBand(P)) { P.x += h.dir * push * dt; clampToArena(P); }
+        for (const e of this.enemies) {
+          if (e.dead || e.boss || e.spawnT > 0) continue;
+          if (inBand(e)) { e.x += h.dir * push * dt; clampToArena(e); }
+        }
+      }
+    }
+  },
+
+  renderHazards(ctx) {
+    const H = this.hazards || [];
+    for (const h of H) {
+      const def = DATA.HAZARDS[h.type];
+      if (h.type === 'fireVent') {
+        if (h.phase === 'dormant' || !h.phase) {
+          ctx.fillStyle = 'rgba(0,0,0,0.45)';
+          ctx.beginPath(); ctx.arc(h.x, h.y, h.r * 0.6, 0, U.TAU); ctx.fill();
+          ctx.strokeStyle = def.color + '55'; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(h.x, h.y, h.r * 0.6, 0, U.TAU); ctx.stroke();
+          for (let i = 0; i < 3; i++) {
+            const a = (i / 3) * U.TAU;
+            ctx.beginPath();
+            ctx.moveTo(h.x + Math.cos(a) * h.r * 0.3, h.y + Math.sin(a) * h.r * 0.3);
+            ctx.lineTo(h.x + Math.cos(a) * h.r * 0.55, h.y + Math.sin(a) * h.r * 0.55);
+            ctx.stroke();
+          }
+        } else if (h.phase === 'warn') {
+          const frac = 1 - h.t / def.warn;
+          ctx.fillStyle = def.color + '55';
+          ctx.beginPath(); ctx.arc(h.x, h.y, h.r * Math.max(0.1, frac), 0, U.TAU); ctx.fill();
+          ctx.strokeStyle = def.color; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(h.x, h.y, h.r, 0, U.TAU); ctx.stroke();
+        } else if (h.phase === 'erupt') {
+          ctx.fillStyle = def.color + '99';
+          ctx.beginPath(); ctx.arc(h.x, h.y, h.r, 0, U.TAU); ctx.fill();
+          ctx.fillStyle = def.color;
+          for (let i = 0; i < 8; i++) {
+            const a = (i / 8) * U.TAU;
+            const bx = h.x + Math.cos(a) * h.r, by = h.y + Math.sin(a) * h.r;
+            const tx = h.x + Math.cos(a) * h.r * 1.4, ty = h.y + Math.sin(a) * h.r * 1.4;
+            const pa = a + Math.PI / 2;
+            ctx.beginPath();
+            ctx.moveTo(bx + Math.cos(pa) * 5, by + Math.sin(pa) * 5);
+            ctx.lineTo(bx - Math.cos(pa) * 5, by - Math.sin(pa) * 5);
+            ctx.lineTo(tx, ty);
+            ctx.closePath(); ctx.fill();
+          }
+        }
+      } else if (h.type === 'venomPool') {
+        const alpha = 0.22 + 0.06 * Math.sin(this.time * 3);
+        ctx.fillStyle = def.color; ctx.globalAlpha = alpha;
+        ctx.beginPath(); ctx.arc(h.x, h.y, h.r, 0, U.TAU); ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = def.color; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(h.x, h.y, h.r, 0, U.TAU); ctx.stroke();
+        for (let i = 0; i < 3; i++) {
+          const a = this.time * (0.6 + i * 0.2) + i * 2;
+          const bx = h.x + Math.cos(a) * h.r * 0.5, by = h.y + Math.sin(a) * h.r * 0.5;
+          ctx.beginPath(); ctx.arc(bx, by, 4, 0, U.TAU); ctx.fill();
+        }
+      } else if (h.type === 'arrowVolley') {
+        for (const m of h.markers) {
+          const frac = 1 - m.t / def.warn;
+          ctx.strokeStyle = def.color; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(m.x, m.y, m.r, 0, U.TAU); ctx.stroke();
+          ctx.fillStyle = def.color + '55';
+          ctx.beginPath(); ctx.arc(m.x, m.y, m.r * Math.max(0.05, frac), 0, U.TAU); ctx.fill();
+          for (let i = 0; i < 4; i++) {
+            const a = (i / 4) * U.TAU + Math.PI / 4;
+            ctx.beginPath();
+            ctx.moveTo(m.x + Math.cos(a) * m.r * 0.9, m.y + Math.sin(a) * m.r * 0.9);
+            ctx.lineTo(m.x + Math.cos(a) * m.r * 0.6, m.y + Math.sin(a) * m.r * 0.6);
+            ctx.stroke();
+          }
+        }
+      } else if (h.type === 'riverCurrent') {
+        const surging = h.phase === 'surge';
+        const warning = h.phase === 'surgeWarn';
+        ctx.fillStyle = def.color;
+        ctx.globalAlpha = surging ? 0.22 : (warning ? 0.18 : 0.10);
+        ctx.fillRect(h.x, h.y, h.w, h.h);
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = warning ? '#ffffff' : def.color;
+        ctx.lineWidth = 1.5;
+        const push = surging ? def.surgePush : def.push;
+        const scroll = (this.time * push * h.dir) % 60;
+        for (let x = h.x - 60; x < h.x + h.w + 60; x += 60) {
+          const cx = x + scroll;
+          const cy = h.y + h.h / 2;
+          ctx.beginPath();
+          if (h.dir > 0) { ctx.moveTo(cx - 8, cy - 10); ctx.lineTo(cx + 8, cy); ctx.lineTo(cx - 8, cy + 10); }
+          else { ctx.moveTo(cx + 8, cy - 10); ctx.lineTo(cx - 8, cy); ctx.lineTo(cx + 8, cy + 10); }
+          ctx.stroke();
+        }
+      }
+    }
+  },
+  // ---- end Phase 4 hazards ----
 
   // ---------------- render ----------------
   render() {
@@ -480,15 +678,8 @@ const GAME = {
       }
     }
 
-    // pillars
-    for (const p of this.pillars) {
-      ctx.fillStyle = biome.wall;
-      ctx.beginPath(); ctx.arc(p.x, p.y + 4, p.r, 0, U.TAU); ctx.fill();
-      ctx.fillStyle = this.shadeMix(biome.wall, biome.accent, 0.25);
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, U.TAU); ctx.fill();
-      ctx.strokeStyle = biome.accent + '55'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 0.6, 0, U.TAU); ctx.stroke();
-    }
+    this.renderObstacles(ctx);
+    this.renderHazards(ctx);
 
     // doors
     for (const d of this.doors) {
@@ -770,6 +961,45 @@ const GAME = {
     }
     ctx.globalAlpha = 1;
   },
+
+  // ---- Phase 4: obstacles (pillar/wall/pit) — renderObstacles ----
+  renderObstacles(ctx) {
+    const biome = this.biome;
+    for (const o of this.pillars) {
+      const kind = o.kind || 'pillar';
+      if (kind === 'pit') {
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        if (o.shape === 'rect') ctx.fillRect(o.x, o.y, o.w, o.h);
+        else { ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, U.TAU); ctx.fill(); }
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        if (o.shape === 'rect') ctx.fillRect(o.x + 6, o.y + 6, Math.max(0, o.w - 12), Math.max(0, o.h - 12));
+        else { ctx.beginPath(); ctx.arc(o.x, o.y, Math.max(0, o.r - 6), 0, U.TAU); ctx.fill(); }
+        ctx.strokeStyle = biome.accent + '66';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 5]);
+        if (o.shape === 'rect') ctx.strokeRect(o.x, o.y, o.w, o.h);
+        else { ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, U.TAU); ctx.stroke(); }
+        ctx.setLineDash([]);
+      } else if (o.shape === 'rect') {
+        ctx.fillStyle = biome.wall;
+        ctx.fillRect(o.x, o.y + 4, o.w, o.h);
+        ctx.fillStyle = this.shadeMix(biome.wall, biome.accent, 0.25);
+        ctx.fillRect(o.x, o.y, o.w, o.h);
+        ctx.strokeStyle = biome.accent + '55';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(o.x + 4, o.y + 4, Math.max(0, o.w - 8), Math.max(0, o.h - 8));
+      } else {
+        // pillar (circle) — existing look
+        ctx.fillStyle = biome.wall;
+        ctx.beginPath(); ctx.arc(o.x, o.y + 4, o.r, 0, U.TAU); ctx.fill();
+        ctx.fillStyle = this.shadeMix(biome.wall, biome.accent, 0.25);
+        ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, U.TAU); ctx.fill();
+        ctx.strokeStyle = biome.accent + '55'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(o.x, o.y, o.r * 0.6, 0, U.TAU); ctx.stroke();
+      }
+    }
+  },
+  // ---- end Phase 4 obstacles ----
 
   renderHubBg(ctx) {
     // slowly turning mandala behind the hub menu

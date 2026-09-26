@@ -1344,5 +1344,885 @@ const prov = checkProvenance(path.join(__dirname, '..', 'assets', 'sprites'));
 check('provenance: every atlas has a PROVENANCE.json entry'
   + (prov.missing.length ? ' — missing: ' + prov.missing.join(', ') : ''), prov.ok);
 
+// ---------------- Phase 4: boss telegraphs & phases (GAME-05/06) ----------------
+console.log('\n— boss telegraphs & phases (Phase 4) —');
+sandbox.__ctx = ctxStub;
+
+// Capture the violation count BEFORE the per-move harness runs below, so a failure here is
+// attributable to the full runs already executed earlier in this file (god-mode, weak-player,
+// all-boons stress, gandiva/gada runs, worst-case stress) rather than to the harness itself.
+const preHarnessViolations = vm.runInContext('BOSS_TG.violations.length', sandbox);
+check('no unarmed boss damage across all full runs executed so far', preHarnessViolations === 0);
+
+// Static source check: no touchAttack( in class Boss; takeDamage( only inside hurtPlayer();
+// enemyShot( only inside shoot().
+{
+  const src = fs.readFileSync(path.join(__dirname, '..', 'js', 'entities.js'), 'utf8');
+  const bStart = src.indexOf('class Boss');
+  const bEnd = src.indexOf('// ---------------- shared helpers', bStart);
+  const bossBody = src.slice(bStart, bEnd);
+  const noTouchAttack = !/touchAttack\(/.test(bossBody);
+
+  function stripMethodBody(text, name) {
+    const idx = text.indexOf(name + '(');
+    if (idx === -1) return text;
+    const braceStart = text.indexOf('{', idx);
+    let depth = 0, i = braceStart;
+    for (; i < text.length; i++) {
+      if (text[i] === '{') depth++;
+      else if (text[i] === '}') { depth--; if (depth === 0) { i++; break; } }
+    }
+    return text.slice(0, idx) + text.slice(i);
+  }
+  let stripped = stripMethodBody(bossBody, 'hurtPlayer');
+  stripped = stripMethodBody(stripped, 'shoot');
+  const noStrayTakeDamage = !/takeDamage\(/.test(stripped);
+  const noStrayEnemyShot = !/enemyShot\(/.test(stripped);
+  check('Boss: no touchAttack( calls remain', noTouchAttack);
+  check('Boss: takeDamage( only appears inside hurtPlayer()', noStrayTakeDamage);
+  check('Boss: enemyShot( only appears inside shoot()', noStrayEnemyShot);
+}
+
+// Static data check: every referenced move id exists, damaging moves have wind >= 0.4s.
+vm.runInContext(`
+globalThis.__bossStatic = { errors: [] };
+(function() {
+  const E = __bossStatic.errors;
+  for (const bossId of Object.keys(DATA.BOSSES)) {
+    for (const ph of [1, 2]) {
+      const table = BOSS_MOVESETS[bossId] && BOSS_MOVESETS[bossId][ph];
+      if (!table || !table.length) { E.push(bossId + ' phase ' + ph + ' moveset empty/missing'); continue; }
+      for (const entry of table) {
+        const id = entry[0];
+        if (!BOSS_MOVE_DEFS[id]) { E.push(bossId + ' phase ' + ph + ' unknown move ' + id); continue; }
+        const def = { ...BOSS_MOVE_DEFS[id], ...(entry[2] || {}) };
+        if (def.dmg && def.wind < 0.4) E.push(bossId + ' phase ' + ph + ' move ' + id + ' wind too short (' + def.wind + ')');
+      }
+    }
+  }
+})();
+`, sandbox);
+const bossStatic = vm.runInContext('__bossStatic', sandbox);
+check('boss movesets: data integrity (known moves, damaging moves wind >= 0.4s)'
+  + (bossStatic.errors.length ? ' — ' + bossStatic.errors.join('; ') : ''), bossStatic.errors.length === 0);
+
+// Per-move harness: place the player in reach, force a specific move, and verify
+// telegraph-before-damage for it.
+vm.runInContext(`
+globalThis.__bossMove = function(bossId, phase, moveId) {
+  GAME.startRun();
+  const P = GAME.player;
+  P.maxhp = P.hp = 1e9;
+  const biomeIdx = DATA.BIOMES.findIndex(b => b.boss === bossId);
+  GAME.biomeIdx = biomeIdx; GAME.biome = DATA.BIOMES[biomeIdx];
+  ROOMS.enterRoom('boss');
+  const B = GAME.bossRef;
+  B.asleep = false;
+  B.state = 'rest'; B.t = 99;
+  if (phase === 2) { B.phase = 2; B.hp = B.maxhp * 0.45; }
+  const hits = [];
+  const origTakeDamage = P.takeDamage.bind(P);
+  P.takeDamage = function(amount, fx, fy) {
+    hits.push({ state: B.state, armed: B.armed });
+    return origTakeDamage(amount, fx, fy);
+  };
+  P.x = B.x - (B.r + 60); P.y = B.y;
+  const v0 = BOSS_TG.violations.length;
+  B.startMove(moveId);
+  const serial = B.moveSerial;
+  let wind = 0, drawErr = null, frames = 0;
+  const DT = 1 / 60;
+  while (frames++ < 360) {
+    for (const e of GAME.enemies) if (e !== B) e.dead = true;
+    P.iframes = 0; P.dashT = 0;
+    if (/Wind$/.test(B.state)) wind += DT;
+    GAME.update(DT);
+    try { B.draw(__ctx); GAME.renderBackground(__ctx); GAME.renderEffects(__ctx); }
+    catch (e) { drawErr = e.message; }
+    if (B.moveSerial !== serial || B.phase !== phase) break;
+  }
+  P.takeDamage = origTakeDamage;
+  return { wind, hits, dmgCalls: B.dmgCalls || 0, newViolations: BOSS_TG.violations.slice(v0),
+           def: B.moveDef(moveId), drawErr };
+};
+
+// Moves that deal damage synchronously via hurtPlayer() at the moment of contact — for these,
+// "armed" must be truthy at the exact instant P.takeDamage() fires. Ranged/AoE moves (radial,
+// spiral, and later lamps/leap) deal damage via shoot()-spawned projectiles resolved by the
+// shared enemy-projectile loop in game.js some frames later (after travel time), often once the
+// boss has already moved on to 'rest' or its next move — armed is correctly null by then even
+// though the shot was only ever fired while armed (already verified by newViolations === 0).
+const DIRECT_DMG_MOVES = new Set(['swipe', 'charge', 'slam', 'noose']);
+
+globalThis.__bossMoveResults = {};
+for (const bossId of Object.keys(DATA.BOSSES)) {
+  __bossMoveResults[bossId] = {};
+  for (const phase of [1, 2]) {
+    const table = BOSS_MOVESETS[bossId][phase];
+    const ids = table.map(m => m[0]);
+    if (ids.includes('chase') && !ids.includes('swipe')) ids.push('swipe');
+    const fails = [];
+    for (const moveId of ids) {
+      const res = __bossMove(bossId, phase, moveId);
+      if (res.drawErr) fails.push(moveId + ': draw error ' + res.drawErr);
+      if (res.newViolations.length) fails.push(moveId + ': ' + res.newViolations.length + ' violations');
+      if (DIRECT_DMG_MOVES.has(moveId) && !res.hits.every(h => h.armed)) fails.push(moveId + ': unarmed hit recorded');
+      if (res.def.dmg) {
+        if (res.wind < res.def.wind - 0.05) fails.push(moveId + ': wind ' + res.wind.toFixed(2) + ' < ' + res.def.wind);
+        if (res.dmgCalls <= 0) fails.push(moveId + ': dmgCalls=0');
+      }
+    }
+    __bossMoveResults[bossId][phase] = { ids, fails };
+  }
+}
+`, sandbox);
+const bossMoveResults = vm.runInContext('__bossMoveResults', sandbox);
+console.log('\n— boss telegraphs: per-move harness (Phase 4) —');
+for (const bossId of Object.keys(bossMoveResults)) {
+  for (const phase of [1, 2]) {
+    const r = bossMoveResults[bossId][phase];
+    check(`${bossId} phase ${phase}: telegraph invariant holds for ${r.ids.join(',')}`
+      + (r.fails.length ? ' — ' + r.fails.join('; ') : ''), r.fails.length === 0);
+  }
+}
+
+// Static: every boss's phase-2 moveset contains >= 2 attacks absent from phase 1.
+vm.runInContext(`
+globalThis.__phase2NewMoves = {};
+for (const bossId of Object.keys(DATA.BOSSES)) {
+  const p1 = new Set(BOSS_MOVESETS[bossId][1].map(m => m[0]));
+  const p2 = new Set(BOSS_MOVESETS[bossId][2].map(m => m[0]));
+  __phase2NewMoves[bossId] = [...p2].filter(id => !p1.has(id));
+}
+`, sandbox);
+const phase2NewMoves = vm.runInContext('__phase2NewMoves', sandbox);
+console.log('\n— boss phase-2 movesets: >= 2 new attacks per boss (Phase 4) —');
+for (const bossId of Object.keys(phase2NewMoves)) {
+  check(`${bossId}: >= 2 phase-2-only attacks (${phase2NewMoves[bossId].join(', ')})`,
+    phase2NewMoves[bossId].length >= 2);
+}
+
+// Phase-transition harness: 50% HP -> phaseShift -> deterministic opener -> phase-2-only
+// moves appear over time, with zero new BOSS_TG violations along the way.
+vm.runInContext(`
+globalThis.__bossPhaseTransition = function(bossId) {
+  GAME.startRun();
+  const P = GAME.player;
+  P.maxhp = P.hp = 1e9;
+  const biomeIdx = DATA.BIOMES.findIndex(b => b.boss === bossId);
+  GAME.biomeIdx = biomeIdx; GAME.biome = DATA.BIOMES[biomeIdx];
+  ROOMS.enterRoom('boss');
+  const B = GAME.bossRef;
+  B.asleep = false;
+  B.pickMove();
+  B.hp = B.maxhp * 0.49;
+  const v0 = BOSS_TG.violations.length;
+  const DT = 1 / 60;
+
+  GAME.update(DT);
+  const enteredPhaseShift = B.phase === 2 && B.state === 'phaseShift';
+
+  const table2 = BOSS_MOVESETS[bossId][2];
+  const openerId = (table2.find(m => m[2] && m[2].opener) || [null])[0];
+  let openerSeen = false, frames = 0;
+  while (frames++ < 96) { // 1.6s
+    for (const e of GAME.enemies) if (e !== B) e.dead = true;
+    P.iframes = 0; P.dashT = 0;
+    GAME.update(DT);
+    if (B.lastMove === openerId && (B.state === openerId + 'Wind' || B.state === openerId)) { openerSeen = true; break; }
+  }
+
+  const lastMoves = new Set();
+  frames = 0;
+  while (frames++ < 1800) { // 30s
+    for (const e of GAME.enemies) if (e !== B) e.dead = true;
+    P.iframes = 0; P.dashT = 0;
+    GAME.update(DT);
+    lastMoves.add(B.lastMove);
+  }
+  const p1Ids = new Set(BOSS_MOVESETS[bossId][1].map(m => m[0]));
+  const p2OnlyIds = new Set(BOSS_MOVESETS[bossId][2].map(m => m[0]).filter(id => !p1Ids.has(id)));
+  const hasPhase2Only = [...lastMoves].some(id => p2OnlyIds.has(id));
+
+  return { enteredPhaseShift, openerId, openerSeen, hasPhase2Only, newViolations: BOSS_TG.violations.length - v0 };
+};
+
+globalThis.__phaseTransitionResults = {};
+for (const bossId of Object.keys(DATA.BOSSES)) __phaseTransitionResults[bossId] = __bossPhaseTransition(bossId);
+`, sandbox);
+const phaseTransitionResults = vm.runInContext('__phaseTransitionResults', sandbox);
+console.log('\n— boss phase transitions: phaseShift -> deterministic opener -> phase-2 moves (Phase 4) —');
+for (const bossId of Object.keys(phaseTransitionResults)) {
+  const r = phaseTransitionResults[bossId];
+  check(`${bossId}: 50% HP triggers phaseShift`, r.enteredPhaseShift);
+  check(`${bossId}: opens phase 2 deterministically with its signature move (${r.openerId})`, r.openerSeen);
+  check(`${bossId}: phase-2-only moves appear over 30s of play`, r.hasPhase2Only);
+  check(`${bossId}: no new BOSS_TG violations during the phase transition`, r.newViolations === 0);
+}
+
+// Global gate: zero violations across everything simulated so far (full runs + all harnesses).
+check('no unarmed boss damage anywhere (global BOSS_TG.violations gate)',
+  vm.runInContext('BOSS_TG.violations.length', sandbox) === 0);
+
+// ---------------- Phase 4: boons & duos (GAME-01/02) ----------------
+console.log('\n— boons & duos (Phase 4, GAME-01/02) —');
+
+const boonCountData = JSON.parse(vm.runInContext(`
+  JSON.stringify({
+    total: DATA.BOONS.length,
+    perGod: Object.keys(DATA.GODS).map(g => ({ g, n: DATA.BOONS.filter(b => b.god === g).length }))
+  })
+`, sandbox));
+check(`boon pool >= 24 total (actual ${boonCountData.total})`, boonCountData.total >= 24);
+for (const { g, n } of boonCountData.perGod) check(`${g}: >= 4 boons (actual ${n})`, n >= 4);
+
+vm.runInContext(`
+globalThis.__duoIntegrityErrors = [];
+try {
+  const ids = new Set();
+  for (const b of DATA.BOONS) ids.add(b.id);
+  if (DATA.DUO_BOONS.length < 3) __duoIntegrityErrors.push('duo count < 3: ' + DATA.DUO_BOONS.length);
+  for (const d of DATA.DUO_BOONS) {
+    if (ids.has(d.id)) __duoIntegrityErrors.push(d.id + ' collides with a single-god boon id');
+    ids.add(d.id);
+    if (d.duo !== true) __duoIntegrityErrors.push(d.id + ' duo !== true');
+    if (!Array.isArray(d.gods) || d.gods.length !== 2 || new Set(d.gods).size !== 2) __duoIntegrityErrors.push(d.id + ' gods must be 2 distinct ids');
+    for (const g of d.gods) if (!DATA.GODS[g]) __duoIntegrityErrors.push(d.id + ' unknown god ' + g);
+    const reqKeys = Object.keys(d.req).sort();
+    const godsSorted = d.gods.slice().sort();
+    if (JSON.stringify(reqKeys) !== JSON.stringify(godsSorted)) __duoIntegrityErrors.push(d.id + ' req keys != gods');
+    for (const g of d.gods) {
+      for (const rid of (d.req[g] || [])) {
+        const b = DATA.BOONS.find(x => x.id === rid);
+        if (!b) __duoIntegrityErrors.push(d.id + ' req id missing: ' + rid);
+        else if (b.god !== g) __duoIntegrityErrors.push(d.id + ' req id ' + rid + ' belongs to ' + b.god + ' not ' + g);
+      }
+    }
+    for (let r = 0; r < DATA.RARITIES.length; r++) {
+      const s = d.desc(d.base * DATA.RARITIES[r].mult);
+      if (!s || typeof s !== 'string' || !s.length) __duoIntegrityErrors.push(d.id + ' desc empty at rarity ' + r);
+    }
+    if (DATA.findBoon(d.id) !== d) __duoIntegrityErrors.push(d.id + ' findBoon mismatch');
+  }
+} catch (e) { __duoIntegrityErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const duoIntegrityErrors = vm.runInContext('__duoIntegrityErrors', sandbox);
+check('duo boons: integrity (count, unique ids, gods, req lists, desc, findBoon)'
+  + (duoIntegrityErrors.length ? ' — ' + duoIntegrityErrors.join('; ') : ''), duoIntegrityErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__duoEligibilityErrors = [];
+try {
+  GAME.startRun();
+  const P0 = GAME.player;
+  if (P0.eligibleDuos().length !== 0) __duoEligibilityErrors.push('fresh run has eligible duos');
+
+  for (const d of DATA.DUO_BOONS) {
+    GAME.startRun();
+    const P = GAME.player;
+    for (const g of d.gods) {
+      const rid = d.req[g][0];
+      P.addBoon(DATA.findBoon(rid), 0);
+    }
+    const elig = P.eligibleDuos();
+    if (!elig.includes(d)) __duoEligibilityErrors.push(d.id + ' not eligible after req boons added');
+    const offer = P.duoOfferFor(d.gods[0]);
+    if (!offer || !offer.gods.includes(d.gods[0])) __duoEligibilityErrors.push(d.id + ' duoOfferFor failed');
+    P.addBoon(d, 0);
+    if (P.eligibleDuos().includes(d)) __duoEligibilityErrors.push(d.id + ' still eligible after being taken');
+    if (P.val(d.id) !== d.base) __duoEligibilityErrors.push(d.id + ' val mismatch at rarity 0');
+  }
+} catch (e) { __duoEligibilityErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const duoEligibilityErrors = vm.runInContext('__duoEligibilityErrors', sandbox);
+check('duo boons: eligibility gating, offer targeting, post-pick exclusion'
+  + (duoEligibilityErrors.length ? ' — ' + duoEligibilityErrors.join('; ') : ''), duoEligibilityErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__duoEffectErrors = [];
+try {
+  function __freshEnemyRun() {
+    GAME.startRun();
+    const P = GAME.player;
+    P.maxhp = 1e9; P.hp = 1e9;
+    GAME.enemies = [];
+    const e = new Enemy('bhuta', P.x + 60, P.y, 1);
+    e.spawnT = 0; e.hp = e.maxhp = 1e6;
+    GAME.enemies.push(e);
+    return { P, e };
+  }
+
+  { const { P, e } = __freshEnemyRun();
+    P.addBoon(DATA.findBoon('duo_pavanaputra'), 0);
+    P.tryDash();
+    if (!(P.pavanaT > 0)) __duoEffectErrors.push('pavanaputra: pavanaT not set after dash');
+  }
+
+  { const { P, e } = __freshEnemyRun();
+    P.addBoon(DATA.findBoon('duo_khandava'), 0);
+    chainLightning(e, 10, 0);
+    if (!(e.burns.length > 0)) __duoEffectErrors.push('khandava: no burn applied via chain');
+  }
+
+  { const { P, e } = __freshEnemyRun();
+    P.addBoon(DATA.findBoon('duo_yogamaya'), 0);
+    P.iframes = 0; P.dashT = 0;
+    P.takeDamage(5);
+    if (!(P.iframes >= 1.1)) __duoEffectErrors.push('yogamaya: iframes not extended (' + P.iframes + ')');
+    if (!(e.maya > 0)) __duoEffectErrors.push('yogamaya: enemy not marked with maya');
+  }
+
+  { const { P, e } = __freshEnemyRun();
+    P.addBoon(DATA.findBoon('duo_marut'), 0);
+    const h0 = e.hp;
+    P.tryDash();
+    if (!(e.hp < h0)) __duoEffectErrors.push('marut: enemy hp unchanged after dash');
+  }
+
+  { const { P, e } = __freshEnemyRun();
+    P.addBoon(DATA.findBoon('duo_jwalamukhi'), 0);
+    P.iframes = 0; P.dashT = 0;
+    P.takeDamage(5);
+    if (!(e.burns.length > 0)) __duoEffectErrors.push('jwalamukhi: no burn applied on hit');
+  }
+
+  { const { P, e } = __freshEnemyRun();
+    const e2 = new Enemy('bhuta', e.x + 40, e.y, 1);
+    e2.spawnT = 0; e2.hp = e2.maxhp = 1e6;
+    GAME.enemies.push(e2);
+    P.addBoon(DATA.findBoon('duo_kapidhvaja'), 0);
+    for (let i = 0; i < 6; i++) hitEnemy(e, 1, 'attack');
+    if (!(e2.maya > 0)) __duoEffectErrors.push('kapidhvaja: e2 not marked with maya');
+    if (P.kapiHits !== 0) __duoEffectErrors.push('kapidhvaja: kapiHits not reset (' + P.kapiHits + ')');
+  }
+} catch (e) { __duoEffectErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const duoEffectErrors = vm.runInContext('__duoEffectErrors', sandbox);
+check('duo boons: targeted synergy effects fire correctly in the real pipeline'
+  + (duoEffectErrors.length ? ' — ' + duoEffectErrors.join('; ') : ''), duoEffectErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__duoStressErrors = [];
+try {
+  META.lastWeapon = 'khanda'; // melee weapon (a prior VFX stress block leaves lastWeapon = 'gandiva'/bow)
+  GAME.startRun();
+  const P = GAME.player;
+  P.maxhp = 1e9; P.hp = 1e9;
+  for (const def of DATA.BOONS) P.addBoon(def, Math.floor(Math.random() * 3));
+  for (const def of DATA.DUO_BOONS) P.addBoon(def, Math.floor(Math.random() * 3));
+  for (let frame = 0; frame < 4000; frame++) {
+    if (frame % 9 === 0) P.meleeAttack();
+    if (frame % 40 === 0) P.tryDash();
+    if (frame % 80 === 0) P.trySpecial();
+    if (frame % 100 === 0) P.tryCast();
+    if (frame % 60 === 0) { P.iframes = 0; P.dashT = 0; P.takeDamage(3); }
+    const living = GAME.enemies.filter(e => !e.dead && e.spawnT <= 0);
+    if (living.length && frame % 3 === 0) hitEnemy(living[0], 30, 'attack');
+    GAME.update(1/60);
+    GAME.render();
+    if (GAME.state === 'cleared' && GAME.doors.length) {
+      GAME.player.x = GAME.doors[0].x; GAME.player.y = GAME.doors[0].y;
+    }
+    if (GAME.state === 'choosing') {
+      const cards = document.getElementById('boon-cards').children;
+      if (cards.length) cards[0].onclick();
+      else if (!document.getElementById('shop').classList.contains('hidden')) UI.closeShop();
+      else GAME.state = 'cleared';
+    }
+  }
+} catch (e) { __duoStressErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const duoStressErrors = vm.runInContext('__duoStressErrors', sandbox);
+check('all boons + all duos active simultaneously, 4000 frames incl. periodic takeDamage'
+  + (duoStressErrors.length ? ' — ' + duoStressErrors[0] : ''), duoStressErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__duoOfferErrors = [];
+try {
+  for (const d of DATA.DUO_BOONS) {
+    GAME.startRun();
+    const P = GAME.player;
+    for (const g of d.gods) P.addBoon(DATA.findBoon(d.req[g][0]), 0);
+    UI.offerBoon(d.gods[0]);
+    if (GAME.state !== 'choosing') __duoOfferErrors.push(d.id + ': state not choosing after offerBoon');
+    const cards = document.getElementById('boon-cards').children;
+    if (cards.length > META.boonChoices()) __duoOfferErrors.push(d.id + ': too many cards (' + cards.length + ')');
+    const c0 = cards[0];
+    if (!c0 || c0.duo !== true) __duoOfferErrors.push(d.id + ': first card not flagged duo');
+    if (!c0 || !c0.className.includes('duo')) __duoOfferErrors.push(d.id + ': first card className missing duo');
+    if (!c0 || !c0.innerHTML.includes('DUO') || !c0.innerHTML.includes(d.name)) __duoOfferErrors.push(d.id + ': first card innerHTML missing DUO/name');
+    c0.onclick();
+    if (!P.has(d.id)) __duoOfferErrors.push(d.id + ': picking card did not grant duo');
+    GAME.state = 'cleared';
+    UI.offerBoon(d.gods[0]);
+    const cards2 = document.getElementById('boon-cards').children;
+    const c02 = cards2[0];
+    if (c02 && c02.duo === true && c02.innerHTML.includes(d.name)) __duoOfferErrors.push(d.id + ': offered again after being taken');
+  }
+} catch (e) { __duoOfferErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const duoOfferErrors = vm.runInContext('__duoOfferErrors', sandbox);
+check('duo offer: styled first card when eligible, grants on pick, not re-offered'
+  + (duoOfferErrors.length ? ' — ' + duoOfferErrors.join('; ') : ''), duoOfferErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__duoNegErrors = [];
+try {
+  GAME.startRun();
+  UI.offerBoon('agni');
+  const cards = document.getElementById('boon-cards').children;
+  for (const c of cards) if (c.duo) __duoNegErrors.push('duo card shown with no prerequisites met');
+} catch (e) { __duoNegErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const duoNegErrors = vm.runInContext('__duoNegErrors', sandbox);
+check('duo offer: never shown before prerequisites are met'
+  + (duoNegErrors.length ? ' — ' + duoNegErrors.join('; ') : ''), duoNegErrors.length === 0);
+
+// ---------------- Phase 4: room layouts (GAME-03) ----------------
+console.log('\n— room layouts (Phase 4, GAME-03) —');
+
+vm.runInContext(`
+globalThis.__layoutErrors = [];
+try {
+  const A = GAME.arena;
+  const spawnX = A.x + 90, spawnY = A.y + A.h / 2;
+  const doorX = A.x + A.w - 36;
+  const doorYs = [1/3, 1/2, 2/3].map(f => A.y + A.h * f);
+
+  const seenIds = new Set();
+  for (const biomeId of Object.keys(DATA.LAYOUTS)) {
+    const list = ROOMS.layoutsFor(biomeId);
+    if (list.length < 3) __layoutErrors.push(biomeId + ': fewer than 3 templates (' + list.length + ')');
+    for (const tpl of list) {
+      if (seenIds.has(tpl.id)) __layoutErrors.push(tpl.id + ': duplicate template id');
+      seenIds.add(tpl.id);
+
+      const obs = ROOMS.materializeLayout(tpl);
+      for (const o of obs) {
+        if (o.shape === 'circle') {
+          if (o.x - o.r < A.x || o.x + o.r > A.x + A.w || o.y - o.r < A.y || o.y + o.r > A.y + A.h)
+            __layoutErrors.push(tpl.id + ': circle obstacle out of bounds');
+        } else {
+          if (o.x < A.x || o.x + o.w > A.x + A.w || o.y < A.y || o.y + o.h > A.y + A.h)
+            __layoutErrors.push(tpl.id + ': rect obstacle out of bounds');
+        }
+        if (ROOMS.obstacleDist(o, spawnX, spawnY) < 80)
+          __layoutErrors.push(tpl.id + ': obstacle too close to spawn');
+        for (const dy of doorYs) {
+          if (ROOMS.obstacleDist(o, doorX, dy) < 34 + 24)
+            __layoutErrors.push(tpl.id + ': obstacle too close to a door candidate');
+        }
+      }
+
+      // reachability flood-fill (10px grid, player radius 13)
+      const cell = 10, pr = 13;
+      const cols = Math.floor(A.w / cell), rows = Math.floor(A.h / cell);
+      const idx = (c, r) => r * cols + c;
+      const walkable = (px, py) => px >= A.x + pr && px <= A.x + A.w - pr && py >= A.y + pr && py <= A.y + A.h - pr
+        && !ROOMS.pointBlocked(px, py, pr, { obstacles: obs });
+      const visited = new Uint8Array(cols * rows);
+      const startCol = Math.floor((spawnX - A.x) / cell), startRow = Math.floor((spawnY - A.y) / cell);
+      visited[idx(startCol, startRow)] = 1;
+      const stack = [[startCol, startRow]];
+      while (stack.length) {
+        const [c, r] = stack.pop();
+        for (const [dc, dr] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+          const nc = c + dc, nr = r + dr;
+          if (nc < 0 || nc >= cols || nr < 0 || nr >= rows) continue;
+          if (visited[idx(nc, nr)]) continue;
+          const px = A.x + (nc + 0.5) * cell, py = A.y + (nr + 0.5) * cell;
+          if (!walkable(px, py)) continue;
+          visited[idx(nc, nr)] = 1;
+          stack.push([nc, nr]);
+        }
+      }
+      for (const dy of doorYs) {
+        const dc = Math.floor((doorX - A.x) / cell), dr = Math.floor((dy - A.y) / cell);
+        if (dc < 0 || dc >= cols || dr < 0 || dr >= rows || !visited[idx(dc, dr)])
+          __layoutErrors.push(tpl.id + ': a door candidate is unreachable from spawn');
+      }
+    }
+  }
+} catch (e) { __layoutErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const layoutErrors = vm.runInContext('__layoutErrors', sandbox);
+check('room layouts: >=3 templates/biome, unique ids, bounds, spawn/door clearance, reachability'
+  + (layoutErrors.length ? ' — ' + layoutErrors.slice(0, 6).join('; ') + (layoutErrors.length > 6 ? ` (+${layoutErrors.length - 6} more)` : '') : ''),
+  layoutErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__collisionErrors = [];
+try {
+  // Rect push-out
+  GAME.pillars = [{shape:'rect',kind:'wall',x:400,y:300,w:100,h:60}];
+  { const ent = {x:450,y:330,r:13};
+    clampToArena(ent);
+    const cx = U.clamp(ent.x, 400, 500), cy = U.clamp(ent.y, 300, 360);
+    const d = U.dist(ent.x, ent.y, cx, cy);
+    if (d < 12.9) __collisionErrors.push('rect push-out: entity still inside inflated rect (d=' + d + ')');
+  }
+
+  // Circle legacy compat (no shape field)
+  GAME.pillars = [{x:400,y:300,r:30}];
+  { const ent = {x:405,y:300,r:13};
+    clampToArena(ent);
+    const d = U.dist(ent.x, ent.y, 400, 300);
+    if (d < 42.9) __collisionErrors.push('legacy circle push-out: distance too small (d=' + d + ')');
+  }
+
+  // Pit blocks movement like a wall, but not projectiles
+  GAME.pillars = [{shape:'rect',kind:'pit',x:400,y:300,w:100,h:60}];
+  { const ent = {x:450,y:330,r:13};
+    clampToArena(ent);
+    const cx = U.clamp(ent.x, 400, 500), cy = U.clamp(ent.y, 300, 360);
+    const d = U.dist(ent.x, ent.y, cx, cy);
+    if (d < 12.9) __collisionErrors.push('pit push-out: entity still inside inflated pit (d=' + d + ')');
+  }
+  if (ROOMS.blocksProjectile({x:450,y:330,r:5}) !== false) __collisionErrors.push('pit should not block projectiles');
+  GAME.pillars = [{shape:'rect',kind:'wall',x:400,y:300,w:100,h:60}];
+  if (ROOMS.blocksProjectile({x:450,y:330,r:5}) !== true) __collisionErrors.push('wall should block projectiles');
+} catch (e) { __collisionErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const collisionErrors = vm.runInContext('__collisionErrors', sandbox);
+check('obstacle collision: rect push-out, legacy circle compat, pit vs wall projectile blocking'
+  + (collisionErrors.length ? ' — ' + collisionErrors.join('; ') : ''), collisionErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__projErrors = [];
+try {
+  GAME.startRun();
+  GAME.enemies = [];
+  const A = GAME.arena;
+  const px = A.x + 900, py = A.y + 500; // far from player spawn (A.x+90, A.y+A.h/2)
+
+  GAME.pillars = [{shape:'rect',kind:'pit',x:px-20,y:py-20,w:40,h:40}];
+  GAME.eprojectiles = [{x:px,y:py,vx:0,vy:0,dmg:0,color:'#fff',r:5,t:4}];
+  GAME.update(1/60);
+  if (GAME.eprojectiles.length !== 1) __projErrors.push('projectile over a pit was incorrectly removed');
+
+  GAME.pillars = [{shape:'rect',kind:'wall',x:px-20,y:py-20,w:40,h:40}];
+  GAME.eprojectiles = [{x:px,y:py,vx:0,vy:0,dmg:0,color:'#fff',r:5,t:4}];
+  GAME.update(1/60);
+  if (GAME.eprojectiles.length !== 0) __projErrors.push('projectile over a wall was not removed');
+} catch (e) { __projErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const projErrors = vm.runInContext('__projErrors', sandbox);
+check('projectile blocking: pit lets enemy projectiles through, wall stops them'
+  + (projErrors.length ? ' — ' + projErrors.join('; ') : ''), projErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__drawObstacleErrors = [];
+try {
+  GAME.pillars = [
+    {shape:'circle',kind:'pillar',x:400,y:300,r:30},
+    {shape:'rect',kind:'wall',x:500,y:300,w:80,h:40},
+    {shape:'rect',kind:'pit',x:650,y:300,w:80,h:40},
+    {shape:'circle',kind:'pit',x:800,y:300,r:30},
+  ];
+  GAME.renderBackground(__ctx);
+} catch (e) { __drawObstacleErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const drawObstacleErrors = vm.runInContext('__drawObstacleErrors', sandbox);
+check('renderObstacles draws pillar/wall/pit (circle+rect) without throwing'
+  + (drawObstacleErrors.length ? ' — ' + drawObstacleErrors.join('; ') : ''), drawObstacleErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__varietyErrors = [];
+try {
+  ROOMS.layoutHistory = []; ROOMS.lastLayoutId = null;
+  for (const biomeId of Object.keys(DATA.LAYOUTS)) {
+    GAME.biome = DATA.BIOMES.find(b => b.id === biomeId);
+    ROOMS.lastLayoutId = null; // fresh biome: no cross-biome carryover expected (ids never collide)
+    for (let i = 0; i < 20; i++) ROOMS.buildArena(false);
+  }
+  const hist = ROOMS.layoutHistory;
+  const distinct = new Set(hist.map(h => h.id));
+  if (distinct.size < 4) __varietyErrors.push('fewer than 4 distinct template ids seen across ' + hist.length + ' rooms (' + distinct.size + ')');
+  for (const h of hist) {
+    const list = DATA.LAYOUTS[h.biome] || [];
+    if (!list.some(t => t.id === h.id)) __varietyErrors.push(h.id + ' not a valid template id for ' + h.biome);
+  }
+  let prevBiome = null, prevId = null;
+  for (const h of hist) {
+    if (h.biome === prevBiome && h.id === prevId) __varietyErrors.push('consecutive repeat of ' + h.id + ' in ' + h.biome);
+    prevBiome = h.biome; prevId = h.id;
+  }
+} catch (e) { __varietyErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const varietyErrors = vm.runInContext('__varietyErrors', sandbox);
+check('room layout variety: >=4 distinct templates seen, all valid, never an immediate repeat per biome'
+  + (varietyErrors.length ? ' — ' + varietyErrors.slice(0, 5).join('; ') : ''), varietyErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__spawnErrors = [];
+try {
+  for (const biomeId of Object.keys(DATA.LAYOUTS)) {
+    const biomeIdx = DATA.BIOMES.findIndex(b => b.id === biomeId);
+    for (const tpl of ROOMS.layoutsFor(biomeId)) {
+      GAME.startRun();
+      GAME.biomeIdx = biomeIdx; GAME.biome = DATA.BIOMES[biomeIdx];
+      ROOMS.enterRoom('mudra');
+      ROOMS.buildArena(false, tpl.id);
+      if (ROOMS.pointBlocked(GAME.player.x, GAME.player.y, GAME.player.r))
+        __spawnErrors.push(tpl.id + ': player spawn point is blocked');
+      GAME.enemies = [];
+      ROOMS.spawnWave(16);
+      ROOMS.spawnWave(16);
+      for (const e of GAME.enemies) {
+        if (ROOMS.pointBlocked(e.x, e.y, e.r))
+          __spawnErrors.push(tpl.id + ': enemy ' + e.type + ' spawned inside/near an obstacle');
+      }
+    }
+  }
+} catch (e) { __spawnErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const spawnErrors = vm.runInContext('__spawnErrors', sandbox);
+check('forced-template rooms: player spawn clear, enemies never spawn inside/near an obstacle'
+  + (spawnErrors.length ? ' — ' + spawnErrors.slice(0, 5).join('; ') + (spawnErrors.length > 5 ? ` (+${spawnErrors.length - 5} more)` : '') : ''),
+  spawnErrors.length === 0);
+
+// ---------------- Phase 4: hazards (GAME-04) ----------------
+console.log('\n— environmental hazards (Phase 4, GAME-04) —');
+
+vm.runInContext(`
+globalThis.__hazardStaticErrors = [];
+try {
+  const ids = new Set();
+  for (const b of DATA.BIOMES) {
+    if (!DATA.HAZARDS[b.hazard]) __hazardStaticErrors.push(b.id + ': hazard id missing from DATA.HAZARDS (' + b.hazard + ')');
+    ids.add(b.hazard);
+  }
+  if (ids.size !== 4) __hazardStaticErrors.push('expected 4 distinct hazard ids, got ' + ids.size);
+  for (const def of Object.values(DATA.HAZARDS)) {
+    if (def.damaging && !((def.warn || 0) >= 0.6 || (def.grace || 0) >= 0.6))
+      __hazardStaticErrors.push(def.id + ': damaging hazard has no >=0.6s warn/grace');
+  }
+} catch (e) { __hazardStaticErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const hazardStaticErrors = vm.runInContext('__hazardStaticErrors', sandbox);
+check('hazards: every biome maps to a valid, distinct hazard; damaging hazards telegraph >=0.6s'
+  + (hazardStaticErrors.length ? ' — ' + hazardStaticErrors.join('; ') : ''), hazardStaticErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__hazardPlacementErrors = [];
+try {
+  const A = GAME.arena;
+  const spawnX = A.x + 90, spawnY = A.y + A.h / 2;
+  for (let bi = 0; bi < DATA.BIOMES.length; bi++) {
+    const biome = DATA.BIOMES[bi];
+    for (let trial = 0; trial < 10; trial++) {
+      GAME.startRun();
+      GAME.biomeIdx = bi; GAME.biome = biome;
+      ROOMS.enterRoom('mudra');
+      if (GAME.hazards.length < 1) __hazardPlacementErrors.push(biome.id + ': no hazards spawned in a combat room');
+      for (const h of GAME.hazards) {
+        if (h.type !== biome.hazard) __hazardPlacementErrors.push(biome.id + ': wrong hazard type ' + h.type);
+        if (h.type === 'fireVent' || h.type === 'venomPool') {
+          if (U.dist(h.x, h.y, spawnX, spawnY) < 80) __hazardPlacementErrors.push(h.type + ': too close to spawn');
+          if (ROOMS.pointBlocked(h.x, h.y, h.r)) __hazardPlacementErrors.push(h.type + ': placed inside an obstacle');
+        }
+        if (h.type === 'riverCurrent') {
+          if (spawnY >= h.y && spawnY <= h.y + h.h) __hazardPlacementErrors.push('riverCurrent band contains the spawn point');
+        }
+      }
+    }
+  }
+} catch (e) { __hazardPlacementErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const hazardPlacementErrors = vm.runInContext('__hazardPlacementErrors', sandbox);
+check('hazards: placed correctly per biome (type, spawn clearance, obstacle clearance, river band)'
+  + (hazardPlacementErrors.length ? ' — ' + hazardPlacementErrors.slice(0, 5).join('; ') + (hazardPlacementErrors.length > 5 ? ` (+${hazardPlacementErrors.length - 5} more)` : '') : ''),
+  hazardPlacementErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__hazardNonCombatErrors = [];
+try {
+  GAME.startRun();
+  ROOMS.enterRoom('sarovar');
+  if (GAME.hazards.length !== 0) __hazardNonCombatErrors.push('sarovar room has hazards');
+  GAME.startRun();
+  ROOMS.enterRoom('boss');
+  if (GAME.hazards.length !== 0) __hazardNonCombatErrors.push('boss room has hazards');
+} catch (e) { __hazardNonCombatErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const hazardNonCombatErrors = vm.runInContext('__hazardNonCombatErrors', sandbox);
+check('hazards: never spawned in sarovar or boss rooms'
+  + (hazardNonCombatErrors.length ? ' — ' + hazardNonCombatErrors.join('; ') : ''), hazardNonCombatErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__hazardSlowErrors = [];
+try {
+  GAME.startRun();
+  const P = GAME.player;
+  const base = P.moveSpeed();
+  P.hazardSlowT = 0.2; P.hazardSlowF = 0.6;
+  const slowed = P.moveSpeed();
+  if (Math.abs(slowed - base * 0.6) > 0.01)
+    __hazardSlowErrors.push('moveSpeed not scaled by hazardSlowF (base=' + base + ', slowed=' + slowed + ')');
+} catch (e) { __hazardSlowErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const hazardSlowErrors = vm.runInContext('__hazardSlowErrors', sandbox);
+check('hazards: player hazardSlowT/hazardSlowF scale moveSpeed'
+  + (hazardSlowErrors.length ? ' — ' + hazardSlowErrors.join('; ') : ''), hazardSlowErrors.length === 0);
+
+// ---- per-type hazard behavior (telegraph, damage, slow, push) ----
+vm.runInContext(`
+globalThis.__hazardRoom = function(biomeIdx) {
+  GAME.startRun();
+  const P = GAME.player;
+  P.maxhp = 1e9; P.hp = 1e9;
+  GAME.biomeIdx = biomeIdx; GAME.biome = DATA.BIOMES[biomeIdx];
+  ROOMS.enterRoom('mudra');
+  const A = GAME.arena;
+  for (const e of GAME.enemies) { e.hp = e.maxhp = 1e9; e.stun = 1e9; e.x = A.x + A.w - 20; e.y = A.y + 20; }
+  P.__hits = 0;
+  const orig = P.takeDamage.bind(P);
+  P.takeDamage = function(amount, fx, fy) { P.__hits++; return orig(amount, fx, fy); };
+  return P;
+};
+`, sandbox);
+
+vm.runInContext(`
+globalThis.__fireVentErrors = [];
+try {
+  const P = __hazardRoom(0);
+  const vents = GAME.hazards.filter(h => h.type === 'fireVent');
+  if (!vents.length) __fireVentErrors.push('no fireVent hazards spawned');
+  else {
+    P.x = vents[0].x; P.y = vents[0].y;
+    let testEnemy = null, e0hp = null;
+    if (vents.length > 1) {
+      testEnemy = new Enemy('preta', vents[1].x, vents[1].y, 1);
+      testEnemy.spawnT = 0; testEnemy.stun = 1e9; testEnemy.hp = testEnemy.maxhp = 1e6;
+      GAME.enemies.push(testEnemy);
+      e0hp = testEnemy.hp;
+    }
+    for (let f = 0; f < 600; f++) {
+      P.iframes = 0; P.dashT = 0;
+      GAME.update(1/60);
+      GAME.renderHazards(__ctx);
+    }
+    if (P.__hits < 1) __fireVentErrors.push('fireVent: player never hit within 10s');
+    if (testEnemy && !(testEnemy.hp < e0hp)) __fireVentErrors.push('fireVent: enemy on vent[1] never took damage');
+  }
+} catch (e) { __fireVentErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const fireVentErrors = vm.runInContext('__fireVentErrors', sandbox);
+check('fireVent: telegraphs then hits the player and nearby enemies'
+  + (fireVentErrors.length ? ' — ' + fireVentErrors.join('; ') : ''), fireVentErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__venomErrors = [];
+try {
+  const P = __hazardRoom(1);
+  const pools = GAME.hazards.filter(h => h.type === 'venomPool');
+  if (!pools.length) __venomErrors.push('no venomPool hazards spawned');
+  else {
+    const unslowed = P.moveSpeed();
+    P.x = pools[0].x; P.y = pools[0].y;
+    const testEnemy = new Enemy('preta', pools[0].x, pools[0].y, 1);
+    testEnemy.spawnT = 0; testEnemy.stun = 1e9; testEnemy.slowT = 0; testEnemy.slowF = 1;
+    GAME.enemies.push(testEnemy);
+
+    P.iframes = 0; P.dashT = 0;
+    GAME.update(1/60);
+    if (!(P.moveSpeed() < unslowed * 0.7))
+      __venomErrors.push('venomPool: player not sufficiently slowed after 1 frame (speed=' + P.moveSpeed() + ', unslowed=' + unslowed + ')');
+    if (!(testEnemy.slowT > 0)) __venomErrors.push('venomPool: enemy not slowed');
+
+    for (let f = 0; f < 179; f++) { P.iframes = 0; P.dashT = 0; GAME.update(1/60); GAME.renderHazards(__ctx); }
+    if (P.__hits < 1) __venomErrors.push('venomPool: player never took a tick of damage within 3s');
+  }
+} catch (e) { __venomErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const venomErrors = vm.runInContext('__venomErrors', sandbox);
+check('venomPool: slows player and enemies, ticks damage on the player'
+  + (venomErrors.length ? ' — ' + venomErrors.join('; ') : ''), venomErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__volleyErrors = [];
+try {
+  const P = __hazardRoom(2);
+  for (let f = 0; f < 600; f++) {
+    P.iframes = 0; P.dashT = 0;
+    GAME.update(1/60);
+    GAME.renderHazards(__ctx);
+  }
+  if (P.__hits < 1) __volleyErrors.push('arrowVolley: player never hit within 10s');
+} catch (e) { __volleyErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const volleyErrors = vm.runInContext('__volleyErrors', sandbox);
+check('arrowVolley: ground marker telegraphs then hits a stationary player'
+  + (volleyErrors.length ? ' — ' + volleyErrors.join('; ') : ''), volleyErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__riverErrors = [];
+try {
+  const P = __hazardRoom(3);
+  const river = GAME.hazards.find(h => h.type === 'riverCurrent');
+  if (!river) __riverErrors.push('no riverCurrent hazard spawned');
+  else {
+    const A = GAME.arena;
+    P.x = A.x + A.w / 2; P.y = river.y + river.h / 2;
+    const x0 = P.x;
+    for (let f = 0; f < 60; f++) {
+      P.iframes = 0; P.dashT = 0;
+      GAME.update(1/60);
+      GAME.renderHazards(__ctx);
+    }
+    const dx = (P.x - x0) * river.dir;
+    if (dx < 60) __riverErrors.push('riverCurrent: player displacement too small (' + dx + 'px in 1s)');
+  }
+} catch (e) { __riverErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const riverErrors = vm.runInContext('__riverErrors', sandbox);
+check('riverCurrent: pushes the player along its direction'
+  + (riverErrors.length ? ' — ' + riverErrors.join('; ') : ''), riverErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__dormancyErrors = [];
+try {
+  const P = __hazardRoom(0);
+  const vents = GAME.hazards.filter(h => h.type === 'fireVent');
+  if (!vents.length) __dormancyErrors.push('no fireVent hazards spawned for dormancy check');
+  else {
+    P.x = vents[0].x; P.y = vents[0].y;
+    for (let f = 0; f < 600 && P.__hits < 1; f++) { P.iframes = 0; P.dashT = 0; GAME.update(1/60); }
+    if (P.__hits < 1) __dormancyErrors.push('dormancy: could not get an initial hit to test against');
+    GAME.state = 'cleared';
+    const before = P.__hits;
+    for (let f = 0; f < 180; f++) { P.iframes = 0; P.dashT = 0; GAME.update(1/60); GAME.renderHazards(__ctx); }
+    if (P.__hits !== before) __dormancyErrors.push('dormancy: hazard still dealt damage after the room left combat state');
+  }
+} catch (e) { __dormancyErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const dormancyErrors = vm.runInContext('__dormancyErrors', sandbox);
+check('hazards go dormant once the room leaves combat state (no damage for 3s after clear)'
+  + (dormancyErrors.length ? ' — ' + dormancyErrors.join('; ') : ''), dormancyErrors.length === 0);
+
+const hazardViolationsAfterSims = vm.runInContext('(GAME.hazardViolations || [])', sandbox);
+check('no unwarned hazard damage anywhere in the targeted hazard sims (hazardViolations gate)'
+  + (hazardViolationsAfterSims.length ? ' — ' + hazardViolationsAfterSims.join(', ') : ''),
+  hazardViolationsAfterSims.length === 0);
+
+vm.runInContext('GAME.hazardViolations = [];', sandbox);
+console.log('\n— re-run full runs with hazards active —');
+const r1h = vm.runInContext('simulateRun({ godMode: true })', sandbox);
+check('run 1 (god mode) still reaches victory with hazards active'
+  + (r1h.errors.length ? ' — ' + r1h.errors[0] : ''), r1h.errors.length === 0 && r1h.final === 'victory');
+const r2h = vm.runInContext('simulateRun({ weakPlayer: true })', sandbox);
+// Note: by this point in the file, an earlier meta-progression block has maxed out
+// META (sanjeevani/defiance etc, a process-wide singleton), so a "weak player" run may
+// now survive to victory instead of dying — that's expected meta-progression behavior,
+// not a hazard regression. We only assert it completes cleanly (no errors, reaches an
+// end state), matching this plan's actual concern (hazards don't break full runs).
+check('run 2 (weak player) still completes cleanly with hazards active (final=' + r2h.final + ')'
+  + (r2h.errors.length ? ' — ' + r2h.errors[0] : ''),
+  r2h.errors.length === 0 && (r2h.final === 'dead' || r2h.final === 'victory'));
+const hazardViolationsAfterFullRuns = vm.runInContext('(GAME.hazardViolations || [])', sandbox);
+check('no unwarned hazard damage across full god-mode + weak-player runs'
+  + (hazardViolationsAfterFullRuns.length ? ' — ' + hazardViolationsAfterFullRuns.join(', ') : ''),
+  hazardViolationsAfterFullRuns.length === 0);
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

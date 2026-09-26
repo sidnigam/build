@@ -44,21 +44,52 @@ const ROOMS = {
 
   blocksProjectile(p) { return this.pointBlocked(p.x, p.y, p.r, { projectile: true }); },
 
-  // Build the arena geometry for a new room (pillars vary per room)
-  buildArena(isBoss) {
+  // Guaranteed-free fallback spawn point: coarse grid scan of the right 70% of the arena.
+  findClearSpawnPoint(r) {
+    const A = GAME.arena, P = GAME.player, step = 40;
+    const xStart = A.x + A.w * 0.3;
+    for (const minDist of [220, 120]) {
+      for (let y = A.y + 60; y <= A.y + A.h - 60; y += step) {
+        for (let x = xStart; x <= A.x + A.w - 60; x += step) {
+          if (U.dist(x, y, P.x, P.y) < minDist) continue;
+          if (this.pointBlocked(x, y, r)) continue;
+          return { x, y };
+        }
+      }
+    }
+    return null;
+  },
+
+  // Build the arena geometry for a new room (a per-biome layout template, or open for boss rooms)
+  buildArena(isBoss, forceId) {
     GAME.pillars = [];
     if (isBoss) return; // boss arenas are open
-    const n = U.randInt(0, 3);
-    for (let i = 0; i < n; i++) {
-      let x, y, tries = 0;
-      do {
-        x = U.rand(GAME.arena.x + 150, GAME.arena.x + GAME.arena.w - 150);
-        y = U.rand(GAME.arena.y + 110, GAME.arena.y + GAME.arena.h - 110);
-        tries++;
-      } while (tries < 20 && (U.dist(x, y, GAME.player.x, GAME.player.y) < 160 ||
-               GAME.pillars.some(p => U.dist(x, y, p.x, p.y) < 170)));
-      GAME.pillars.push({ x, y, r: U.rand(28, 46) });
+    const list = this.layoutsFor(GAME.biome.id);
+    if (!list.length) {
+      // fallback: legacy random pillars (kept for biomes with no templates yet)
+      const n = U.randInt(0, 3);
+      for (let i = 0; i < n; i++) {
+        let x, y, tries = 0;
+        do {
+          x = U.rand(GAME.arena.x + 150, GAME.arena.x + GAME.arena.w - 150);
+          y = U.rand(GAME.arena.y + 110, GAME.arena.y + GAME.arena.h - 110);
+          tries++;
+        } while (tries < 20 && (U.dist(x, y, GAME.player.x, GAME.player.y) < 160 ||
+                 GAME.pillars.some(p => U.dist(x, y, p.x, p.y) < 170)));
+        GAME.pillars.push({ shape: 'circle', kind: 'pillar', x, y, r: U.rand(28, 46) });
+      }
+      return;
     }
+    let tpl;
+    if (forceId) tpl = list.find(t => t.id === forceId) || U.choice(list);
+    else {
+      const candidates = list.filter(t => t.id !== this.lastLayoutId);
+      tpl = U.choice(candidates.length ? candidates : list);
+    }
+    GAME.pillars = this.materializeLayout(tpl);
+    this.lastLayoutId = tpl.id;
+    (this.layoutHistory = this.layoutHistory || []).push({ biome: GAME.biome.id, id: tpl.id });
+    if (this.layoutHistory.length > 200) this.layoutHistory.shift();
   },
 
   // Encounter plan: total budget split into waves
@@ -85,13 +116,18 @@ const ROOMS = {
       const pool = b.enemies.map(id => DATA.ENEMIES[id]).filter(e => e.cost <= Math.max(left, 1));
       const def = U.choice(pool.length ? pool : b.enemies.map(id => DATA.ENEMIES[id]));
       left -= def.cost;
-      // spawn away from the player
-      let x, y, tries = 0;
+      // spawn away from the player and clear of obstacles
+      let x, y, tries = 0, ok = false;
       do {
         x = U.rand(GAME.arena.x + 60, GAME.arena.x + GAME.arena.w - 60);
         y = U.rand(GAME.arena.y + 60, GAME.arena.y + GAME.arena.h - 60);
         tries++;
-      } while (tries < 25 && U.dist(x, y, GAME.player.x, GAME.player.y) < 220);
+        ok = U.dist(x, y, GAME.player.x, GAME.player.y) >= 220 && !this.pointBlocked(x, y, def.r + 12);
+      } while (tries < 40 && !ok);
+      if (!ok) {
+        const spot = this.findClearSpawnPoint(def.r + 12);
+        if (spot) { x = spot.x; y = spot.y; }
+      }
       GAME.enemies.push(new Enemy(def.id, x, y, b.scale));
     }
   },

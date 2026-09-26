@@ -1500,5 +1500,60 @@ const drawObstacleErrors = vm.runInContext('__drawObstacleErrors', sandbox);
 check('renderObstacles draws pillar/wall/pit (circle+rect) without throwing'
   + (drawObstacleErrors.length ? ' — ' + drawObstacleErrors.join('; ') : ''), drawObstacleErrors.length === 0);
 
+vm.runInContext(`
+globalThis.__varietyErrors = [];
+try {
+  ROOMS.layoutHistory = []; ROOMS.lastLayoutId = null;
+  for (const biomeId of Object.keys(DATA.LAYOUTS)) {
+    GAME.biome = DATA.BIOMES.find(b => b.id === biomeId);
+    ROOMS.lastLayoutId = null; // fresh biome: no cross-biome carryover expected (ids never collide)
+    for (let i = 0; i < 20; i++) ROOMS.buildArena(false);
+  }
+  const hist = ROOMS.layoutHistory;
+  const distinct = new Set(hist.map(h => h.id));
+  if (distinct.size < 4) __varietyErrors.push('fewer than 4 distinct template ids seen across ' + hist.length + ' rooms (' + distinct.size + ')');
+  for (const h of hist) {
+    const list = DATA.LAYOUTS[h.biome] || [];
+    if (!list.some(t => t.id === h.id)) __varietyErrors.push(h.id + ' not a valid template id for ' + h.biome);
+  }
+  let prevBiome = null, prevId = null;
+  for (const h of hist) {
+    if (h.biome === prevBiome && h.id === prevId) __varietyErrors.push('consecutive repeat of ' + h.id + ' in ' + h.biome);
+    prevBiome = h.biome; prevId = h.id;
+  }
+} catch (e) { __varietyErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const varietyErrors = vm.runInContext('__varietyErrors', sandbox);
+check('room layout variety: >=4 distinct templates seen, all valid, never an immediate repeat per biome'
+  + (varietyErrors.length ? ' — ' + varietyErrors.slice(0, 5).join('; ') : ''), varietyErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__spawnErrors = [];
+try {
+  for (const biomeId of Object.keys(DATA.LAYOUTS)) {
+    const biomeIdx = DATA.BIOMES.findIndex(b => b.id === biomeId);
+    for (const tpl of ROOMS.layoutsFor(biomeId)) {
+      GAME.startRun();
+      GAME.biomeIdx = biomeIdx; GAME.biome = DATA.BIOMES[biomeIdx];
+      ROOMS.enterRoom('mudra');
+      ROOMS.buildArena(false, tpl.id);
+      if (ROOMS.pointBlocked(GAME.player.x, GAME.player.y, GAME.player.r))
+        __spawnErrors.push(tpl.id + ': player spawn point is blocked');
+      GAME.enemies = [];
+      ROOMS.spawnWave(16);
+      ROOMS.spawnWave(16);
+      for (const e of GAME.enemies) {
+        if (ROOMS.pointBlocked(e.x, e.y, e.r))
+          __spawnErrors.push(tpl.id + ': enemy ' + e.type + ' spawned inside/near an obstacle');
+      }
+    }
+  }
+} catch (e) { __spawnErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const spawnErrors = vm.runInContext('__spawnErrors', sandbox);
+check('forced-template rooms: player spawn clear, enemies never spawn inside/near an obstacle'
+  + (spawnErrors.length ? ' — ' + spawnErrors.slice(0, 5).join('; ') + (spawnErrors.length > 5 ? ` (+${spawnErrors.length - 5} more)` : '') : ''),
+  spawnErrors.length === 0);
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

@@ -1138,5 +1138,79 @@ for (const bossId of Object.keys(phaseTransitionResults)) {
 check('no unarmed boss damage anywhere (global BOSS_TG.violations gate)',
   vm.runInContext('BOSS_TG.violations.length', sandbox) === 0);
 
+// ---------------- Phase 4: boons & duos (GAME-01/02) ----------------
+console.log('\n— boons & duos (Phase 4, GAME-01/02) —');
+
+const boonCountData = JSON.parse(vm.runInContext(`
+  JSON.stringify({
+    total: DATA.BOONS.length,
+    perGod: Object.keys(DATA.GODS).map(g => ({ g, n: DATA.BOONS.filter(b => b.god === g).length }))
+  })
+`, sandbox));
+check(`boon pool >= 24 total (actual ${boonCountData.total})`, boonCountData.total >= 24);
+for (const { g, n } of boonCountData.perGod) check(`${g}: >= 4 boons (actual ${n})`, n >= 4);
+
+vm.runInContext(`
+globalThis.__duoIntegrityErrors = [];
+try {
+  const ids = new Set();
+  for (const b of DATA.BOONS) ids.add(b.id);
+  if (DATA.DUO_BOONS.length < 3) __duoIntegrityErrors.push('duo count < 3: ' + DATA.DUO_BOONS.length);
+  for (const d of DATA.DUO_BOONS) {
+    if (ids.has(d.id)) __duoIntegrityErrors.push(d.id + ' collides with a single-god boon id');
+    ids.add(d.id);
+    if (d.duo !== true) __duoIntegrityErrors.push(d.id + ' duo !== true');
+    if (!Array.isArray(d.gods) || d.gods.length !== 2 || new Set(d.gods).size !== 2) __duoIntegrityErrors.push(d.id + ' gods must be 2 distinct ids');
+    for (const g of d.gods) if (!DATA.GODS[g]) __duoIntegrityErrors.push(d.id + ' unknown god ' + g);
+    const reqKeys = Object.keys(d.req).sort();
+    const godsSorted = d.gods.slice().sort();
+    if (JSON.stringify(reqKeys) !== JSON.stringify(godsSorted)) __duoIntegrityErrors.push(d.id + ' req keys != gods');
+    for (const g of d.gods) {
+      for (const rid of (d.req[g] || [])) {
+        const b = DATA.BOONS.find(x => x.id === rid);
+        if (!b) __duoIntegrityErrors.push(d.id + ' req id missing: ' + rid);
+        else if (b.god !== g) __duoIntegrityErrors.push(d.id + ' req id ' + rid + ' belongs to ' + b.god + ' not ' + g);
+      }
+    }
+    for (let r = 0; r < DATA.RARITIES.length; r++) {
+      const s = d.desc(d.base * DATA.RARITIES[r].mult);
+      if (!s || typeof s !== 'string' || !s.length) __duoIntegrityErrors.push(d.id + ' desc empty at rarity ' + r);
+    }
+    if (DATA.findBoon(d.id) !== d) __duoIntegrityErrors.push(d.id + ' findBoon mismatch');
+  }
+} catch (e) { __duoIntegrityErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const duoIntegrityErrors = vm.runInContext('__duoIntegrityErrors', sandbox);
+check('duo boons: integrity (count, unique ids, gods, req lists, desc, findBoon)'
+  + (duoIntegrityErrors.length ? ' — ' + duoIntegrityErrors.join('; ') : ''), duoIntegrityErrors.length === 0);
+
+vm.runInContext(`
+globalThis.__duoEligibilityErrors = [];
+try {
+  GAME.startRun();
+  const P0 = GAME.player;
+  if (P0.eligibleDuos().length !== 0) __duoEligibilityErrors.push('fresh run has eligible duos');
+
+  for (const d of DATA.DUO_BOONS) {
+    GAME.startRun();
+    const P = GAME.player;
+    for (const g of d.gods) {
+      const rid = d.req[g][0];
+      P.addBoon(DATA.findBoon(rid), 0);
+    }
+    const elig = P.eligibleDuos();
+    if (!elig.includes(d)) __duoEligibilityErrors.push(d.id + ' not eligible after req boons added');
+    const offer = P.duoOfferFor(d.gods[0]);
+    if (!offer || !offer.gods.includes(d.gods[0])) __duoEligibilityErrors.push(d.id + ' duoOfferFor failed');
+    P.addBoon(d, 0);
+    if (P.eligibleDuos().includes(d)) __duoEligibilityErrors.push(d.id + ' still eligible after being taken');
+    if (P.val(d.id) !== d.base) __duoEligibilityErrors.push(d.id + ' val mismatch at rarity 0');
+  }
+} catch (e) { __duoEligibilityErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
+`, sandbox);
+const duoEligibilityErrors = vm.runInContext('__duoEligibilityErrors', sandbox);
+check('duo boons: eligibility gating, offer targeting, post-pick exclusion'
+  + (duoEligibilityErrors.length ? ' — ' + duoEligibilityErrors.join('; ') : ''), duoEligibilityErrors.length === 0);
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

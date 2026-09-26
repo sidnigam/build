@@ -175,7 +175,7 @@ class Player {
 
   has(id) { return id in this.boonRanks; }
   val(id) {
-    const def = DATA.BOONS.find(b => b.id === id);
+    const def = DATA.findBoon(id);
     return def.base * DATA.RARITIES[this.boonRanks[id]].mult;
   }
 
@@ -183,6 +183,14 @@ class Player {
     const out = [];
     for (const s of ['attack', 'special', 'dash', 'cast']) if (this.slots[s]) out.push(this.slots[s]);
     return out.concat(this.passives);
+  }
+
+  eligibleDuos() {
+    return DATA.DUO_BOONS.filter(d => !this.has(d.id) && d.gods.every(g => d.req[g].some(id => this.has(id))));
+  }
+  duoOfferFor(godId) {
+    const l = this.eligibleDuos().filter(d => d.gods.includes(godId));
+    return l.length ? U.choice(l) : null;
   }
 
   addBoon(def, rarity) {

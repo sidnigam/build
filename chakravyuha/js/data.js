@@ -119,6 +119,42 @@ DATA.BOONS = [
     base: 30, desc: v => `Foes that strike you in melee take ${Math.round(v)} damage.` },
 ];
 
+// ---------- DUO BOONS ----------
+// Offered once the player holds >= 1 boon from EACH god's req list.
+DATA.DUO_BOONS = [
+  { id: 'duo_pavanaputra', duo: true, gods: ['hanuman','vayu'], god: 'hanuman', slot: 'passive',
+    name: 'Pavanaputra', base: 60,
+    req: { hanuman: ['han_attack','han_special','han_bhakti'], vayu: ['vayu_dash','vayu_speed','vayu_gust','vayu_attack'] },
+    desc: v => `For 1s after you dash, your attacks deal +${Math.round(v)}% damage and knock foes back twice as far.`,
+    lore: 'The Wind\'s own son. Where the father moves, the son strikes.' },
+  { id: 'duo_khandava', duo: true, gods: ['agni','indra'], god: 'agni', slot: 'passive',
+    name: 'Khandava Firestorm', base: 8,
+    req: { agni: ['agni_attack','agni_special','agni_cast','agni_ghee'], indra: ['indra_attack','indra_special'] },
+    desc: v => `Your lightning ignites foes (Burn ${Math.round(v)} damage/s), and deals +50% damage to foes already burning.`,
+    lore: 'When Agni devoured the Khandava forest, Indra\'s storm raged over it. Here, fire and storm finally agree.' },
+  { id: 'duo_yogamaya', duo: true, gods: ['krishna','durga'], god: 'krishna', slot: 'passive',
+    name: "Yogamaya's Veil", base: 1.2,
+    req: { krishna: ['kri_attack','kri_special','kri_lila'], durga: ['dur_kavacha','dur_special','dur_thorns'] },
+    desc: v => `When struck, you are veiled for ${v.toFixed(1)}s (untouchable) and foes near you are marked with Maya.`,
+    lore: 'The Mother took Krishna\'s place in the cradle the night he was born. She is still covering for him.' },
+  { id: 'duo_marut', duo: true, gods: ['indra','vayu'], god: 'indra', slot: 'passive',
+    name: 'Marut Gana', base: 24,
+    req: { indra: ['indra_attack','indra_special','indra_cast','indra_tribute'], vayu: ['vayu_dash','vayu_gust','vayu_speed'] },
+    desc: v => `Each dash looses lightning at the nearest foe (${Math.round(v)} damage, 2 jumps).`,
+    lore: 'The storm-host rides at Indra\'s side and runs on the wind.' },
+  { id: 'duo_jwalamukhi', duo: true, gods: ['agni','durga'], god: 'agni', slot: 'passive',
+    name: 'Jwalamukhi', base: 10,
+    req: { agni: ['agni_attack','agni_special','agni_ghee'], durga: ['dur_kavacha','dur_thorns','dur_dash'] },
+    desc: v => `When struck, you erupt in flame: foes within reach gain Burn (${Math.round(v)} damage/s).`,
+    lore: 'The Mother whose mouth is flame. Strike her child and learn it.' },
+  { id: 'duo_kapidhvaja', duo: true, gods: ['hanuman','krishna'], god: 'hanuman', slot: 'passive',
+    name: 'Kapidhvaja', base: 30,
+    req: { hanuman: ['han_attack','han_special','han_bhakti'], krishna: ['kri_attack','kri_special','kri_cast'] },
+    desc: v => `Every 6th attack hit raises the Monkey Banner: a shockwave deals ${Math.round(v)} damage nearby and marks foes with Maya.`,
+    lore: 'Hanuman rode on the banner of the chariot Krishna drove for Arjuna — your father\'s chariot.' },
+];
+DATA.findBoon = id => DATA.BOONS.find(b => b.id === id) || DATA.DUO_BOONS.find(b => b.id === id);
+
 // ---------- WEAPONS ----------
 DATA.WEAPONS = {
   khanda: {

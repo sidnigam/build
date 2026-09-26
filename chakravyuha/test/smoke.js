@@ -2324,6 +2324,42 @@ console.log('\n— character readability: ground marker spec (quick 260926-djs) 
       const e0 = SPRITES.groundMarkerSpec({ r: 14, type: 'rakshasa', color: '#ff0000' }, 0.5).pulse;
       return p0 !== p1 && e0 === 1;
     })()`) === true);
+
+  check('SPRITES ground markers: destroyed via removeEntity/endEntities, faded+destroyed via retireEntity/tickDying, swept by clearEntities',
+    R(`(() => {
+      const mk = () => ({ parent: null, alpha: 1, rotation: 0, filters: null,
+        scale: { x: 1, y: 1, set(a, b) { this.x = a; this.y = b; } },
+        d: false, destroy() { this.d = true; } });
+
+      // A stays (seen this frame); B is unseen + not dead -> removeEntity destroys sprite+marker now.
+      const A = { _pixiSprite: mk(), _pixiMarker: mk() };
+      const B = { _pixiSprite: mk(), _pixiMarker: mk() };
+      SPRITES._tracked.add(A); SPRITES._tracked.add(B);
+      SPRITES.beginEntities();
+      SPRITES._markSeen(A);
+      const bMarker = B._pixiMarker;
+      SPRITES.endEntities();
+      const r1 = bMarker.d === true && B._pixiMarker === null && !SPRITES._tracked.has(B)
+        && A._pixiMarker && A._pixiMarker.d === false && SPRITES._tracked.has(A);
+
+      // C is dead -> retireEntity hands sprite+marker to the dying pool; tickDying fades then destroys both.
+      const C = { _pixiSprite: mk(), _pixiMarker: mk(), dead: true };
+      SPRITES._tracked.add(C);
+      const cMarker = C._pixiMarker, cSprite = C._pixiSprite;
+      SPRITES.retireEntity(C);
+      const r2 = C._pixiMarker === null && cMarker.d === false && !SPRITES._tracked.has(C);
+      SPRITES.tickDying(SPRITES.CFG.DEATH_DUR + 0.1);
+      const r3 = cMarker.d === true && cSprite.d === true && SPRITES._dying.length === 0;
+
+      // D: clearEntities sweeps any remaining tracked entity's marker too.
+      const D = { _pixiSprite: mk(), _pixiMarker: mk() };
+      SPRITES._tracked.add(D);
+      const dMarker = D._pixiMarker;
+      SPRITES.clearEntities();
+      const r4 = dMarker.d === true && D._pixiMarker === null && SPRITES._tracked.size === 0;
+
+      return r1 && r2 && r3 && r4;
+    })()`) === true);
 }
 
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);

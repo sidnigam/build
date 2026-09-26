@@ -643,6 +643,10 @@ const SPRITES = {
       for (const item of this._dying) {
         if (item.spr.parent) item.spr.parent.removeChild(item.spr);
         if (typeof item.spr.destroy === 'function') item.spr.destroy();
+        if (item.marker) {   // quick-260926-djs: marker rides along with its dying sprite
+          if (item.marker.parent) item.marker.parent.removeChild(item.marker);
+          if (typeof item.marker.destroy === 'function') item.marker.destroy();
+        }
       }
       this._dying.length = 0;
     }
@@ -657,6 +661,10 @@ const SPRITES = {
     for (const item of this._dying) {
       if (item.spr.parent) item.spr.parent.removeChild(item.spr);
       if (typeof item.spr.destroy === 'function') item.spr.destroy();
+      if (item.marker) {   // quick-260926-djs: marker rides along with its dying sprite
+        if (item.marker.parent) item.marker.parent.removeChild(item.marker);
+        if (typeof item.marker.destroy === 'function') item.marker.destroy();
+      }
     }
     this._dying.length = 0;
     for (const g of this._ghosts || []) {
@@ -723,9 +731,10 @@ const SPRITES = {
 
     const spr = e._pixiSprite;
     const layout = e._pixiLayout;
+    const isPlayerEntity = e.spriteKey === 'player' || e.type === undefined;
     // Facing: player faces aim; enemies/bosses face the player.
     let angle = 0;
-    if (e.spriteKey === 'player' || e.type === undefined) {
+    if (isPlayerEntity) {
       angle = e.aim || 0;
     } else if (typeof GAME !== 'undefined' && GAME.player) {
       angle = Math.atan2(GAME.player.y - e.y, GAME.player.x - e.x);
@@ -755,21 +764,41 @@ const SPRITES = {
     spr.rotation = pa.rot;
     spr.alpha = sp.alpha * this.blinkAlpha(e, t);
     spr.zIndex = e.y;          // lower on screen draws in front
-    this._applyFlash(spr, flash);
+    this._applyFlash(spr, flash, isPlayerEntity);
+    this.drawMarker(e, t);     // quick-260926-djs: ground-plane readability ring/shadow, under the sprite
     this._markSeen(e);
 
     if (e.spriteKey === 'player') this.drawGhosts(e);
   },
 
   /**
-   * _applyFlash(spr, k) — lazily attaches/detaches a ColorMatrixFilter that lerps the sprite's
-   * color toward white by k (0..1); filters are only attached while flashing (near-zero per-frame
-   * cost otherwise). OFF=1: the vendored Pixi v8 GL fragment shader (color-matrix-filter) does
-   * `result.r = uColorMatrix[0]*color.r + ... + uColorMatrix[4]` against color already normalized
-   * to 0..1 (texture sample, alpha-unpremultiplied) — so the offset column adds directly, no /255.
+   * _applyFlash(spr, k, isPlayer) — lazily attaches/detaches a ColorMatrixFilter that lerps the
+   * sprite's color toward white by k (0..1); filters are only attached while flashing (near-zero
+   * per-frame cost otherwise). OFF=1: the vendored Pixi v8 GL fragment shader (color-matrix-filter)
+   * does `result.r = uColorMatrix[0]*color.r + ... + uColorMatrix[4]` against color already
+   * normalized to 0..1 (texture sample, alpha-unpremultiplied) — so the offset column adds
+   * directly, no /255.
+   *
+   * quick-260926-djs: when isPlayer, a second lazily-built ColorMatrixFilter applies a flat
+   * CFG.PLAYER_LIFT brightness (via the real `.brightness()` method, confirmed present on the
+   * vendored ColorMatrixFilter) and is composed with the flash filter as a two-entry filters
+   * array — Pixi runs filters in sequence, so this needs no manual matrix-multiplication. Built
+   * once and left untouched afterward (steady-state cost is just the extra filter pass).
    */
-  _applyFlash(spr, k) {
+  _applyFlash(spr, k, isPlayer) {
     if (!spr) return;
+    let liftF = spr._liftF;
+    if (isPlayer && !liftF) {
+      try {
+        const PIXI = window.PIXI;
+        liftF = new PIXI.ColorMatrixFilter();
+        liftF.brightness(this.CFG.PLAYER_LIFT, false);
+        spr._liftF = liftF;
+      } catch (err) {
+        // Composing the lift is best-effort (D-11-style): skip it and rely on the ground ring.
+        liftF = null;
+      }
+    }
     if (k > 0) {
       try {
         const PIXI = window.PIXI;
@@ -781,14 +810,14 @@ const SPRITES = {
           0, 0, 1 - k, 0, k * OFF,
           0, 0, 0, 1, 0,
         ];
-        spr.filters = [spr._flashF];
+        spr.filters = (isPlayer && liftF) ? [liftF, spr._flashF] : [spr._flashF];
       } catch (err) {
         if (!this._flashWarned) { console.warn('[SPRITES] ColorMatrixFilter unavailable — flash disabled', err); this._flashWarned = true; }
         spr.filters = null;
         spr.tint = 0xffffff;
       }
-    } else if (spr.filters) {
-      spr.filters = null;
+    } else {
+      spr.filters = (isPlayer && liftF) ? [liftF] : null;
     }
   },
 
@@ -802,19 +831,25 @@ const SPRITES = {
    */
   retireEntity(e) {
     const spr = e._pixiSprite;
+    const marker = e._pixiMarker;   // quick-260926-djs: fades alongside the sprite in tickDying below
     if (spr) {
-      this._dying.push({ spr, t: 0, bx: spr.scale.x, by: spr.scale.y });
+      this._dying.push({ spr, marker, t: 0, bx: spr.scale.x, by: spr.scale.y });
+    } else if (marker) {
+      this._destroyMarker(e);       // edge case: marker without a sprite (texAnim missing) — no fade to run
     }
     e._pixiSprite = null;
     e._pixiAnim   = null;
     e._pixiLayout = null;
+    e._pixiMarker = null;
+    e._markerKey  = null;
     this._destroyWeapon(e);   // 02-10: a dead player's weapon disappears with it
     this._tracked.delete(e);
   },
 
   /**
    * tickDying(dt) — advances every retired sprite's death fade; destroys + removes on completion.
-   * Headless-safe: a no-op when _dying is empty (smoke tests never populate it).
+   * The ground marker (if any) fades alongside the sprite (quick-260926-djs) and is destroyed
+   * together with it. Headless-safe: a no-op when _dying is empty (smoke tests never populate it).
    */
   tickDying(dt) {
     this._dyingTick = this._frameId;
@@ -827,9 +862,14 @@ const SPRITES = {
       spr.scale.set(item.bx * pose.scale, item.by * pose.scale);
       spr.rotation = pose.rot * Math.sign(item.bx || 1);
       this._applyFlash(spr, item.t < 0.08 ? this.CFG.FLASH_MAX : 0);
+      if (item.marker) item.marker.alpha = pose.alpha;
       if (pose.done) {
         if (spr.parent) spr.parent.removeChild(spr);
         if (typeof spr.destroy === 'function') spr.destroy();
+        if (item.marker) {
+          if (item.marker.parent) item.marker.parent.removeChild(item.marker);
+          if (typeof item.marker.destroy === 'function') item.marker.destroy();
+        }
         this._dying.splice(i, 1);
       }
     }
@@ -876,6 +916,72 @@ const SPRITES = {
     } catch (err) {
       if (!this._ghostWarned) { console.warn('[SPRITES] dash ghosts unavailable', err); this._ghostWarned = true; }
     }
+  },
+
+  // ---------------- Ground marker Pixi runtime (quick-260926-djs) ----------------
+
+  /**
+   * drawMarker(e, t) — lazily creates ONE PIXI.Graphics marker per entity (`e._pixiMarker`),
+   * added to entityContainer (chosen over bgContainer/a dedicated layer: entityContainer already
+   * sorts by zIndex=e.y every frame, so `zIndex = spriteZ - 0.5` sits the marker directly under
+   * that entity's sprite for free, with no extra layer or draw-order bookkeeping) — sits above the
+   * bridge-canvas floor wash (bgContainer) and below all entity sprites. The Graphics content
+   * (ellipse sizes/colors from groundMarkerSpec) is only rebuilt when the cached spec key changes;
+   * every other frame this just repositions/re-alphas the existing object (no new Pixi objects).
+   */
+  drawMarker(e, t) {
+    if (!this.entityContainer) return;
+    try {
+      const spec = this.groundMarkerSpec(e, t);
+      if (!e._pixiMarker) {
+        const PIXI = window.PIXI;
+        e._pixiMarker = new PIXI.Graphics();
+        this.entityContainer.addChild(e._pixiMarker);
+        e._markerKey = null;
+      }
+      const marker = e._pixiMarker;
+      const key = spec.kind + ':' + spec.rx.toFixed(2) + ':' + spec.ry.toFixed(2) + ':' + spec.color;
+      if (e._markerKey !== key) {
+        marker.clear();
+        // Dark contact shadow — common to every kind, grounds the sprite against any floor art.
+        marker.ellipse(0, 0, spec.rx, spec.ry).fill({ color: 0x000000, alpha: spec.shadowAlpha });
+        if (spec.kind === 'player') {
+          // Soft outer glow (2 concentric ellipses, decreasing alpha outward) + a thin gold ring.
+          marker.ellipse(0, 0, spec.rx * 1.6, spec.ry * 1.6).fill({ color: spec.color, alpha: spec.alpha * 0.18 });
+          marker.ellipse(0, 0, spec.rx * 1.25, spec.ry * 1.25).fill({ color: spec.color, alpha: spec.alpha * 0.3 });
+          marker.ellipse(0, 0, spec.rx, spec.ry).stroke({ width: 1.5, color: spec.color, alpha: spec.alpha });
+        } else {
+          // Faint rim in the entity's DATA color, slightly outside the shadow ellipse.
+          marker.ellipse(0, 0, spec.rx * 1.15, spec.ry * 1.15).stroke({ width: 1.5, color: spec.color, alpha: spec.alpha });
+        }
+        e._markerKey = key;
+      }
+      const layout = e._pixiLayout;
+      marker.x = e.x;
+      marker.y = e.y + (layout ? layout.dy : e.r * this.CFG.FEET_OFFSET_R);   // same feet anchor as the sprite
+      marker.zIndex = e.y - 0.5;
+      const spr = e._pixiSprite;
+      marker.alpha = spec.pulse * (spr ? spr.alpha : 1);   // player pulse ±15%; fades with spawn/iframes/death
+      marker.visible = true;
+    } catch (err) {
+      if (!this._markerWarned) { console.warn('[SPRITES] ground marker unavailable', err); this._markerWarned = true; }
+    }
+  },
+
+  /**
+   * _destroyMarker(e) — detaches + destroys an entity's ground marker (if any) and clears its
+   * fields. Called from removeEntity (immediate despawn) and from retireEntity's no-sprite edge
+   * case; the normal death path instead hands the marker into the _dying pool (see retireEntity)
+   * so it fades alongside the sprite instead of vanishing outright.
+   */
+  _destroyMarker(e) {
+    const m = e._pixiMarker;
+    if (m) {
+      if (m.parent) m.parent.removeChild(m);
+      if (typeof m.destroy === 'function') m.destroy();
+    }
+    e._pixiMarker = null;
+    e._markerKey = null;
   },
 
   // ---------------- Weapon overlay Pixi runtime (02-10) ----------------
@@ -1034,6 +1140,7 @@ const SPRITES = {
     e._pixiSprite = null;
     e._pixiAnim   = null;
     e._pixiLayout = null;
+    this._destroyMarker(e);   // quick-260926-djs: ground marker lifecycle mirrors the sprite lifecycle
     this._destroyWeapon(e);   // 02-10: weapon lifecycle mirrors the sprite lifecycle
     this._tracked.delete(e);
   },

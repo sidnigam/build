@@ -86,7 +86,8 @@ def main():
         sys.exit(1)
 
     kind, pos, neg, width, height = build_prompt(prompts, args.key)
-    base_seed = subjects[args.key]["base_seed"]
+    entry = subjects[args.key]
+    base_seed = entry["base_seed"]
     seed = base_seed + args.attempt
 
     kind_dir = {"biome": "biomes", "boss": "bosses", "enemy": "enemies", "god": "gods"}[kind]

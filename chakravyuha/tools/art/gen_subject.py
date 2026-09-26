@@ -77,7 +77,7 @@ def main():
     base_seed = subjects[args.key]["base_seed"]
     seed = base_seed + args.attempt
 
-    kind_dir = kind + "s"  # biome -> biomes, boss -> bosses, enemy -> enemies
+    kind_dir = {"biome": "biomes", "boss": "bosses", "enemy": "enemies"}[kind]
     out_dir = os.path.join(ROOT, "assets", "sprites", "_gen", kind_dir, args.key)
     os.makedirs(out_dir, exist_ok=True)
     out_path = os.path.join(out_dir, f"{args.key}_s{seed}.png")

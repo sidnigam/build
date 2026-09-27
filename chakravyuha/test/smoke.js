@@ -4372,5 +4372,78 @@ console.log('\n— FOCUS (05.2-02) —');
     })()`) === true);
 }
 
+// ---------------- controller wiring (05.2-02) ----------------
+console.log('\n— controller wiring (05.2-02) —');
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+
+  check('ensurePadHints(): ran during boot (UI._padHintsDone) and boonpick got a .pad-hint footer',
+    R(`UI._padHintsDone === true && document.getElementById('boonpick').children.some(c => c.className === 'pad-hint')`) === true);
+
+  vm.runInContext(`
+globalThis.__wireResults = {};
+(function() {
+  const R = __wireResults;
+  const savedDevice = INPUT.device, savedAx = INPUT.ax, savedAy = INPUT.ay, savedLmb = INPUT.lmb;
+  const savedState = GAME.state, savedEnemies = GAME.enemies;
+  const savedAimAng = PAD._aimAng, savedPrevPressed = PAD._prevPressed, savedStateIndex = PAD.state.index;
+  const savedTickPad = FOCUS.tickPad;
+  const savedRefresh = GLYPHS.refresh;
+
+  try {
+    GAME.state = 'combat';
+    GAME.enemies = [];
+    GAME.player.dashCharges = Math.max(GAME.player.dashCharges, 1);
+    GAME.player.dashT = 0;
+
+    const gp = { id: 'DualSense Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 0ce6)', mapping: 'standard', connected: true, axes: [0, 0, 0, 0], buttons: Array.from({ length: 18 }, () => ({ pressed: false, value: 0 })) };
+    globalThis.navigator = { getGamepads: () => [gp] };
+    PAD._aimAng = null; PAD._prevPressed = {}; PAD.state.index = -1; INPUT.device = 'pad';
+
+    // 1. FOCUS.tickPad stubbed to consume every frame as a menu -> B (bound to dash) must not dash
+    FOCUS.tickPad = () => true;
+    PAD.poll();   // baseline edge
+    const dashChargesBefore = GAME.player.dashCharges;
+    gp.buttons[PAD.CFG.BTN.B] = { pressed: true, value: 1 };
+    PAD.poll();
+    R.menuGateSuppressesDash = GAME.player.dashCharges === dashChargesBefore && GAME.player.dashT === 0;
+    gp.buttons[PAD.CFG.BTN.B] = { pressed: false, value: 0 };
+    PAD.poll();
+
+    // 2. FOCUS.tickPad returns false (no panel active) -> combat dispatch runs, dash fires normally
+    FOCUS.tickPad = () => false;
+    PAD.poll();   // baseline edge with the gate open
+    const dashChargesBefore2 = GAME.player.dashCharges;
+    gp.buttons[PAD.CFG.BTN.B] = { pressed: true, value: 1 };
+    PAD.poll();
+    R.noGateAllowsDash = GAME.player.dashCharges === dashChargesBefore2 - 1 && GAME.player.dashT > 0;
+    gp.buttons[PAD.CFG.BTN.B] = { pressed: false, value: 0 };
+    PAD.poll();
+
+    // 3. GLYPHS.refresh runs every poll (spy); PAD.poll() never throws once navigator is gone
+    let refreshCalls = 0;
+    GLYPHS.refresh = function (...args) { refreshCalls++; return savedRefresh.apply(this, args); };
+    PAD.poll();
+    delete globalThis.navigator;
+    let threw = false;
+    try { PAD.poll(); } catch (e) { threw = true; }
+    R.noThrowNoNav = threw === false;
+    R.refreshRan = refreshCalls > 0;
+  } finally {
+    delete globalThis.navigator;
+    FOCUS.tickPad = savedTickPad;
+    GLYPHS.refresh = savedRefresh;
+    INPUT.device = savedDevice; INPUT.ax = savedAx; INPUT.ay = savedAy; INPUT.lmb = savedLmb;
+    GAME.state = savedState; GAME.enemies = savedEnemies;
+    PAD._aimAng = savedAimAng; PAD._prevPressed = savedPrevPressed; PAD.state.index = savedStateIndex;
+  }
+})();
+  `, sandbox);
+  const wr = vm.runInContext('__wireResults', sandbox);
+  check('poll() menu gate: FOCUS.tickPad() returning true consumes pad input as menu navigation — B (dash) does not dash', wr.menuGateSuppressesDash);
+  check('poll() menu gate: FOCUS.tickPad() returning false passes pad input through — B (dash) dashes normally', wr.noGateAllowsDash);
+  check('poll(): GLYPHS.refresh() runs every frame; poll() never throws once navigator is removed', wr.refreshRan && wr.noThrowNoNav);
+}
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

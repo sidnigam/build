@@ -19,6 +19,29 @@ const UI = {
     document.querySelectorAll('.panel').forEach(p => p.classList.add('hidden'));
   },
 
+  // ---------- controller pad-hint footers (Phase 05.2 Plan 02, D-09) ----------
+  PAD_HINTS: {
+    hub: null, boonpick: 'boon', shop: 'shop', shrine: 'menu', armory: 'menu',
+    codex: 'codex', death: 'continue', victory: 'continue', pause: 'pause', settings: 'settings',
+  },
+  ensurePadHints() {
+    if (this._padHintsDone) return;
+    this._padHintsDone = true;
+    if (typeof document === 'undefined') return;
+    for (const panelId of Object.keys(this.PAD_HINTS)) {
+      const key = this.PAD_HINTS[panelId];
+      if (!key) continue;
+      const panel = this.el(panelId);
+      if (!panel) continue;
+      const div = document.createElement('div');
+      div.className = 'pad-hint';
+      if (typeof div.setAttribute === 'function') div.setAttribute('data-glyph-hint', key);
+      else { div.dataset = div.dataset || {}; div.dataset.glyphHint = key; }
+      panel.appendChild(div);
+    }
+    if (typeof GLYPHS !== 'undefined') GLYPHS.refresh(true);
+  },
+
   // ---------- transient banners ----------
   banner(text, color = '#ffd34d') {
     const b = this.el('banner');
@@ -53,6 +76,7 @@ const UI = {
   // ---------- hub (the Banyan at the Edge of Worlds) ----------
   hub() {
     this.bindSettingsEntryPoints();
+    this.ensurePadHints();
     this.hideAll();
     GAME.state = 'hub';
     AUDIO.stopDrone();
@@ -63,6 +87,7 @@ const UI = {
     if (META.wins > 0) s.push(`${META.wins} escape${META.wins > 1 ? 's' : ''}`);
     if (META.bestTime > 0) s.push(`best ${Math.floor(META.bestTime / 60)}:${String(Math.floor(META.bestTime % 60)).padStart(2, '0')}`);
     this.el('hub-stats').textContent = s.join('  ·  ');
+    if (typeof GLYPHS !== 'undefined') GLYPHS.refresh(true);
     this.show('hub');
   },
 

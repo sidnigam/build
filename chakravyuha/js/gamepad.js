@@ -280,6 +280,7 @@ const PAD = {
 
   // ---------------- per-frame poll ----------------
   poll() {
+    if (typeof GLYPHS !== 'undefined') GLYPHS.refresh();
     if (typeof navigator === 'undefined' || !navigator.getGamepads) return;
 
     const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
@@ -395,6 +396,13 @@ const PAD = {
           INPUT.mx = P.x + Math.cos(a) * this.CFG.AIM_REACH;
           INPUT.my = P.y + Math.sin(a) * this.CFG.AIM_REACH;
         }
+      }
+
+      // ---- menu focus gate: a visible panel consumes pad input as menu navigation ----
+      if (typeof FOCUS !== 'undefined' && FOCUS.tickPad(this.state)) {
+        this._prevPressed = {};
+        for (const name of this.BUTTON_NAMES) this._prevPressed[name] = !!m.buttons[name];
+        return;
       }
 
       // ---- combat/pause dispatch ----

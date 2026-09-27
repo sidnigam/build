@@ -5,6 +5,7 @@
 
 const INPUT = {
   keys: {}, mx: 640, my: 360, lmb: false, rmb: false,
+  wx: 640, wy: 360,          // world-space aim target (Phase 05.1) — mx/my stay screen-space
   ax: 0, ay: 0, device: 'kbm',
   bindings: {
     moveUp: ['w', 'arrowup'], moveDown: ['s', 'arrowdown'],
@@ -124,6 +125,16 @@ const GAME = {
 
   playing() { return this.state === 'combat' || this.state === 'cleared'; },
 
+  // World-space mouse aim (Phase 05.1, D-13): converts last frame's on-screen mouse position through
+  // the camera's inverse transform. Only from frame() — smoke sims driving update() directly must not
+  // depend on it. Gamepad owns INPUT.wx/wy itself while INPUT.device === 'pad' (js/gamepad.js).
+  syncAim() {
+    if (INPUT.device !== 'pad') {
+      const w = CAMERA.screenToWorld(INPUT.mx, INPUT.my);
+      INPUT.wx = w.x; INPUT.wy = w.y;
+    }
+  },
+
   // ---------------- run lifecycle ----------------
   startRun() {
     UI.hideAll();
@@ -178,6 +189,7 @@ const GAME = {
   // ---------------- frame ----------------
   frame(tms) {
     PAD.poll();
+    this.syncAim();               // uses last frame's on-screen transform — the one the player saw
     const t = tms / 1000;
     this.dt = Math.min(0.033, t - (this._last || t));
     this._last = t;
@@ -1226,15 +1238,18 @@ const GAME = {
       ctx.textAlign = 'left';
     }
 
-    // crosshair (D-11: screen-space, outside camera transform)
+    // crosshair (D-11/D-15: screen-space, outside camera transform)
+    // kbm aims at the literal cursor position; pad has no cursor, so project its world-space
+    // aim target back to screen space through the current camera transform.
+    const cross = INPUT.device === 'pad' ? CAMERA.worldToScreen(INPUT.wx, INPUT.wy) : { x: INPUT.mx, y: INPUT.my };
     ctx.strokeStyle = 'rgba(255,255,255,0.8)';
     ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.arc(INPUT.mx, INPUT.my, 8, 0, U.TAU); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cross.x, cross.y, 8, 0, U.TAU); ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(INPUT.mx - 12, INPUT.my); ctx.lineTo(INPUT.mx - 4, INPUT.my);
-    ctx.moveTo(INPUT.mx + 4, INPUT.my); ctx.lineTo(INPUT.mx + 12, INPUT.my);
-    ctx.moveTo(INPUT.mx, INPUT.my - 12); ctx.lineTo(INPUT.mx, INPUT.my - 4);
-    ctx.moveTo(INPUT.mx, INPUT.my + 4); ctx.lineTo(INPUT.mx, INPUT.my + 12);
+    ctx.moveTo(cross.x - 12, cross.y); ctx.lineTo(cross.x - 4, cross.y);
+    ctx.moveTo(cross.x + 4, cross.y); ctx.lineTo(cross.x + 12, cross.y);
+    ctx.moveTo(cross.x, cross.y - 12); ctx.lineTo(cross.x, cross.y - 4);
+    ctx.moveTo(cross.x, cross.y + 4); ctx.lineTo(cross.x, cross.y + 12);
     ctx.stroke();
   },
 

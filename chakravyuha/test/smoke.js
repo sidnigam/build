@@ -2807,5 +2807,70 @@ check('SPRITES.coverFit: matches the old fixed-viewport formula; cover-fits an e
 check('GAME.render(): does not throw with mocked SPRITES, in combat and hub states'
   + (align.renderErr ? ' — ' + align.renderErr : ''), align.renderNoThrow);
 
+// ---------------- world-space aim (Phase 05.1) ----------------
+console.log('\n— world-space aim (Phase 05.1) —');
+vm.runInContext(`
+globalThis.__aimResults = {};
+(function() {
+  const R = __aimResults;
+  const savedDevice = INPUT.device, savedMx = INPUT.mx, savedMy = INPUT.my, savedWx = INPUT.wx, savedWy = INPUT.wy;
+  const savedPlayer = GAME.player, savedState = GAME.state, savedLmb = INPUT.lmb, savedShake = GAME.shake;
+  const savedAimAng = PAD._aimAng, savedPrevButtons = PAD._prevButtons;
+
+  try {
+    INPUT.lmb = false;
+    // 1/2. syncAim under a scrolled camera resolves screen mouse -> world aim target; Player.update aims at it.
+    CAMERA.resetFx(); CAMERA.sx = 900; CAMERA.sy = 600; GAME.shake = 0; CAMERA.begin();
+    INPUT.device = 'kbm'; INPUT.mx = 1000; INPUT.my = 200;
+    GAME.syncAim();
+    const syncOk = Math.abs(INPUT.wx - 1900) < 1e-9 && Math.abs(INPUT.wy - 800) < 1e-9;
+
+    GAME.player = new Player('khanda');
+    GAME.player.x = 500; GAME.player.y = 500;
+    GAME.state = 'combat';
+    GAME.player.update(1 / 60);
+    const expectedAim = Math.atan2(INPUT.wy - GAME.player.y, INPUT.wx - GAME.player.x);
+    const playerAimOk = Math.abs(GAME.player.aim - expectedAim) < 1e-9;
+    R.syncAimAndPlayerAim = syncOk && playerAimOk;
+
+    // 3. syncAim does not overwrite wx/wy while a gamepad is aiming.
+    INPUT.device = 'pad'; INPUT.wx = 111; INPUT.wy = 222;
+    GAME.syncAim();
+    R.padSyncUntouched = INPUT.wx === 111 && INPUT.wy === 222;
+
+    // 4. PAD.poll: right stick -> world-space wx/wy; releasing the stick holds the last angle;
+    //    INPUT.mx/my are never written by the pad.
+    INPUT.device = 'kbm'; INPUT.mx = 77; INPUT.my = 88;
+    PAD._aimAng = null; PAD._prevButtons = {};
+    const gp = { axes: [0, 0, 1, 0], buttons: [] };
+    globalThis.navigator = { getGamepads: () => [gp] };
+    PAD.poll();
+    const deviceSwitchedOk = INPUT.device === 'pad';
+    const firstAimOk = Math.abs(INPUT.wx - (GAME.player.x + PAD.CFG.AIM_REACH)) < 1e-9
+      && Math.abs(INPUT.wy - GAME.player.y) < 1e-9;
+    const mxUntouched = INPUT.mx === 77 && INPUT.my === 88;
+
+    gp.axes = [0, 0, 0, 0];   // release the stick
+    GAME.player.x += 100;     // move the player — aim direction should be held, target re-centered
+    PAD.poll();
+    const heldAimOk = Math.abs(INPUT.wx - (GAME.player.x + PAD.CFG.AIM_REACH)) < 1e-9
+      && Math.abs(INPUT.wy - GAME.player.y) < 1e-9;
+
+    R.padAim = deviceSwitchedOk && firstAimOk && mxUntouched && heldAimOk;
+  } finally {
+    delete globalThis.navigator;
+    INPUT.device = savedDevice; INPUT.mx = savedMx; INPUT.my = savedMy; INPUT.wx = savedWx; INPUT.wy = savedWy;
+    INPUT.lmb = savedLmb; GAME.shake = savedShake;
+    GAME.player = savedPlayer; GAME.state = savedState;
+    PAD._aimAng = savedAimAng; PAD._prevButtons = savedPrevButtons;
+    CAMERA.resetFx(); CAMERA.sx = 0; CAMERA.sy = 0; CAMERA._store(CAMERA.xform());
+  }
+})();
+`, sandbox);
+const aim = vm.runInContext('__aimResults', sandbox);
+check('GAME.syncAim(): resolves screen mx/my through the inverse camera transform into INPUT.wx/wy; Player.update aims at wx/wy', aim.syncAimAndPlayerAim);
+check('GAME.syncAim(): does not overwrite INPUT.wx/wy while INPUT.device === "pad"', aim.padSyncUntouched);
+check('PAD.poll(): right stick writes a world-space aim target; holds direction when released; never writes INPUT.mx/my', aim.padAim);
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

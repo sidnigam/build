@@ -254,7 +254,7 @@ class Player {
 
   update(dt) {
     const I = INPUT;
-    this.aim = Math.atan2(I.my - this.y, I.mx - this.x);
+    this.aim = Math.atan2(I.wy - this.y, I.wx - this.x);
 
     // timers
     U.cool(this, 'atkCd', dt); U.cool(this, 'specialCd', dt);

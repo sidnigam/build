@@ -4398,5 +4398,73 @@ function makeMusicSandbox() {
   check('stinger/integration sequence never threw' + (intErr ? ' — ' + intErr.stack : ''), intErr === null);
 }
 
+// ---------------- MUSIC stress/budget (05.3-03 task 3) ----------------
+{
+  console.log('\n— MUSIC stress/budget (05.3-03) —');
+  let stressErr = null;
+  try {
+    const { sb, R } = makeMusicSandbox();
+    const timers = sb.__timers;
+    R(`
+      var FAKE_AUDIO = { ctx: new AudioContext(), muted: false };
+      FAKE_AUDIO.musicGain = FAKE_AUDIO.ctx.createGain();
+      MUSIC.attach(FAKE_AUDIO);
+      var GAME = { state: 'hub', prePause: null, biome: { id: 'hub', droneHz: 138.59 }, bossRef: null,
+        enemies: [], player: { hp: 100, maxhp: 100, boonRanks: {}, defiance: 1 } };
+      MUSIC.start(13131313);
+    `);
+    const mock = R('FAKE_AUDIO.ctx');
+    function run(sec) {
+      const steps = Math.max(1, Math.round(sec / 0.025));
+      for (let i = 0; i < steps; i++) {
+        mock.advance(0.025);
+        let guard = 0;
+        while (timers.length && guard++ < 1000) timers.shift().fn();
+      }
+    }
+    function untilRaga(rid) { let g = 0; while (R('MUSIC.raga') !== rid && g++ < 200) run(0.1); }
+
+    // one L5 densest-texture 120s soak per biome raga: CPU budget + voice caps.
+    const ragaIds = ['bhairav', 'malkauns', 'adana', 'bhairavi']; // naraka/patala/ranabhoomi/vaitarani
+    for (const rid of ragaIds) {
+      R(`MUSIC.debug(5, ${JSON.stringify(rid)});`);
+      untilRaga(rid);
+      R('MUSIC.stats.ticks = 0; MUSIC.stats.avgTickMs = 0; MUSIC.stats.maxTickMs = 0; MUSIC.stats.peakActive = 0;');
+      const nodesBefore = Object.values(mock.count).reduce((a, b) => a + b, 0);
+      run(120);
+      const nodesAfter = Object.values(mock.count).reduce((a, b) => a + b, 0);
+      const nodesPerSec = (nodesAfter - nodesBefore) / 120;
+      const stats = R('MUSIC.stats');
+      console.log(`  info  ${rid} L5/120s: avgTickMs=${stats.avgTickMs.toFixed(4)} maxTickMs=${stats.maxTickMs.toFixed(3)} ` +
+        `dropped=${stats.dropped} peakActive=${stats.peakActive} nodes/s=${nodesPerSec.toFixed(1)}`);
+      check(`${rid} L5/120s: avgTickMs < 0.75 (3% of the 25ms period)`, stats.avgTickMs < 0.75);
+      check(`${rid} L5/120s: peakActive <= CAPS.total`, stats.peakActive <= R('MUSIC.CAPS.total'));
+      check(`${rid} L5/120s: mock.late === 0`, mock.late === 0);
+      check(`${rid} L5/120s: created nodes/sec < 120`, nodesPerSec < 120);
+    }
+
+    // long-form variety (MUS-07): >= 8 distinct 5-note phrase-degree
+    // sequences over 64 tala cycles at bhairav level 2 (no back-to-back
+    // repeats, generator regenerates on collision — 05.3-01 D-09).
+    R("MUSIC.debug(2, 'bhairav');");
+    untilRaga('bhairav');
+    R(`
+      MUSIC._degLog = [];
+      MUSIC._origLeadNote2 = MUSIC.leadNote;
+      MUSIC.leadNote = function (t, deg) { MUSIC._degLog.push(deg); return MUSIC._origLeadNote2.apply(this, arguments); };
+    `);
+    const cycleSec = R("MUSIC.theory.talaSteps(MUSIC.tala) * (60 / MUSIC.bpm / MUSIC.theory.STEPS_PER_MATRA)");
+    run(64 * cycleSec);
+    const degLog = R('MUSIC._degLog');
+    const sigs = new Set();
+    for (let i = 0; i + 4 < degLog.length; i += 5) sigs.add(degLog.slice(i, i + 5).join(','));
+    check(`long-form variety: >= 8 distinct 5-note degree windows over 64 bhairav cycles (measured ${sigs.size} from ${degLog.length} notes)`,
+      sigs.size >= 8);
+  } catch (e) {
+    stressErr = e;
+  }
+  check('stress/budget sequence never threw' + (stressErr ? ' — ' + stressErr.stack : ''), stressErr === null);
+}
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

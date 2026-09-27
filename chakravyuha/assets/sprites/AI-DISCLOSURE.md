@@ -89,3 +89,23 @@ Each entry in `PROVENANCE.json assets[]` contains (fields vary slightly by `kind
   "self_review": "..."
 }
 ```
+
+## God portraits (Phase 05.5)
+
+The six boon-granting gods (Hanuman, Agni, Indra, Vayu, Krishna, Durga) are intended to
+each get one illustrated half-body bust portrait, generated the same way as the character
+atlases above: **txt2img** with fixed, recorded seeds (reserved range 71000–71599, up to 7
+attempts per god), local ComfyUI, no ControlNet or IPAdapter, followed by rembg (`u2net`)
+background removal, alpha despeckling, trim, and a bottom-aligned fit into 600x768 with a
+bottom alpha feather (`tools/art/finish_portrait.py`). Unlike the earlier character atlases,
+**no god portrait has shipped as of this plan** — every attempt for all six gods was
+rejected against the Iconography Bible's hard checks (see
+`.planning/phases/05.5-god-portraits-and-boon-dialogue/05.5-01-SUMMARY.md` for the full
+per-god, per-seed record). Where a portrait is missing, the boon-pick screen and codex fall
+back to the existing CSS/SVG god symbol; no god portrait AI asset is currently shipped or
+consumed by players. `assets/sprites/_review/gods-contact-sheet.png` documents this
+NOT-SHIPPED state for every god. The divine aura shown behind a portrait (or symbol) on the
+boon-pick screen is CSS-drawn, not AI, per the existing UI-ornament exemption above. A
+retry pass with the DreamShaper XL checkpoint (see 05.4-01 checkpoint research) is planned;
+every god portrait, if and when shipped, will await human cultural review (QA-03) before
+the Steam AI Content Survey is finalized, exactly as the character atlases above do.

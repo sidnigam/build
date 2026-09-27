@@ -629,5 +629,6 @@
       "self_review": "Accepted on attempt 0: rakshasa sorcerer conjurer, magenta-pink robes, wide-brimmed hat, bead necklace, bone staff topped with a glowing pink orb. Distinct silhouette (hat + robe + staff-orb), no halo, no text, clean cutout."
     }
   ],
-  "review_sheet": "assets/sprites/_review/contact-sheet.png"
+  "review_sheet": "assets/sprites/_review/contact-sheet.png",
+  "review_sheet_gods": "assets/sprites/_review/gods-contact-sheet.png"
 }

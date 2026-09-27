@@ -1675,3 +1675,427 @@ MUSIC.theory.LEAD_PRESETS = {
     BOL_GAIN,
   };
 })();
+
+// ================================================================
+// Web Audio engine (05.3-02 task 3): bus graph, sample banks, voice-
+// capped one-shots, and the persistent monophonic lead. Every method
+// here is a no-op (returns early) when MUSIC.ctx is null, so this stays
+// fully inert until AUDIO.init() calls MUSIC.attach() with a real ctx
+// (not wired up until 05.3-03 — the shipped game is unchanged so far).
+// D-01/D-11/D-15/D-16.
+// ================================================================
+(function () {
+  MUSIC.RENDER_SR_MAX = 32000;
+  MUSIC.MIX = { drone: 0.55, sub: 0.5, lead: 0.5, pluck: 0.4, tabla: 0.6, big: 0.7, metal: 0.18, fx: 0.6 };
+  MUSIC.SENDS = { drone: 0.25, sub: 0, lead: 0.35, pluck: 0.3, tabla: 0.15, big: 0.12, metal: 0.3, fx: 0.4 };
+  MUSIC.CAPS = { total: 28, tabla: 6, big: 4, metal: 4, pluck: 8, drone: 6, fx: 4 };
+  MUSIC.OUTPUT_TRIM = 1.0;
+  MUSIC.stats = {
+    ticks: 0, avgTickMs: 0, maxTickMs: 0, renderMs: 0, pendingJobs: 0,
+    active: 0, peakActive: 0, dropped: 0, syncRenders: 0, late: 0,
+  };
+
+  function now() { return (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now(); }
+  function foldRange(v, lo, hi) {
+    let guard = 0;
+    while (v < lo && guard++ < 32) v *= 2;
+    guard = 0;
+    while (v >= hi && guard++ < 32) v /= 2;
+    return v;
+  }
+
+  MUSIC.attach = function (audio) {
+    if (!audio || !audio.ctx || this.ctx) return false;
+    this.audio = audio;
+    this.ctx = audio.ctx;
+    this.sr = Math.min(audio.ctx.sampleRate, MUSIC.RENDER_SR_MAX);
+    this.running = false;
+    this._activeCounts = {};
+    this._banks = {};
+    this._bankOrder = [];
+    this._droneAlt = false;
+    this._buildGraph();
+    this._initLead();
+    this._initPads();
+    this.setRaga('yaman');
+    return true;
+  };
+
+  MUSIC.detach = function () {
+    if (!this.ctx) return;
+    try {
+      for (const s of Object.keys(this.nodes.stems)) this.nodes.stems[s].disconnect();
+      this.nodes.trim.disconnect();
+    } catch (e) { /* mock/real nodes may not all support disconnect args, ignore */ }
+    this.ctx = null; this.audio = null; this.nodes = null; this.lead = null; this.pads = null;
+    this._banks = {}; this._bankOrder = [];
+    this.running = false;
+  };
+
+  // ---------------- bus graph ----------------
+
+  MUSIC._buildGraph = function () {
+    const ctx = this.ctx;
+    const T = MUSIC.theory;
+    const nodes = { stems: {}, sends: {}, panners: {}, stemInputs: {} };
+
+    const mix = ctx.createGain(); mix.gain.value = 1;
+    const reverbIn = ctx.createGain(); reverbIn.gain.value = 1;
+    const convolver = ctx.createConvolver();
+    const irArr = MUSIC.dsp.impulse(this.sr, 2.4, 1);
+    const irBuf = ctx.createBuffer(2, irArr[0].length, this.sr);
+    irBuf.getChannelData(0).set(irArr[0]);
+    irBuf.getChannelData(1).set(irArr[1]);
+    convolver.buffer = irBuf;
+    convolver.normalize = true;
+    const reverbReturn = ctx.createGain(); reverbReturn.gain.value = 0.8;
+    reverbIn.connect(convolver); convolver.connect(reverbReturn); reverbReturn.connect(mix);
+
+    const stemNames = T.STEM_NAMES.concat(['fx']);
+    for (const s of stemNames) {
+      const g = ctx.createGain();
+      g.gain.value = s === 'fx' ? MUSIC.MIX.fx : 0;
+      let input = g;
+      if (s === 'pluck' || s === 'tabla' || s === 'metal') {
+        const pan = ctx.createStereoPanner();
+        pan.pan.value = s === 'pluck' ? -0.2 : s === 'tabla' ? 0.15 : 0.3;
+        pan.connect(g);
+        input = pan;
+        nodes.panners[s] = pan;
+      }
+      g.connect(mix);
+      const send = ctx.createGain(); send.gain.value = MUSIC.SENDS[s] || 0;
+      g.connect(send); send.connect(reverbIn);
+      nodes.stems[s] = g;
+      nodes.sends[s] = send;
+      nodes.stemInputs[s] = input;
+      if (s === 'drone') {
+        const panL = ctx.createStereoPanner(); panL.pan.value = -0.35; panL.connect(g);
+        const panR = ctx.createStereoPanner(); panR.pan.value = 0.35; panR.connect(g);
+        nodes.panners.droneL = panL; nodes.panners.droneR = panR;
+      }
+    }
+
+    const duckLP = ctx.createBiquadFilter(); duckLP.type = 'lowpass'; duckLP.frequency.value = 18000; duckLP.Q.value = 0.7;
+    const duckGain = ctx.createGain(); duckGain.gain.value = 1;
+    const glue = ctx.createDynamicsCompressor();
+    glue.threshold.value = -18; glue.knee.value = 12; glue.ratio.value = 2.5; glue.attack.value = 0.012; glue.release.value = 0.25;
+    const limiter = ctx.createDynamicsCompressor();
+    limiter.threshold.value = -3; limiter.knee.value = 0; limiter.ratio.value = 20; limiter.attack.value = 0.002; limiter.release.value = 0.12;
+    const trim = ctx.createGain(); trim.gain.value = MUSIC.OUTPUT_TRIM;
+
+    mix.connect(duckLP); duckLP.connect(duckGain); duckGain.connect(glue); glue.connect(limiter); limiter.connect(trim);
+    trim.connect(this.audio.musicGain);
+
+    nodes.mix = mix; nodes.reverbIn = reverbIn; nodes.convolver = convolver; nodes.reverbReturn = reverbReturn;
+    nodes.duckLP = duckLP; nodes.duckGain = duckGain; nodes.glue = glue; nodes.limiter = limiter; nodes.trim = trim;
+    this.nodes = nodes;
+  };
+
+  // ---------------- sample banks ----------------
+
+  MUSIC._toAudioBuffer = function (arr) {
+    if (Array.isArray(arr)) {
+      const buf = this.ctx.createBuffer(arr.length, arr[0].length, this.sr);
+      for (let i = 0; i < arr.length; i++) buf.getChannelData(i).set(arr[i]);
+      return buf;
+    }
+    const buf = this.ctx.createBuffer(1, arr.length, this.sr);
+    buf.getChannelData(0).set(arr);
+    return buf;
+  };
+
+  MUSIC._ensureBank = function (ragaId) {
+    if (this._banks[ragaId]) return this._banks[ragaId];
+    const raga = MUSIC.theory.RAGAS[ragaId];
+    const jobs = MUSIC.dsp.bankSpec(raga);
+    const bank = { jobs, buffers: new Map(), idx: 0, done: false };
+    this._banks[ragaId] = bank;
+    this._bankOrder.push(ragaId);
+    while (this._bankOrder.length > 2) {
+      let evictIdx = -1;
+      for (let i = 0; i < this._bankOrder.length; i++) {
+        const id = this._bankOrder[i];
+        if (id !== ragaId && id !== 'yaman') { evictIdx = i; break; }
+      }
+      if (evictIdx === -1) break;
+      delete this._banks[this._bankOrder[evictIdx]];
+      this._bankOrder.splice(evictIdx, 1);
+    }
+    return bank;
+  };
+
+  MUSIC._renderSlice = function (budgetMs) {
+    if (!this.ctx) return;
+    budgetMs = budgetMs === undefined ? 4 : budgetMs;
+    const bank = this._banks[this.raga];
+    if (!bank || bank.done) return;
+    const t0 = now();
+    while (bank.idx < bank.jobs.length) {
+      if (now() - t0 >= budgetMs) { MUSIC.stats.pendingJobs = bank.jobs.length - bank.idx; return; }
+      const job = bank.jobs[bank.idx++];
+      if (!bank.buffers.has(job.key)) {
+        const arr = MUSIC.dsp.renderJob(job, this.sr);
+        bank.buffers.set(job.key, this._toAudioBuffer(arr));
+      }
+    }
+    bank.done = true;
+    MUSIC.stats.pendingJobs = 0;
+  };
+
+  MUSIC._buffer = function (key) {
+    const bank = this._banks[this.raga];
+    if (!bank) return null;
+    if (bank.buffers.has(key)) return bank.buffers.get(key);
+    let job = null;
+    for (let i = 0; i < bank.jobs.length; i++) if (bank.jobs[i].key === key) { job = bank.jobs[i]; break; }
+    if (!job) return null;
+    MUSIC.stats.syncRenders++;
+    const arr = MUSIC.dsp.renderJob(job, this.sr);
+    const buf = this._toAudioBuffer(arr);
+    bank.buffers.set(key, buf);
+    return buf;
+  };
+
+  // ---------------- voice-capped one-shots ----------------
+
+  MUSIC.playOneShot = function (stem, key, t, vel, opts) {
+    if (!this.ctx) return false;
+    opts = opts || {};
+    const capStem = MUSIC.CAPS[stem] !== undefined ? MUSIC.CAPS[stem] : 4;
+    this._activeCounts[stem] = this._activeCounts[stem] || 0;
+    if (this._activeCounts[stem] >= capStem || MUSIC.stats.active >= MUSIC.CAPS.total) {
+      MUSIC.stats.dropped++;
+      return false;
+    }
+    const buf = this._buffer(key);
+    if (!buf) { MUSIC.stats.dropped++; return false; }
+
+    const src = this.ctx.createBufferSource();
+    src.buffer = buf;
+    if (opts.rate) src.playbackRate.value = opts.rate;
+    const g = this.ctx.createGain();
+    const bolKey = key.indexOf('t:') === 0 ? key.slice(2) : null;
+    const bolGain = (bolKey && MUSIC.dsp.BOL_GAIN[bolKey] !== undefined) ? MUSIC.dsp.BOL_GAIN[bolKey] : 1;
+    g.gain.value = Math.max(0.0001, vel * bolGain);
+
+    let target = this.nodes.stemInputs[stem];
+    if (stem === 'drone' && key.indexOf('d:') === 0) {
+      this._droneAlt = !this._droneAlt;
+      target = this._droneAlt ? this.nodes.panners.droneL : this.nodes.panners.droneR;
+    }
+    src.connect(g); g.connect(target);
+
+    const startAt = Math.max(t, this.ctx.currentTime);
+    src.start(startAt);
+    this._activeCounts[stem]++;
+    MUSIC.stats.active++;
+    MUSIC.stats.peakActive = Math.max(MUSIC.stats.peakActive, MUSIC.stats.active);
+    const self = this;
+    src.onended = function () {
+      self._activeCounts[stem] = Math.max(0, self._activeCounts[stem] - 1);
+      MUSIC.stats.active = Math.max(0, MUSIC.stats.active - 1);
+      try { src.disconnect(); g.disconnect(); } catch (e) { /* ignore */ }
+    };
+    return true;
+  };
+
+  // ---------------- persistent monophonic lead ----------------
+
+  MUSIC._initLead = function () {
+    const ctx = this.ctx;
+    const wave = MUSIC.dsp.leadWave('bansuri');
+    const osc = ctx.createOscillator();
+    osc.setPeriodicWave(ctx.createPeriodicWave(wave.real, wave.imag));
+    osc.start(0);
+
+    const filt1 = ctx.createBiquadFilter(); filt1.type = 'peaking'; filt1.frequency.value = 750; filt1.Q.value = 2; filt1.gain.value = 0;
+    const filt2 = ctx.createBiquadFilter(); filt2.type = 'peaking'; filt2.frequency.value = 2200; filt2.Q.value = 2; filt2.gain.value = 0;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 6000; lp.Q.value = 0.5;
+    const amp = ctx.createGain(); amp.gain.value = 0;
+    osc.connect(filt1); filt1.connect(filt2); filt2.connect(lp); lp.connect(amp); amp.connect(this.nodes.stemInputs.lead);
+
+    const breathLen = Math.max(1, Math.round(this.sr * 1));
+    const breathBuf = ctx.createBuffer(1, breathLen, this.sr);
+    { const d = breathBuf.getChannelData(0); const rand = MUSIC.gen.rng(4242); for (let i = 0; i < breathLen; i++) d[i] = rand() * 2 - 1; }
+    const breathSrc = ctx.createBufferSource(); breathSrc.buffer = breathBuf; breathSrc.loop = true; breathSrc.start(0);
+    const breathBp = ctx.createBiquadFilter(); breathBp.type = 'bandpass'; breathBp.frequency.value = 2000; breathBp.Q.value = 1.5;
+    const breathAmp = ctx.createGain(); breathAmp.gain.value = 0;
+    breathSrc.connect(breathBp); breathBp.connect(breathAmp); breathAmp.connect(this.nodes.stemInputs.lead);
+
+    const vibLfo = ctx.createOscillator(); vibLfo.frequency.value = 5.2; vibLfo.start(0);
+    const vibGain = ctx.createGain(); vibGain.gain.value = 0;
+    vibLfo.connect(vibGain); vibGain.connect(osc.detune);
+
+    this.lead = {
+      osc, filt1, filt2, lp, amp, breathSrc, breathBp, breathAmp, vibLfo, vibGain,
+      preset: MUSIC.theory.LEAD_PRESETS.bansuri, presetId: 'bansuri', prevHz: null,
+    };
+  };
+
+  MUSIC._applyLeadPreset = function (id) {
+    const preset = MUSIC.theory.LEAD_PRESETS[id] || MUSIC.theory.LEAD_PRESETS.bansuri;
+    const wave = MUSIC.dsp.leadWave(id);
+    this.lead.osc.setPeriodicWave(this.ctx.createPeriodicWave(wave.real, wave.imag));
+    this.lead.preset = preset;
+    this.lead.presetId = id;
+    this.lead.vibLfo.frequency.value = preset.vibRate;
+    const f = preset.formants || [];
+    if (f[0]) { this.lead.filt1.frequency.value = f[0][0]; this.lead.filt1.gain.value = 0; }
+    if (f[1]) { this.lead.filt2.frequency.value = f[1][0]; this.lead.filt2.gain.value = 0; }
+  };
+
+  MUSIC.ANDOLAN_MIN_SEC = 0.3;
+
+  MUSIC.leadNote = function (t, deg, durSec, vel, opts) {
+    if (!this.ctx || !this.lead) return;
+    opts = opts || {};
+    const T = MUSIC.theory;
+    const raga = T.RAGAS[this.raga];
+    const preset = this.lead.preset;
+    const leadMul = raga.leadMul || 2;
+    const hz = T.semiToHz(this.sa * leadMul, deg);
+    const prevHz = this.lead.prevHz;
+
+    if (opts.kan) {
+      const graceHz = T.semiToHz(this.sa * leadMul, deg + 1);
+      this.lead.osc.frequency.setValueAtTime(graceHz, t);
+      this.lead.osc.frequency.setValueAtTime(hz, t + 0.035);
+    } else if (opts.glide && prevHz) {
+      this.lead.osc.frequency.setValueAtTime(prevHz, t);
+      const glideTime = Math.max(0.001, Math.min(0.18, 0.5 * durSec));
+      this.lead.osc.frequency.exponentialRampToValueAtTime(hz, t + glideTime);
+    } else {
+      this.lead.osc.frequency.setValueAtTime(hz, t);
+      this.lead.amp.gain.setTargetAtTime(Math.max(0.0001, vel * 0.6), t, 0.005);
+      this.lead.amp.gain.setTargetAtTime(Math.max(0.0001, vel), t + 0.02, 0.005);
+    }
+    if (opts.murki) {
+      const upperHz = T.semiToHz(this.sa * leadMul, deg + 1);
+      const lowerHz = T.semiToHz(this.sa * leadMul, deg - 1);
+      this.lead.osc.frequency.setValueAtTime(upperHz, t);
+      this.lead.osc.frequency.setValueAtTime(hz, t + 0.045);
+      this.lead.osc.frequency.setValueAtTime(lowerHz, t + 0.09);
+      this.lead.osc.frequency.setValueAtTime(hz, t + 0.135);
+    }
+    this.lead.prevHz = hz;
+
+    this.lead.lp.frequency.setTargetAtTime(Math.min(preset.lpCap, hz * preset.lpMul), t, 0.05);
+    const attackTc = Math.max(0.001, preset.attack / 3);
+    this.lead.amp.gain.setTargetAtTime(Math.max(0.0001, vel * preset.gain), t, attackTc);
+    this.lead.breathAmp.gain.setTargetAtTime(Math.max(0.0001, vel * preset.gain * preset.breath), t, attackTc);
+
+    const isAndolan = raga.andolan && raga.andolan.indexOf(T.pc(deg)) !== -1 && durSec >= MUSIC.ANDOLAN_MIN_SEC;
+    if (isAndolan) {
+      this.lead.vibLfo.frequency.setValueAtTime(1.6, t);
+      this.lead.vibGain.gain.setValueAtTime(0.0001, t);
+      this.lead.vibGain.gain.linearRampToValueAtTime(25, t + 0.3);
+    } else {
+      this.lead.vibLfo.frequency.setValueAtTime(preset.vibRate, t);
+      this.lead.vibGain.gain.setValueAtTime(0.0001, t);
+      this.lead.vibGain.gain.linearRampToValueAtTime(Math.max(0.0001, preset.vibCents), t + preset.vibDelay + 0.3);
+    }
+  };
+
+  MUSIC.leadRelease = function (t) {
+    if (!this.ctx || !this.lead) return;
+    const preset = this.lead.preset;
+    const tc = Math.max(0.001, preset.release / 3);
+    this.lead.amp.gain.setTargetAtTime(0.0001, t, tc);
+    this.lead.breathAmp.gain.setTargetAtTime(0.0001, t, tc);
+  };
+
+  MUSIC.leadCancel = function (t) {
+    if (!this.ctx || !this.lead) return;
+    this.lead.osc.frequency.cancelScheduledValues(t);
+    this.lead.amp.gain.cancelScheduledValues(t);
+    this.leadRelease(t);
+  };
+
+  // ---------------- pads (sine Sa pad / sub / tension) ----------------
+
+  MUSIC._initPads = function () {
+    const ctx = this.ctx;
+    const padOsc = ctx.createOscillator(); padOsc.frequency.value = 220; padOsc.start(0);
+    const padGain = ctx.createGain(); padGain.gain.value = 0.25;
+    padOsc.connect(padGain); padGain.connect(this.nodes.stemInputs.drone);
+
+    const subWave = MUSIC.dsp.leadWave('sub');
+    const subOsc = ctx.createOscillator();
+    subOsc.setPeriodicWave(ctx.createPeriodicWave(subWave.real, subWave.imag));
+    subOsc.frequency.value = 55; subOsc.start(0);
+    const subGain = ctx.createGain(); subGain.gain.value = 1;
+    subOsc.connect(subGain); subGain.connect(this.nodes.stemInputs.sub);
+
+    const tensionOsc = ctx.createOscillator(); tensionOsc.frequency.value = 440; tensionOsc.start(0);
+    const tensionGain = ctx.createGain(); tensionGain.gain.value = 0;
+    tensionOsc.connect(tensionGain); tensionGain.connect(this.nodes.stemInputs.drone);
+
+    this.pads = { padOsc, padGain, subOsc, subGain, tensionOsc, tensionGain };
+  };
+
+  // ---------------- raga / intensity / duck / tension control ----------------
+
+  MUSIC.setRaga = function (id, saHz) {
+    if (!this.ctx) return;
+    const T = MUSIC.theory;
+    const raga = T.RAGAS[id] || T.ragaFor(id);
+    this.raga = raga.id;
+    this.tala = T.TALAS[raga.tala];
+    this.sa = (saHz !== undefined && saHz !== null && isFinite(saHz)) ? saHz : raga.sa;
+    const t = this.ctx.currentTime;
+
+    this.pads.padOsc.frequency.setTargetAtTime(this.sa, t, 0.2);
+    this.pads.subOsc.frequency.setTargetAtTime(foldRange(this.sa / 2, 40, 65), t, 0.2);
+    this.pads.tensionOsc.frequency.setTargetAtTime(T.semiToHz(this.sa * 2, raga.tension || 0), t, 0.2);
+    this._applyLeadPreset(raga.lead);
+
+    const bank = this._ensureBank(raga.id);
+    for (let i = 0; i < bank.jobs.length; i++) {
+      const job = bank.jobs[i];
+      if (job.kind === 'tanpura' || (job.kind === 'fx' && job.args.kind === 'bell')) {
+        if (!bank.buffers.has(job.key)) {
+          const arr = MUSIC.dsp.renderJob(job, this.sr);
+          bank.buffers.set(job.key, this._toAudioBuffer(arr));
+        }
+      }
+    }
+  };
+
+  MUSIC.setStemLevels = function (level, t, rampSec, override) {
+    if (!this.ctx) return;
+    rampSec = rampSec === undefined ? 0.3 : rampSec;
+    const T = MUSIC.theory;
+    const raga = T.RAGAS[this.raga];
+    const lvl = Math.max(0, Math.min(5, level));
+    const row = T.INTENSITY[lvl];
+    const tc = Math.max(0.001, rampSec / 3);
+    for (const s of T.STEM_NAMES) {
+      const base = (override && override[s] !== undefined) ? override[s] : row[s];
+      const target = base * MUSIC.MIX[s] * (s === 'big' ? (raga.bigBoost || 1) : 1);
+      this.nodes.stems[s].gain.setTargetAtTime(target, t, tc);
+    }
+  };
+
+  MUSIC.setDuck = function (on, t) {
+    if (!this.ctx) return;
+    if (on) {
+      this.nodes.duckLP.frequency.setTargetAtTime(1100, t, 0.15);
+      this.nodes.duckGain.gain.setTargetAtTime(0.6, t, 0.15);
+    } else {
+      this.nodes.duckLP.frequency.setTargetAtTime(18000, t, 0.15);
+      this.nodes.duckGain.gain.setTargetAtTime(1, t, 0.15);
+    }
+  };
+
+  MUSIC.setTension = function (on, t) {
+    if (!this.ctx) return;
+    this.pads.tensionGain.gain.setTargetAtTime(on ? 0.12 : 0.0001, t, 0.3);
+  };
+
+  MUSIC.isAudible = function () {
+    if (!this.ctx || !this.audio) return false;
+    const vol = (typeof SETTINGS !== 'undefined') ? SETTINGS.get('musicVolume') : 1;
+    return !!(this.running && !this.audio.muted && vol > 0.02);
+  };
+})();

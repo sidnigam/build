@@ -3740,5 +3740,284 @@ console.log('\n— character readability: ground marker spec (quick 260926-djs) 
   }
 }
 
+// ---------------- MUSIC engine (mock AudioContext) (05.3-02) ----------------
+// Strict MockAudioContext: throws on non-finite AudioParam values/times,
+// on exponentialRampToValueAtTime(<=0), and on setTargetAtTime(timeConstant
+// <= 0); records connect() destinations and per-node-type creation counts;
+// records late (`start(t)` with t before currentTime) calls. Reusable by
+// 05.3-03.
+class MockAudioContext {
+  constructor() {
+    this.currentTime = 0;
+    this.sampleRate = 48000;
+    this.state = 'running';
+    this.late = 0;
+    this.count = {};
+    this._sources = [];
+    this.destination = this._nodeBase();
+  }
+  _bump(kind) { this.count[kind] = (this.count[kind] || 0) + 1; }
+  _nodeBase() {
+    return {
+      _dsts: [],
+      connect(dst) { this._dsts.push(dst); return dst; },
+      disconnect() { this._dsts = []; },
+    };
+  }
+  _assertFinite(x, label) {
+    if (typeof x !== 'number' || !Number.isFinite(x)) throw new TypeError('MockAudioContext: non-finite ' + label + ' (' + x + ')');
+  }
+  _param(initial) {
+    const self = this;
+    return {
+      value: initial,
+      _events: [],
+      setValueAtTime(v, t) {
+        self._assertFinite(v, 'value'); self._assertFinite(t, 'time');
+        this.value = v; this._events.push({ type: 'set', v, t }); return this;
+      },
+      linearRampToValueAtTime(v, t) {
+        self._assertFinite(v, 'value'); self._assertFinite(t, 'time');
+        this.value = v; this._events.push({ type: 'lin', v, t }); return this;
+      },
+      exponentialRampToValueAtTime(v, t) {
+        self._assertFinite(v, 'value'); self._assertFinite(t, 'time');
+        if (!(v > 0)) throw new RangeError('MockAudioContext: exponentialRampToValueAtTime value <= 0 (' + v + ')');
+        this.value = v; this._events.push({ type: 'exp', v, t }); return this;
+      },
+      setTargetAtTime(v, t, tc) {
+        self._assertFinite(v, 'value'); self._assertFinite(t, 'time'); self._assertFinite(tc, 'timeConstant');
+        if (!(tc > 0)) throw new RangeError('MockAudioContext: setTargetAtTime timeConstant <= 0 (' + tc + ')');
+        this.value = v; this._events.push({ type: 'target', v, t, tc }); return this;
+      },
+      cancelScheduledValues(t) {
+        self._assertFinite(t, 'time'); this._events.push({ type: 'cancel', t }); return this;
+      },
+    };
+  }
+  createGain() { this._bump('gain'); return Object.assign(this._nodeBase(), { gain: this._param(1) }); }
+  createOscillator() {
+    this._bump('osc');
+    const self = this;
+    return Object.assign(this._nodeBase(), {
+      type: 'sine', frequency: this._param(440), detune: this._param(0), periodicWave: null,
+      setPeriodicWave(w) { this.periodicWave = w; this.type = 'custom'; },
+      _started: false,
+      start(t) { self._assertFinite(t, 'osc.start time'); if (t < self.currentTime - 1e-3) self.late++; this._started = true; },
+      stop(t) { self._assertFinite(t, 'osc.stop time'); },
+      onended: null,
+    });
+  }
+  createBufferSource() {
+    this._bump('bufferSource');
+    const self = this;
+    return Object.assign(this._nodeBase(), {
+      buffer: null, playbackRate: this._param(1), loop: false, onended: null, _endTime: null,
+      start(t) {
+        self._assertFinite(t, 'bufferSource.start time');
+        if (t < self.currentTime - 1e-3) self.late++;
+        const rate = this.playbackRate.value || 1;
+        const dur = this.buffer ? (this.buffer.length / this.buffer.sampleRate) / rate : 0;
+        this._endTime = this.loop ? Infinity : t + dur;
+        self._sources.push(this);
+      },
+      stop(t) {
+        self._assertFinite(t, 'bufferSource.stop time');
+        this._endTime = (this._endTime === null) ? t : Math.min(this._endTime, t);
+      },
+    });
+  }
+  createBuffer(ch, len, sr) {
+    this._bump('buffer');
+    const data = [];
+    for (let i = 0; i < ch; i++) data.push(new Float32Array(len));
+    return { numberOfChannels: ch, length: len, sampleRate: sr, getChannelData(i) { return data[i]; } };
+  }
+  createBiquadFilter() { this._bump('biquad'); return Object.assign(this._nodeBase(), { type: 'lowpass', frequency: this._param(350), Q: this._param(1), gain: this._param(0), detune: this._param(0) }); }
+  createConvolver() { this._bump('convolver'); return Object.assign(this._nodeBase(), { buffer: null, normalize: true }); }
+  createDynamicsCompressor() { this._bump('compressor'); return Object.assign(this._nodeBase(), { threshold: this._param(-24), knee: this._param(30), ratio: this._param(12), attack: this._param(0.003), release: this._param(0.25), reduction: 0 }); }
+  createStereoPanner() { this._bump('panner'); return Object.assign(this._nodeBase(), { pan: this._param(0) }); }
+  createPeriodicWave(real, imag) { this._bump('periodicWave'); return { real, imag }; }
+  resume() { this.state = 'running'; return { then() {} }; }
+  advance(sec) {
+    this.currentTime += sec;
+    for (let i = this._sources.length - 1; i >= 0; i--) {
+      const s = this._sources[i];
+      if (s._endTime !== null && s._endTime <= this.currentTime) {
+        this._sources.splice(i, 1);
+        if (typeof s.onended === 'function') s.onended();
+      }
+    }
+  }
+}
+
+// fresh vm context (never the main sandbox) with a strict MockAudioContext.
+// Loads utils/settings/storage/audio/music only (music's engine layer
+// doesn't need renderer/sprites/data/entities/rooms/ui/game/gamepad).
+function makeMusicSandbox() {
+  const storage = {};
+  const timers = [];
+  const noop2 = () => {};
+  const sb = {
+    console, Math, JSON, Set, Map, Array, Object, Number, String, Boolean, Date, Promise, Float32Array,
+    parseInt, parseFloat, isNaN,
+    setTimeout: (fn, ms) => { timers.push({ fn, ms }); return timers.length; },
+    clearTimeout: noop2,
+    __timers: timers,
+    performance: { now: () => { const h = process.hrtime(); return h[0] * 1000 + h[1] / 1e6; } },
+    addEventListener: noop2, removeEventListener: noop2,
+    location: { search: '' },
+    localStorage: {
+      getItem: k => (k in storage ? storage[k] : null),
+      setItem: (k, v) => { storage[k] = String(v); },
+      removeItem: k => { delete storage[k]; },
+    },
+    AudioContext: MockAudioContext,
+  };
+  sb.window = sb;
+  sb.globalThis = sb;
+  vm.createContext(sb);
+  const R = (src) => vm.runInContext(src, sb);
+  for (const f of ['utils.js', 'settings.js', 'storage.js', 'audio.js', 'music.js']) {
+    const musicSrc = fs.readFileSync(path.join(__dirname, '..', 'js', f), 'utf8');
+    vm.runInContext(musicSrc, sb, { filename: f });
+  }
+  return { sb, R };
+}
+
+{
+  console.log('\n— MUSIC engine (mock AudioContext) (05.3-02) —');
+
+  // ---- main sandbox stays fully inert ----
+  check('main sandbox: MUSIC.ctx === null', vm.runInContext('MUSIC.ctx', sandbox) === null);
+  check('main sandbox: MUSIC.attach({ctx:null}) === false', vm.runInContext('MUSIC.attach({ctx:null})', sandbox) === false);
+  check('main sandbox: MUSIC.isAudible() === false', vm.runInContext('MUSIC.isAudible()', sandbox) === false);
+  const __preTimeouts = vm.runInContext('__timeouts.length', sandbox);
+  check('main sandbox: no __timeouts added by any of the above', vm.runInContext('__timeouts.length', sandbox) === __preTimeouts);
+
+  // ---- mock sandbox ----
+  let engineErr = null;
+  let mock = null;
+  try {
+    const { R } = makeMusicSandbox();
+    R('AUDIO.init();');
+    const attach1 = R('MUSIC.attach(AUDIO)');
+    check('attach returns true the first time', attach1 === true);
+    const attach2 = R('MUSIC.attach(AUDIO)');
+    check('attach returns false the second time', attach2 === false);
+    check('MUSIC.ctx === AUDIO.ctx', R('MUSIC.ctx === AUDIO.ctx') === true);
+    mock = R('AUDIO.ctx');
+
+    // ---- bus graph ----
+    check("trim node's recorded destinations include AUDIO.musicGain",
+      R('MUSIC.nodes.trim._dsts.indexOf(AUDIO.musicGain) !== -1') === true);
+    const nodeCount = Object.values(mock.count).reduce((a, b) => a + b, 0);
+    check(`persistent node count after attach < 70 (counted ${nodeCount})`, nodeCount < 70);
+    check("stems exist for every STEM_NAMES entry + 'fx'",
+      R("MUSIC.theory.STEM_NAMES.concat(['fx']).every(s => !!MUSIC.nodes.stems[s])") === true);
+
+    // ---- setStemLevels ----
+    R('MUSIC.setStemLevels(4, AUDIO.ctx.currentTime, 0.5);');
+    check('setStemLevels(4,t,.5): each stem gain last automation is setTargetAtTime to INTENSITY[4][s]*MIX[s]*bigBoost',
+      R(`(function () {
+        const T = MUSIC.theory;
+        const raga = T.RAGAS[MUSIC.raga];
+        for (const s of T.STEM_NAMES) {
+          const target = T.INTENSITY[4][s] * MUSIC.MIX[s] * (s === 'big' ? (raga.bigBoost || 1) : 1);
+          const evs = MUSIC.nodes.stems[s].gain._events;
+          const last = evs[evs.length - 1];
+          if (!last || last.type !== 'target' || Math.abs(last.v - target) > 1e-9) return false;
+        }
+        return true;
+      })()`) === true);
+
+    // ---- playOneShot ----
+    {
+      const t0 = R('AUDIO.ctx.currentTime');
+      check("playOneShot('tabla','t:Dha', t, .8) -> true", R(`MUSIC.playOneShot('tabla', 't:Dha', ${t0}, 0.8)`) === true);
+      check('BufferSource buffer.sampleRate === min(ctx.sampleRate, 32000)',
+        R(`MUSIC._buffer('t:Dha').sampleRate === Math.min(AUDIO.ctx.sampleRate, MUSIC.RENDER_SR_MAX)`) === true);
+
+      mock.advance(2); // let the t:Dha one-shot above finish so the cap test below starts from a clean (0-active) slate
+      R('MUSIC.stats.dropped = 0;');
+      let successes = 0;
+      for (let i = 0; i < 10; i++) if (R(`MUSIC.playOneShot('tabla', 't:Na', ${t0}, 0.5)`) === true) successes++;
+      const caps = R('MUSIC.CAPS.tabla');
+      check(`10 calls at once -> exactly CAPS.tabla (${caps}) succeed, stats.dropped increments`,
+        successes === caps && R('MUSIC.stats.dropped') === 10 - caps);
+
+      mock.advance(3);
+      check('after advance(3) all onended fire and active counts return to 0', R('MUSIC.stats.active') === 0);
+    }
+
+    // ---- leadNote ----
+    {
+      const tp = R('AUDIO.ctx.currentTime');
+      R(`MUSIC.leadNote(${tp}, 0, 0.3, 0.5, {});`); // primer note: establishes prevHz for the glide below
+
+      const t0 = R('AUDIO.ctx.currentTime');
+      R(`MUSIC.leadNote(${t0}, 7, 0.5, 0.7, {glide:true});`);
+      check('leadNote(glide:true) schedules finite frequency automation including an exponential ramp',
+        R(`(function () {
+          const evs = MUSIC.lead.osc.frequency._events;
+          return evs.length > 0 && evs.every(e => Number.isFinite(e.v) && Number.isFinite(e.t)) && evs.some(e => e.type === 'exp');
+        })()`) === true);
+
+      const t1 = R('AUDIO.ctx.currentTime');
+      R(`MUSIC.setRaga('bhairav'); MUSIC.leadNote(${t1}, 8, 1.0, 0.7, {});`);
+      check('a note on an andolan degree (bhairav deg 8, dur >= 1 matra) sets the LFO rate to 1.6 Hz',
+        Math.abs(R('MUSIC.lead.vibLfo.frequency.value') - 1.6) < 1e-9);
+
+      const t2 = R('AUDIO.ctx.currentTime');
+      R(`MUSIC.leadNote(${t2}, 4, 0.5, 0.7, {kan:true});`);
+      check('kan inserts a ~35ms grace frequency before the main pitch',
+        R(`(function () {
+          const evs = MUSIC.lead.osc.frequency._events;
+          const last2 = evs.slice(-2);
+          return last2.length === 2 && last2[0].v !== last2[1].v && Math.abs((last2[1].t - last2[0].t) - 0.035) < 1e-9;
+        })()`) === true);
+    }
+
+    // ---- setDuck ----
+    {
+      const t0 = R('AUDIO.ctx.currentTime');
+      R(`MUSIC.setDuck(true, ${t0});`);
+      check('setDuck(true,t) -> duck lowpass target 1100 and duck gain .6',
+        R('MUSIC.nodes.duckLP.frequency.value === 1100 && Math.abs(MUSIC.nodes.duckGain.gain.value - 0.6) < 1e-9') === true);
+      R(`MUSIC.setDuck(false, ${t0});`);
+      check('setDuck(false,t) -> 18000 / 1',
+        R('MUSIC.nodes.duckLP.frequency.value === 18000 && MUSIC.nodes.duckGain.gain.value === 1') === true);
+    }
+
+    // ---- setRaga / setTension ----
+    {
+      const t0 = R('AUDIO.ctx.currentTime');
+      R(`MUSIC.setRaga('malkauns');`);
+      check("setRaga('malkauns') -> bank for malkauns exists", R("!!MUSIC._banks['malkauns']") === true);
+      check("tanpura job keys include 'd:-7'", R("MUSIC._banks['malkauns'].jobs.some(j => j.key === 'd:-7')") === true);
+      check('pad oscillator frequency target = 98',
+        R('MUSIC.pads.padOsc.frequency._events[MUSIC.pads.padOsc.frequency._events.length - 1].v') === 98);
+
+      R(`MUSIC.setTension(true, ${t0});`);
+      check('setTension(true,t) raises the tension gain above 0', R('MUSIC.pads.tensionGain.gain.value') > 0);
+    }
+
+    // ---- _renderSlice ----
+    {
+      R("MUSIC.setRaga('adana');");
+      let guard = 0;
+      while (R('!!(MUSIC._banks[MUSIC.raga] && MUSIC._banks[MUSIC.raga].done)') !== true && guard++ < 500) {
+        R('MUSIC._renderSlice(4);');
+      }
+      check('repeated _renderSlice(4) calls eventually mark the bank done',
+        R('!!(MUSIC._banks[MUSIC.raga] && MUSIC._banks[MUSIC.raga].done)') === true);
+    }
+  } catch (e) {
+    engineErr = e;
+  }
+  check('mock engine sequence never threw' + (engineErr ? ' — ' + engineErr.message : ''), engineErr === null);
+  check('mock.late === 0 (no start() call scheduled before currentTime)', mock !== null && mock.late === 0);
+}
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

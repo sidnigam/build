@@ -2872,5 +2872,102 @@ check('GAME.syncAim(): resolves screen mx/my through the inverse camera transfor
 check('GAME.syncAim(): does not overwrite INPUT.wx/wy while INPUT.device === "pad"', aim.padSyncUntouched);
 check('PAD.poll(): right stick writes a world-space aim target; holds direction when released; never writes INPUT.mx/my', aim.padAim);
 
+// ---------------- denser waves (Phase 05.1) ----------------
+console.log('\n— denser waves (Phase 05.1) —');
+vm.runInContext(`
+globalThis.__waveResults = {};
+(function() {
+  const R = __waveResults;
+  const stats = (biomeId, roomIdx, n = 200) => {
+    const biome = DATA.BIOMES.find(b => b.id === biomeId);
+    let units = 0, weak = 0, threat = 0, elite = 0, waveCount = 0;
+    for (let i = 0; i < n; i++) {
+      const waves = ROOMS.planRoom(biome, roomIdx);
+      waveCount += waves.length;
+      for (const wave of waves) {
+        units += wave.length;
+        for (const u of wave) {
+          const def = DATA.ENEMIES[u.id];
+          threat += def.hp * biome.scale * (u.weak ? 0.5 : 1);
+          if (u.weak) weak++;
+          if (def.cost >= DATA.WAVES.eliteCost) elite++;
+        }
+      }
+    }
+    return {
+      meanUnits: units / n, meanWaves: waveCount / n,
+      meanWeakFrac: units ? weak / units : 0,
+      meanThreat: threat / n, meanEffHp: units ? threat / units : 0,
+      meanElite: elite / n,
+    };
+  };
+
+  R.naraka = { room1: stats('naraka', 1), last: stats('naraka', 5) };
+  R.patala = { room1: stats('patala', 1), last: stats('patala', 6) };
+  R.ranabhoomi = { room1: stats('ranabhoomi', 1), last: stats('ranabhoomi', 6) };
+  R.vaitarani = { room1: stats('vaitarani', 1), last: stats('vaitarani', 2) };
+
+  // composeWave invariants across every biome
+  R.composeErrors = [];
+  for (const b of DATA.BIOMES) {
+    for (let i = 0; i < 50; i++) {
+      const budget = 1 + Math.random() * 15;
+      const units = ROOMS.composeWave(budget, b, { fodderShare: Math.random(), eliteShare: Math.random() * 0.5 });
+      if (!units.length) R.composeErrors.push(b.id + ': empty wave for budget ' + budget.toFixed(2));
+      for (const u of units) {
+        if (!DATA.ENEMIES[u.id]) R.composeErrors.push(b.id + ': invalid id ' + u.id);
+        if (u.weak && !b.waves.fodder.includes(u.id)) R.composeErrors.push(b.id + ': weak unit not from fodder list (' + u.id + ')');
+      }
+      const legacyUnits = ROOMS.composeWave(budget, b, { fodderShare: 0 });
+      if (!legacyUnits.length) R.composeErrors.push(b.id + ': legacy path empty wave for budget ' + budget.toFixed(2));
+      for (const u of legacyUnits) {
+        if (u.weak) R.composeErrors.push(b.id + ': legacy path produced a weak unit');
+        if (!b.enemies.includes(u.id)) R.composeErrors.push(b.id + ': legacy path used non-biome id ' + u.id);
+      }
+    }
+  }
+
+  // biome waves-block validity
+  R.biomeWaveErrors = [];
+  for (const b of DATA.BIOMES) {
+    const w = b.waves;
+    if (!w) { R.biomeWaveErrors.push(b.id + ': missing waves block'); continue; }
+    for (const k of ['count', 'perWave', 'fodderShare', 'eliteShare']) {
+      if (!Array.isArray(w[k]) || w[k].length !== 2) R.biomeWaveErrors.push(b.id + ': waves.' + k + ' invalid');
+    }
+    if (!Array.isArray(w.fodder) || !w.fodder.length) R.biomeWaveErrors.push(b.id + ': waves.fodder empty');
+    for (const id of (w.fodder || [])) if (!DATA.ENEMIES[id]) R.biomeWaveErrors.push(b.id + ': invalid fodder id ' + id);
+  }
+})();
+`, sandbox);
+const wr = vm.runInContext('__waveResults', sandbox);
+
+for (const id of ['naraka', 'patala', 'ranabhoomi', 'vaitarani']) {
+  const s = wr[id];
+  console.log(`  info  ${id}: room1 units=${s.room1.meanUnits.toFixed(1)}, last units=${s.last.meanUnits.toFixed(1)}, weak%=${(s.room1.meanWeakFrac * 100).toFixed(0)}->${(s.last.meanWeakFrac * 100).toFixed(0)}, elites(last)=${s.last.meanElite.toFixed(2)}`);
+}
+
+check(`naraka room1: mean units >= 15 (${wr.naraka.room1.meanUnits.toFixed(1)}), weak% >= 0.6 (${wr.naraka.room1.meanWeakFrac.toFixed(2)}), exactly 3 waves (${wr.naraka.room1.meanWaves})`,
+  wr.naraka.room1.meanUnits >= 15 && wr.naraka.room1.meanWeakFrac >= 0.6 && wr.naraka.room1.meanWaves === 3);
+
+check(`naraka: mean effective hp/unit ramps room1 (${wr.naraka.room1.meanEffHp.toFixed(2)}) < last room (${wr.naraka.last.meanEffHp.toFixed(2)})`,
+  wr.naraka.room1.meanEffHp < wr.naraka.last.meanEffHp);
+
+for (const id of ['naraka', 'patala', 'ranabhoomi', 'vaitarani']) {
+  const s = wr[id];
+  check(`${id}: mean total threat ramps (room1=${s.room1.meanThreat.toFixed(0)} < last=${s.last.meanThreat.toFixed(0)})`,
+    s.room1.meanThreat < s.last.meanThreat);
+}
+check(`vaitarani room1 threat (${wr.vaitarani.room1.meanThreat.toFixed(0)}) > naraka room1 threat (${wr.naraka.room1.meanThreat.toFixed(0)})`,
+  wr.vaitarani.room1.meanThreat > wr.naraka.room1.meanThreat);
+
+check(`ranabhoomi last room: mean elite count >= 2 (${wr.ranabhoomi.last.meanElite.toFixed(2)})`, wr.ranabhoomi.last.meanElite >= 2);
+check(`naraka room1: mean elite count < 0.5 (${wr.naraka.room1.meanElite.toFixed(2)})`, wr.naraka.room1.meanElite < 0.5);
+
+check('composeWave invariants: never empty, every id valid, weak only from fodder list, legacy path uses only biome ids with no weak units'
+  + (wr.composeErrors.length ? ' — ' + wr.composeErrors.slice(0, 5).join('; ') : ''), wr.composeErrors.length === 0);
+check('every DATA.BIOMES entry has a valid waves block'
+  + (wr.biomeWaveErrors.length ? ' — ' + wr.biomeWaveErrors.join('; ') : ''), wr.biomeWaveErrors.length === 0);
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

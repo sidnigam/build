@@ -198,6 +198,16 @@ DATA.ENEMIES = {
                color: '#ff9ad5', cost: 4 },
 };
 
+// ---------- WAVES (Phase 05.1: denser encounters, D-18/D-19) ----------
+DATA.WAVES = {
+  maxAlive: 26,                          // tunable: perf + readability cap on simultaneous living enemies
+  weak: { hp: 0.5, dmg: 0.6, cost: 0.5 },// fodder multipliers; a weak unit costs half its budget
+  nextWaveAt: 0.3,                       // next wave when alive <= ceil(lastWaveSize * nextWaveAt)
+  waveDelay: 0.7, dripEvery: 0.35, dripBatch: 3,
+  spawnMin: 360, spawnMax: 950, packSize: [3, 6], packJitter: 70,
+  engageRange: 640, eliteCost: 3,
+};
+
 // ---------- BOSSES ----------
 DATA.BOSSES = {
   tataka: {
@@ -229,24 +239,28 @@ DATA.BIOMES = [
     bg: '#160a0e', floor: '#241016', accent: '#ff5533', wall: '#3d1a20',
     enemies: ['preta', 'rakshasa', 'archer'], boss: 'tataka', hazard: 'fireVent',
     scale: 1.0, budget: [4, 9], droneHz: 110,
+    waves: { count: [3, 3], perWave: [4, 9], fodder: ['preta'], fodderShare: [0.85, 0.35], eliteShare: [0, 0.15] },
   },
   {
     id: 'patala', name: 'PATALA', sub: 'Realm of the Serpent Kings', rooms: 6,
     bg: '#061412', floor: '#0b201c', accent: '#2ee6a8', wall: '#143830',
     enemies: ['naga', 'vetala', 'archer', 'rakshasa'], boss: 'ahiravana', hazard: 'venomPool',
     scale: 1.35, budget: [7, 12], droneHz: 98,
+    waves: { count: [3, 4], perWave: [6, 11], fodder: ['preta', 'rakshasa'], fodderShare: [0.7, 0.3], eliteShare: [0.1, 0.3] },
   },
   {
     id: 'ranabhoomi', name: 'RANABHOOMI', sub: 'Field of the Fallen Warriors', rooms: 6,
     bg: '#171107', floor: '#241b0d', accent: '#ffcf5c', wall: '#403018',
     enemies: ['daitya', 'bhuta', 'yatudhana', 'vetala'], boss: 'kumbhakarna', hazard: 'arrowVolley',
     scale: 1.8, budget: [9, 15], droneHz: 123,
+    waves: { count: [3, 4], perWave: [8, 14], fodder: ['preta', 'rakshasa'], fodderShare: [0.6, 0.25], eliteShare: [0.2, 0.45] },
   },
   {
     id: 'vaitarani', name: 'VAITARANI', sub: 'The River Between Worlds', rooms: 2,
     bg: '#0a0e16', floor: '#121828', accent: '#9fb8ff', wall: '#222c4a',
     enemies: ['preta', 'rakshasa', 'naga', 'vetala', 'bhuta', 'daitya'], boss: 'yama', hazard: 'riverCurrent',
     scale: 2.1, budget: [12, 16], droneHz: 82,
+    waves: { count: [4, 4], perWave: [10, 15], fodder: ['preta'], fodderShare: [0.45, 0.25], eliteShare: [0.3, 0.45] },
   },
 ];
 

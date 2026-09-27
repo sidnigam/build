@@ -194,30 +194,121 @@ const ROOMS = {
     if (this.layoutHistory.length > 200) this.layoutHistory.shift();
   },
 
-  // Encounter plan: total budget split into waves
-  planWaves() {
-    const b = GAME.biome;
-    // roomIdx is 1-based by the time waves are planned
-    const roomFrac = U.clamp((GAME.roomIdx - 1) / Math.max(1, b.rooms - 1), 0, 1);
-    const budget = Math.round(U.lerp(b.budget[0], b.budget[1], roomFrac));
-    const nWaves = budget <= 6 ? 1 : (budget <= 11 ? 2 : 3);
-    const waves = [];
-    let left = budget;
-    for (let i = 0; i < nWaves; i++) {
-      const share = i === nWaves - 1 ? left : Math.ceil(budget / nWaves);
-      waves.push(Math.max(2, share));
-      left -= share;
-    }
-    return waves;
+  // ---- Phase 05.1: data-driven wave composition (WAVE-01/02, D-18/D-19/D-20) ----
+  // Per-room-index/biome lerp of the biome's `waves` block (count/perWave/fodderShare/eliteShare).
+  waveParams(biome, roomIdx) {
+    const w = biome.waves;
+    const f = U.clamp((roomIdx - 1) / Math.max(1, biome.rooms - 1), 0, 1);
+    return {
+      nWaves: Math.round(U.lerp(w.count[0], w.count[1], f)),
+      perWave: U.lerp(w.perWave[0], w.perWave[1], f),
+      fodderShare: U.lerp(w.fodderShare[0], w.fodderShare[1], f),
+      eliteShare: U.lerp(w.eliteShare[0], w.eliteShare[1], f),
+    };
   },
 
-  spawnWave(budget) {
+  // Pure: budget -> array of { id, weak }. opts = { fodderShare, eliteShare } (both default 0 — the
+  // legacy numeric spawnWave(n) path passes fodderShare:0 so no weak units are ever produced).
+  composeWave(budget, biome, opts = {}) {
+    const W = DATA.WAVES;
+    const fodderShare = opts.fodderShare ?? 0;
+    const eliteShare = opts.eliteShare ?? 0;
+    const fodderIds = (biome.waves && biome.waves.fodder) || [];
+    const weakCost = id => DATA.ENEMIES[id].cost * W.weak.cost;
+    const units = [];
+
+    // 1. fodder (weak units), spending a fodderShare slice of the budget
+    let fb = budget * fodderShare;
+    if (fodderIds.length) {
+      let guard = 0;
+      while (guard++ < 60) {
+        const pool = fodderIds.filter(id => weakCost(id) <= fb);
+        if (!pool.length) break;
+        const id = U.choice(pool);
+        units.push({ id, weak: true });
+        fb -= weakCost(id);
+      }
+    }
+
+    // 2. remaining budget (leftover fodder budget carries forward) split elite/regular
+    let rest = budget * (1 - fodderShare) + fb;
+    let eb = rest * eliteShare;
+    let rb = rest - eb;
+
+    // 3. elites
+    {
+      const eliteIds = biome.enemies.filter(id => DATA.ENEMIES[id].cost >= W.eliteCost);
+      let guard = 0;
+      while (guard++ < 60) {
+        const pool = eliteIds.filter(id => DATA.ENEMIES[id].cost <= eb);
+        if (!pool.length) break;
+        const id = U.choice(pool);
+        units.push({ id, weak: false });
+        eb -= DATA.ENEMIES[id].cost;
+      }
+      rb += eb; // leftover elite budget carried into regulars
+    }
+
+    // 4. regulars (fall back to the whole biome roster when it has no sub-elite-cost enemies)
+    {
+      let regularIds = biome.enemies.filter(id => DATA.ENEMIES[id].cost < W.eliteCost);
+      if (!regularIds.length) regularIds = biome.enemies.slice();
+      let guard = 0;
+      while (guard++ < 60) {
+        const pool = regularIds.filter(id => DATA.ENEMIES[id].cost <= rb);
+        if (!pool.length) break;
+        const id = U.choice(pool);
+        units.push({ id, weak: false });
+        rb -= DATA.ENEMIES[id].cost;
+      }
+    }
+
+    // 5. leftover fill: weak fodder when this wave uses fodder at all, else the legacy
+    // any-affordable-biome-enemy fill (keeps the numeric spawnWave(n) path's old behavior).
+    if (fodderShare > 0 && fodderIds.length) {
+      let guard = 0;
+      while (guard++ < 60) {
+        const pool = fodderIds.filter(id => weakCost(id) <= rb);
+        if (!pool.length) break;
+        const id = U.choice(pool);
+        units.push({ id, weak: true });
+        rb -= weakCost(id);
+      }
+    } else if (rb > 0) {
+      let guard = 0;
+      while (rb > 0 && guard++ < 60) {
+        const pool = biome.enemies.filter(id => DATA.ENEMIES[id].cost <= Math.max(rb, 1));
+        if (!pool.length) break;
+        const id = U.choice(pool);
+        units.push({ id, weak: false });
+        rb -= DATA.ENEMIES[id].cost;
+      }
+    }
+
+    // 6. guarantee non-empty
+    if (!units.length) {
+      const cheapest = biome.enemies.slice().sort((a, b) => DATA.ENEMIES[a].cost - DATA.ENEMIES[b].cost)[0];
+      units.push({ id: cheapest, weak: false });
+    }
+
+    return units;
+  },
+
+  // roomIdx is 1-based. Returns an array of unit lists (one per wave).
+  planRoom(biome, roomIdx) {
+    const p = this.waveParams(biome, roomIdx);
+    return Array.from({ length: p.nWaves }, () => this.composeWave(p.perWave, biome, p));
+  },
+
+  planWaves() {
+    return this.planRoom(GAME.biome, GAME.roomIdx);
+  },
+
+  spawnWave(arg) {
+    const units = typeof arg === 'number' ? this.composeWave(arg, GAME.biome, { fodderShare: 0 }) : arg;
     const b = GAME.biome;
-    let left = budget, guard = 0;
-    while (left > 0 && guard++ < 30) {
-      const pool = b.enemies.map(id => DATA.ENEMIES[id]).filter(e => e.cost <= Math.max(left, 1));
-      const def = U.choice(pool.length ? pool : b.enemies.map(id => DATA.ENEMIES[id]));
-      left -= def.cost;
+    for (const u of units) {
+      const def = DATA.ENEMIES[u.id];
       // spawn away from the player and clear of obstacles
       let x, y, tries = 0, ok = false;
       do {
@@ -230,7 +321,7 @@ const ROOMS = {
         const spot = this.findClearSpawnPoint(def.r + 12);
         if (spot) { x = spot.x; y = spot.y; }
       }
-      GAME.enemies.push(new Enemy(def.id, x, y, b.scale));
+      GAME.enemies.push(new Enemy(def.id, x, y, b.scale, u.weak ? DATA.WAVES.weak : null));
     }
   },
 

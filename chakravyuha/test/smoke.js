@@ -2048,12 +2048,14 @@ globalThis.__arenaResults = {};
 (function() {
   const R = __arenaResults;
 
-  // (a) first room of a run is a combat arena at 2240x1300; worldRect matches the 05.4 art budget
+  // (a) first room of a run is a combat arena at 2240x1300; worldRect matches the 05.4 art-padding
+  // contract (padBySize.combat = {l:120,r:120,t:200,b:110}) and GAME.arenaPad is exposed for 05.4
   GAME.startRun();
   const A1 = GAME.arena;
   const wr = ROOMS.worldRect();
   R.firstRoomCombat = A1.w === 2240 && A1.h === 1300
-    && wr.x === 0 && wr.y === 0 && wr.w === 2340 && wr.h === 1440;
+    && wr.x === -70 && wr.y === -116 && wr.w === 2480 && wr.h === 1610
+    && GAME.arenaPad === DATA.ARENA.padBySize.combat;
 
   // (b) sarovar room is legacy-size (rest) and the camera transform is exactly identity
   ROOMS.enterRoom('sarovar');
@@ -2093,16 +2095,16 @@ globalThis.__arenaResults = {};
     && rivers.every(h => !(spawnYv >= h.y && spawnYv <= h.y + h.h));
   R.hazardScaling = fireVentAvgOk && twoBandsOk;
 
-  // (f) after entering a combat room the camera scroll is clamped inside the world rect
+  // (f) after entering a combat room the camera scroll is clamped inside the (padded) world rect
   GAME.startRun();
   ROOMS.enterRoom('mudra');
-  R.cameraClampedOnEntry = CAMERA.sx >= 0 && CAMERA.sx <= 1060 && CAMERA.sy >= 0 && CAMERA.sy <= 720;
+  R.cameraClampedOnEntry = CAMERA.sx >= -70 && CAMERA.sx <= 1130 && CAMERA.sy >= -116 && CAMERA.sy <= 774;
 
   ROOMS.setArena('rest');
 })();
 `, sandbox);
 const arn = vm.runInContext('__arenaResults', sandbox);
-check('ROOMS.setArena: first run room is a 2240x1300 combat arena; ROOMS.worldRect() is {0,0,2340,1440}', arn.firstRoomCombat);
+check('ROOMS.setArena: first run room is a 2240x1300 combat arena; ROOMS.worldRect() is {-70,-116,2480,1610} (05.4 art padding), GAME.arenaPad exposed', arn.firstRoomCombat);
 check('ROOMS.setArena: sarovar room is legacy 1180x580; camera transform is exactly identity', arn.sarovarRestIdentity);
 check('ROOMS.setArena: boss room is 1600x960', arn.bossSize);
 check('ROOMS.setArena mutates GAME.arena in place (a held reference sees the new size)', arn.inPlaceMutation);
@@ -2652,6 +2654,158 @@ check('CAMERA.snap: sets S to clamped desired immediately and updates tx/ty/tz',
 check('CAMERA.viewRect/visible/visibleRect: identity view + AABB culling', cam.viewCull);
 check('CAMERA.edgePoint: null on-screen, else ray-to-inset-rect intersection with matching angle', cam.edgePoint);
 check('CAMERA.clusterIndicators: sector clustering, count caps, door-first/boss-next ordering, on-screen excluded', cam.cluster);
+
+// ---------------- camera bridge alignment (Phase 05.1) ----------------
+console.log('\n— camera bridge alignment (Phase 05.1) —');
+vm.runInContext(`
+globalThis.__alignResults = {};
+(function() {
+  const R = __alignResults;
+  const noop = () => {};
+  const mk = () => ({
+    position: { x: 0, y: 0, set(x, y) { this.x = x; this.y = y; } },
+    scale: { x: 1, y: 1, set(s) { this.x = s; this.y = s; } },
+  });
+  const mkRecCtx = () => {
+    const t = { _last: null };
+    return new Proxy(t, {
+      get(tt, prop) {
+        if (prop === '_last') return tt._last;
+        if (prop === 'setTransform') return (...args) => { tt._last = args; };
+        if (prop === 'createRadialGradient' || prop === 'createLinearGradient') return () => ({ addColorStop: noop });
+        if (prop === 'measureText') return () => ({ width: 0 });
+        if (prop in tt) return tt[prop];
+        return noop;
+      },
+      set(tt, prop, v) { tt[prop] = v; return true; },
+    });
+  };
+
+  const savedWC = SPRITES.worldContainer, savedBS = SPRITES.bridgeSprite,
+        savedBCtx = SPRITES.bridgeCtx, savedHCtx = SPRITES.hudBridgeCtx;
+  const savedState = GAME.state, savedPlayer = GAME.player, savedShake = GAME.shake;
+  const savedArena = Object.assign({}, GAME.arena), savedArenaPad = GAME.arenaPad;
+
+  try {
+    const wc = mk(), bs = mk(), rec = mkRecCtx();
+    SPRITES.worldContainer = wc;
+    SPRITES.bridgeSprite = bs;
+    SPRITES.bridgeCtx = rec;
+    SPRITES.hudBridgeCtx = rec;
+
+    const points = [];
+    for (let i = 0; i < 10; i++) points.push({ x: Math.random() * 3000 - 500, y: Math.random() * 2000 - 500 });
+
+    // One transform drives Pixi (wc) and the bridge (rec + bs); both must agree with CAMERA.worldToScreen.
+    const checkCase = () => {
+      CAMERA.begin();
+      CAMERA.applyCtx(rec);
+      const [a, b, c, d, e, f] = rec._last;
+      const matrixMatchesStored = a === CAMERA.tz && b === 0 && c === 0 && d === CAMERA.tz && e === CAMERA.tx && f === CAMERA.ty;
+      let pointsOk = true;
+      for (const W of points) {
+        const pixiScreen = { x: wc.scale.x * W.x + wc.position.x, y: wc.scale.y * W.y + wc.position.y };
+        const ctxT = { x: a * W.x + e, y: d * W.y + f };
+        const bridgeLocal = { x: bs.position.x + ctxT.x * bs.scale.x, y: bs.position.y + ctxT.y * bs.scale.y };
+        const bridgeScreen = { x: wc.scale.x * bridgeLocal.x + wc.position.x, y: wc.scale.y * bridgeLocal.y + wc.position.y };
+        const expected = CAMERA.worldToScreen(W.x, W.y);
+        const closeEnough = (p, q) => Math.abs(p.x - q.x) < 1e-6 && Math.abs(p.y - q.y) < 1e-6;
+        if (!closeEnough(pixiScreen, bridgeScreen) || !closeEnough(pixiScreen, expected) || !closeEnough(bridgeScreen, expected)) pointsOk = false;
+      }
+      return matrixMatchesStored && pointsOk;
+    };
+
+    // (a) identity — hub, no player
+    GAME.state = 'hub'; GAME.player = null; GAME.shake = 0;
+    CAMERA.resetFx(); CAMERA.sx = 0; CAMERA.sy = 0;
+    const idOk = checkCase()
+      && CAMERA.tx === 0 && CAMERA.ty === 0 && CAMERA.tz === 1
+      && wc.position.x === 0 && wc.position.y === 0 && wc.scale.x === 1
+      && bs.position.x === 0 && bs.position.y === 0 && bs.scale.x === 1;
+
+    // (b) scroll only
+    CAMERA.sx = 800; CAMERA.sy = 500;
+    const scrollOk = checkCase();
+
+    // (c) scroll + zoom punch (off-center focus) + kick + shake
+    SETTINGS.set('screenShake', true);
+    CAMERA.punch(1200, 700, 0.08, 0.6);
+    CAMERA.update(0.1);
+    CAMERA.kick(6, -4);
+    GAME.shake = 10;
+    const fullOk = checkCase();
+
+    R.alignment = idOk && scrollOk && fullOk;
+
+    CAMERA.resetFx(); CAMERA.sx = 0; CAMERA.sy = 0; GAME.shake = 0;
+    CAMERA._store(CAMERA.xform());
+    SETTINGS.reset();
+
+    // Legacy (rest) arena in combat: follow() converges back to identity — bridge sprite untouched.
+    GAME.state = 'combat';
+    ROOMS.setArena('rest');
+    GAME.player = { x: GAME.arena.x + 90, y: GAME.arena.y + GAME.arena.h / 2 };
+    INPUT.wx = GAME.player.x; INPUT.wy = GAME.player.y; INPUT.ax = 0; INPUT.ay = 0;
+    CAMERA.resetFx(); CAMERA.sx = 999; CAMERA.sy = 999;
+    for (let fr = 0; fr < 180; fr++) CAMERA.follow(1 / 60);
+    CAMERA.begin();
+    R.legacyIdentity = CAMERA.tx === 0 && CAMERA.ty === 0 && CAMERA.tz === 1
+      && wc.position.x === 0 && wc.position.y === 0 && wc.scale.x === 1
+      && bs.position.x === 0 && bs.position.y === 0 && bs.scale.x === 1 && bs.scale.y === 1;
+
+    // coverFit: matches the old fixed-viewport formula, and cover-fits an expanded combat world rect.
+    const legacyRect = { x: -30, y: -30, w: 1340, h: 780 };
+    const oldSc = Math.max(1340 / 1280, 780 / 720);
+    const oldFit = { scale: oldSc, x: 640 - 1280 * oldSc / 2, y: 360 - 720 * oldSc / 2 };
+    const newFit = SPRITES.coverFit(1280, 720, legacyRect);
+    const coverFitLegacyMatches = Math.abs(newFit.scale - oldFit.scale) < 1e-9
+      && Math.abs(newFit.x - oldFit.x) < 1e-9 && Math.abs(newFit.y - oldFit.y) < 1e-9;
+
+    ROOMS.setArena('combat');
+    const R2 = ROOMS.worldRect();
+    const bigRect = { x: R2.x - 30, y: R2.y - 30, w: R2.w + 60, h: R2.h + 60 };
+    const bigFit = SPRITES.coverFit(2400, 1440, bigRect);
+    const coversRect = bigFit.x <= bigRect.x + 1e-6 && bigFit.y <= bigRect.y + 1e-6
+      && bigFit.x + 2400 * bigFit.scale >= bigRect.x + bigRect.w - 1e-6
+      && bigFit.y + 1440 * bigFit.scale >= bigRect.y + bigRect.h - 1e-6;
+    R.coverFit = coverFitLegacyMatches && coversRect;
+
+    // GAME.render(): must not throw with mocked SPRITES, in a combat room and in the hub.
+    let renderErr = null;
+    try {
+      GAME.startRun();
+      ROOMS.enterRoom('mudra');
+      GAME.render();
+      GAME.state = 'hub'; GAME.player = null;
+      GAME.render();
+    } catch (e) { renderErr = e.stack.split('\\n').slice(0, 3).join(' | '); }
+    R.renderNoThrow = renderErr === null;
+    R.renderErr = renderErr;
+  } finally {
+    SPRITES.worldContainer = savedWC;
+    SPRITES.bridgeSprite = savedBS;
+    SPRITES.bridgeCtx = savedBCtx;
+    SPRITES.hudBridgeCtx = savedHCtx;
+    GAME.state = savedState;
+    GAME.player = savedPlayer;
+    GAME.shake = savedShake;
+    Object.assign(GAME.arena, savedArena);
+    GAME.arenaPad = savedArenaPad;
+    INPUT.ax = 0; INPUT.ay = 0;
+    if (typeof INPUT.wx !== 'undefined') { INPUT.wx = 640; INPUT.wy = 360; }
+    CAMERA.resetFx();
+    CAMERA.sx = 0; CAMERA.sy = 0;
+    CAMERA._store(CAMERA.xform());
+    SETTINGS.reset();
+  }
+})();
+`, sandbox);
+const align = vm.runInContext('__alignResults', sandbox);
+check('camera/bridge alignment: Pixi mapping == bridge counter-transform mapping == CAMERA.worldToScreen, under identity/scroll/scroll+zoom+kick+shake', align.alignment);
+check('legacy (rest) arena in combat: CAMERA.follow() converges to exact identity; bridge sprite untouched (pos 0,0 scale 1)', align.legacyIdentity);
+check('SPRITES.coverFit: matches the old fixed-viewport formula; cover-fits an expanded combat world rect', align.coverFit);
+check('GAME.render(): does not throw with mocked SPRITES, in combat and hub states'
+  + (align.renderErr ? ' — ' + align.renderErr : ''), align.renderNoThrow);
 
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

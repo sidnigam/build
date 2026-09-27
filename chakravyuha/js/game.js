@@ -17,6 +17,7 @@ const GAME = {
   canvas: null, ctx: null,
   W: 1280, H: 720,
   arena: { x: 50, y: 84, w: 1180, h: 580 },
+  arenaPad: { l: 50, r: 50, t: 84, b: 56 },   // current room's world-rect padding (ROOMS.setArena) — 05.4 art contract
   state: 'hub',           // hub | combat | cleared | choosing | paused | dead | victory
   time: 0, dt: 0, runTime: 0,
   shake: 0,
@@ -183,6 +184,7 @@ const GAME = {
     this.time += this.dt;
 
     if (this.playing()) this.update(this.dt);
+    CAMERA.follow(this.dt);       // real dt: smooth-follow the player every frame, even through hitstop
     CAMERA.update(this.dt);       // real dt: keeps animating through hitstop/paused/choosing states
     VFX.tick(this.dt);            // real dt: flash fade + FPS EMA keep running through hitstop
     this.render();
@@ -585,7 +587,8 @@ const GAME = {
     const inRun = this.state !== 'hub';
 
     SPRITES.clearBridge();
-    CAMERA.begin();                              // drives worldContainer; no ctx argument (D-03)
+    CAMERA.begin();                              // computes+stores tx/ty/tz, drives worldContainer/bridge sprite
+    CAMERA.applyCtx(ctx);                         // bridge primitives now draw in world space (CAM-03)
     this.renderBackground(ctx);
     SPRITES.beginEntities();
     if (inRun) {
@@ -594,6 +597,7 @@ const GAME = {
     } else VFX.render(ctx);
     // Sweep sprites whose entities were not drawn this frame (G.enemies = [] on room change, hub state).
     SPRITES.endEntities();
+    CAMERA.resetCtx(ctx);
     CAMERA.end();
     // UI pass — separate HUD bridge in hudContainer: unaffected by shake, above sprites (D-10/D-11)
     this.renderHUD(SPRITES.hudBridgeCtx || ctx);
@@ -601,19 +605,27 @@ const GAME = {
     SPRITES.uploadBridge();                      // re-upload bridge canvas to Pixi texture
   },
 
+  // World rect (current room, shake-padded) the illustrated biome background cover-fits against.
+  _bgRect() {
+    const R = ROOMS.worldRect();
+    return { x: R.x - 30, y: R.y - 30, w: R.w + 60, h: R.h + 60 };
+  },
+
   renderBackground(ctx) {
     const A = this.arena;
     const inRun = this.state !== 'hub';
     const biome = this.biome;
 
-    // background — illustrated biome image when loaded (02-10), else the primitive fill (D-11)
-    const hasBg = SPRITES.setBackground(inRun ? SPRITES.bgKeyFor(biome) : null);   // hub shows no biome bg
+    // background — illustrated biome image when loaded (02-10), else the primitive fill (D-11).
+    // Cover-fit against the current room's world rect (Phase 05.1) — not the fixed viewport size.
+    const hasBg = SPRITES.setBackground(inRun ? SPRITES.bgKeyFor(biome) : null, inRun ? this._bgRect() : undefined);   // hub shows no biome bg
+    const V = CAMERA.viewRect(40);                // world-space outer fill covers whatever is on screen, incl. shake margin
     if (hasBg) {
       ctx.fillStyle = 'rgba(0,0,0,' + SPRITES.CFG.BG_DIM_OUTER + ')';               // dim everything outside the arena
-      ctx.fillRect(-30, -30, this.W + 60, this.H + 60);
+      ctx.fillRect(V.x, V.y, V.w, V.h);
     } else {
       ctx.fillStyle = inRun ? biome.bg : '#0b0710';
-      ctx.fillRect(-30, -30, this.W + 60, this.H + 60);
+      ctx.fillRect(V.x, V.y, V.w, V.h);
     }
 
     if (!inRun) { this.renderHubBg(ctx); return; }

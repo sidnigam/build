@@ -264,11 +264,18 @@ DATA.HAZARDS = {
 
 // ---------- ARENA SIZING (Phase 05.1) ----------
 // D-01: arena top-left stays fixed at `origin`; only w/h change per room kind.
-// `pad` is the wall/HUD framing around the arena — rest arena + pad == exactly 1280x720.
+// `padBySize` is the wall/HUD/art framing around the arena, per room kind — rest arena + its pad
+// == exactly 1280x720 (legacy, unchanged). combat/boss arenas get a much larger pad (05.4
+// cross-phase contract: architectural walls sit outside the arena edge, so the camera must be able
+// to scroll far enough to reveal that art — ~200px above, ~110-120px left/right/below).
 DATA.ARENA = {
   origin: { x: 50, y: 84 },
   sizes: { combat: { w: 2240, h: 1300 }, boss: { w: 1600, h: 960 }, rest: { w: 1180, h: 580 } },  // tunable
-  pad: { l: 50, r: 50, t: 84, b: 56 },
+  padBySize: {
+    combat: { l: 120, r: 120, t: 200, b: 110 },
+    boss:   { l: 120, r: 120, t: 200, b: 110 },
+    rest:   { l: 50, r: 50, t: 84, b: 56 },   // legacy — keeps rest rooms' identity transform unchanged
+  },
   legacyArea: 1180 * 580,
   largeArea: 1180 * 580 * 1.5,              // arenas at/above this area get template `large` extras
   maxObstacleScale: 1.4,                    // cap for circle-obstacle radius scaling

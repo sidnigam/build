@@ -81,8 +81,13 @@ const CAMERA = {
   // so load order (renderer.js loads before data.js/game.js) is irrelevant.
   // ============================================================
 
+  // Cross-phase contract (05.4): the current room's padding (GAME.arenaPad, set by ROOMS.setArena)
+  // drives the scroll clamp so the camera can reveal art placed outside the arena edge; falls back
+  // to the legacy rest-size pad when no room has been entered yet (hub, pre-run, headless).
   pad() {
-    return (typeof DATA !== 'undefined' && DATA.ARENA && DATA.ARENA.pad) || { l: 50, r: 50, t: 84, b: 56 };
+    if (typeof GAME !== 'undefined' && GAME.arenaPad) return GAME.arenaPad;
+    const rest = typeof DATA !== 'undefined' && DATA.ARENA && DATA.ARENA.padBySize && DATA.ARENA.padBySize.rest;
+    return rest || { l: 50, r: 50, t: 84, b: 56 };
   },
 
   // D-03: {x,y} = arena top-left minus padding; {w,h} = arena size plus padding on both axes.
@@ -275,25 +280,27 @@ const CAMERA = {
     this._store(this.xform());
   },
 
-  // D-03: CAMERA.begin drives worldContainer position/scale instead of ctx transforms.
-  // Takes no ctx argument. No-ops in headless (SPRITES.worldContainer is null).
+  // D-06/D-10: compute+store the one shared transform (always — headless too, since tests/culling
+  // read tx/ty/tz), then drive Pixi's worldContainer and counter-transform the bridge sprite so
+  // bridge-canvas primitives (drawn in world space via applyCtx) land on the same screen pixels as
+  // Pixi children.
   begin() {
-    const wc = (typeof SPRITES !== 'undefined') && SPRITES.worldContainer;
-    if (!wc) return;                              // headless / pre-init: no-op
     const scale = this.shakeScale();
-    let ox = this.x + this.kx * scale, oy = this.y + this.ky * scale;
-    const s = GAME.shake * scale;                 // D-06: read GAME.shake at call time
-    if (s > 0.5) {
-      ox += U.rand(-s, s) * 0.5;
-      oy += U.rand(-s, s) * 0.5;
-    }
-    // Zoom about the punch focus point (D-14). When z === 1 this reduces to the old behaviour.
-    const z = this.zoom;
-    ox += this.fx - this.fx * z;
-    oy += this.fy - this.fy * z;
-    wc.position.set(ox, oy);
-    wc.scale.set(z);
+    const s = (typeof GAME !== 'undefined' ? GAME.shake : 0) * scale;
+    let shx = 0, shy = 0;
+    if (s > 0.5) { shx = U.rand(-s, s) * 0.5; shy = U.rand(-s, s) * 0.5; }
+    this._store(this.xform(shx, shy));            // always — headless too (tests + culling read tx/ty/tz)
+    const wc = (typeof SPRITES !== 'undefined') && SPRITES.worldContainer;
+    if (!wc) return;                              // headless / pre-init: skip Pixi/bridge wiring
+    wc.position.set(this.tx, this.ty); wc.scale.set(this.tz);
+    const bs = SPRITES.bridgeSprite;               // counter-transform: bridge pixels map 1:1 to screen pixels
+    if (bs) { bs.position.set(-this.tx / this.tz, -this.ty / this.tz); bs.scale.set(1 / this.tz); }
   },
+
+  // Set the bridge ctx's transform to the same tx/ty/tz driving worldContainer, so primitives drawn
+  // in world coordinates land on the same screen pixels as Pixi children (CAM-03).
+  applyCtx(ctx) { if (ctx && ctx.setTransform) ctx.setTransform(this.tz, 0, 0, this.tz, this.tx, this.ty); },
+  resetCtx(ctx) { if (ctx && ctx.setTransform) ctx.setTransform(1, 0, 0, 1, 0, 0); },
 
   // No ctx.restore needed — container transform persists until next begin().
   end() { /* no-op — worldContainer transform stays set */ },

@@ -13,9 +13,13 @@ const ROOMS = {
     // D-02: mutate GAME.arena in place — any code/test holding `const A = GAME.arena` keeps a live reference.
     Object.assign(GAME.arena, { x: DATA.ARENA.origin.x, y: DATA.ARENA.origin.y, w: s.w, h: s.h });
     GAME.arenaKind = kind;
+    // Cross-phase contract (05.4): expose the current room's world-rect padding on GAME so both
+    // ROOMS.worldRect() and CAMERA's scroll clamp (CAMERA.pad()) agree on how far past the arena
+    // edge the camera/art may extend.
+    GAME.arenaPad = DATA.ARENA.padBySize[kind] || DATA.ARENA.padBySize.rest;
   },
 
-  worldRect() { return CAMERA.worldRectFor(GAME.arena, DATA.ARENA.pad); },
+  worldRect() { return CAMERA.worldRectFor(GAME.arena, GAME.arenaPad || DATA.ARENA.padBySize.rest); },
 
   obstacleScale() {
     const A = GAME.arena;

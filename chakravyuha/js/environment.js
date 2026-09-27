@@ -755,10 +755,13 @@ const ENV = {
   // ---------------- loading (D-13a) ----------------
   // Returns 'loading' | 'ready' | 'fallback' | 'unavailable' (no env manifest AND no legacy bg —
   // sync() then returns false so the full legacy primitive path runs).
+  _retryAt: null,
   ensureLoaded(biomeId) {
     if (!biomeId) return 'unavailable';
     const st = this._biomeStatus[biomeId];
     if (st) return st;
+    const now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    if (this._retryAt && this._retryAt[biomeId] && now < this._retryAt[biomeId]) return 'loading';
     this._biomeStatus[biomeId] = 'loading';
     this._loadBiome(biomeId);
     return 'loading';
@@ -791,9 +794,17 @@ const ENV = {
           console.warn('ENV: atlas/tiles failed to load for', biomeId, e);
         }
       }
-      // D-13a fallback kit: legacy bg tiled as the floor, procedural walls.
+      // D-13a fallback kit: legacy bg tiled as the floor, procedural walls. The legacy bg atlas
+      // loads asynchronously at boot (SPRITES.load) independently of ENV — if it hasn't landed yet
+      // (race: a biome entered right after boot, before its texture finishes loading), retry
+      // shortly instead of permanently caching 'unavailable' (Rule 1 fix — see 05.4-04 SUMMARY).
       const legacyTex = SPRITES.textures && SPRITES.textures['bg:' + biomeId];
-      if (!legacyTex) { this._biomeStatus[biomeId] = 'unavailable'; return; }
+      if (!legacyTex) {
+        delete this._biomeStatus[biomeId];
+        this._retryAt = this._retryAt || {};
+        this._retryAt[biomeId] = (typeof performance !== 'undefined' ? performance.now() : Date.now()) + 300;
+        return;
+      }
       this._tileTextures[biomeId] = { floor_a: legacyTex };
       this._manifests[biomeId] = {
         schema: 1, biome: biomeId,

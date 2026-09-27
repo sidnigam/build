@@ -3293,5 +3293,190 @@ check('coin vacuum: 90px magnet unchanged in combat; cleared-room pickups fly to
   + (vacuumR.error ? ' — ' + vacuumR.error : ''),
   !vacuumR.error && vacuumR.combatNotVacuumed && vacuumR.clearedVacuumed);
 
+// ---------------- culling + indicators (Phase 05.1) ----------------
+console.log('\n— culling + indicators (Phase 05.1) —');
+vm.runInContext(`
+globalThis.__cullResults = {};
+(function() {
+  const R = __cullResults;
+  const noop = () => {};
+  const mkCountCtx = () => {
+    const counts = {};
+    return new Proxy({ _counts: counts }, {
+      get(t, prop) {
+        if (prop === '_counts') return counts;
+        if (prop === 'createRadialGradient' || prop === 'createLinearGradient') return () => ({ addColorStop: noop });
+        if (prop === 'measureText') return () => ({ width: 0 });
+        if (prop in t) return t[prop];
+        return function() { counts[prop] = (counts[prop] || 0) + 1; };
+      },
+      set(t, prop, v) { t[prop] = v; return true; },
+    });
+  };
+  const sumCounts = (c) => { let s = 0; for (const k in c) s += c[k]; return s; };
+
+  const savedState = GAME.state, savedPlayer = GAME.player;
+  const savedArena = Object.assign({}, GAME.arena), savedArenaPad = GAME.arenaPad;
+  const savedBiome = GAME.biome, savedBiomeIdx = GAME.biomeIdx;
+  const savedOrbits = GAME.orbits, savedPP = GAME.pprojectiles, savedEP = GAME.eprojectiles,
+        savedBolts = GAME.bolts, savedRings = GAME.rings, savedTexts = GAME.texts,
+        savedPillars = GAME.pillars, savedDZ = GAME.dangerZones, savedZones = GAME.zones,
+        savedDoors = GAME.doors, savedPickups = GAME.pickups, savedHazards = GAME.hazards,
+        savedEnemies = GAME.enemies, savedWaves = GAME.waves, savedSpawnQ = GAME.spawnQueue;
+  const savedCamSx = CAMERA.sx, savedCamSy = CAMERA.sy;
+  const savedWx = INPUT.wx, savedWy = INPUT.wy, savedAx = INPUT.ax, savedAy = INPUT.ay;
+
+  try {
+    GAME.startRun();
+    GAME.biomeIdx = 0; GAME.biome = DATA.BIOMES[0];
+    ROOMS.enterRoom('mudra');   // combat arena (2240x1300)
+    const A = Object.assign({}, GAME.arena);
+
+    // Snap the camera to the far right of the arena, then read back the exact view (D-07 clamp).
+    GAME.player.x = A.x + A.w - 260; GAME.player.y = A.y + A.h / 2;
+    INPUT.wx = GAME.player.x; INPUT.wy = GAME.player.y; INPUT.ax = 0; INPUT.ay = 0;
+    CAMERA.snap();
+    const V = CAMERA.viewRect(0);
+    const offX = A.x + 40, offY = A.y + A.h / 2;        // near the arena's left edge — off-screen
+    const onX = V.x + V.w / 2, onY = V.y + V.h / 2;     // dead-center of the current view — on-screen
+
+    while (VFX.stats().active > 0) VFX.update(1/60);
+    GAME.waves = []; GAME.spawnQueue = []; GAME.hazards = []; GAME.pillars = [];
+    GAME.dangerZones = []; GAME.zones = []; GAME.doors = []; GAME.pickups = [];
+
+    // 1. renderEffects: 200 player projectiles off-screen -> 0 arcs; on-screen -> >= 200 arcs.
+    {
+      GAME.orbits = []; GAME.eprojectiles = []; GAME.bolts = []; GAME.rings = []; GAME.texts = [];
+      GAME.pprojectiles = [];
+      for (let i = 0; i < 200; i++) GAME.pprojectiles.push({ x: offX, y: offY, r: 4, color: '#fff', vx: 1, vy: 0, chakra: false });
+      let cctx = mkCountCtx();
+      GAME.renderEffects(cctx);
+      const offArcs = cctx._counts.arc || 0;
+
+      GAME.pprojectiles = [];
+      for (let i = 0; i < 200; i++) GAME.pprojectiles.push({ x: onX, y: onY, r: 4, color: '#fff', vx: 1, vy: 0, chakra: false });
+      cctx = mkCountCtx();
+      GAME.renderEffects(cctx);
+      const onArcs = cctx._counts.arc || 0;
+      R.effectsCull = offArcs === 0 && onArcs >= 200;
+    }
+
+    // 2. renderBackground: 10 pillars off-screen draw strictly fewer primitives than on-screen.
+    {
+      GAME.pillars = [];
+      for (let i = 0; i < 10; i++) GAME.pillars.push({ shape: 'circle', kind: 'pillar', x: offX + i, y: offY, r: 20 });
+      let cctx = mkCountCtx();
+      GAME.renderBackground(cctx);
+      const offTotal = sumCounts(cctx._counts);
+
+      GAME.pillars = [];
+      for (let i = 0; i < 10; i++) GAME.pillars.push({ shape: 'circle', kind: 'pillar', x: onX + i, y: onY, r: 20 });
+      cctx = mkCountCtx();
+      GAME.renderBackground(cctx);
+      const onTotal = sumCounts(cctx._counts);
+      R.obstacleCull = offTotal < onTotal;
+      GAME.pillars = [];
+    }
+
+    // 3. renderEntities: 20 fallback-drawn (no atlas — always true headless) enemies off-screen
+    //    call e.draw() 0 times; on-screen call it 20 times. Culled entities never reach the branch.
+    {
+      const mkFallbackEnemies = (x, y) => {
+        const list = [];
+        for (let i = 0; i < 20; i++) {
+          const e = new Enemy('preta', x + i, y, 1);
+          e.spawnT = 0;
+          e._drawCalls = 0;
+          e.draw = function() { this._drawCalls++; };
+          list.push(e);
+        }
+        return list;
+      };
+      GAME.player = null;   // isolate the enemy loop from the player-draw branch
+      GAME.enemies = mkFallbackEnemies(offX, offY);
+      GAME.renderEntities(mkCountCtx());
+      let offDraws = 0;
+      for (const e of GAME.enemies) offDraws += e._drawCalls;
+
+      GAME.enemies = mkFallbackEnemies(onX, onY);
+      GAME.renderEntities(mkCountCtx());
+      let onDraws = 0;
+      for (const e of GAME.enemies) onDraws += e._drawCalls;
+      R.entityCull = offDraws === 0 && onDraws === 20;
+    }
+
+    // 4. SPRITES.cullEntity(e): hides mocked sprite/marker/weapon and marks the entity seen, so
+    //    endEntities()'s mark-and-sweep does not remove it (the sprite refs stay alive to be
+    //    re-shown by drawEntity/drawWeapon next time the entity is on-screen).
+    {
+      const e = { _pixiSprite: { visible: true }, _pixiMarker: { visible: true }, _pixiWeapon: { visible: true }, dead: false };
+      SPRITES.beginEntities();
+      SPRITES.cullEntity(e);
+      const hiddenAfterCull = e._pixiSprite.visible === false && e._pixiMarker.visible === false && e._pixiWeapon.visible === false;
+      SPRITES.endEntities();
+      const survivedSweep = e._pixiSprite !== null && e._pixiMarker !== null && e._pixiWeapon !== null;
+      SPRITES._tracked.delete(e);
+      R.cullLifecycle = hiddenAfterCull && survivedSweep;
+    }
+
+    // 5. VFX.inView + ctx-fallback particle culling.
+    {
+      const view = { x: 0, y: 0, w: 100, h: 100 };
+      const pIn = { x: 50, y: 50, r0: 3, r1: 3 };
+      const pOut = { x: 5000, y: 5000, r0: 3, r1: 3 };
+      R.inView = VFX.inView(pIn, view) === true && VFX.inView(pOut, view) === false;
+
+      while (VFX.stats().active > 0) VFX.update(1/60);
+      for (let i = 0; i < 100; i++) VFX.spawn(offX, offY, 0, 0, 10, 3, 3, '#fff', 0, false, 1, 0, 1, false);
+      const cctx = mkCountCtx();
+      VFX.render(cctx);
+      R.particleCull = (cctx._counts.arc || 0) === 0;
+      while (VFX.stats().active > 0) VFX.update(1/60);
+    }
+
+    // 6. ambientRect(): contained in the arena, intersects the current view; falls back to the
+    //    full arena (never empty) when the view doesn't overlap it.
+    {
+      const rect = GAME.ambientRect();
+      const containedInArena = rect.x >= A.x - 1e-6 && rect.y >= A.y - 1e-6
+        && rect.x + rect.w <= A.x + A.w + 1e-6 && rect.y + rect.h <= A.y + A.h + 1e-6;
+      const V0 = CAMERA.viewRect(0);
+      const intersectsView = rect.x < V0.x + V0.w && rect.x + rect.w > V0.x
+        && rect.y < V0.y + V0.h && rect.y + rect.h > V0.y;
+
+      CAMERA.sx = 1e7; CAMERA.sy = 1e7; CAMERA._store(CAMERA.xform());
+      const farRect = GAME.ambientRect();
+      const fallsBackToArena = farRect.x === A.x && farRect.y === A.y && farRect.w === A.w && farRect.h === A.h;
+      R.ambientRect = containedInArena && intersectsView && fallsBackToArena;
+    }
+
+  } finally {
+    GAME.state = savedState;
+    GAME.player = savedPlayer;
+    Object.assign(GAME.arena, savedArena);
+    GAME.arenaPad = savedArenaPad;
+    GAME.biome = savedBiome; GAME.biomeIdx = savedBiomeIdx;
+    GAME.orbits = savedOrbits; GAME.pprojectiles = savedPP; GAME.eprojectiles = savedEP;
+    GAME.bolts = savedBolts; GAME.rings = savedRings; GAME.texts = savedTexts;
+    GAME.pillars = savedPillars; GAME.dangerZones = savedDZ; GAME.zones = savedZones;
+    GAME.doors = savedDoors; GAME.pickups = savedPickups; GAME.hazards = savedHazards;
+    GAME.enemies = savedEnemies; GAME.waves = savedWaves; GAME.spawnQueue = savedSpawnQ;
+    INPUT.ax = savedAx; INPUT.ay = savedAy;
+    if (typeof savedWx === 'undefined') delete INPUT.wx; else INPUT.wx = savedWx;
+    if (typeof savedWy === 'undefined') delete INPUT.wy; else INPUT.wy = savedWy;
+    CAMERA.resetFx();
+    CAMERA.sx = 0; CAMERA.sy = 0;
+    CAMERA._store(CAMERA.xform());
+  }
+})();
+`, sandbox);
+const cull = vm.runInContext('__cullResults', sandbox);
+check('renderEffects: off-screen player projectiles issue 0 arcs; on-screen issue >= 200', cull.effectsCull);
+check('renderBackground: off-screen obstacles draw strictly fewer primitives than on-screen', cull.obstacleCull);
+check('renderEntities: off-screen fallback-drawn enemies call draw() 0 times; on-screen 20 times', cull.entityCull);
+check('SPRITES.cullEntity(e): hides sprite/marker/weapon and marks seen so endEntities() does not remove it', cull.cullLifecycle);
+check('VFX.inView: true inside the view rect, false outside; ctx-fallback render skips off-screen particles', cull.inView && cull.particleCull);
+check('GAME.ambientRect(): contained in the arena and intersects the view; falls back to the full arena when the view does not overlap it', cull.ambientRect);
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

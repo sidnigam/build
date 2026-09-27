@@ -652,6 +652,19 @@ const SPRITES = {
   },
 
   /**
+   * cullEntity(e) — CAM-05: an entity is off-screen this frame. Mark it seen (so endEntities()'
+   * mark-and-sweep doesn't destroy/recreate its sprite next time it scrolls into view) and hide its
+   * sprite/marker/weapon. drawEntity/drawWeapon re-show them the next time the entity is drawn.
+   */
+  cullEntity(e) {
+    if (!e._pixiSprite) return;
+    this._markSeen(e);
+    e._pixiSprite.visible = false;
+    if (e._pixiMarker) e._pixiMarker.visible = false;
+    if (e._pixiWeapon) e._pixiWeapon.visible = false;
+  },
+
+  /**
    * endEntities() — destroy sprites of entities not drawn this frame
    * (replaced via G.enemies = [], or not rendered because we are in the hub).
    * Dead entities are retired (fade out via tickDying) instead of destroyed outright (02-07).
@@ -755,6 +768,7 @@ const SPRITES = {
     }
 
     const spr = e._pixiSprite;
+    spr.visible = true;   // CAM-05: re-show after a possible cullEntity() while off-screen
     const layout = e._pixiLayout;
     const isPlayerEntity = e.spriteKey === 'player' || e.type === undefined;
     // Facing: player faces aim; enemies/bosses face the player.
@@ -1087,6 +1101,7 @@ const SPRITES = {
       }
 
       const root = e._pixiWeapon;
+      root.visible = true;   // CAM-05: re-show after a possible cullEntity() while off-screen
       root.position.set(pose.x, pose.y);
       root.rotation = pose.rot;
       const s = e.r * this.CFG.WEAPON_SCALE_PER_R;

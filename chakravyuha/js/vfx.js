@@ -233,13 +233,21 @@ const VFX = {
   },
 
   // ---------------- rendering ----------------
+  // CAM-05: pure AABB test — is particle p (expanded by its max radius) inside view rect v?
+  inView(p, v) {
+    const r = Math.max(p.r0, p.r1);
+    return p.x + r >= v.x && p.x - r <= v.x + v.w && p.y + r >= v.y && p.y - r <= v.y + v.h;
+  },
+
   render(ctx) {
     if (!this._px && !this._pxFailed) this._tryAttach();
     if (this._px) { this._renderPixi(); return; }
     if (!ctx) return;
+    const v = (typeof CAMERA !== 'undefined' && CAMERA.viewRect) ? CAMERA.viewRect(64) : null;
     for (let i = 0; i < this.CAP; i++) {
       const p = this.pool[i];
       if (!p.active) continue;
+      if (v && !this.inView(p, v)) continue;   // CAM-05: skip off-screen particles
       const frac = U.clamp(p.t / p.max, 0, 1);
       ctx.globalAlpha = p.tex === 3 ? frac * 0.25 : frac; // mist (D-16): softer overall alpha
       ctx.fillStyle = p.color;
@@ -328,10 +336,11 @@ const VFX = {
 
   _renderPixi() {
     const { sprites, tex, under, over } = this._px;
+    const v = (typeof CAMERA !== 'undefined' && CAMERA.viewRect) ? CAMERA.viewRect(64) : null;
     for (let i = 0; i < this.CAP; i++) {
       const p = this.pool[i];
       const spr = sprites[i];
-      if (!p.active) {
+      if (!p.active || (v && !this.inView(p, v))) {   // CAM-05: hide off-screen particles, keep pooled
         if (spr.visible) spr.visible = false;
         continue;
       }

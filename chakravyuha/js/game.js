@@ -386,7 +386,7 @@ const GAME = {
 
     // cosmetic arrays
     VFX.update(dt);
-    VFX.ambient(this.biome.id, this.arena, dt);
+    VFX.ambient(this.biome.id, this.ambientRect(), dt);   // CAM-05: ambient spawns only near the visible part of the arena
     for (const t of this.texts) { t.t -= dt; t.y -= 36 * dt; }
     this.texts = this.texts.filter(t => t.t > 0);
     for (const r of this.rings) r.t -= dt;
@@ -508,6 +508,11 @@ const GAME = {
     const H = this.hazards || [];
     for (const h of H) {
       const def = DATA.HAZARDS[h.type];
+      if (h.type === 'fireVent' || h.type === 'venomPool') {
+        if (!CAMERA.visible(h.x, h.y, h.r * 1.5)) continue;
+      } else if (h.type === 'riverCurrent') {
+        if (!CAMERA.visibleRect(h.x, h.y, h.w, h.h)) continue;
+      }
       if (h.type === 'fireVent') {
         if (h.phase === 'dormant' || !h.phase) {
           ctx.fillStyle = 'rgba(0,0,0,0.45)';
@@ -557,6 +562,7 @@ const GAME = {
         }
       } else if (h.type === 'arrowVolley') {
         for (const m of h.markers) {
+          if (!CAMERA.visible(m.x, m.y, m.r)) continue;
           const frac = 1 - m.t / def.warn;
           ctx.strokeStyle = def.color; ctx.lineWidth = 2;
           ctx.beginPath(); ctx.arc(m.x, m.y, m.r, 0, U.TAU); ctx.stroke();
@@ -626,6 +632,18 @@ const GAME = {
     return { x: R.x - 30, y: R.y - 30, w: R.w + 60, h: R.h + 60 };
   },
 
+  // CAM-05: intersection of the arena with the current view (+margin) — biome ambient particles
+  // spawn only near what's actually on screen instead of anywhere in a 2240x1300 arena. Falls back
+  // to the full arena when the view doesn't overlap it (never returns an empty rect).
+  ambientRect() {
+    const A = this.arena;
+    const V = CAMERA.viewRect(120);
+    const x1 = Math.max(A.x, V.x), y1 = Math.max(A.y, V.y);
+    const x2 = Math.min(A.x + A.w, V.x + V.w), y2 = Math.min(A.y + A.h, V.y + V.h);
+    if (x2 <= x1 || y2 <= y1) return A;
+    return { x: x1, y: y1, w: x2 - x1, h: y2 - y1 };
+  },
+
   renderBackground(ctx) {
     const A = this.arena;
     const inRun = this.state !== 'hub';
@@ -691,6 +709,7 @@ const GAME = {
 
     // boss slam danger zones
     for (const dz of this.dangerZones || []) {
+      if (!CAMERA.visible(dz.x, dz.y, dz.r)) continue;
       ctx.fillStyle = 'rgba(255,68,68,0.12)';
       ctx.strokeStyle = 'rgba(255,68,68,0.7)';
       ctx.lineWidth = 2;
@@ -700,6 +719,7 @@ const GAME = {
 
     // zones
     for (const z of this.zones) {
+      if (!CAMERA.visible(z.x, z.y, z.r)) continue;
       if (z.type === 'fire') {
         ctx.fillStyle = `rgba(255,90,40,${0.18 + 0.08 * Math.sin(this.time * 10)})`;
         ctx.beginPath(); ctx.arc(z.x, z.y, z.r, 0, U.TAU); ctx.fill();
@@ -721,6 +741,7 @@ const GAME = {
 
     // doors
     for (const d of this.doors) {
+      if (!CAMERA.visible(d.x, d.y, d.r + 60)) continue;   // margin covers the reward-name label
       const pulse = 0.7 + 0.3 * Math.sin(this.time * 4);
       const grad = ctx.createRadialGradient(d.x, d.y, 4, d.x, d.y, d.r + 16);
       grad.addColorStop(0, d.reward.color + 'cc');
@@ -744,6 +765,7 @@ const GAME = {
 
     // pickups
     for (const pk of this.pickups) {
+      if (!CAMERA.visible(pk.x, pk.y, 6)) continue;
       ctx.fillStyle = '#ffcf5c';
       ctx.beginPath(); ctx.arc(pk.x, pk.y, 5, 0, U.TAU); ctx.fill();
       ctx.strokeStyle = '#a87b1d'; ctx.lineWidth = 1.5;
@@ -757,6 +779,7 @@ const GAME = {
     SPRITES.tickDying(this.dt);                      // death shrink/fade (02-07)
     for (const e of this.enemies) {
       if (e.dead) { if (e._pixiSprite) SPRITES.retireEntity(e); continue; }
+      if (!CAMERA.visible(e.x, e.y, e.r * 3, 96)) { SPRITES.cullEntity(e); continue; }   // CAM-05: off-screen — hide sprite, keep tracked
       if (SPRITES.has(e.type)) { this.renderSpriteExtras(ctx, e); SPRITES.drawEntity(e); }
       else e.draw(ctx);                              // D-11: silent fallback to primitive
     }
@@ -918,6 +941,7 @@ const GAME = {
   renderEffects(ctx) {
     // orbits
     for (const o of this.orbits) {
+      if (!CAMERA.visible(o.x, o.y, 14)) continue;
       ctx.fillStyle = '#ffd34d';
       ctx.save();
       ctx.translate(o.x, o.y);
@@ -934,6 +958,7 @@ const GAME = {
 
     // projectiles
     for (const p of this.pprojectiles) {
+      if (!CAMERA.visible(p.x, p.y, p.r + 16)) continue;
       ctx.fillStyle = p.color;
       if (p.chakra) {
         ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(this.time * 14);
@@ -957,6 +982,7 @@ const GAME = {
       }
     }
     for (const p of this.eprojectiles) {
+      if (!CAMERA.visible(p.x, p.y, p.r + 16)) continue;
       ctx.fillStyle = p.color;
       ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, U.TAU); ctx.fill();
       ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 1.5;
@@ -965,6 +991,7 @@ const GAME = {
 
     // lightning bolts
     for (const b of this.bolts) {
+      if (!CAMERA.visibleRect(Math.min(b.x1, b.x2), Math.min(b.y1, b.y2), Math.abs(b.x2 - b.x1), Math.abs(b.y2 - b.y1), 16)) continue;
       ctx.strokeStyle = `rgba(255,224,120,${b.t / 0.18})`;
       ctx.lineWidth = 3;
       ctx.beginPath();
@@ -980,6 +1007,7 @@ const GAME = {
 
     // expanding rings
     for (const r of this.rings) {
+      if (!CAMERA.visible(r.x, r.y, r.r * 1.3 + 4)) continue;
       ctx.strokeStyle = r.color;
       ctx.globalAlpha = r.t / 0.25 * 0.8;
       ctx.lineWidth = 4;
@@ -992,6 +1020,7 @@ const GAME = {
 
     // damage texts
     for (const t of this.texts) {
+      if (!CAMERA.visible(t.x, t.y, 60)) continue;
       ctx.globalAlpha = U.clamp(t.t / 0.4, 0, 1);
       ctx.fillStyle = t.color;
       ctx.font = `bold ${t.size}px Georgia`;
@@ -1004,6 +1033,7 @@ const GAME = {
   renderObstacles(ctx) {
     const biome = this.biome;
     for (const o of this.pillars) {
+      if (o.shape === 'rect' ? !CAMERA.visibleRect(o.x, o.y - 8, o.w, o.h + 16) : !CAMERA.visible(o.x, o.y + 6, o.r + 8)) continue;
       const kind = o.kind || 'pillar';
       if (kind === 'pit') {
         const isRect = o.shape === 'rect';

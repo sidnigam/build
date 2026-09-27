@@ -650,35 +650,49 @@ const GAME = {
     const inRun = this.state !== 'hub';
     const biome = this.biome;
 
+    // Phase 05.4: ENV owns the environment (floor/walls/props/skins/lights) when it can build one
+    // for the current biome (real manifest or the legacy-bg fallback kit) — see D-13a. Falls back
+    // to false (the full legacy primitive path below, byte-for-byte) headless or with nothing to show.
+    const envOn = inRun && typeof ENV !== 'undefined' && ENV.sync(this);
+
     // background — illustrated biome image when loaded (02-10), else the primitive fill (D-11).
     // Cover-fit against the current room's world rect (Phase 05.1) — not the fixed viewport size.
-    const hasBg = SPRITES.setBackground(inRun ? SPRITES.bgKeyFor(biome) : null, inRun ? this._bgRect() : undefined);   // hub shows no biome bg
+    // envOn: ENV's own floor/walls replace the illustrated bg + outer dim entirely.
+    const hasBg = envOn
+      ? SPRITES.setBackground(null)
+      : SPRITES.setBackground(inRun ? SPRITES.bgKeyFor(biome) : null, inRun ? this._bgRect() : undefined);   // hub shows no biome bg
     const V = CAMERA.viewRect(40);                // world-space outer fill covers whatever is on screen, incl. shake margin
-    if (hasBg) {
-      ctx.fillStyle = 'rgba(0,0,0,' + SPRITES.CFG.BG_DIM_OUTER + ')';               // dim everything outside the arena
-      ctx.fillRect(V.x, V.y, V.w, V.h);
-    } else {
-      ctx.fillStyle = inRun ? biome.bg : '#0b0710';
-      ctx.fillRect(V.x, V.y, V.w, V.h);
+    if (!envOn) {
+      if (hasBg) {
+        ctx.fillStyle = 'rgba(0,0,0,' + SPRITES.CFG.BG_DIM_OUTER + ')';               // dim everything outside the arena
+        ctx.fillRect(V.x, V.y, V.w, V.h);
+      } else {
+        ctx.fillStyle = inRun ? biome.bg : '#0b0710';
+        ctx.fillRect(V.x, V.y, V.w, V.h);
+      }
     }
 
     if (!inRun) { this.renderHubBg(ctx); return; }
 
     // arena floor
-    if (hasBg) {
-      ctx.clearRect(A.x, A.y, A.w, A.h);                                              // undo the outer dim inside the arena
-      ctx.globalAlpha = SPRITES.CFG.BG_FLOOR_TINT; ctx.fillStyle = biome.floor;       // biome-tinted readability wash
+    if (hasBg || envOn) {
+      if (!envOn) ctx.clearRect(A.x, A.y, A.w, A.h);                                   // undo the outer dim inside the arena
+      const floorTint = envOn ? ENV.grade('floorTint', SPRITES.CFG.BG_FLOOR_TINT) : SPRITES.CFG.BG_FLOOR_TINT;
+      ctx.globalAlpha = floorTint; ctx.fillStyle = biome.floor;                        // biome-tinted readability wash
       ctx.fillRect(A.x, A.y, A.w, A.h); ctx.globalAlpha = 1;
-      ctx.fillStyle = `rgba(0,0,0,${SPRITES.CFG.BG_FLOOR_DARKEN})`;                    // flat-black darken so sprites/telegraphs pop off busy illustrated floors
+      const floorDarken = envOn ? ENV.grade('floorDarken', SPRITES.CFG.BG_FLOOR_DARKEN) : SPRITES.CFG.BG_FLOOR_DARKEN;
+      ctx.fillStyle = `rgba(0,0,0,${floorDarken})`;                                    // flat-black darken so sprites/telegraphs pop off busy illustrated floors
       ctx.fillRect(A.x, A.y, A.w, A.h);
-      const vcx = A.x + A.w / 2, vcy = A.y + A.h / 2;                                  // soft radial vignette: calm the floor center-out, guarded for the smoke ctx stub
-      const vr = Math.max(A.w, A.h) * 0.62;
-      const vgrad = ctx.createRadialGradient && ctx.createRadialGradient(vcx, vcy, vr * 0.35, vcx, vcy, vr);
-      if (vgrad && vgrad.addColorStop) {
-        vgrad.addColorStop(0, 'rgba(0,0,0,0)');
-        vgrad.addColorStop(1, 'rgba(0,0,0,0.35)');
-        ctx.fillStyle = vgrad;
-        ctx.fillRect(A.x, A.y, A.w, A.h);
+      if (!envOn) {
+        const vcx = A.x + A.w / 2, vcy = A.y + A.h / 2;                                // soft radial vignette: calm the floor center-out, guarded for the smoke ctx stub
+        const vr = Math.max(A.w, A.h) * 0.62;
+        const vgrad = ctx.createRadialGradient && ctx.createRadialGradient(vcx, vcy, vr * 0.35, vcx, vcy, vr);
+        if (vgrad && vgrad.addColorStop) {
+          vgrad.addColorStop(0, 'rgba(0,0,0,0)');
+          vgrad.addColorStop(1, 'rgba(0,0,0,0.35)');
+          ctx.fillStyle = vgrad;
+          ctx.fillRect(A.x, A.y, A.w, A.h);
+        }
       }
     } else {
       ctx.fillStyle = biome.floor;
@@ -700,13 +714,16 @@ const GAME = {
     }
     ctx.stroke();
 
-    // walls
-    ctx.strokeStyle = biome.wall;
-    ctx.lineWidth = 10;
-    ctx.strokeRect(A.x - 5, A.y - 5, A.w + 10, A.h + 10);
-    ctx.strokeStyle = biome.accent + '44';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(A.x - 10, A.y - 10, A.w + 20, A.h + 20);
+    // walls — ENV draws its own architecture outside the arena when active (D-04); the legacy
+    // stroked frame would otherwise double up with it.
+    if (!envOn) {
+      ctx.strokeStyle = biome.wall;
+      ctx.lineWidth = 10;
+      ctx.strokeRect(A.x - 5, A.y - 5, A.w + 10, A.h + 10);
+      ctx.strokeStyle = biome.accent + '44';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(A.x - 10, A.y - 10, A.w + 20, A.h + 20);
+    }
 
     // boss slam danger zones
     for (const dz of this.dangerZones || []) {
@@ -1091,6 +1108,7 @@ const GAME = {
     const biome = this.biome;
     for (const o of this.pillars) {
       if (o.shape === 'rect' ? !CAMERA.visibleRect(o.x, o.y - 8, o.w, o.h + 16) : !CAMERA.visible(o.x, o.y + 6, o.r + 8)) continue;
+      if (typeof ENV !== 'undefined' && ENV.hasSkin(o)) continue;   // Phase 05.4: ENV drew a biome-art skin on this obstacle's exact footprint
       const kind = o.kind || 'pillar';
       if (kind === 'pit') {
         const isRect = o.shape === 'rect';

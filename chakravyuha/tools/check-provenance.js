@@ -1,6 +1,6 @@
 // tools/check-provenance.js — ART-06 provenance completeness gate
-// Verifies every *-atlas.png / *-bg.png under assets/sprites/ has a complete entry in
-// PROVENANCE.json.
+// Verifies every *-atlas.png / *-bg.png / *-portrait.png under assets/sprites/ has a
+// complete entry in PROVENANCE.json.
 //
 // Usage (CI / smoke hook):
 //   node tools/check-provenance.js
@@ -18,7 +18,7 @@ const REQUIRED_FIELDS = ['prompt', 'seed', 'checkpoint', 'post_processing', 'rev
 
 /**
  * checkProvenance(rootDir)
- * Recursively finds every *-atlas.png / *-bg.png under rootDir.
+ * Recursively finds every *-atlas.png / *-bg.png / *-portrait.png under rootDir.
  * Loads <rootDir>/PROVENANCE.json -> assets[] and checks:
  *   - every tracked file has a matching entry (by filename)          -> missing[]
  *   - every entry with kind in {biome, boss, enemy} has all of
@@ -31,7 +31,7 @@ const REQUIRED_FIELDS = ['prompt', 'seed', 'checkpoint', 'post_processing', 'rev
  * @returns {{ ok: boolean, missing: string[], incomplete: string[], atlases: string[] }}
  */
 function checkProvenance(rootDir = 'assets/sprites') {
-  // Find all *-atlas.png / *-bg.png files recursively
+  // Find all *-atlas.png / *-bg.png / *-portrait.png files recursively
   const atlases = findAtlases(rootDir);
 
   // Load PROVENANCE.json
@@ -58,7 +58,7 @@ function checkProvenance(rootDir = 'assets/sprites') {
   // Check completeness for generated entries (kind in {biome, boss, enemy})
   const incomplete = [];
   for (const entry of provenance.assets || []) {
-    if (!entry.kind || !['biome', 'boss', 'enemy'].includes(entry.kind)) continue; // exempt (e.g. player)
+    if (!entry.kind || !['biome', 'boss', 'enemy', 'god'].includes(entry.kind)) continue; // exempt (e.g. player)
     const missingFields = REQUIRED_FIELDS.filter(field => {
       const v = entry[field];
       if (Array.isArray(v)) return v.length === 0 && field === 'post_processing';
@@ -78,7 +78,7 @@ function checkProvenance(rootDir = 'assets/sprites') {
 }
 
 /**
- * findAtlases(dir) — recursively collect all *-atlas.png / *-bg.png paths
+ * findAtlases(dir) — recursively collect all *-atlas.png / *-bg.png / *-portrait.png paths
  */
 function findAtlases(dir) {
   if (!fs.existsSync(dir)) return [];
@@ -90,7 +90,7 @@ function findAtlases(dir) {
       const full = path.join(current, entry.name);
       if (entry.isDirectory()) {
         walk(full);
-      } else if (entry.isFile() && /-(atlas|bg)\.png$/.test(entry.name)) {
+      } else if (entry.isFile() && /-(atlas|bg|portrait)\.png$/.test(entry.name)) {
         results.push(full);
       }
     }
@@ -107,7 +107,7 @@ if (require.main === module) {
   const result = checkProvenance();
   if (result.ok) {
     const count = result.atlases.length;
-    console.log(`provenance ok (${count} atlases/backgrounds)`);
+    console.log(`provenance ok (${count} atlases/backgrounds/portraits)`);
     process.exit(0);
   } else {
     console.error(`provenance FAIL:`);

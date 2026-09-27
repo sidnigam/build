@@ -43,6 +43,16 @@ def build_prompt(prompts, key):
         pos = prompts["biome_positive_template"].format(ground=ground, palette=palette)
         neg = prompts["biome_negative"]
         width, height = prompts["biome_size"]
+    elif kind == "god":
+        subject = entry["subject"]
+        palette = entry.get("palette", "")
+        pos = f"{subject}, {palette}, {prompts['god_style_positive']}" if palette else \
+            f"{subject}, {prompts['god_style_positive']}"
+        neg = prompts["god_style_negative"] + ", " + prompts["god_negative_extra"]
+        extra = entry.get("negative_extra")
+        if extra:
+            neg = neg + ", " + extra
+        width, height = prompts["god_size"]
     else:
         subject = entry["subject"]
         palette = entry.get("palette", "")
@@ -65,6 +75,8 @@ def main():
     ap.add_argument("--attempt", type=int, default=0)
     ap.add_argument("--wait-only", dest="wait_only", default=None)
     ap.add_argument("--timeout", type=int, default=540)
+    ap.add_argument("--busy-wait", dest="busy_wait", type=int, default=600,
+                     help="Max seconds to wait for /queue to drain before queueing (serialization safety).")
     args = ap.parse_args()
 
     prompts = load_prompts()
@@ -74,10 +86,11 @@ def main():
         sys.exit(1)
 
     kind, pos, neg, width, height = build_prompt(prompts, args.key)
-    base_seed = subjects[args.key]["base_seed"]
+    entry = subjects[args.key]
+    base_seed = entry["base_seed"]
     seed = base_seed + args.attempt
 
-    kind_dir = {"biome": "biomes", "boss": "bosses", "enemy": "enemies"}[kind]
+    kind_dir = {"biome": "biomes", "boss": "bosses", "enemy": "enemies", "god": "gods"}[kind]
     out_dir = os.path.join(ROOT, "assets", "sprites", "_gen", kind_dir, args.key)
     os.makedirs(out_dir, exist_ok=True)
     out_path = os.path.join(out_dir, f"{args.key}_s{seed}.png")
@@ -92,17 +105,39 @@ def main():
         sys.exit(1)
     comfyui_version = stats.get("system", {}).get("comfyui_version")
 
-    graph = cc.build_txt2img_graph(pos, neg, seed, width, height, steps=steps, cfg=cfg)
+    ckpt = entry.get("checkpoint") or prompts.get("checkpoint", "sd_xl_base_1.0.safetensors")
+    ckpt_label = entry.get("checkpoint_label") or prompts.get("checkpoint_label", ckpt)
+
+    graph = cc.build_txt2img_graph(pos, neg, seed, width, height, steps=steps, cfg=cfg, ckpt=ckpt)
     params = {
         "positive": pos, "negative": neg, "seed": seed, "width": width, "height": height,
         "steps": steps, "cfg": cfg, "sampler": "dpmpp_2m", "scheduler": "karras",
-        "checkpoint": "sd_xl_base_1.0.safetensors",
+        "checkpoint": ckpt, "checkpoint_label": ckpt_label,
     }
 
     if args.wait_only:
         prompt_id = args.wait_only
         print(f"Resuming wait on prompt_id={prompt_id}", file=sys.stderr)
     else:
+        # Serialization safety: ComfyUI is single-tenant (05.4 may also be generating).
+        waited = 0
+        poll_s = 15
+        while True:
+            try:
+                queue = cc._http_json(f"{cc.COMFY_HOST}/queue", timeout=10)
+            except Exception:
+                break
+            busy = bool(queue.get("queue_running")) or bool(queue.get("queue_pending"))
+            if not busy:
+                break
+            if waited >= args.busy_wait:
+                print(f"ERROR: ComfyUI still busy after {args.busy_wait}s", file=sys.stderr)
+                sys.exit(1)
+            print("ComfyUI busy — another job is running (05.4?)", file=sys.stderr)
+            import time as _time
+            _time.sleep(poll_s)
+            waited += poll_s
+
         try:
             prompt_id = cc.queue_prompt(graph)
         except Exception as e:

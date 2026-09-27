@@ -576,12 +576,15 @@ class Player {
 
 // ---------------- ENEMY ----------------
 class Enemy {
-  constructor(typeId, x, y, scale) {
+  constructor(typeId, x, y, scale, mods) {
     const d = DATA.ENEMIES[typeId];
     this.type = typeId; this.def = d;
     this.x = x; this.y = y; this.r = d.r;
     this.hp = d.hp * scale; this.maxhp = this.hp;
     this.dmg = d.dmg * Math.sqrt(scale);
+    // Phase 05.1 (WAVE-01, D-18): weakened "fodder" instances — a mods object multiplies hp/dmg
+    // (typically DATA.WAVES.weak) and flags the unit as weak; without mods, behavior is unchanged.
+    if (mods) { this.hp *= mods.hp || 1; this.maxhp = this.hp; this.dmg *= mods.dmg || 1; this.weak = true; }
     this.spd = d.spd; this.color = d.color;
     this.dead = false; this.boss = false;
     this.flash = 0; this.stun = 0; this.maya = 0; this.slowT = 0; this.slowF = 1;

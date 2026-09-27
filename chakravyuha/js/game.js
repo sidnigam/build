@@ -27,6 +27,7 @@ const GAME = {
   // run state
   player: null, biome: DATA.BIOMES[0], biomeIdx: 0, roomIdx: 0, totalRooms: 0,
   reward: null, waves: [], waveDelay: 0,
+  spawnQueue: [], lastWaveSize: 0, dripT: 0,   // Phase 05.1 (WAVE-02/03): overlapping waves + alive-cap drip queue
   kills: 0, bossRef: null, bossRewarded: false, bossHurtT: 0,
   shopSeenThisBiome: false, nooseT: 0, prePause: null,
 
@@ -235,20 +236,19 @@ const GAME = {
       if (!wasLast) this.bossRef = null;
     }
 
-    // wave / room-clear logic
+    // wave / room-clear logic (Phase 05.1, D-21): waves overlap (next wave triggers once the
+    // previous one is mostly cleared), overflow spawns drip in from a queue under the alive cap,
+    // and the room only clears once there is nothing alive, queued, or left to spawn.
     if (this.state === 'combat' && !this.bossRef) {
-      const alive = this.enemies.some(e => !e.dead);
-      if (!alive) {
-        if (this.waves.length > 0) {
-          this.waveDelay += dt;
-          if (this.waveDelay > 0.7) {
-            this.waveDelay = 0;
-            ROOMS.spawnWave(this.waves.shift());
-          }
-        } else {
-          this.state = 'cleared';
-          ROOMS.onRoomClear();
-        }
+      ROOMS.drainQueue(dt);
+      const alive = ROOMS.aliveCount();
+      const queued = this.spawnQueue.length;
+      if (this.waves.length > 0 && queued === 0 && alive <= ROOMS.nextWaveThreshold()) {
+        this.waveDelay += dt;
+        if (this.waveDelay > DATA.WAVES.waveDelay) { this.waveDelay = 0; ROOMS.spawnWave(this.waves.shift()); }
+      } else if (this.waves.length === 0 && queued === 0 && alive === 0) {
+        this.state = 'cleared';
+        ROOMS.onRoomClear();
       }
     }
 

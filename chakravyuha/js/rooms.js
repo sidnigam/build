@@ -75,13 +75,13 @@ const ROOMS = {
 
   blocksProjectile(p) { return this.pointBlocked(p.x, p.y, p.r, { projectile: true }); },
 
-  // Guaranteed-free fallback spawn point: coarse grid scan of the right 70% of the arena.
+  // Guaranteed-free fallback spawn point: coarse grid scan of the WHOLE arena (Phase 05.1: larger
+  // arenas need spawns spread across the full space, not just the right 70%).
   findClearSpawnPoint(r) {
     const A = GAME.arena, P = GAME.player, step = 40;
-    const xStart = A.x + A.w * 0.3;
     for (const minDist of [220, 120]) {
       for (let y = A.y + 60; y <= A.y + A.h - 60; y += step) {
-        for (let x = xStart; x <= A.x + A.w - 60; x += step) {
+        for (let x = A.x + 60; x <= A.x + A.w - 60; x += step) {
           if (U.dist(x, y, P.x, P.y) < minDist) continue;
           if (this.pointBlocked(x, y, r)) continue;
           return { x, y };
@@ -304,24 +304,97 @@ const ROOMS = {
     return this.planRoom(GAME.biome, GAME.roomIdx);
   },
 
+  // ---- Phase 05.1: alive cap + drip queue + pack placement (WAVE-03) ----
+  aliveCount() {
+    return GAME.enemies.reduce((n, e) => n + (e.dead ? 0 : 1), 0);
+  },
+
+  nextWaveThreshold() {
+    return Math.max(0, Math.ceil((GAME.lastWaveSize || 0) * DATA.WAVES.nextWaveAt));
+  },
+
+  // A pack center: a point spawnMin..spawnMax from the player, inside the arena (inset 80), clear of
+  // obstacles. The first pack of a wave prefers on-screen placement for its first 20 tries.
+  pickPackCenter(first) {
+    const A = GAME.arena, P = GAME.player, W = DATA.WAVES;
+    const insideInset = (x, y, inset) => x >= A.x + inset && x <= A.x + A.w - inset && y >= A.y + inset && y <= A.y + A.h - inset;
+    for (let tries = 0; tries < 40; tries++) {
+      const a = U.rand(U.TAU), d = U.rand(W.spawnMin, W.spawnMax);
+      const x = P.x + Math.cos(a) * d, y = P.y + Math.sin(a) * d;
+      if (!insideInset(x, y, 80)) continue;
+      if (this.pointBlocked(x, y, 40)) continue;
+      if (first && tries < 20 && typeof CAMERA !== 'undefined' && !CAMERA.visible(x, y, 0, -60)) continue;
+      return { x, y };
+    }
+    for (let tries = 0; tries < 40; tries++) {
+      const x = U.rand(A.x + 80, A.x + A.w - 80);
+      const y = U.rand(A.y + 80, A.y + A.h - 80);
+      if (U.dist(x, y, P.x, P.y) < 220) continue;
+      if (this.pointBlocked(x, y, 40)) continue;
+      return { x, y };
+    }
+    const spot = this.findClearSpawnPoint(40);
+    if (spot) return spot;
+    return { x: A.x + A.w * 0.7, y: A.y + A.h / 2 }; // ultimate fallback: arena center-right (existing behavior)
+  },
+
+  // A single unit's spawn point near a pack center, jittered, clear of obstacles and the player.
+  placeUnit(def, cx, cy) {
+    const A = GAME.arena, P = GAME.player, J = DATA.WAVES.packJitter;
+    const inset = def.r + 20;
+    for (let tries = 0; tries < 12; tries++) {
+      const x = U.clamp(cx + U.rand(-J, J), A.x + inset, A.x + A.w - inset);
+      const y = U.clamp(cy + U.rand(-J, J), A.y + inset, A.y + A.h - inset);
+      if (this.pointBlocked(x, y, def.r + 12)) continue;
+      if (U.dist(x, y, P.x, P.y) < 220) continue;
+      return { x, y };
+    }
+    const spot = this.findClearSpawnPoint(def.r + 12);
+    if (spot) return spot;
+    return { x: cx, y: cy };
+  },
+
+  // Spawn as many units as the alive cap allows (in packs around the player); overflow drips
+  // in later via drainQueue. Returns the number actually spawned.
+  spawnUnits(units, first = true) {
+    const W = DATA.WAVES;
+    const room = Math.max(0, W.maxAlive - this.aliveCount());
+    const now = units.slice(0, room);
+    const overflow = units.slice(now.length);
+    if (overflow.length) GAME.spawnQueue.push(...overflow);
+
+    let i = 0, spawned = 0, isFirstPack = first;
+    while (i < now.length) {
+      const packLen = Math.min(U.randInt(W.packSize[0], W.packSize[1]), now.length - i);
+      const center = this.pickPackCenter(isFirstPack);
+      isFirstPack = false;
+      for (let k = 0; k < packLen; k++) {
+        const u = now[i++];
+        const def = DATA.ENEMIES[u.id];
+        const pos = this.placeUnit(def, center.x, center.y);
+        GAME.enemies.push(new Enemy(u.id, pos.x, pos.y, GAME.biome.scale, u.weak ? W.weak : null));
+        spawned++;
+      }
+    }
+    return spawned;
+  },
+
   spawnWave(arg) {
     const units = typeof arg === 'number' ? this.composeWave(arg, GAME.biome, { fodderShare: 0 }) : arg;
-    const b = GAME.biome;
-    for (const u of units) {
-      const def = DATA.ENEMIES[u.id];
-      // spawn away from the player and clear of obstacles
-      let x, y, tries = 0, ok = false;
-      do {
-        x = U.rand(GAME.arena.x + 60, GAME.arena.x + GAME.arena.w - 60);
-        y = U.rand(GAME.arena.y + 60, GAME.arena.y + GAME.arena.h - 60);
-        tries++;
-        ok = U.dist(x, y, GAME.player.x, GAME.player.y) >= 220 && !this.pointBlocked(x, y, def.r + 12);
-      } while (tries < 40 && !ok);
-      if (!ok) {
-        const spot = this.findClearSpawnPoint(def.r + 12);
-        if (spot) { x = spot.x; y = spot.y; }
-      }
-      GAME.enemies.push(new Enemy(def.id, x, y, b.scale, u.weak ? DATA.WAVES.weak : null));
+    GAME.lastWaveSize = units.length;
+    return this.spawnUnits(units);
+  },
+
+  // Drip-feed queued overflow units in as the alive cap allows (WAVE-03).
+  drainQueue(dt) {
+    const W = DATA.WAVES;
+    GAME.dripT = (GAME.dripT || 0) - dt;
+    if (GAME.dripT <= 0 && GAME.spawnQueue.length && this.aliveCount() < W.maxAlive) {
+      const room = W.maxAlive - this.aliveCount();
+      const n = Math.min(W.dripBatch, room, GAME.spawnQueue.length);
+      const batch = GAME.spawnQueue.splice(0, n);
+      this.spawnUnits(batch, false);
+      GAME.dripT = W.dripEvery;
     }
   },
 
@@ -358,6 +431,7 @@ const ROOMS = {
     G.pickups = []; G.zones = []; G.orbits = []; G.rings = [];
     G.bolts = []; G.dangerZones = []; G.doors = []; G.hazards = [];
     G.nooseT = 0; G.bossRewarded = false;
+    G.spawnQueue = []; G.lastWaveSize = 0; G.dripT = 0; G.waveDelay = 0;
 
     // D-02: size the arena for this room kind BEFORE the player is placed.
     const kind = rewardId === 'boss' ? 'boss' : (rewardId === 'sarovar' || rewardId === 'kubera') ? 'rest' : 'combat';

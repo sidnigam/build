@@ -2969,5 +2969,179 @@ check('composeWave invariants: never empty, every id valid, weak only from fodde
 check('every DATA.BIOMES entry has a valid waves block'
   + (wr.biomeWaveErrors.length ? ' — ' + wr.biomeWaveErrors.join('; ') : ''), wr.biomeWaveErrors.length === 0);
 
+// ---- spawning: weak Enemy mods, pack placement, alive cap + drip queue, overlapping waves ----
+vm.runInContext(`
+globalThis.__modsResults = (function() {
+  const d = DATA.ENEMIES.preta;
+  const e = new Enemy('preta', 100, 100, 1.35, DATA.WAVES.weak);
+  const hpOk = Math.abs(e.hp - d.hp * 1.35 * 0.5) < 1e-9 && Math.abs(e.maxhp - e.hp) < 1e-9;
+  const dmgOk = Math.abs(e.dmg - d.dmg * Math.sqrt(1.35) * 0.6) < 1e-9;
+  const weakOk = e.weak === true;
+  const e2 = new Enemy('preta', 0, 0, 1.35);
+  const unmodOk = Math.abs(e2.hp - d.hp * 1.35) < 1e-9 && !e2.weak;
+  return { hpOk, dmgOk, weakOk, unmodOk };
+})();
+`, sandbox);
+const modsR = vm.runInContext('__modsResults', sandbox);
+check('Enemy mods: weak fodder halves hp, scales dmg by 0.6, flags weak=true; unmodded unchanged',
+  modsR.hpOk && modsR.dmgOk && modsR.weakOk && modsR.unmodOk);
+
+vm.runInContext(`
+globalThis.__capResults = {};
+try {
+  GAME.startRun();
+  GAME.biomeIdx = 0; GAME.biome = DATA.BIOMES[0];
+  ROOMS.enterRoom('mudra');
+  GAME.enemies = []; GAME.spawnQueue = []; GAME.waves = []; GAME.lastWaveSize = 0; GAME.dripT = 0;
+  const units = Array.from({ length: 40 }, () => ({ id: 'preta', weak: true }));
+  ROOMS.spawnWave(units);
+  const aliveAfterSpawn = ROOMS.aliveCount();
+  __capResults.capRespected = aliveAfterSpawn <= DATA.WAVES.maxAlive;
+  __capResults.queueLen = GAME.spawnQueue.length;
+  __capResults.queueExpected = 40 - DATA.WAVES.maxAlive;
+
+  let killed = 0;
+  for (const e of GAME.enemies) { if (killed >= 10) break; e.hp = 0; e.dead = true; killed++; }
+  let maxAliveSeen = 0;
+  for (let f = 0; f < 120; f++) {
+    GAME.update(1 / 60);
+    maxAliveSeen = Math.max(maxAliveSeen, ROOMS.aliveCount());
+  }
+  __capResults.neverExceededCap = maxAliveSeen <= DATA.WAVES.maxAlive;
+  __capResults.queueDrained = GAME.spawnQueue.length < __capResults.queueLen;
+} catch (e) { __capResults.error = e.stack.split('\\n').slice(0, 3).join(' | '); }
+`, sandbox);
+const capR = vm.runInContext('__capResults', sandbox);
+check('alive cap: spawning 40 weak pretas keeps alive <= maxAlive, overflow queued'
+  + (capR.error ? ' — ' + capR.error : ''),
+  !capR.error && capR.capRespected && capR.queueLen === capR.queueExpected);
+check('spawn queue drains over time without ever exceeding the alive cap'
+  + (capR.error ? ' — ' + capR.error : ''),
+  !capR.error && capR.neverExceededCap && capR.queueDrained);
+
+vm.runInContext(`
+globalThis.__packResults = { errors: [] };
+try {
+  for (const biomeId of Object.keys(DATA.LAYOUTS)) {
+    const biomeIdx = DATA.BIOMES.findIndex(b => b.id === biomeId);
+    for (const tpl of ROOMS.layoutsFor(biomeId)) {
+      GAME.startRun();
+      GAME.biomeIdx = biomeIdx; GAME.biome = DATA.BIOMES[biomeIdx];
+      ROOMS.enterRoom('mudra');
+      ROOMS.buildArena(false, tpl.id);
+      GAME.enemies = []; GAME.spawnQueue = []; GAME.waves = []; GAME.lastWaveSize = 0;
+      const units = Array.from({ length: 16 }, () => ({ id: GAME.biome.enemies[0], weak: false }));
+      ROOMS.spawnUnits(units);
+      const A = GAME.arena, P = GAME.player;
+      for (const e of GAME.enemies) {
+        const inArena = e.x >= A.x + e.r && e.x <= A.x + A.w - e.r && e.y >= A.y + e.r && e.y <= A.y + A.h - e.r;
+        if (!inArena) __packResults.errors.push(tpl.id + ': enemy out of arena bounds');
+        if (ROOMS.pointBlocked(e.x, e.y, e.r)) __packResults.errors.push(tpl.id + ': enemy inside/near an obstacle');
+        if (U.dist(e.x, e.y, P.x, P.y) < 220) __packResults.errors.push(tpl.id + ': enemy within 220px of the player');
+      }
+    }
+  }
+} catch (e) { __packResults.errors.push(e.stack.split('\\n').slice(0, 3).join(' | ')); }
+`, sandbox);
+const packR = vm.runInContext('__packResults', sandbox);
+check('pack spawns (12 forced templates, 16 units each): inside arena bounds, obstacle-clear, >=220px from the player'
+  + (packR.errors.length ? ' — ' + packR.errors.slice(0, 5).join('; ') + (packR.errors.length > 5 ? ` (+${packR.errors.length - 5} more)` : '') : ''),
+  packR.errors.length === 0);
+
+vm.runInContext(`
+globalThis.__centerResults = { errors: [], farCount: 0, total: 0 };
+try {
+  GAME.startRun();
+  GAME.biomeIdx = 3; GAME.biome = DATA.BIOMES[3];
+  ROOMS.enterRoom('mudra');
+  const P = GAME.player;
+  for (let i = 0; i < 200; i++) {
+    const c = ROOMS.pickPackCenter(i % 5 === 0);
+    __centerResults.total++;
+    if (U.dist(c.x, c.y, P.x, P.y) >= DATA.WAVES.spawnMin) __centerResults.farCount++;
+  }
+} catch (e) { __centerResults.errors.push(e.stack.split('\\n').slice(0, 3).join(' | ')); }
+`, sandbox);
+const centerR = vm.runInContext('__centerResults', sandbox);
+check('pack centers: >= 50% picked at distance >= DATA.WAVES.spawnMin from the player'
+  + (centerR.errors.length ? ' — ' + centerR.errors.join('; ') : ''),
+  centerR.errors.length === 0 && (centerR.farCount / centerR.total) >= 0.5);
+
+vm.runInContext(`
+globalThis.__overlapResults = {};
+try {
+  GAME.startRun();
+  GAME.biomeIdx = 0; GAME.biome = DATA.BIOMES[0];
+  ROOMS.enterRoom('mudra');
+  GAME.state = 'combat'; GAME.bossRef = null; GAME.hazards = []; GAME.pillars = [];
+  GAME.player.hp = 1e9; GAME.player.maxhp = 1e9;
+  const farX = GAME.arena.x + GAME.arena.w - 40, farY = GAME.arena.y + 40;
+  const unitsB = [{ id: 'preta', weak: false }];
+
+  // Case A: leaving 3 alive (<= ceil(10*0.3)=3) should spawn wave B after waveDelay
+  GAME.enemies = [];
+  for (let i = 0; i < 3; i++) { const e = new Enemy('preta', farX, farY, 1); e.spawnT = 0; GAME.enemies.push(e); }
+  GAME.spawnQueue = []; GAME.lastWaveSize = 10; GAME.waveDelay = 0; GAME.waves = [unitsB];
+  const beforeCountA = GAME.enemies.length;
+  for (let f = 0; f < 60; f++) GAME.update(1 / 60);
+  __overlapResults.triggeredWhenBelowThreshold = GAME.enemies.length > beforeCountA;
+
+  // Case B: leaving 5 alive (> 3) should NOT spawn wave B
+  GAME.enemies = [];
+  for (let i = 0; i < 5; i++) { const e = new Enemy('preta', farX, farY, 1); e.spawnT = 0; GAME.enemies.push(e); }
+  GAME.spawnQueue = []; GAME.lastWaveSize = 10; GAME.waveDelay = 0; GAME.waves = [unitsB];
+  const beforeCountB = GAME.enemies.length;
+  for (let f = 0; f < 60; f++) GAME.update(1 / 60);
+  __overlapResults.notTriggeredWhenAboveThreshold = GAME.enemies.length === beforeCountB;
+} catch (e) { __overlapResults.error = e.stack.split('\\n').slice(0, 3).join(' | '); }
+`, sandbox);
+const overlapR = vm.runInContext('__overlapResults', sandbox);
+check('overlapping waves: next wave spawns once alive <= nextWaveThreshold, not before'
+  + (overlapR.error ? ' — ' + overlapR.error : ''),
+  !overlapR.error && overlapR.triggeredWhenBelowThreshold && overlapR.notTriggeredWhenAboveThreshold);
+
+vm.runInContext(`
+globalThis.__clearResults = {};
+try {
+  GAME.startRun();
+  GAME.biomeIdx = 0; GAME.biome = DATA.BIOMES[0];
+  ROOMS.enterRoom('mudra');
+  GAME.state = 'combat'; GAME.bossRef = null; GAME.hazards = []; GAME.pillars = [];
+  GAME.player.hp = 1e9; GAME.player.maxhp = 1e9;
+  GAME.enemies = [];
+  GAME.spawnQueue = [{ id: 'preta', weak: false }, { id: 'preta', weak: false }];
+  GAME.waves = []; GAME.lastWaveSize = 0; GAME.dripT = 0;
+  for (let f = 0; f < 5; f++) GAME.update(1 / 60);
+  __clearResults.notClearedWithQueue = GAME.state === 'combat';
+  __clearResults.queueDrippedIn = GAME.enemies.length > 0;
+
+  for (let f = 0; f < 300 && GAME.state === 'combat'; f++) {
+    for (const e of GAME.enemies) e.dead = true;
+    GAME.update(1 / 60);
+  }
+  __clearResults.clearedOnceEmpty = GAME.state === 'cleared';
+} catch (e) { __clearResults.error = e.stack.split('\\n').slice(0, 3).join(' | '); }
+`, sandbox);
+const clearR = vm.runInContext('__clearResults', sandbox);
+check('room-clear gating: a non-empty queue with 0 alive does not clear (drips instead); clears once alive/waves/queue are all empty'
+  + (clearR.error ? ' — ' + clearR.error : ''),
+  !clearR.error && clearR.notClearedWithQueue && clearR.queueDrippedIn && clearR.clearedOnceEmpty);
+
+vm.runInContext(`
+globalThis.__resetResults = {};
+try {
+  GAME.startRun();
+  GAME.spawnQueue = [{ id: 'preta', weak: false }, { id: 'preta', weak: false }];
+  GAME.lastWaveSize = 99;
+  ROOMS.enterRoom('mudra');
+  __resetResults.queueReset = GAME.spawnQueue.length === 0;
+  __resetResults.lastWaveSizeReset = GAME.lastWaveSize !== 99;
+} catch (e) { __resetResults.error = e.stack.split('\\n').slice(0, 3).join(' | '); }
+`, sandbox);
+const resetR = vm.runInContext('__resetResults', sandbox);
+check('enterRoom resets GAME.spawnQueue and GAME.lastWaveSize'
+  + (resetR.error ? ' — ' + resetR.error : ''),
+  !resetR.error && resetR.queueReset && resetR.lastWaveSizeReset);
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

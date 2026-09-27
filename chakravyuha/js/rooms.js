@@ -7,18 +7,49 @@
 
 const ROOMS = {
 
+  // ---- Phase 05.1: arena sizing (CAM-01/CAM-07, D-01/D-02/D-03) ----
+  setArena(kind) {
+    const s = DATA.ARENA.sizes[kind] || DATA.ARENA.sizes.rest;
+    // D-02: mutate GAME.arena in place — any code/test holding `const A = GAME.arena` keeps a live reference.
+    Object.assign(GAME.arena, { x: DATA.ARENA.origin.x, y: DATA.ARENA.origin.y, w: s.w, h: s.h });
+    GAME.arenaKind = kind;
+    // Cross-phase contract (05.4): expose the current room's world-rect padding on GAME so both
+    // ROOMS.worldRect() and CAMERA's scroll clamp (CAMERA.pad()) agree on how far past the arena
+    // edge the camera/art may extend.
+    GAME.arenaPad = DATA.ARENA.padBySize[kind] || DATA.ARENA.padBySize.rest;
+  },
+
+  worldRect() { return CAMERA.worldRectFor(GAME.arena, GAME.arenaPad || DATA.ARENA.padBySize.rest); },
+
+  obstacleScale() {
+    const A = GAME.arena;
+    return U.clamp(Math.sqrt(Math.min(A.w / 1180, A.h / 580)), 1, DATA.ARENA.maxObstacleScale);
+  },
+
+  isLargeArena() {
+    const A = GAME.arena;
+    return A.w * A.h >= DATA.ARENA.largeArea;
+  },
+
+  hazardCountScale() {
+    const A = GAME.arena;
+    return U.clamp(Math.sqrt((A.w * A.h) / DATA.ARENA.legacyArea), 1, 2.2);
+  },
+
   // ---- Phase 4: room layout geometry helpers (GAME-03) ----
   layoutsFor(biomeId) { return DATA.LAYOUTS[biomeId] || []; },
 
   materializeLayout(tpl) {
     const A = GAME.arena;
-    return tpl.obstacles.map(o => {
+    const scale = this.obstacleScale();
+    const list = tpl.obstacles.concat(this.isLargeArena() && tpl.large ? tpl.large : []);
+    return list.map(o => {
       if (o.kind === 'wall' || (o.w !== undefined && o.h !== undefined)) {
         return { shape: 'rect', kind: o.kind, x: A.x + o.x * A.w, y: A.y + o.y * A.h,
           w: o.w * A.w, h: o.h * A.h, tpl: tpl.id };
       }
       return { shape: 'circle', kind: o.kind || 'pillar', x: A.x + o.x * A.w, y: A.y + o.y * A.h,
-        r: o.r, tpl: tpl.id };
+        r: o.r * scale, tpl: tpl.id };
     });
   },
 
@@ -44,13 +75,13 @@ const ROOMS = {
 
   blocksProjectile(p) { return this.pointBlocked(p.x, p.y, p.r, { projectile: true }); },
 
-  // Guaranteed-free fallback spawn point: coarse grid scan of the right 70% of the arena.
+  // Guaranteed-free fallback spawn point: coarse grid scan of the WHOLE arena (Phase 05.1: larger
+  // arenas need spawns spread across the full space, not just the right 70%).
   findClearSpawnPoint(r) {
     const A = GAME.arena, P = GAME.player, step = 40;
-    const xStart = A.x + A.w * 0.3;
     for (const minDist of [220, 120]) {
       for (let y = A.y + 60; y <= A.y + A.h - 60; y += step) {
-        for (let x = xStart; x <= A.x + A.w - 60; x += step) {
+        for (let x = A.x + 60; x <= A.x + A.w - 60; x += step) {
           if (U.dist(x, y, P.x, P.y) < minDist) continue;
           if (this.pointBlocked(x, y, r)) continue;
           return { x, y };
@@ -87,8 +118,9 @@ const ROOMS = {
     const def = DATA.HAZARDS[GAME.biome.hazard];
     if (!def) return;
     const A = GAME.arena;
+    const hcs = this.hazardCountScale();
     if (def.id === 'fireVent') {
-      const n = U.randInt(def.count[0], def.count[1]);
+      const n = Math.round(U.randInt(def.count[0], def.count[1]) * hcs);
       const placed = [];
       for (let i = 0; i < n; i++) {
         const p = this.freePoint(def.r, { avoid: placed, minSep: 30 });
@@ -99,7 +131,7 @@ const ROOMS = {
           warnShown: 0, hitSet: null, age: 0 });
       }
     } else if (def.id === 'venomPool') {
-      const n = U.randInt(def.count[0], def.count[1]);
+      const n = Math.round(U.randInt(def.count[0], def.count[1]) * hcs);
       const placed = [];
       for (let i = 0; i < n; i++) {
         const r = U.rand(def.r[0], def.r[1]);
@@ -111,13 +143,22 @@ const ROOMS = {
     } else if (def.id === 'arrowVolley') {
       GAME.hazards.push({ type: 'arrowVolley', t: def.firstDelay, markers: [] });
     } else if (def.id === 'riverCurrent') {
-      const h = U.rand(def.h[0], def.h[1]);
-      const upper = U.chance(0.5);
-      const y = upper
-        ? U.rand(A.y + 30, A.y + A.h * 0.5 - h - 40)
-        : U.rand(A.y + A.h * 0.5 + 40, A.y + A.h - h - 30);
-      GAME.hazards.push({ type: 'riverCurrent', x: A.x, y, w: A.w, h,
-        dir: U.chance(0.5) ? 1 : -1, phase: 'calm', t: U.rand(def.surgeEvery[0], def.surgeEvery[1]), age: 0 });
+      // D-CAM-07: tall (combat-sized) arenas get a second river band; both formulas already
+      // exclude the spawn row (A.y + A.h/2 +/- 40).
+      const makeBand = (upper) => {
+        const h = U.rand(def.h[0], def.h[1]);
+        const y = upper
+          ? U.rand(A.y + 30, A.y + A.h * 0.5 - h - 40)
+          : U.rand(A.y + A.h * 0.5 + 40, A.y + A.h - h - 30);
+        return { type: 'riverCurrent', x: A.x, y, w: A.w, h,
+          dir: U.chance(0.5) ? 1 : -1, phase: 'calm', t: U.rand(def.surgeEvery[0], def.surgeEvery[1]), age: 0 };
+      };
+      if (A.h >= 1000) {
+        GAME.hazards.push(makeBand(true));
+        GAME.hazards.push(makeBand(false));
+      } else {
+        GAME.hazards.push(makeBand(U.chance(0.5)));
+      }
     }
   },
 
@@ -153,43 +194,207 @@ const ROOMS = {
     if (this.layoutHistory.length > 200) this.layoutHistory.shift();
   },
 
-  // Encounter plan: total budget split into waves
-  planWaves() {
-    const b = GAME.biome;
-    // roomIdx is 1-based by the time waves are planned
-    const roomFrac = U.clamp((GAME.roomIdx - 1) / Math.max(1, b.rooms - 1), 0, 1);
-    const budget = Math.round(U.lerp(b.budget[0], b.budget[1], roomFrac));
-    const nWaves = budget <= 6 ? 1 : (budget <= 11 ? 2 : 3);
-    const waves = [];
-    let left = budget;
-    for (let i = 0; i < nWaves; i++) {
-      const share = i === nWaves - 1 ? left : Math.ceil(budget / nWaves);
-      waves.push(Math.max(2, share));
-      left -= share;
-    }
-    return waves;
+  // ---- Phase 05.1: data-driven wave composition (WAVE-01/02, D-18/D-19/D-20) ----
+  // Per-room-index/biome lerp of the biome's `waves` block (count/perWave/fodderShare/eliteShare).
+  waveParams(biome, roomIdx) {
+    const w = biome.waves;
+    const f = U.clamp((roomIdx - 1) / Math.max(1, biome.rooms - 1), 0, 1);
+    return {
+      nWaves: Math.round(U.lerp(w.count[0], w.count[1], f)),
+      perWave: U.lerp(w.perWave[0], w.perWave[1], f),
+      fodderShare: U.lerp(w.fodderShare[0], w.fodderShare[1], f),
+      eliteShare: U.lerp(w.eliteShare[0], w.eliteShare[1], f),
+    };
   },
 
-  spawnWave(budget) {
-    const b = GAME.biome;
-    let left = budget, guard = 0;
-    while (left > 0 && guard++ < 30) {
-      const pool = b.enemies.map(id => DATA.ENEMIES[id]).filter(e => e.cost <= Math.max(left, 1));
-      const def = U.choice(pool.length ? pool : b.enemies.map(id => DATA.ENEMIES[id]));
-      left -= def.cost;
-      // spawn away from the player and clear of obstacles
-      let x, y, tries = 0, ok = false;
-      do {
-        x = U.rand(GAME.arena.x + 60, GAME.arena.x + GAME.arena.w - 60);
-        y = U.rand(GAME.arena.y + 60, GAME.arena.y + GAME.arena.h - 60);
-        tries++;
-        ok = U.dist(x, y, GAME.player.x, GAME.player.y) >= 220 && !this.pointBlocked(x, y, def.r + 12);
-      } while (tries < 40 && !ok);
-      if (!ok) {
-        const spot = this.findClearSpawnPoint(def.r + 12);
-        if (spot) { x = spot.x; y = spot.y; }
+  // Pure: budget -> array of { id, weak }. opts = { fodderShare, eliteShare } (both default 0 — the
+  // legacy numeric spawnWave(n) path passes fodderShare:0 so no weak units are ever produced).
+  composeWave(budget, biome, opts = {}) {
+    const W = DATA.WAVES;
+    const fodderShare = opts.fodderShare ?? 0;
+    const eliteShare = opts.eliteShare ?? 0;
+    const fodderIds = (biome.waves && biome.waves.fodder) || [];
+    const weakCost = id => DATA.ENEMIES[id].cost * W.weak.cost;
+    const units = [];
+
+    // 1. fodder (weak units), spending a fodderShare slice of the budget
+    let fb = budget * fodderShare;
+    if (fodderIds.length) {
+      let guard = 0;
+      while (guard++ < 60) {
+        const pool = fodderIds.filter(id => weakCost(id) <= fb);
+        if (!pool.length) break;
+        const id = U.choice(pool);
+        units.push({ id, weak: true });
+        fb -= weakCost(id);
       }
-      GAME.enemies.push(new Enemy(def.id, x, y, b.scale));
+    }
+
+    // 2. remaining budget (leftover fodder budget carries forward) split elite/regular
+    let rest = budget * (1 - fodderShare) + fb;
+    let eb = rest * eliteShare;
+    let rb = rest - eb;
+
+    // 3. elites
+    {
+      const eliteIds = biome.enemies.filter(id => DATA.ENEMIES[id].cost >= W.eliteCost);
+      let guard = 0;
+      while (guard++ < 60) {
+        const pool = eliteIds.filter(id => DATA.ENEMIES[id].cost <= eb);
+        if (!pool.length) break;
+        const id = U.choice(pool);
+        units.push({ id, weak: false });
+        eb -= DATA.ENEMIES[id].cost;
+      }
+      rb += eb; // leftover elite budget carried into regulars
+    }
+
+    // 4. regulars (fall back to the whole biome roster when it has no sub-elite-cost enemies)
+    {
+      let regularIds = biome.enemies.filter(id => DATA.ENEMIES[id].cost < W.eliteCost);
+      if (!regularIds.length) regularIds = biome.enemies.slice();
+      let guard = 0;
+      while (guard++ < 60) {
+        const pool = regularIds.filter(id => DATA.ENEMIES[id].cost <= rb);
+        if (!pool.length) break;
+        const id = U.choice(pool);
+        units.push({ id, weak: false });
+        rb -= DATA.ENEMIES[id].cost;
+      }
+    }
+
+    // 5. leftover fill: weak fodder when this wave uses fodder at all, else the legacy
+    // any-affordable-biome-enemy fill (keeps the numeric spawnWave(n) path's old behavior).
+    if (fodderShare > 0 && fodderIds.length) {
+      let guard = 0;
+      while (guard++ < 60) {
+        const pool = fodderIds.filter(id => weakCost(id) <= rb);
+        if (!pool.length) break;
+        const id = U.choice(pool);
+        units.push({ id, weak: true });
+        rb -= weakCost(id);
+      }
+    } else if (rb > 0) {
+      let guard = 0;
+      while (rb > 0 && guard++ < 60) {
+        const pool = biome.enemies.filter(id => DATA.ENEMIES[id].cost <= Math.max(rb, 1));
+        if (!pool.length) break;
+        const id = U.choice(pool);
+        units.push({ id, weak: false });
+        rb -= DATA.ENEMIES[id].cost;
+      }
+    }
+
+    // 6. guarantee non-empty
+    if (!units.length) {
+      const cheapest = biome.enemies.slice().sort((a, b) => DATA.ENEMIES[a].cost - DATA.ENEMIES[b].cost)[0];
+      units.push({ id: cheapest, weak: false });
+    }
+
+    return units;
+  },
+
+  // roomIdx is 1-based. Returns an array of unit lists (one per wave).
+  planRoom(biome, roomIdx) {
+    const p = this.waveParams(biome, roomIdx);
+    return Array.from({ length: p.nWaves }, () => this.composeWave(p.perWave, biome, p));
+  },
+
+  planWaves() {
+    return this.planRoom(GAME.biome, GAME.roomIdx);
+  },
+
+  // ---- Phase 05.1: alive cap + drip queue + pack placement (WAVE-03) ----
+  aliveCount() {
+    return GAME.enemies.reduce((n, e) => n + (e.dead ? 0 : 1), 0);
+  },
+
+  nextWaveThreshold() {
+    return Math.max(0, Math.ceil((GAME.lastWaveSize || 0) * DATA.WAVES.nextWaveAt));
+  },
+
+  // A pack center: a point spawnMin..spawnMax from the player, inside the arena (inset 80), clear of
+  // obstacles. The first pack of a wave prefers on-screen placement for its first 20 tries.
+  pickPackCenter(first) {
+    const A = GAME.arena, P = GAME.player, W = DATA.WAVES;
+    const insideInset = (x, y, inset) => x >= A.x + inset && x <= A.x + A.w - inset && y >= A.y + inset && y <= A.y + A.h - inset;
+    for (let tries = 0; tries < 40; tries++) {
+      const a = U.rand(U.TAU), d = U.rand(W.spawnMin, W.spawnMax);
+      const x = P.x + Math.cos(a) * d, y = P.y + Math.sin(a) * d;
+      if (!insideInset(x, y, 80)) continue;
+      if (this.pointBlocked(x, y, 40)) continue;
+      if (first && tries < 20 && typeof CAMERA !== 'undefined' && !CAMERA.visible(x, y, 0, -60)) continue;
+      return { x, y };
+    }
+    for (let tries = 0; tries < 40; tries++) {
+      const x = U.rand(A.x + 80, A.x + A.w - 80);
+      const y = U.rand(A.y + 80, A.y + A.h - 80);
+      if (U.dist(x, y, P.x, P.y) < 220) continue;
+      if (this.pointBlocked(x, y, 40)) continue;
+      return { x, y };
+    }
+    const spot = this.findClearSpawnPoint(40);
+    if (spot) return spot;
+    return { x: A.x + A.w * 0.7, y: A.y + A.h / 2 }; // ultimate fallback: arena center-right (existing behavior)
+  },
+
+  // A single unit's spawn point near a pack center, jittered, clear of obstacles and the player.
+  placeUnit(def, cx, cy) {
+    const A = GAME.arena, P = GAME.player, J = DATA.WAVES.packJitter;
+    const inset = def.r + 20;
+    for (let tries = 0; tries < 12; tries++) {
+      const x = U.clamp(cx + U.rand(-J, J), A.x + inset, A.x + A.w - inset);
+      const y = U.clamp(cy + U.rand(-J, J), A.y + inset, A.y + A.h - inset);
+      if (this.pointBlocked(x, y, def.r + 12)) continue;
+      if (U.dist(x, y, P.x, P.y) < 220) continue;
+      return { x, y };
+    }
+    const spot = this.findClearSpawnPoint(def.r + 12);
+    if (spot) return spot;
+    return { x: cx, y: cy };
+  },
+
+  // Spawn as many units as the alive cap allows (in packs around the player); overflow drips
+  // in later via drainQueue. Returns the number actually spawned.
+  spawnUnits(units, first = true) {
+    const W = DATA.WAVES;
+    const room = Math.max(0, W.maxAlive - this.aliveCount());
+    const now = units.slice(0, room);
+    const overflow = units.slice(now.length);
+    if (overflow.length) GAME.spawnQueue.push(...overflow);
+
+    let i = 0, spawned = 0, isFirstPack = first;
+    while (i < now.length) {
+      const packLen = Math.min(U.randInt(W.packSize[0], W.packSize[1]), now.length - i);
+      const center = this.pickPackCenter(isFirstPack);
+      isFirstPack = false;
+      for (let k = 0; k < packLen; k++) {
+        const u = now[i++];
+        const def = DATA.ENEMIES[u.id];
+        const pos = this.placeUnit(def, center.x, center.y);
+        GAME.enemies.push(new Enemy(u.id, pos.x, pos.y, GAME.biome.scale, u.weak ? W.weak : null));
+        spawned++;
+      }
+    }
+    return spawned;
+  },
+
+  spawnWave(arg) {
+    const units = typeof arg === 'number' ? this.composeWave(arg, GAME.biome, { fodderShare: 0 }) : arg;
+    GAME.lastWaveSize = units.length;
+    return this.spawnUnits(units);
+  },
+
+  // Drip-feed queued overflow units in as the alive cap allows (WAVE-03).
+  drainQueue(dt) {
+    const W = DATA.WAVES;
+    GAME.dripT = (GAME.dripT || 0) - dt;
+    if (GAME.dripT <= 0 && GAME.spawnQueue.length && this.aliveCount() < W.maxAlive) {
+      const room = W.maxAlive - this.aliveCount();
+      const n = Math.min(W.dripBatch, room, GAME.spawnQueue.length);
+      const batch = GAME.spawnQueue.splice(0, n);
+      this.spawnUnits(batch, false);
+      GAME.dripT = W.dripEvery;
     }
   },
 
@@ -226,11 +431,17 @@ const ROOMS = {
     G.pickups = []; G.zones = []; G.orbits = []; G.rings = [];
     G.bolts = []; G.dangerZones = []; G.doors = []; G.hazards = [];
     G.nooseT = 0; G.bossRewarded = false;
+    G.spawnQueue = []; G.lastWaveSize = 0; G.dripT = 0; G.waveDelay = 0;
+
+    // D-02: size the arena for this room kind BEFORE the player is placed.
+    const kind = rewardId === 'boss' ? 'boss' : (rewardId === 'sarovar' || rewardId === 'kubera') ? 'rest' : 'combat';
+    this.setArena(kind);
 
     const P = G.player;
     P.x = G.arena.x + 90;
     P.y = G.arena.y + G.arena.h / 2;
     P.iframes = Math.max(P.iframes, 0.8);
+    if (typeof CAMERA !== 'undefined') CAMERA.snap();   // D-08: room changes never swoop
 
     if (rewardId === 'boss') {
       G.roomIdx++; // boss room

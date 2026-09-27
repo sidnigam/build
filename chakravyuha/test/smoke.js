@@ -1784,65 +1784,71 @@ console.log('\n— room layouts (Phase 4, GAME-03) —');
 vm.runInContext(`
 globalThis.__layoutErrors = [];
 try {
-  const A = GAME.arena;
-  const spawnX = A.x + 90, spawnY = A.y + A.h / 2;
-  const doorX = A.x + A.w - 36;
-  const doorYs = [1/3, 1/2, 2/3].map(f => A.y + A.h * f);
-
   const seenIds = new Set();
-  for (const biomeId of Object.keys(DATA.LAYOUTS)) {
-    const list = ROOMS.layoutsFor(biomeId);
-    if (list.length < 3) __layoutErrors.push(biomeId + ': fewer than 3 templates (' + list.length + ')');
-    for (const tpl of list) {
-      if (seenIds.has(tpl.id)) __layoutErrors.push(tpl.id + ': duplicate template id');
-      seenIds.add(tpl.id);
+  for (const kind of ['combat', 'rest']) {
+    ROOMS.setArena(kind);
+    const A = GAME.arena;
+    const spawnX = A.x + 90, spawnY = A.y + A.h / 2;
+    const doorX = A.x + A.w - 36;
+    const doorYs = [1/3, 1/2, 2/3].map(f => A.y + A.h * f);
 
-      const obs = ROOMS.materializeLayout(tpl);
-      for (const o of obs) {
-        if (o.shape === 'circle') {
-          if (o.x - o.r < A.x || o.x + o.r > A.x + A.w || o.y - o.r < A.y || o.y + o.r > A.y + A.h)
-            __layoutErrors.push(tpl.id + ': circle obstacle out of bounds');
-        } else {
-          if (o.x < A.x || o.x + o.w > A.x + A.w || o.y < A.y || o.y + o.h > A.y + A.h)
-            __layoutErrors.push(tpl.id + ': rect obstacle out of bounds');
+    for (const biomeId of Object.keys(DATA.LAYOUTS)) {
+      const list = ROOMS.layoutsFor(biomeId);
+      if (list.length < 3) __layoutErrors.push(kind + '/' + biomeId + ': fewer than 3 templates (' + list.length + ')');
+      for (const tpl of list) {
+        if (kind === 'combat') { // only count each id once, on the first pass
+          if (seenIds.has(tpl.id)) __layoutErrors.push(tpl.id + ': duplicate template id');
+          seenIds.add(tpl.id);
         }
-        if (ROOMS.obstacleDist(o, spawnX, spawnY) < 80)
-          __layoutErrors.push(tpl.id + ': obstacle too close to spawn');
+
+        const obs = ROOMS.materializeLayout(tpl);
+        for (const o of obs) {
+          if (o.shape === 'circle') {
+            if (o.x - o.r < A.x || o.x + o.r > A.x + A.w || o.y - o.r < A.y || o.y + o.r > A.y + A.h)
+              __layoutErrors.push(kind + '/' + tpl.id + ': circle obstacle out of bounds');
+          } else {
+            if (o.x < A.x || o.x + o.w > A.x + A.w || o.y < A.y || o.y + o.h > A.y + A.h)
+              __layoutErrors.push(kind + '/' + tpl.id + ': rect obstacle out of bounds');
+          }
+          if (ROOMS.obstacleDist(o, spawnX, spawnY) < 80)
+            __layoutErrors.push(kind + '/' + tpl.id + ': obstacle too close to spawn');
+          for (const dy of doorYs) {
+            if (ROOMS.obstacleDist(o, doorX, dy) < 34 + 24)
+              __layoutErrors.push(kind + '/' + tpl.id + ': obstacle too close to a door candidate');
+          }
+        }
+
+        // reachability flood-fill (10px grid, player radius 13)
+        const cell = 10, pr = 13;
+        const cols = Math.floor(A.w / cell), rows = Math.floor(A.h / cell);
+        const idx = (c, r) => r * cols + c;
+        const walkable = (px, py) => px >= A.x + pr && px <= A.x + A.w - pr && py >= A.y + pr && py <= A.y + A.h - pr
+          && !ROOMS.pointBlocked(px, py, pr, { obstacles: obs });
+        const visited = new Uint8Array(cols * rows);
+        const startCol = Math.floor((spawnX - A.x) / cell), startRow = Math.floor((spawnY - A.y) / cell);
+        visited[idx(startCol, startRow)] = 1;
+        const stack = [[startCol, startRow]];
+        while (stack.length) {
+          const [c, r] = stack.pop();
+          for (const [dc, dr] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+            const nc = c + dc, nr = r + dr;
+            if (nc < 0 || nc >= cols || nr < 0 || nr >= rows) continue;
+            if (visited[idx(nc, nr)]) continue;
+            const px = A.x + (nc + 0.5) * cell, py = A.y + (nr + 0.5) * cell;
+            if (!walkable(px, py)) continue;
+            visited[idx(nc, nr)] = 1;
+            stack.push([nc, nr]);
+          }
+        }
         for (const dy of doorYs) {
-          if (ROOMS.obstacleDist(o, doorX, dy) < 34 + 24)
-            __layoutErrors.push(tpl.id + ': obstacle too close to a door candidate');
+          const dc = Math.floor((doorX - A.x) / cell), dr = Math.floor((dy - A.y) / cell);
+          if (dc < 0 || dc >= cols || dr < 0 || dr >= rows || !visited[idx(dc, dr)])
+            __layoutErrors.push(kind + '/' + tpl.id + ': a door candidate is unreachable from spawn');
         }
-      }
-
-      // reachability flood-fill (10px grid, player radius 13)
-      const cell = 10, pr = 13;
-      const cols = Math.floor(A.w / cell), rows = Math.floor(A.h / cell);
-      const idx = (c, r) => r * cols + c;
-      const walkable = (px, py) => px >= A.x + pr && px <= A.x + A.w - pr && py >= A.y + pr && py <= A.y + A.h - pr
-        && !ROOMS.pointBlocked(px, py, pr, { obstacles: obs });
-      const visited = new Uint8Array(cols * rows);
-      const startCol = Math.floor((spawnX - A.x) / cell), startRow = Math.floor((spawnY - A.y) / cell);
-      visited[idx(startCol, startRow)] = 1;
-      const stack = [[startCol, startRow]];
-      while (stack.length) {
-        const [c, r] = stack.pop();
-        for (const [dc, dr] of [[1,0],[-1,0],[0,1],[0,-1]]) {
-          const nc = c + dc, nr = r + dr;
-          if (nc < 0 || nc >= cols || nr < 0 || nr >= rows) continue;
-          if (visited[idx(nc, nr)]) continue;
-          const px = A.x + (nc + 0.5) * cell, py = A.y + (nr + 0.5) * cell;
-          if (!walkable(px, py)) continue;
-          visited[idx(nc, nr)] = 1;
-          stack.push([nc, nr]);
-        }
-      }
-      for (const dy of doorYs) {
-        const dc = Math.floor((doorX - A.x) / cell), dr = Math.floor((dy - A.y) / cell);
-        if (dc < 0 || dc >= cols || dr < 0 || dr >= rows || !visited[idx(dc, dr)])
-          __layoutErrors.push(tpl.id + ': a door candidate is unreachable from spawn');
       }
     }
   }
+  ROOMS.setArena('rest');
 } catch (e) { __layoutErrors.push(e.stack.split('\\n').slice(0,3).join(' | ')); }
 `, sandbox);
 const layoutErrors = vm.runInContext('__layoutErrors', sandbox);
@@ -2006,14 +2012,15 @@ check('hazards: every biome maps to a valid, distinct hazard; damaging hazards t
 vm.runInContext(`
 globalThis.__hazardPlacementErrors = [];
 try {
-  const A = GAME.arena;
-  const spawnX = A.x + 90, spawnY = A.y + A.h / 2;
   for (let bi = 0; bi < DATA.BIOMES.length; bi++) {
     const biome = DATA.BIOMES[bi];
     for (let trial = 0; trial < 10; trial++) {
       GAME.startRun();
       GAME.biomeIdx = bi; GAME.biome = biome;
       ROOMS.enterRoom('mudra');
+      // arena is sized (and may resize) by enterRoom — recompute AFTER, never cache before a room change.
+      const A = GAME.arena;
+      const spawnX = A.x + 90, spawnY = A.y + A.h / 2;
       if (GAME.hazards.length < 1) __hazardPlacementErrors.push(biome.id + ': no hazards spawned in a combat room');
       for (const h of GAME.hazards) {
         if (h.type !== biome.hazard) __hazardPlacementErrors.push(biome.id + ': wrong hazard type ' + h.type);
@@ -2033,6 +2040,76 @@ const hazardPlacementErrors = vm.runInContext('__hazardPlacementErrors', sandbox
 check('hazards: placed correctly per biome (type, spawn clearance, obstacle clearance, river band)'
   + (hazardPlacementErrors.length ? ' — ' + hazardPlacementErrors.slice(0, 5).join('; ') + (hazardPlacementErrors.length > 5 ? ` (+${hazardPlacementErrors.length - 5} more)` : '') : ''),
   hazardPlacementErrors.length === 0);
+
+// ---------------- Phase 05.1: arena sizing + camera snap on room entry ----------------
+console.log('\n— arena sizing + camera snap on room entry (Phase 05.1) —');
+vm.runInContext(`
+globalThis.__arenaResults = {};
+(function() {
+  const R = __arenaResults;
+
+  // (a) first room of a run is a combat arena at 2240x1300; worldRect matches the 05.4 art-padding
+  // contract (padBySize.combat = {l:120,r:120,t:200,b:110}) and GAME.arenaPad is exposed for 05.4
+  GAME.startRun();
+  const A1 = GAME.arena;
+  const wr = ROOMS.worldRect();
+  R.firstRoomCombat = A1.w === 2240 && A1.h === 1300
+    && wr.x === -70 && wr.y === -116 && wr.w === 2480 && wr.h === 1610
+    && GAME.arenaPad === DATA.ARENA.padBySize.combat;
+
+  // (b) sarovar room is legacy-size (rest) and the camera transform is exactly identity
+  ROOMS.enterRoom('sarovar');
+  const A2 = GAME.arena;
+  R.sarovarRestIdentity = A2.w === 1180 && A2.h === 580 && CAMERA.tx === 0 && CAMERA.ty === 0 && CAMERA.tz === 1;
+
+  // (c) boss room is 1600x960
+  GAME.startRun();
+  ROOMS.enterRoom('boss');
+  const A3 = GAME.arena;
+  R.bossSize = A3.w === 1600 && A3.h === 960;
+
+  // (d) a held reference to GAME.arena sees setArena's in-place mutation
+  const heldA = GAME.arena;
+  ROOMS.setArena('combat');
+  R.inPlaceMutation = heldA === GAME.arena && heldA.w === 2240 && heldA.h === 1300;
+  ROOMS.setArena('rest');
+
+  // (e) fireVent count scales up in the (large) combat arena; Vaitarani combat rooms get 2 river bands
+  let fireVentTotal = 0, fireVentTrials = 0;
+  for (let i = 0; i < 20; i++) {
+    GAME.startRun();
+    GAME.biomeIdx = 0; GAME.biome = DATA.BIOMES[0]; // naraka -> fireVent
+    ROOMS.enterRoom('mudra');
+    fireVentTotal += GAME.hazards.filter(h => h.type === 'fireVent').length;
+    fireVentTrials++;
+  }
+  const fireVentAvgOk = (fireVentTotal / fireVentTrials) >= 4;
+
+  GAME.startRun();
+  GAME.biomeIdx = 3; GAME.biome = DATA.BIOMES[3]; // vaitarani -> riverCurrent
+  ROOMS.enterRoom('mudra');
+  const Av = GAME.arena;
+  const spawnYv = Av.y + Av.h / 2;
+  const rivers = GAME.hazards.filter(h => h.type === 'riverCurrent');
+  const twoBandsOk = rivers.length === 2
+    && rivers.every(h => !(spawnYv >= h.y && spawnYv <= h.y + h.h));
+  R.hazardScaling = fireVentAvgOk && twoBandsOk;
+
+  // (f) after entering a combat room the camera scroll is clamped inside the (padded) world rect
+  GAME.startRun();
+  ROOMS.enterRoom('mudra');
+  R.cameraClampedOnEntry = CAMERA.sx >= -70 && CAMERA.sx <= 1130 && CAMERA.sy >= -116 && CAMERA.sy <= 774;
+
+  ROOMS.setArena('rest');
+})();
+`, sandbox);
+const arn = vm.runInContext('__arenaResults', sandbox);
+check('ROOMS.setArena: first run room is a 2240x1300 combat arena; ROOMS.worldRect() is {-70,-116,2480,1610} (05.4 art padding), GAME.arenaPad exposed', arn.firstRoomCombat);
+check('ROOMS.setArena: sarovar room is legacy 1180x580; camera transform is exactly identity', arn.sarovarRestIdentity);
+check('ROOMS.setArena: boss room is 1600x960', arn.bossSize);
+check('ROOMS.setArena mutates GAME.arena in place (a held reference sees the new size)', arn.inPlaceMutation);
+check('hazards scale with arena size: fireVent count >=4 on average over 20 Naraka rooms; Vaitarani combat rooms get 2 river bands clear of spawn', arn.hazardScaling);
+check('CAMERA.snap() on room entry leaves the scroll clamped to the world rect', arn.cameraClampedOnEntry);
 
 vm.runInContext(`
 globalThis.__hazardNonCombatErrors = [];
@@ -2163,6 +2240,12 @@ try {
   if (!river) __riverErrors.push('no riverCurrent hazard spawned');
   else {
     const A = GAME.arena;
+    // Isolate the push-math check from the room's obstacle layout: vaitarani's "vait_fords"
+    // template runs a full-height column of pits straight through the arena's horizontal center
+    // (the exact x this fixture places the player at), so clampToArena's obstacle-push-out could
+    // pin the player against a pit edge and mask the river's own push — a test-fixture bug, not a
+    // river/obstacle interaction this check cares about (Phase 05.1-03 root-cause fix).
+    GAME.pillars = [];
     P.x = A.x + A.w / 2; P.y = river.y + river.h / 2;
     const x0 = P.x;
     for (let f = 0; f < 60; f++) {
@@ -2664,6 +2747,1152 @@ console.log('\n— character readability: ground marker spec (quick 260926-djs) 
   // restore clean state
   R(`META.dialogue = ${__snapDialogue2}; META.runs = ${__snapRuns2}; META.save();`);
 }
+
+// ---------------- Phase 05.1: camera math ----------------
+console.log('\n— camera math (Phase 05.1) —');
+vm.runInContext(`
+globalThis.__camResults = {};
+(function() {
+  const R = __camResults;
+  const savedState = GAME.state, savedPlayer = GAME.player;
+  const savedArena = Object.assign({}, GAME.arena);
+  const savedWx = INPUT.wx, savedWy = INPUT.wy, savedAx = INPUT.ax, savedAy = INPUT.ay;
+  SETTINGS.reset();
+
+  // 1. worldRectFor
+  {
+    const legacy = CAMERA.worldRectFor({x:50,y:84,w:1180,h:580}, {l:50,r:50,t:84,b:56});
+    const combat = CAMERA.worldRectFor({x:50,y:84,w:2240,h:1300}, {l:50,r:50,t:84,b:56});
+    R.worldRectFor = legacy.x===0 && legacy.y===0 && legacy.w===1280 && legacy.h===720
+      && combat.x===0 && combat.y===0 && combat.w===2340 && combat.h===1440;
+  }
+
+  // 2. clampScroll
+  {
+    const legacyR = {x:0,y:0,w:1280,h:720};
+    const combatR = {x:0,y:0,w:2340,h:1440};
+    const c1 = CAMERA.clampScroll(500, -300, legacyR);
+    const c2 = CAMERA.clampScroll(-9999, 9999, legacyR);
+    const legacyAlwaysZero = c1.x===0 && c1.y===0 && c2.x===0 && c2.y===0;
+    const c3 = CAMERA.clampScroll(-500, -500, combatR);
+    const c4 = CAMERA.clampScroll(9999, 9999, combatR);
+    const combatClamp = c3.x===0 && c3.y===0 && c4.x===1060 && c4.y===720;
+    const narrowR = {x:100, y:50, w:200, h:100}; // narrower than 1280x720 on both axes
+    const c5 = CAMERA.clampScroll(0, 0, narrowR);
+    const centered = Math.abs(c5.x - (100 + (100+200-1280))/2) < 1e-9 && Math.abs(c5.y - (50 + (50+100-720))/2) < 1e-9;
+    R.clampScroll = legacyAlwaysZero && combatClamp && centered;
+  }
+
+  // 3. desiredScroll / lookAhead
+  {
+    const P = {x: 1170, y: 734}; // combat-arena center: A.x+A.w/2=1170, A.y+A.h/2=734
+    const R2 = {x:0,y:0,w:2340,h:1440};
+    const d0 = CAMERA.desiredScroll(P, {x:P.x,y:P.y}, {x:0,y:0}, R2);
+    const a = CAMERA.anchor();
+    const unclampedMatches = Math.abs(d0.x - (P.x - a.x)) < 1e-9 && Math.abs(d0.y - (P.y - a.y)) < 1e-9;
+    const la = CAMERA.lookAhead(P, {x: P.x+5000, y: P.y+5000}, {x:1, y:0});
+    const lookAheadCapped = Math.hypot(la.x, la.y) <= CAMERA.CFG.LOOK_AIM_MAX + CAMERA.CFG.LOOK_MOVE + 1e-6;
+    R.desiredScroll = unclampedMatches && lookAheadCapped;
+  }
+
+  // 4. xform()
+  {
+    CAMERA.resetFx(); CAMERA.sx = 0; CAMERA.sy = 0;
+    const x0 = CAMERA.xform();
+    const identity = x0.tx===0 && x0.ty===0 && x0.tz===1;
+
+    CAMERA.sx = 300; CAMERA.sy = 200;
+    const x1 = CAMERA.xform();
+    const scrollOnly = x1.tx===-300 && x1.ty===-200 && x1.tz===1;
+
+    CAMERA.fx = 500; CAMERA.fy = 400; CAMERA.zoom = 1.2;
+    CAMERA.sx = 150; CAMERA.sy = 90;
+    CAMERA._store(CAMERA.xform());
+    const proj = CAMERA.worldToScreen(CAMERA.fx, CAMERA.fy);
+    const focusMaps = Math.abs(proj.x - (CAMERA.fx - CAMERA.sx)) < 1e-9 && Math.abs(proj.y - (CAMERA.fy - CAMERA.sy)) < 1e-9;
+
+    CAMERA.resetFx(); CAMERA.sx = 0; CAMERA.sy = 0;
+    R.xform = identity && scrollOnly && focusMaps;
+  }
+
+  // 5. worldToScreen/screenToWorld round-trip under scroll+zoom+kick
+  {
+    SETTINGS.set('screenShake', true);
+    CAMERA.resetFx();
+    CAMERA.sx = 123; CAMERA.sy = -45; CAMERA.zoom = 1.05;
+    CAMERA.kx = 3; CAMERA.ky = -2;
+    CAMERA._store(CAMERA.xform());
+    let ok = true;
+    for (let i = 0; i < 20; i++) {
+      const wx = Math.random() * 3000 - 500, wy = Math.random() * 2000 - 500;
+      const s = CAMERA.worldToScreen(wx, wy);
+      const w2 = CAMERA.screenToWorld(s.x, s.y);
+      if (Math.abs(w2.x - wx) > 1e-9 || Math.abs(w2.y - wy) > 1e-9) ok = false;
+    }
+    R.roundTrip = ok;
+    SETTINGS.reset();
+    CAMERA.resetFx(); CAMERA.sx = 0; CAMERA.sy = 0; CAMERA._store(CAMERA.xform());
+  }
+
+  // 6. follow(): converges, snaps on big jumps, identity in hub/no-player
+  {
+    GAME.state = 'combat';
+    Object.assign(GAME.arena, {x:50,y:84,w:2240,h:1300});
+    GAME.player = { x: GAME.arena.x + 90, y: GAME.arena.y + GAME.arena.h/2 };
+    INPUT.wx = GAME.player.x; INPUT.wy = GAME.player.y; INPUT.ax = 0; INPUT.ay = 0;
+    CAMERA.resetFx(); CAMERA.sx = 0; CAMERA.sy = 0;
+
+    let prevDist = Infinity, monotonic = true;
+    for (let f = 0; f < 180; f++) {
+      CAMERA.follow(1/60);
+      const D = CAMERA._followTarget();
+      const dist = Math.hypot(D.x - CAMERA.sx, D.y - CAMERA.sy);
+      if (f > 0 && dist > prevDist + 1e-9) monotonic = false;
+      prevDist = dist;
+    }
+    const convergedClose = prevDist < 1;
+
+    CAMERA.sx = 0; CAMERA.sy = 0;
+    GAME.player.x = GAME.arena.x + GAME.arena.w - 90;
+    INPUT.wx = GAME.player.x; INPUT.wy = GAME.player.y;
+    const Dsnap = CAMERA._followTarget();
+    const bigJump = Math.hypot(Dsnap.x, Dsnap.y) > CAMERA.CFG.SNAP_DIST;
+    CAMERA.follow(1/60);
+    const snappedImmediately = bigJump && Math.abs(CAMERA.sx - Dsnap.x) < 1e-9 && Math.abs(CAMERA.sy - Dsnap.y) < 1e-9;
+
+    GAME.state = 'hub';
+    CAMERA.sx = 999; CAMERA.sy = 999;
+    CAMERA.follow(1/60);
+    const hubIdentity = CAMERA.sx === 0 && CAMERA.sy === 0 && CAMERA.tx === 0 && CAMERA.ty === 0 && CAMERA.tz === 1;
+
+    R.follow = monotonic && convergedClose && snappedImmediately && hubIdentity;
+  }
+
+  // 7. snap(): S equals clamped desired immediately; tx/ty/tz updated
+  {
+    GAME.state = 'combat';
+    GAME.player = { x: GAME.arena.x + 200, y: GAME.arena.y + 100 };
+    INPUT.wx = GAME.player.x; INPUT.wy = GAME.player.y; INPUT.ax = 0; INPUT.ay = 0;
+    CAMERA.sx = 12345; CAMERA.sy = -6789;
+    CAMERA.snap();
+    const D = CAMERA._followTarget();
+    const snappedExact = Math.abs(CAMERA.sx - D.x) < 1e-9 && Math.abs(CAMERA.sy - D.y) < 1e-9;
+    const xf = CAMERA.xform();
+    const transformUpdated = Math.abs(CAMERA.tx - xf.tx) < 1e-9 && Math.abs(CAMERA.ty - xf.ty) < 1e-9 && CAMERA.tz === xf.tz;
+    R.snap = snappedExact && transformUpdated;
+  }
+
+  // 8. viewRect / visible / visibleRect (identity transform)
+  {
+    GAME.state = 'hub';
+    CAMERA.resetFx(); CAMERA.sx = 0; CAMERA.sy = 0; CAMERA._store(CAMERA.xform());
+    const vr = CAMERA.viewRect(0);
+    const vrIdentity = vr.x===0 && vr.y===0 && vr.w===1280 && vr.h===720;
+    const visIn = CAMERA.visible(640, 360, 10) === true;
+    const visOut = CAMERA.visible(640+2000, 360, 10) === false;
+    const visRectPartial = CAMERA.visibleRect(1250, 700, 100, 100, 0) === true;
+    const visRectFar = CAMERA.visibleRect(5000, 5000, 50, 50, 0) === false;
+    R.viewCull = vrIdentity && visIn && visOut && visRectPartial && visRectFar;
+  }
+
+  // 9. edgePoint
+  {
+    const onScreen = CAMERA.edgePoint(640, 360);
+    const offRight = CAMERA.edgePoint(5000, 360);
+    const inset = CAMERA.CFG.IND_INSET;
+    const a = CAMERA.anchor();
+    const s = CAMERA.worldToScreen(5000, 360);
+    const expectedAngle = Math.atan2(s.y - a.y, s.x - a.x);
+    const rightBoundOk = !!offRight && Math.abs(offRight.x - (CAMERA.VW - inset.r)) < 1e-6;
+    const angleOk = !!offRight && Math.abs(offRight.angle - expectedAngle) < 1e-6;
+    R.edgePoint = onScreen === null && rightBoundOk && angleOk;
+  }
+
+  // 10. clusterIndicators
+  {
+    const dirs = [0.1963, 2.1599, -2.1599]; // sector centers (16 sectors) — well clear of bucket boundaries
+    const items30 = [];
+    for (let i = 0; i < 30; i++) {
+      const ang = dirs[i % 3] + (Math.random() - 0.5) * 0.02;
+      items30.push({ x: 640 + Math.cos(ang)*3000, y: 360 + Math.sin(ang)*3000, kind:'enemy', color:'#fff', sym:'e' });
+    }
+    const res30 = CAMERA.clusterIndicators(items30);
+    const sumCounts30 = res30.reduce((a,b) => a + b.count, 0);
+    const cluster30 = res30.length <= 3 && sumCounts30 === 30;
+
+    const items40 = [];
+    for (let i = 0; i < 40; i++) {
+      const ang = (i/40) * Math.PI * 2;
+      items40.push({ x: 640 + Math.cos(ang)*3000, y: 360 + Math.sin(ang)*3000, kind:'enemy', color:'#fff', sym:'e' });
+    }
+    const res40 = CAMERA.clusterIndicators(items40, { max: 8 });
+    const cluster40 = res40.length <= 8;
+
+    const mixed = [
+      { x: 640, y: 360, kind: 'enemy', color:'#fff', sym:'e' },       // on-screen -> no arrow
+      { x: 5000, y: 360, kind: 'door', color:'#0f0', sym:'d' },
+      { x: 5000, y: 500, kind: 'boss', color:'#f00', sym:'b' },
+      { x: -5000, y: 360, kind: 'enemy', color:'#fff', sym:'e' },
+    ];
+    const resMixed = CAMERA.clusterIndicators(mixed, { max: 8 });
+    const clusterMixed = resMixed.length === 3 && resMixed[0].kind === 'door' && resMixed[1].kind === 'boss';
+
+    R.cluster = cluster30 && cluster40 && clusterMixed;
+  }
+
+  GAME.state = savedState;
+  GAME.player = savedPlayer;
+  Object.assign(GAME.arena, savedArena);
+  if (savedWx === undefined) delete INPUT.wx; else INPUT.wx = savedWx;
+  if (savedWy === undefined) delete INPUT.wy; else INPUT.wy = savedWy;
+  INPUT.ax = savedAx; INPUT.ay = savedAy;
+  CAMERA.resetFx();
+  CAMERA.sx = 0; CAMERA.sy = 0;
+  CAMERA._store(CAMERA.xform());
+  SETTINGS.reset();
+})();
+`, sandbox);
+const cam = vm.runInContext('__camResults', sandbox);
+check('CAMERA.worldRectFor: legacy arena -> 1280x720, combat arena -> 2340x1440', cam.worldRectFor);
+check('CAMERA.clampScroll: legacy always {0,0}, combat clamps to [0,1060]x[0,720], narrow rect centers', cam.clampScroll);
+check('CAMERA.desiredScroll/lookAhead: aim==player+no-move puts P at anchor (unclamped); look-ahead capped', cam.desiredScroll);
+check('CAMERA.xform: identity at sx=sy=0/zoom=1; scroll-only tx/ty; punch focus maps to (F-S)', cam.xform);
+check('CAMERA.worldToScreen/screenToWorld round-trip within 1e-9 under scroll+zoom+kick', cam.roundTrip);
+check('CAMERA.follow: converges monotonically (<1px after 3s), snaps past SNAP_DIST, identity in hub/no-player', cam.follow);
+check('CAMERA.snap: sets S to clamped desired immediately and updates tx/ty/tz', cam.snap);
+check('CAMERA.viewRect/visible/visibleRect: identity view + AABB culling', cam.viewCull);
+check('CAMERA.edgePoint: null on-screen, else ray-to-inset-rect intersection with matching angle', cam.edgePoint);
+check('CAMERA.clusterIndicators: sector clustering, count caps, door-first/boss-next ordering, on-screen excluded', cam.cluster);
+
+// ---------------- camera bridge alignment (Phase 05.1) ----------------
+console.log('\n— camera bridge alignment (Phase 05.1) —');
+vm.runInContext(`
+globalThis.__alignResults = {};
+(function() {
+  const R = __alignResults;
+  const noop = () => {};
+  const mk = () => ({
+    position: { x: 0, y: 0, set(x, y) { this.x = x; this.y = y; } },
+    scale: { x: 1, y: 1, set(s) { this.x = s; this.y = s; } },
+  });
+  const mkRecCtx = () => {
+    const t = { _last: null };
+    return new Proxy(t, {
+      get(tt, prop) {
+        if (prop === '_last') return tt._last;
+        if (prop === 'setTransform') return (...args) => { tt._last = args; };
+        if (prop === 'createRadialGradient' || prop === 'createLinearGradient') return () => ({ addColorStop: noop });
+        if (prop === 'measureText') return () => ({ width: 0 });
+        if (prop in tt) return tt[prop];
+        return noop;
+      },
+      set(tt, prop, v) { tt[prop] = v; return true; },
+    });
+  };
+
+  const savedWC = SPRITES.worldContainer, savedBS = SPRITES.bridgeSprite,
+        savedBCtx = SPRITES.bridgeCtx, savedHCtx = SPRITES.hudBridgeCtx;
+  const savedState = GAME.state, savedPlayer = GAME.player, savedShake = GAME.shake;
+  const savedArena = Object.assign({}, GAME.arena), savedArenaPad = GAME.arenaPad;
+
+  try {
+    const wc = mk(), bs = mk(), rec = mkRecCtx();
+    SPRITES.worldContainer = wc;
+    SPRITES.bridgeSprite = bs;
+    SPRITES.bridgeCtx = rec;
+    SPRITES.hudBridgeCtx = rec;
+
+    const points = [];
+    for (let i = 0; i < 10; i++) points.push({ x: Math.random() * 3000 - 500, y: Math.random() * 2000 - 500 });
+
+    // One transform drives Pixi (wc) and the bridge (rec + bs); both must agree with CAMERA.worldToScreen.
+    const checkCase = () => {
+      CAMERA.begin();
+      CAMERA.applyCtx(rec);
+      const [a, b, c, d, e, f] = rec._last;
+      const matrixMatchesStored = a === CAMERA.tz && b === 0 && c === 0 && d === CAMERA.tz && e === CAMERA.tx && f === CAMERA.ty;
+      let pointsOk = true;
+      for (const W of points) {
+        const pixiScreen = { x: wc.scale.x * W.x + wc.position.x, y: wc.scale.y * W.y + wc.position.y };
+        const ctxT = { x: a * W.x + e, y: d * W.y + f };
+        const bridgeLocal = { x: bs.position.x + ctxT.x * bs.scale.x, y: bs.position.y + ctxT.y * bs.scale.y };
+        const bridgeScreen = { x: wc.scale.x * bridgeLocal.x + wc.position.x, y: wc.scale.y * bridgeLocal.y + wc.position.y };
+        const expected = CAMERA.worldToScreen(W.x, W.y);
+        const closeEnough = (p, q) => Math.abs(p.x - q.x) < 1e-6 && Math.abs(p.y - q.y) < 1e-6;
+        if (!closeEnough(pixiScreen, bridgeScreen) || !closeEnough(pixiScreen, expected) || !closeEnough(bridgeScreen, expected)) pointsOk = false;
+      }
+      return matrixMatchesStored && pointsOk;
+    };
+
+    // (a) identity — hub, no player
+    GAME.state = 'hub'; GAME.player = null; GAME.shake = 0;
+    CAMERA.resetFx(); CAMERA.sx = 0; CAMERA.sy = 0;
+    const idOk = checkCase()
+      && CAMERA.tx === 0 && CAMERA.ty === 0 && CAMERA.tz === 1
+      && wc.position.x === 0 && wc.position.y === 0 && wc.scale.x === 1
+      && bs.position.x === 0 && bs.position.y === 0 && bs.scale.x === 1;
+
+    // (b) scroll only
+    CAMERA.sx = 800; CAMERA.sy = 500;
+    const scrollOk = checkCase();
+
+    // (c) scroll + zoom punch (off-center focus) + kick + shake
+    SETTINGS.set('screenShake', true);
+    CAMERA.punch(1200, 700, 0.08, 0.6);
+    CAMERA.update(0.1);
+    CAMERA.kick(6, -4);
+    GAME.shake = 10;
+    const fullOk = checkCase();
+
+    R.alignment = idOk && scrollOk && fullOk;
+
+    CAMERA.resetFx(); CAMERA.sx = 0; CAMERA.sy = 0; GAME.shake = 0;
+    CAMERA._store(CAMERA.xform());
+    SETTINGS.reset();
+
+    // Legacy (rest) arena in combat: follow() converges back to identity — bridge sprite untouched.
+    GAME.state = 'combat';
+    ROOMS.setArena('rest');
+    GAME.player = { x: GAME.arena.x + 90, y: GAME.arena.y + GAME.arena.h / 2 };
+    INPUT.wx = GAME.player.x; INPUT.wy = GAME.player.y; INPUT.ax = 0; INPUT.ay = 0;
+    CAMERA.resetFx(); CAMERA.sx = 999; CAMERA.sy = 999;
+    for (let fr = 0; fr < 180; fr++) CAMERA.follow(1 / 60);
+    CAMERA.begin();
+    R.legacyIdentity = CAMERA.tx === 0 && CAMERA.ty === 0 && CAMERA.tz === 1
+      && wc.position.x === 0 && wc.position.y === 0 && wc.scale.x === 1
+      && bs.position.x === 0 && bs.position.y === 0 && bs.scale.x === 1 && bs.scale.y === 1;
+
+    // coverFit: matches the old fixed-viewport formula, and cover-fits an expanded combat world rect.
+    const legacyRect = { x: -30, y: -30, w: 1340, h: 780 };
+    const oldSc = Math.max(1340 / 1280, 780 / 720);
+    const oldFit = { scale: oldSc, x: 640 - 1280 * oldSc / 2, y: 360 - 720 * oldSc / 2 };
+    const newFit = SPRITES.coverFit(1280, 720, legacyRect);
+    const coverFitLegacyMatches = Math.abs(newFit.scale - oldFit.scale) < 1e-9
+      && Math.abs(newFit.x - oldFit.x) < 1e-9 && Math.abs(newFit.y - oldFit.y) < 1e-9;
+
+    ROOMS.setArena('combat');
+    const R2 = ROOMS.worldRect();
+    const bigRect = { x: R2.x - 30, y: R2.y - 30, w: R2.w + 60, h: R2.h + 60 };
+    const bigFit = SPRITES.coverFit(2400, 1440, bigRect);
+    const coversRect = bigFit.x <= bigRect.x + 1e-6 && bigFit.y <= bigRect.y + 1e-6
+      && bigFit.x + 2400 * bigFit.scale >= bigRect.x + bigRect.w - 1e-6
+      && bigFit.y + 1440 * bigFit.scale >= bigRect.y + bigRect.h - 1e-6;
+    R.coverFit = coverFitLegacyMatches && coversRect;
+
+    // GAME.render(): must not throw with mocked SPRITES, in a combat room and in the hub.
+    let renderErr = null;
+    try {
+      GAME.startRun();
+      ROOMS.enterRoom('mudra');
+      GAME.render();
+      GAME.state = 'hub'; GAME.player = null;
+      GAME.render();
+    } catch (e) { renderErr = e.stack.split('\\n').slice(0, 3).join(' | '); }
+    R.renderNoThrow = renderErr === null;
+    R.renderErr = renderErr;
+  } finally {
+    SPRITES.worldContainer = savedWC;
+    SPRITES.bridgeSprite = savedBS;
+    SPRITES.bridgeCtx = savedBCtx;
+    SPRITES.hudBridgeCtx = savedHCtx;
+    GAME.state = savedState;
+    GAME.player = savedPlayer;
+    GAME.shake = savedShake;
+    Object.assign(GAME.arena, savedArena);
+    GAME.arenaPad = savedArenaPad;
+    INPUT.ax = 0; INPUT.ay = 0;
+    if (typeof INPUT.wx !== 'undefined') { INPUT.wx = 640; INPUT.wy = 360; }
+    CAMERA.resetFx();
+    CAMERA.sx = 0; CAMERA.sy = 0;
+    CAMERA._store(CAMERA.xform());
+    SETTINGS.reset();
+  }
+})();
+`, sandbox);
+const align = vm.runInContext('__alignResults', sandbox);
+check('camera/bridge alignment: Pixi mapping == bridge counter-transform mapping == CAMERA.worldToScreen, under identity/scroll/scroll+zoom+kick+shake', align.alignment);
+check('legacy (rest) arena in combat: CAMERA.follow() converges to exact identity; bridge sprite untouched (pos 0,0 scale 1)', align.legacyIdentity);
+check('SPRITES.coverFit: matches the old fixed-viewport formula; cover-fits an expanded combat world rect', align.coverFit);
+check('GAME.render(): does not throw with mocked SPRITES, in combat and hub states'
+  + (align.renderErr ? ' — ' + align.renderErr : ''), align.renderNoThrow);
+
+// ---------------- world-space aim (Phase 05.1) ----------------
+console.log('\n— world-space aim (Phase 05.1) —');
+vm.runInContext(`
+globalThis.__aimResults = {};
+(function() {
+  const R = __aimResults;
+  const savedDevice = INPUT.device, savedMx = INPUT.mx, savedMy = INPUT.my, savedWx = INPUT.wx, savedWy = INPUT.wy;
+  const savedPlayer = GAME.player, savedState = GAME.state, savedLmb = INPUT.lmb, savedShake = GAME.shake;
+  const savedAimAng = PAD._aimAng, savedPrevButtons = PAD._prevButtons;
+
+  try {
+    INPUT.lmb = false;
+    // 1/2. syncAim under a scrolled camera resolves screen mouse -> world aim target; Player.update aims at it.
+    CAMERA.resetFx(); CAMERA.sx = 900; CAMERA.sy = 600; GAME.shake = 0; CAMERA.begin();
+    INPUT.device = 'kbm'; INPUT.mx = 1000; INPUT.my = 200;
+    GAME.syncAim();
+    const syncOk = Math.abs(INPUT.wx - 1900) < 1e-9 && Math.abs(INPUT.wy - 800) < 1e-9;
+
+    GAME.player = new Player('khanda');
+    GAME.player.x = 500; GAME.player.y = 500;
+    GAME.state = 'combat';
+    GAME.player.update(1 / 60);
+    const expectedAim = Math.atan2(INPUT.wy - GAME.player.y, INPUT.wx - GAME.player.x);
+    const playerAimOk = Math.abs(GAME.player.aim - expectedAim) < 1e-9;
+    R.syncAimAndPlayerAim = syncOk && playerAimOk;
+
+    // 3. syncAim does not overwrite wx/wy while a gamepad is aiming.
+    INPUT.device = 'pad'; INPUT.wx = 111; INPUT.wy = 222;
+    GAME.syncAim();
+    R.padSyncUntouched = INPUT.wx === 111 && INPUT.wy === 222;
+
+    // 4. PAD.poll: right stick -> world-space wx/wy; releasing the stick holds the last angle;
+    //    INPUT.mx/my are never written by the pad.
+    INPUT.device = 'kbm'; INPUT.mx = 77; INPUT.my = 88;
+    PAD._aimAng = null; PAD._prevButtons = {};
+    const gp = { axes: [0, 0, 1, 0], buttons: [] };
+    globalThis.navigator = { getGamepads: () => [gp] };
+    PAD.poll();
+    const deviceSwitchedOk = INPUT.device === 'pad';
+    const firstAimOk = Math.abs(INPUT.wx - (GAME.player.x + PAD.CFG.AIM_REACH)) < 1e-9
+      && Math.abs(INPUT.wy - GAME.player.y) < 1e-9;
+    const mxUntouched = INPUT.mx === 77 && INPUT.my === 88;
+
+    gp.axes = [0, 0, 0, 0];   // release the stick
+    GAME.player.x += 100;     // move the player — aim direction should be held, target re-centered
+    PAD.poll();
+    const heldAimOk = Math.abs(INPUT.wx - (GAME.player.x + PAD.CFG.AIM_REACH)) < 1e-9
+      && Math.abs(INPUT.wy - GAME.player.y) < 1e-9;
+
+    R.padAim = deviceSwitchedOk && firstAimOk && mxUntouched && heldAimOk;
+  } finally {
+    delete globalThis.navigator;
+    INPUT.device = savedDevice; INPUT.mx = savedMx; INPUT.my = savedMy; INPUT.wx = savedWx; INPUT.wy = savedWy;
+    INPUT.lmb = savedLmb; GAME.shake = savedShake;
+    GAME.player = savedPlayer; GAME.state = savedState;
+    PAD._aimAng = savedAimAng; PAD._prevButtons = savedPrevButtons;
+    CAMERA.resetFx(); CAMERA.sx = 0; CAMERA.sy = 0; CAMERA._store(CAMERA.xform());
+  }
+})();
+`, sandbox);
+const aim = vm.runInContext('__aimResults', sandbox);
+check('GAME.syncAim(): resolves screen mx/my through the inverse camera transform into INPUT.wx/wy; Player.update aims at wx/wy', aim.syncAimAndPlayerAim);
+check('GAME.syncAim(): does not overwrite INPUT.wx/wy while INPUT.device === "pad"', aim.padSyncUntouched);
+check('PAD.poll(): right stick writes a world-space aim target; holds direction when released; never writes INPUT.mx/my', aim.padAim);
+
+// ---------------- denser waves (Phase 05.1) ----------------
+console.log('\n— denser waves (Phase 05.1) —');
+vm.runInContext(`
+globalThis.__waveResults = {};
+(function() {
+  const R = __waveResults;
+  const stats = (biomeId, roomIdx, n = 200) => {
+    const biome = DATA.BIOMES.find(b => b.id === biomeId);
+    let units = 0, weak = 0, threat = 0, elite = 0, waveCount = 0;
+    for (let i = 0; i < n; i++) {
+      const waves = ROOMS.planRoom(biome, roomIdx);
+      waveCount += waves.length;
+      for (const wave of waves) {
+        units += wave.length;
+        for (const u of wave) {
+          const def = DATA.ENEMIES[u.id];
+          threat += def.hp * biome.scale * (u.weak ? 0.5 : 1);
+          if (u.weak) weak++;
+          if (def.cost >= DATA.WAVES.eliteCost) elite++;
+        }
+      }
+    }
+    return {
+      meanUnits: units / n, meanWaves: waveCount / n,
+      meanWeakFrac: units ? weak / units : 0,
+      meanThreat: threat / n, meanEffHp: units ? threat / units : 0,
+      meanElite: elite / n,
+    };
+  };
+
+  R.naraka = { room1: stats('naraka', 1), last: stats('naraka', 5) };
+  R.patala = { room1: stats('patala', 1), last: stats('patala', 6) };
+  R.ranabhoomi = { room1: stats('ranabhoomi', 1), last: stats('ranabhoomi', 6) };
+  R.vaitarani = { room1: stats('vaitarani', 1), last: stats('vaitarani', 2) };
+
+  // composeWave invariants across every biome
+  R.composeErrors = [];
+  for (const b of DATA.BIOMES) {
+    for (let i = 0; i < 50; i++) {
+      const budget = 1 + Math.random() * 15;
+      const units = ROOMS.composeWave(budget, b, { fodderShare: Math.random(), eliteShare: Math.random() * 0.5 });
+      if (!units.length) R.composeErrors.push(b.id + ': empty wave for budget ' + budget.toFixed(2));
+      for (const u of units) {
+        if (!DATA.ENEMIES[u.id]) R.composeErrors.push(b.id + ': invalid id ' + u.id);
+        if (u.weak && !b.waves.fodder.includes(u.id)) R.composeErrors.push(b.id + ': weak unit not from fodder list (' + u.id + ')');
+      }
+      const legacyUnits = ROOMS.composeWave(budget, b, { fodderShare: 0 });
+      if (!legacyUnits.length) R.composeErrors.push(b.id + ': legacy path empty wave for budget ' + budget.toFixed(2));
+      for (const u of legacyUnits) {
+        if (u.weak) R.composeErrors.push(b.id + ': legacy path produced a weak unit');
+        if (!b.enemies.includes(u.id)) R.composeErrors.push(b.id + ': legacy path used non-biome id ' + u.id);
+      }
+    }
+  }
+
+  // biome waves-block validity
+  R.biomeWaveErrors = [];
+  for (const b of DATA.BIOMES) {
+    const w = b.waves;
+    if (!w) { R.biomeWaveErrors.push(b.id + ': missing waves block'); continue; }
+    for (const k of ['count', 'perWave', 'fodderShare', 'eliteShare']) {
+      if (!Array.isArray(w[k]) || w[k].length !== 2) R.biomeWaveErrors.push(b.id + ': waves.' + k + ' invalid');
+    }
+    if (!Array.isArray(w.fodder) || !w.fodder.length) R.biomeWaveErrors.push(b.id + ': waves.fodder empty');
+    for (const id of (w.fodder || [])) if (!DATA.ENEMIES[id]) R.biomeWaveErrors.push(b.id + ': invalid fodder id ' + id);
+  }
+})();
+`, sandbox);
+const wr = vm.runInContext('__waveResults', sandbox);
+
+for (const id of ['naraka', 'patala', 'ranabhoomi', 'vaitarani']) {
+  const s = wr[id];
+  console.log(`  info  ${id}: room1 units=${s.room1.meanUnits.toFixed(1)}, last units=${s.last.meanUnits.toFixed(1)}, weak%=${(s.room1.meanWeakFrac * 100).toFixed(0)}->${(s.last.meanWeakFrac * 100).toFixed(0)}, elites(last)=${s.last.meanElite.toFixed(2)}`);
+}
+
+check(`naraka room1: mean units >= 15 (${wr.naraka.room1.meanUnits.toFixed(1)}), weak% >= 0.6 (${wr.naraka.room1.meanWeakFrac.toFixed(2)}), exactly 3 waves (${wr.naraka.room1.meanWaves})`,
+  wr.naraka.room1.meanUnits >= 15 && wr.naraka.room1.meanWeakFrac >= 0.6 && wr.naraka.room1.meanWaves === 3);
+
+check(`naraka: mean effective hp/unit ramps room1 (${wr.naraka.room1.meanEffHp.toFixed(2)}) < last room (${wr.naraka.last.meanEffHp.toFixed(2)})`,
+  wr.naraka.room1.meanEffHp < wr.naraka.last.meanEffHp);
+
+for (const id of ['naraka', 'patala', 'ranabhoomi', 'vaitarani']) {
+  const s = wr[id];
+  check(`${id}: mean total threat ramps (room1=${s.room1.meanThreat.toFixed(0)} < last=${s.last.meanThreat.toFixed(0)})`,
+    s.room1.meanThreat < s.last.meanThreat);
+}
+check(`vaitarani room1 threat (${wr.vaitarani.room1.meanThreat.toFixed(0)}) > naraka room1 threat (${wr.naraka.room1.meanThreat.toFixed(0)})`,
+  wr.vaitarani.room1.meanThreat > wr.naraka.room1.meanThreat);
+
+check(`ranabhoomi last room: mean elite count >= 2 (${wr.ranabhoomi.last.meanElite.toFixed(2)})`, wr.ranabhoomi.last.meanElite >= 2);
+check(`naraka room1: mean elite count < 0.5 (${wr.naraka.room1.meanElite.toFixed(2)})`, wr.naraka.room1.meanElite < 0.5);
+
+check('composeWave invariants: never empty, every id valid, weak only from fodder list, legacy path uses only biome ids with no weak units'
+  + (wr.composeErrors.length ? ' — ' + wr.composeErrors.slice(0, 5).join('; ') : ''), wr.composeErrors.length === 0);
+check('every DATA.BIOMES entry has a valid waves block'
+  + (wr.biomeWaveErrors.length ? ' — ' + wr.biomeWaveErrors.join('; ') : ''), wr.biomeWaveErrors.length === 0);
+
+// ---- spawning: weak Enemy mods, pack placement, alive cap + drip queue, overlapping waves ----
+vm.runInContext(`
+globalThis.__modsResults = (function() {
+  const d = DATA.ENEMIES.preta;
+  const e = new Enemy('preta', 100, 100, 1.35, DATA.WAVES.weak);
+  const hpOk = Math.abs(e.hp - d.hp * 1.35 * 0.5) < 1e-9 && Math.abs(e.maxhp - e.hp) < 1e-9;
+  const dmgOk = Math.abs(e.dmg - d.dmg * Math.sqrt(1.35) * 0.6) < 1e-9;
+  const weakOk = e.weak === true;
+  const e2 = new Enemy('preta', 0, 0, 1.35);
+  const unmodOk = Math.abs(e2.hp - d.hp * 1.35) < 1e-9 && !e2.weak;
+  return { hpOk, dmgOk, weakOk, unmodOk };
+})();
+`, sandbox);
+const modsR = vm.runInContext('__modsResults', sandbox);
+check('Enemy mods: weak fodder halves hp, scales dmg by 0.6, flags weak=true; unmodded unchanged',
+  modsR.hpOk && modsR.dmgOk && modsR.weakOk && modsR.unmodOk);
+
+vm.runInContext(`
+globalThis.__capResults = {};
+try {
+  GAME.startRun();
+  GAME.biomeIdx = 0; GAME.biome = DATA.BIOMES[0];
+  ROOMS.enterRoom('mudra');
+  GAME.enemies = []; GAME.spawnQueue = []; GAME.waves = []; GAME.lastWaveSize = 0; GAME.dripT = 0;
+  const units = Array.from({ length: 40 }, () => ({ id: 'preta', weak: true }));
+  ROOMS.spawnWave(units);
+  const aliveAfterSpawn = ROOMS.aliveCount();
+  __capResults.capRespected = aliveAfterSpawn <= DATA.WAVES.maxAlive;
+  __capResults.queueLen = GAME.spawnQueue.length;
+  __capResults.queueExpected = 40 - DATA.WAVES.maxAlive;
+
+  let killed = 0;
+  for (const e of GAME.enemies) { if (killed >= 10) break; e.hp = 0; e.dead = true; killed++; }
+  let maxAliveSeen = 0;
+  for (let f = 0; f < 120; f++) {
+    GAME.update(1 / 60);
+    maxAliveSeen = Math.max(maxAliveSeen, ROOMS.aliveCount());
+  }
+  __capResults.neverExceededCap = maxAliveSeen <= DATA.WAVES.maxAlive;
+  __capResults.queueDrained = GAME.spawnQueue.length < __capResults.queueLen;
+} catch (e) { __capResults.error = e.stack.split('\\n').slice(0, 3).join(' | '); }
+`, sandbox);
+const capR = vm.runInContext('__capResults', sandbox);
+check('alive cap: spawning 40 weak pretas keeps alive <= maxAlive, overflow queued'
+  + (capR.error ? ' — ' + capR.error : ''),
+  !capR.error && capR.capRespected && capR.queueLen === capR.queueExpected);
+check('spawn queue drains over time without ever exceeding the alive cap'
+  + (capR.error ? ' — ' + capR.error : ''),
+  !capR.error && capR.neverExceededCap && capR.queueDrained);
+
+vm.runInContext(`
+globalThis.__packResults = { errors: [] };
+try {
+  for (const biomeId of Object.keys(DATA.LAYOUTS)) {
+    const biomeIdx = DATA.BIOMES.findIndex(b => b.id === biomeId);
+    for (const tpl of ROOMS.layoutsFor(biomeId)) {
+      GAME.startRun();
+      GAME.biomeIdx = biomeIdx; GAME.biome = DATA.BIOMES[biomeIdx];
+      ROOMS.enterRoom('mudra');
+      ROOMS.buildArena(false, tpl.id);
+      GAME.enemies = []; GAME.spawnQueue = []; GAME.waves = []; GAME.lastWaveSize = 0;
+      const units = Array.from({ length: 16 }, () => ({ id: GAME.biome.enemies[0], weak: false }));
+      ROOMS.spawnUnits(units);
+      const A = GAME.arena, P = GAME.player;
+      for (const e of GAME.enemies) {
+        const inArena = e.x >= A.x + e.r && e.x <= A.x + A.w - e.r && e.y >= A.y + e.r && e.y <= A.y + A.h - e.r;
+        if (!inArena) __packResults.errors.push(tpl.id + ': enemy out of arena bounds');
+        if (ROOMS.pointBlocked(e.x, e.y, e.r)) __packResults.errors.push(tpl.id + ': enemy inside/near an obstacle');
+        if (U.dist(e.x, e.y, P.x, P.y) < 220) __packResults.errors.push(tpl.id + ': enemy within 220px of the player');
+      }
+    }
+  }
+} catch (e) { __packResults.errors.push(e.stack.split('\\n').slice(0, 3).join(' | ')); }
+`, sandbox);
+const packR = vm.runInContext('__packResults', sandbox);
+check('pack spawns (12 forced templates, 16 units each): inside arena bounds, obstacle-clear, >=220px from the player'
+  + (packR.errors.length ? ' — ' + packR.errors.slice(0, 5).join('; ') + (packR.errors.length > 5 ? ` (+${packR.errors.length - 5} more)` : '') : ''),
+  packR.errors.length === 0);
+
+vm.runInContext(`
+globalThis.__centerResults = { errors: [], farCount: 0, total: 0 };
+try {
+  GAME.startRun();
+  GAME.biomeIdx = 3; GAME.biome = DATA.BIOMES[3];
+  ROOMS.enterRoom('mudra');
+  const P = GAME.player;
+  for (let i = 0; i < 200; i++) {
+    const c = ROOMS.pickPackCenter(i % 5 === 0);
+    __centerResults.total++;
+    if (U.dist(c.x, c.y, P.x, P.y) >= DATA.WAVES.spawnMin) __centerResults.farCount++;
+  }
+} catch (e) { __centerResults.errors.push(e.stack.split('\\n').slice(0, 3).join(' | ')); }
+`, sandbox);
+const centerR = vm.runInContext('__centerResults', sandbox);
+check('pack centers: >= 50% picked at distance >= DATA.WAVES.spawnMin from the player'
+  + (centerR.errors.length ? ' — ' + centerR.errors.join('; ') : ''),
+  centerR.errors.length === 0 && (centerR.farCount / centerR.total) >= 0.5);
+
+vm.runInContext(`
+globalThis.__overlapResults = {};
+try {
+  GAME.startRun();
+  GAME.biomeIdx = 0; GAME.biome = DATA.BIOMES[0];
+  ROOMS.enterRoom('mudra');
+  GAME.state = 'combat'; GAME.bossRef = null; GAME.hazards = []; GAME.pillars = [];
+  GAME.player.hp = 1e9; GAME.player.maxhp = 1e9;
+  const farX = GAME.arena.x + GAME.arena.w - 40, farY = GAME.arena.y + 40;
+  const unitsB = [{ id: 'preta', weak: false }];
+
+  // Case A: leaving 3 alive (<= ceil(10*0.3)=3) should spawn wave B after waveDelay
+  GAME.enemies = [];
+  for (let i = 0; i < 3; i++) { const e = new Enemy('preta', farX, farY, 1); e.spawnT = 0; GAME.enemies.push(e); }
+  GAME.spawnQueue = []; GAME.lastWaveSize = 10; GAME.waveDelay = 0; GAME.waves = [unitsB];
+  const beforeCountA = GAME.enemies.length;
+  for (let f = 0; f < 60; f++) GAME.update(1 / 60);
+  __overlapResults.triggeredWhenBelowThreshold = GAME.enemies.length > beforeCountA;
+
+  // Case B: leaving 5 alive (> 3) should NOT spawn wave B
+  GAME.enemies = [];
+  for (let i = 0; i < 5; i++) { const e = new Enemy('preta', farX, farY, 1); e.spawnT = 0; GAME.enemies.push(e); }
+  GAME.spawnQueue = []; GAME.lastWaveSize = 10; GAME.waveDelay = 0; GAME.waves = [unitsB];
+  const beforeCountB = GAME.enemies.length;
+  for (let f = 0; f < 60; f++) GAME.update(1 / 60);
+  __overlapResults.notTriggeredWhenAboveThreshold = GAME.enemies.length === beforeCountB;
+} catch (e) { __overlapResults.error = e.stack.split('\\n').slice(0, 3).join(' | '); }
+`, sandbox);
+const overlapR = vm.runInContext('__overlapResults', sandbox);
+check('overlapping waves: next wave spawns once alive <= nextWaveThreshold, not before'
+  + (overlapR.error ? ' — ' + overlapR.error : ''),
+  !overlapR.error && overlapR.triggeredWhenBelowThreshold && overlapR.notTriggeredWhenAboveThreshold);
+
+vm.runInContext(`
+globalThis.__clearResults = {};
+try {
+  GAME.startRun();
+  GAME.biomeIdx = 0; GAME.biome = DATA.BIOMES[0];
+  ROOMS.enterRoom('mudra');
+  GAME.state = 'combat'; GAME.bossRef = null; GAME.hazards = []; GAME.pillars = [];
+  GAME.player.hp = 1e9; GAME.player.maxhp = 1e9;
+  GAME.enemies = [];
+  GAME.spawnQueue = [{ id: 'preta', weak: false }, { id: 'preta', weak: false }];
+  GAME.waves = []; GAME.lastWaveSize = 0; GAME.dripT = 0;
+  for (let f = 0; f < 5; f++) GAME.update(1 / 60);
+  __clearResults.notClearedWithQueue = GAME.state === 'combat';
+  __clearResults.queueDrippedIn = GAME.enemies.length > 0;
+
+  for (let f = 0; f < 300 && GAME.state === 'combat'; f++) {
+    for (const e of GAME.enemies) e.dead = true;
+    GAME.update(1 / 60);
+  }
+  __clearResults.clearedOnceEmpty = GAME.state === 'cleared';
+} catch (e) { __clearResults.error = e.stack.split('\\n').slice(0, 3).join(' | '); }
+`, sandbox);
+const clearR = vm.runInContext('__clearResults', sandbox);
+check('room-clear gating: a non-empty queue with 0 alive does not clear (drips instead); clears once alive/waves/queue are all empty'
+  + (clearR.error ? ' — ' + clearR.error : ''),
+  !clearR.error && clearR.notClearedWithQueue && clearR.queueDrippedIn && clearR.clearedOnceEmpty);
+
+vm.runInContext(`
+globalThis.__resetResults = {};
+try {
+  GAME.startRun();
+  GAME.spawnQueue = [{ id: 'preta', weak: false }, { id: 'preta', weak: false }];
+  GAME.lastWaveSize = 99;
+  ROOMS.enterRoom('mudra');
+  __resetResults.queueReset = GAME.spawnQueue.length === 0;
+  __resetResults.lastWaveSizeReset = GAME.lastWaveSize !== 99;
+} catch (e) { __resetResults.error = e.stack.split('\\n').slice(0, 3).join(' | '); }
+`, sandbox);
+const resetR = vm.runInContext('__resetResults', sandbox);
+check('enterRoom resets GAME.spawnQueue and GAME.lastWaveSize'
+  + (resetR.error ? ' — ' + resetR.error : ''),
+  !resetR.error && resetR.queueReset && resetR.lastWaveSizeReset);
+
+// ---- large-arena fairness: engage range, naga/yatudhana approach, summoner cap, coin vacuum ----
+vm.runInContext(`
+globalThis.__archerResults = {};
+try {
+  GAME.startRun();
+  GAME.biomeIdx = 0; GAME.biome = DATA.BIOMES[0];
+  ROOMS.enterRoom('mudra');
+  GAME.state = 'combat'; GAME.bossRef = null; GAME.hazards = []; GAME.pillars = []; GAME.waves = []; GAME.spawnQueue = [];
+  GAME.eprojectiles = [];
+  const P = GAME.player;
+  P.hp = 1e9; P.maxhp = 1e9;
+  P.x = GAME.arena.x + 90; P.y = GAME.arena.y + GAME.arena.h / 2;
+
+  const a1 = new Enemy('archer', P.x + 1500, P.y, 1);
+  a1.spawnT = 0;
+  GAME.enemies = [a1];
+  const x0 = a1.x;
+  for (let f = 0; f < 180; f++) GAME.update(1 / 60);
+  __archerResults.farNoFire = GAME.eprojectiles.length === 0;
+  __archerResults.farApproached = a1.x < x0;
+
+  GAME.eprojectiles = [];
+  const a2 = new Enemy('archer', P.x + 400, P.y, 1);
+  a2.spawnT = 0; a2.t = 0;
+  GAME.enemies = [a2];
+  let a2Fired = false;
+  for (let f = 0; f < 180; f++) { GAME.update(1 / 60); if (GAME.eprojectiles.length > 0) a2Fired = true; }
+  __archerResults.nearFires = a2Fired;
+} catch (e) { __archerResults.error = e.stack.split('\\n').slice(0, 3).join(' | '); }
+`, sandbox);
+const archerR = vm.runInContext('__archerResults', sandbox);
+check('archer (shoot AI): fires nothing beyond engageRange but approaches; fires within engageRange'
+  + (archerR.error ? ' — ' + archerR.error : ''),
+  !archerR.error && archerR.farNoFire && archerR.farApproached && archerR.nearFires);
+
+vm.runInContext(`
+globalThis.__nagaResults = {};
+try {
+  GAME.startRun();
+  GAME.biomeIdx = 1; GAME.biome = DATA.BIOMES[1];
+  ROOMS.enterRoom('mudra');
+  GAME.state = 'combat'; GAME.bossRef = null; GAME.hazards = []; GAME.pillars = []; GAME.waves = []; GAME.spawnQueue = [];
+  GAME.eprojectiles = [];
+  const P = GAME.player;
+  P.hp = 1e9; P.maxhp = 1e9;
+  P.x = GAME.arena.x + 90; P.y = GAME.arena.y + GAME.arena.h / 2;
+
+  const n1 = new Enemy('naga', P.x + 1500, P.y, 1);
+  n1.spawnT = 0;
+  GAME.enemies = [n1];
+  const x0 = n1.x;
+  for (let f = 0; f < 120; f++) GAME.update(1 / 60);
+  __nagaResults.farNoFire = GAME.eprojectiles.length === 0;
+  __nagaResults.farApproached = n1.x < x0;
+
+  GAME.eprojectiles = [];
+  const n2 = new Enemy('naga', P.x + 300, P.y, 1);
+  n2.spawnT = 0; n2.t = 0;
+  GAME.enemies = [n2];
+  let n2Fired = false;
+  for (let f = 0; f < 180; f++) { GAME.update(1 / 60); if (GAME.eprojectiles.length > 0) n2Fired = true; }
+  __nagaResults.nearFires = n2Fired;
+} catch (e) { __nagaResults.error = e.stack.split('\\n').slice(0, 3).join(' | '); }
+`, sandbox);
+const nagaR = vm.runInContext('__nagaResults', sandbox);
+check('naga (spread AI): fires nothing beyond engageRange but approaches; fires within engageRange'
+  + (nagaR.error ? ' — ' + nagaR.error : ''),
+  !nagaR.error && nagaR.farNoFire && nagaR.farApproached && nagaR.nearFires);
+
+vm.runInContext(`
+globalThis.__summonResults = {};
+try {
+  GAME.startRun();
+  GAME.biomeIdx = 2; GAME.biome = DATA.BIOMES[2];
+  ROOMS.enterRoom('mudra');
+  GAME.state = 'combat'; GAME.bossRef = null; GAME.hazards = []; GAME.pillars = []; GAME.waves = []; GAME.spawnQueue = [];
+  const P = GAME.player;
+  P.hp = 1e9; P.maxhp = 1e9;
+  P.x = GAME.arena.x + 90; P.y = GAME.arena.y + GAME.arena.h / 2;
+
+  // Case A: alive cap reached (26) — yatudhana must not summon
+  GAME.enemies = [];
+  const y1 = new Enemy('yatudhana', P.x + 300, P.y, 1);
+  y1.spawnT = 0; y1.t = 0;
+  GAME.enemies.push(y1);
+  for (let i = 0; i < 25; i++) { const e = new Enemy('rakshasa', P.x + 500 + i, P.y + 100, 1); e.spawnT = 0; GAME.enemies.push(e); }
+  const countBeforeA = GAME.enemies.length;
+  GAME.update(1 / 60);
+  __summonResults.noSummonAtCap = GAME.enemies.length === countBeforeA;
+
+  // Case B: only 3 living — yatudhana should summon (existing <5 living pretas rule kept)
+  GAME.enemies = [];
+  const y2 = new Enemy('yatudhana', P.x + 300, P.y, 1);
+  y2.spawnT = 0; y2.t = 0;
+  GAME.enemies.push(y2);
+  for (let i = 0; i < 2; i++) { const e = new Enemy('rakshasa', P.x + 500 + i, P.y + 100, 1); e.spawnT = 0; GAME.enemies.push(e); }
+  const countBeforeB = GAME.enemies.length;
+  GAME.update(1 / 60);
+  __summonResults.summonsBelowCap = GAME.enemies.length > countBeforeB;
+
+  // Far yatudhana (1500px) approaches
+  GAME.enemies = [];
+  const y3 = new Enemy('yatudhana', P.x + 1500, P.y, 1);
+  y3.spawnT = 0;
+  GAME.enemies.push(y3);
+  const x0 = y3.x;
+  for (let f = 0; f < 120; f++) GAME.update(1 / 60);
+  __summonResults.approachesWhenFar = y3.x < x0;
+} catch (e) { __summonResults.error = e.stack.split('\\n').slice(0, 3).join(' | '); }
+`, sandbox);
+const summonR = vm.runInContext('__summonResults', sandbox);
+check('yatudhana (summon AI): respects the alive cap (no summon at 26 alive, summons below it)'
+  + (summonR.error ? ' — ' + summonR.error : ''),
+  !summonR.error && summonR.noSummonAtCap && summonR.summonsBelowCap);
+check('yatudhana approaches the player when far (1500px)'
+  + (summonR.error ? ' — ' + summonR.error : ''),
+  !summonR.error && summonR.approachesWhenFar);
+
+vm.runInContext(`
+globalThis.__vacuumResults = {};
+try {
+  GAME.startRun();
+  GAME.biomeIdx = 0; GAME.biome = DATA.BIOMES[0];
+  ROOMS.enterRoom('mudra');
+  GAME.hazards = []; GAME.pillars = []; GAME.waves = []; GAME.spawnQueue = []; GAME.enemies = [];
+  const P = GAME.player;
+  const mudra0 = P.mudra;
+
+  GAME.state = 'combat';
+  GAME.pickups = [{ x: P.x + 200, y: P.y, val: 10, t: 30, vx: 0, vy: 0 }];
+  GAME.update(1 / 60);
+  __vacuumResults.combatNotVacuumed = GAME.pickups.length === 1 && GAME.pickups[0].t > 0;
+
+  GAME.state = 'cleared';
+  GAME.pickups = [{ x: P.x + 1500, y: P.y, val: 10, t: 30, vx: 0, vy: 0 }];
+  for (let f = 0; f < 360 && GAME.pickups.length; f++) GAME.update(1 / 60);
+  __vacuumResults.clearedVacuumed = GAME.pickups.length === 0 && P.mudra > mudra0;
+} catch (e) { __vacuumResults.error = e.stack.split('\\n').slice(0, 3).join(' | '); }
+`, sandbox);
+const vacuumR = vm.runInContext('__vacuumResults', sandbox);
+check('coin vacuum: 90px magnet unchanged in combat; cleared-room pickups fly to the player from anywhere'
+  + (vacuumR.error ? ' — ' + vacuumR.error : ''),
+  !vacuumR.error && vacuumR.combatNotVacuumed && vacuumR.clearedVacuumed);
+
+// ---------------- culling + indicators (Phase 05.1) ----------------
+console.log('\n— culling + indicators (Phase 05.1) —');
+vm.runInContext(`
+globalThis.__cullResults = {};
+(function() {
+  const R = __cullResults;
+  const noop = () => {};
+  const mkCountCtx = () => {
+    const counts = {};
+    return new Proxy({ _counts: counts }, {
+      get(t, prop) {
+        if (prop === '_counts') return counts;
+        if (prop === 'createRadialGradient' || prop === 'createLinearGradient') return () => ({ addColorStop: noop });
+        if (prop === 'measureText') return () => ({ width: 0 });
+        if (prop in t) return t[prop];
+        return function() { counts[prop] = (counts[prop] || 0) + 1; };
+      },
+      set(t, prop, v) { t[prop] = v; return true; },
+    });
+  };
+  const sumCounts = (c) => { let s = 0; for (const k in c) s += c[k]; return s; };
+
+  const savedState = GAME.state, savedPlayer = GAME.player;
+  const savedArena = Object.assign({}, GAME.arena), savedArenaPad = GAME.arenaPad;
+  const savedBiome = GAME.biome, savedBiomeIdx = GAME.biomeIdx;
+  const savedOrbits = GAME.orbits, savedPP = GAME.pprojectiles, savedEP = GAME.eprojectiles,
+        savedBolts = GAME.bolts, savedRings = GAME.rings, savedTexts = GAME.texts,
+        savedPillars = GAME.pillars, savedDZ = GAME.dangerZones, savedZones = GAME.zones,
+        savedDoors = GAME.doors, savedPickups = GAME.pickups, savedHazards = GAME.hazards,
+        savedEnemies = GAME.enemies, savedWaves = GAME.waves, savedSpawnQ = GAME.spawnQueue;
+  const savedCamSx = CAMERA.sx, savedCamSy = CAMERA.sy;
+  const savedWx = INPUT.wx, savedWy = INPUT.wy, savedAx = INPUT.ax, savedAy = INPUT.ay;
+
+  try {
+    GAME.startRun();
+    GAME.biomeIdx = 0; GAME.biome = DATA.BIOMES[0];
+    ROOMS.enterRoom('mudra');   // combat arena (2240x1300)
+    const A = Object.assign({}, GAME.arena);
+
+    // Snap the camera to the far right of the arena, then read back the exact view (D-07 clamp).
+    GAME.player.x = A.x + A.w - 260; GAME.player.y = A.y + A.h / 2;
+    INPUT.wx = GAME.player.x; INPUT.wy = GAME.player.y; INPUT.ax = 0; INPUT.ay = 0;
+    CAMERA.snap();
+    const V = CAMERA.viewRect(0);
+    const offX = A.x + 40, offY = A.y + A.h / 2;        // near the arena's left edge — off-screen
+    const onX = V.x + V.w / 2, onY = V.y + V.h / 2;     // dead-center of the current view — on-screen
+
+    while (VFX.stats().active > 0) VFX.update(1/60);
+    GAME.waves = []; GAME.spawnQueue = []; GAME.hazards = []; GAME.pillars = [];
+    GAME.dangerZones = []; GAME.zones = []; GAME.doors = []; GAME.pickups = [];
+
+    // 1. renderEffects: 200 player projectiles off-screen -> 0 arcs; on-screen -> >= 200 arcs.
+    {
+      GAME.orbits = []; GAME.eprojectiles = []; GAME.bolts = []; GAME.rings = []; GAME.texts = [];
+      GAME.pprojectiles = [];
+      for (let i = 0; i < 200; i++) GAME.pprojectiles.push({ x: offX, y: offY, r: 4, color: '#fff', vx: 1, vy: 0, chakra: false });
+      let cctx = mkCountCtx();
+      GAME.renderEffects(cctx);
+      const offArcs = cctx._counts.arc || 0;
+
+      GAME.pprojectiles = [];
+      for (let i = 0; i < 200; i++) GAME.pprojectiles.push({ x: onX, y: onY, r: 4, color: '#fff', vx: 1, vy: 0, chakra: false });
+      cctx = mkCountCtx();
+      GAME.renderEffects(cctx);
+      const onArcs = cctx._counts.arc || 0;
+      R.effectsCull = offArcs === 0 && onArcs >= 200;
+    }
+
+    // 2. renderBackground: 10 pillars off-screen draw strictly fewer primitives than on-screen.
+    {
+      GAME.pillars = [];
+      for (let i = 0; i < 10; i++) GAME.pillars.push({ shape: 'circle', kind: 'pillar', x: offX + i, y: offY, r: 20 });
+      let cctx = mkCountCtx();
+      GAME.renderBackground(cctx);
+      const offTotal = sumCounts(cctx._counts);
+
+      GAME.pillars = [];
+      for (let i = 0; i < 10; i++) GAME.pillars.push({ shape: 'circle', kind: 'pillar', x: onX + i, y: onY, r: 20 });
+      cctx = mkCountCtx();
+      GAME.renderBackground(cctx);
+      const onTotal = sumCounts(cctx._counts);
+      R.obstacleCull = offTotal < onTotal;
+      GAME.pillars = [];
+    }
+
+    // 3. renderEntities: 20 fallback-drawn (no atlas — always true headless) enemies off-screen
+    //    call e.draw() 0 times; on-screen call it 20 times. Culled entities never reach the branch.
+    {
+      const mkFallbackEnemies = (x, y) => {
+        const list = [];
+        for (let i = 0; i < 20; i++) {
+          const e = new Enemy('preta', x + i, y, 1);
+          e.spawnT = 0;
+          e._drawCalls = 0;
+          e.draw = function() { this._drawCalls++; };
+          list.push(e);
+        }
+        return list;
+      };
+      GAME.player = null;   // isolate the enemy loop from the player-draw branch
+      GAME.enemies = mkFallbackEnemies(offX, offY);
+      GAME.renderEntities(mkCountCtx());
+      let offDraws = 0;
+      for (const e of GAME.enemies) offDraws += e._drawCalls;
+
+      GAME.enemies = mkFallbackEnemies(onX, onY);
+      GAME.renderEntities(mkCountCtx());
+      let onDraws = 0;
+      for (const e of GAME.enemies) onDraws += e._drawCalls;
+      R.entityCull = offDraws === 0 && onDraws === 20;
+    }
+
+    // 4. SPRITES.cullEntity(e): hides mocked sprite/marker/weapon and marks the entity seen, so
+    //    endEntities()'s mark-and-sweep does not remove it (the sprite refs stay alive to be
+    //    re-shown by drawEntity/drawWeapon next time the entity is on-screen).
+    {
+      const e = { _pixiSprite: { visible: true }, _pixiMarker: { visible: true }, _pixiWeapon: { visible: true }, dead: false };
+      SPRITES.beginEntities();
+      SPRITES.cullEntity(e);
+      const hiddenAfterCull = e._pixiSprite.visible === false && e._pixiMarker.visible === false && e._pixiWeapon.visible === false;
+      SPRITES.endEntities();
+      const survivedSweep = e._pixiSprite !== null && e._pixiMarker !== null && e._pixiWeapon !== null;
+      SPRITES._tracked.delete(e);
+      R.cullLifecycle = hiddenAfterCull && survivedSweep;
+    }
+
+    // 5. VFX.inView + ctx-fallback particle culling.
+    {
+      const view = { x: 0, y: 0, w: 100, h: 100 };
+      const pIn = { x: 50, y: 50, r0: 3, r1: 3 };
+      const pOut = { x: 5000, y: 5000, r0: 3, r1: 3 };
+      R.inView = VFX.inView(pIn, view) === true && VFX.inView(pOut, view) === false;
+
+      while (VFX.stats().active > 0) VFX.update(1/60);
+      for (let i = 0; i < 100; i++) VFX.spawn(offX, offY, 0, 0, 10, 3, 3, '#fff', 0, false, 1, 0, 1, false);
+      const cctx = mkCountCtx();
+      VFX.render(cctx);
+      R.particleCull = (cctx._counts.arc || 0) === 0;
+      while (VFX.stats().active > 0) VFX.update(1/60);
+    }
+
+    // 6. ambientRect(): contained in the arena, intersects the current view; falls back to the
+    //    full arena (never empty) when the view doesn't overlap it.
+    {
+      const rect = GAME.ambientRect();
+      const containedInArena = rect.x >= A.x - 1e-6 && rect.y >= A.y - 1e-6
+        && rect.x + rect.w <= A.x + A.w + 1e-6 && rect.y + rect.h <= A.y + A.h + 1e-6;
+      const V0 = CAMERA.viewRect(0);
+      const intersectsView = rect.x < V0.x + V0.w && rect.x + rect.w > V0.x
+        && rect.y < V0.y + V0.h && rect.y + rect.h > V0.y;
+
+      CAMERA.sx = 1e7; CAMERA.sy = 1e7; CAMERA._store(CAMERA.xform());
+      const farRect = GAME.ambientRect();
+      const fallsBackToArena = farRect.x === A.x && farRect.y === A.y && farRect.w === A.w && farRect.h === A.h;
+      R.ambientRect = containedInArena && intersectsView && fallsBackToArena;
+    }
+
+  } finally {
+    GAME.state = savedState;
+    GAME.player = savedPlayer;
+    Object.assign(GAME.arena, savedArena);
+    GAME.arenaPad = savedArenaPad;
+    GAME.biome = savedBiome; GAME.biomeIdx = savedBiomeIdx;
+    GAME.orbits = savedOrbits; GAME.pprojectiles = savedPP; GAME.eprojectiles = savedEP;
+    GAME.bolts = savedBolts; GAME.rings = savedRings; GAME.texts = savedTexts;
+    GAME.pillars = savedPillars; GAME.dangerZones = savedDZ; GAME.zones = savedZones;
+    GAME.doors = savedDoors; GAME.pickups = savedPickups; GAME.hazards = savedHazards;
+    GAME.enemies = savedEnemies; GAME.waves = savedWaves; GAME.spawnQueue = savedSpawnQ;
+    INPUT.ax = savedAx; INPUT.ay = savedAy;
+    if (typeof savedWx === 'undefined') delete INPUT.wx; else INPUT.wx = savedWx;
+    if (typeof savedWy === 'undefined') delete INPUT.wy; else INPUT.wy = savedWy;
+    CAMERA.resetFx();
+    CAMERA.sx = 0; CAMERA.sy = 0;
+    CAMERA._store(CAMERA.xform());
+  }
+})();
+`, sandbox);
+const cull = vm.runInContext('__cullResults', sandbox);
+check('renderEffects: off-screen player projectiles issue 0 arcs; on-screen issue >= 200', cull.effectsCull);
+check('renderBackground: off-screen obstacles draw strictly fewer primitives than on-screen', cull.obstacleCull);
+check('renderEntities: off-screen fallback-drawn enemies call draw() 0 times; on-screen 20 times', cull.entityCull);
+check('SPRITES.cullEntity(e): hides sprite/marker/weapon and marks seen so endEntities() does not remove it', cull.cullLifecycle);
+check('VFX.inView: true inside the view rect, false outside; ctx-fallback render skips off-screen particles', cull.inView && cull.particleCull);
+check('GAME.ambientRect(): contained in the arena and intersects the view; falls back to the full arena when the view does not overlap it', cull.ambientRect);
+
+// ---------------- off-screen edge indicators (Phase 05.1) ----------------
+console.log('\n— off-screen edge indicators (Phase 05.1) —');
+vm.runInContext(`
+globalThis.__indResults = {};
+(function() {
+  const R = __indResults;
+  const noop = () => {};
+  const mkCountCtx = () => {
+    const counts = {};
+    return new Proxy({ _counts: counts }, {
+      get(t, prop) {
+        if (prop === '_counts') return counts;
+        if (prop === 'createRadialGradient' || prop === 'createLinearGradient') return () => ({ addColorStop: noop });
+        if (prop === 'measureText') return () => ({ width: 0 });
+        if (prop in t) return t[prop];
+        return function() { counts[prop] = (counts[prop] || 0) + 1; };
+      },
+      set(t, prop, v) { t[prop] = v; return true; },
+    });
+  };
+
+  const savedState = GAME.state, savedEnemies = GAME.enemies, savedDoors = GAME.doors;
+  const savedCamSx = CAMERA.sx, savedCamSy = CAMERA.sy, savedDevice = INPUT.device;
+
+  try {
+    CAMERA.resetFx(); CAMERA.sx = 0; CAMERA.sy = 0; CAMERA._store(CAMERA.xform());   // identity transform — world == screen
+    GAME.state = 'combat';
+    const a = CAMERA.anchor();
+    const dirs = [0.1963, 2.1599, -2.1599];   // sector centers (16 sectors), matching the pure clusterIndicators test
+    const mkOffEnemy = (ang) => { const e = new Enemy('preta', a.x + Math.cos(ang)*3000, a.y + Math.sin(ang)*3000, 1); e.spawnT = 0; return e; };
+
+    GAME.enemies = [];
+    for (let i = 0; i < 30; i++) { const ang = dirs[i % 3] + (Math.random() - 0.5) * 0.02; GAME.enemies.push(mkOffEnemy(ang)); }
+    const items30 = GAME.indicatorItems();
+    const res30 = CAMERA.clusterIndicators(items30);
+    const sum30 = res30.reduce((s, o) => s + o.count, 0);
+    const inset = CAMERA.CFG.IND_INSET;
+    const within30 = res30.every(o => o.x >= inset.l - 0.5 && o.x <= CAMERA.VW - inset.r + 0.5 && o.y >= inset.t - 0.5 && o.y <= CAMERA.VH - inset.b + 0.5);
+    R.cluster30 = items30.length === 30 && res30.length <= 3 && sum30 === 30 && within30;
+
+    GAME.enemies = [];
+    for (let i = 0; i < 40; i++) { const ang = (i / 40) * Math.PI * 2; GAME.enemies.push(mkOffEnemy(ang)); }
+    const res40 = CAMERA.clusterIndicators(GAME.indicatorItems());
+    R.cluster40 = res40.length <= 8;
+
+    // boss off-screen ordered before enemy arrows
+    GAME.enemies = [];
+    const bossE = mkOffEnemy(0.1963); bossE.boss = true; bossE.color = '#ff00ff';
+    GAME.enemies.push(bossE);
+    for (let i = 0; i < 5; i++) GAME.enemies.push(mkOffEnemy(2.1599));
+    const resBoss = CAMERA.clusterIndicators(GAME.indicatorItems());
+    R.bossFirst = resBoss.length >= 1 && resBoss[0].kind === 'boss';
+
+    // dead + on-screen enemies produce no arrows (dead is filtered by indicatorItems itself;
+    // on-screen is filtered by clusterIndicators' edgePoint, since it's still a valid item)
+    GAME.enemies = [];
+    const deadE = mkOffEnemy(0.1963); deadE.dead = true;
+    const onscreenE = new Enemy('preta', a.x, a.y, 1); onscreenE.spawnT = 0;
+    GAME.enemies.push(deadE, onscreenE);
+    const dieItems = GAME.indicatorItems();
+    R.noArrowsForDeadOrOnscreen = dieItems.length === 1 && CAMERA.clusterIndicators(dieItems).length === 0;
+
+    // doors: only shown when state === 'cleared', first in cluster order
+    GAME.enemies = [];
+    GAME.doors = [
+      { x: a.x + Math.cos(2.1599)*3000, y: a.y + Math.sin(2.1599)*3000, reward: { color: '#0f0', sym: 'd' } },
+      { x: a.x + Math.cos(-2.1599)*3000, y: a.y + Math.sin(-2.1599)*3000, reward: { color: '#00f', sym: 'e' } },
+    ];
+    GAME.state = 'combat';
+    R.noDoorsInCombat = GAME.indicatorItems().length === 0;
+    GAME.state = 'cleared';
+    const doorItems = GAME.indicatorItems();
+    const doorRes = CAMERA.clusterIndicators(doorItems);
+    R.doorsAfterClear = doorItems.length === 2 && doorRes.length === 2 && doorRes[0].kind === 'door' && doorRes[1].kind === 'door';
+
+    // renderIndicators(ctx): no-throw for 0/1/40 items and both input devices
+    let indErr = null;
+    try {
+      GAME.enemies = [];
+      GAME.doors = [];
+      GAME.state = 'combat';
+      INPUT.device = 'kbm';
+      GAME.renderIndicators(mkCountCtx());               // 0 items
+      GAME.enemies = [mkOffEnemy(0.1963)];
+      GAME.renderIndicators(mkCountCtx());               // 1 item
+      GAME.enemies = [];
+      for (let i = 0; i < 40; i++) GAME.enemies.push(mkOffEnemy((i / 40) * Math.PI * 2));
+      GAME.renderIndicators(mkCountCtx());               // 40 items
+      INPUT.device = 'pad';
+      GAME.renderIndicators(mkCountCtx());
+    } catch (e) { indErr = e.stack.split('\\n').slice(0, 3).join(' | '); }
+    R.renderIndicatorsNoThrow = indErr === null;
+    R.renderIndicatorsErr = indErr;
+  } finally {
+    GAME.state = savedState;
+    GAME.enemies = savedEnemies;
+    GAME.doors = savedDoors;
+    INPUT.device = savedDevice;
+    CAMERA.resetFx();
+    CAMERA.sx = savedCamSx || 0; CAMERA.sy = savedCamSy || 0;
+    CAMERA._store(CAMERA.xform());
+  }
+})();
+`, sandbox);
+const ind = vm.runInContext('__indResults', sandbox);
+check('indicators: 30 enemies in 3 off-screen clusters -> <= 3 arrows summing to 30, within the HUD inset', ind.cluster30);
+check('indicators: 40 enemies scattered off-screen -> <= 8 arrows (IND_MAX)', ind.cluster40);
+check('indicators: an off-screen boss yields a boss arrow ordered before enemy arrows', ind.bossFirst);
+check('indicators: dead and on-screen enemies produce no arrows', ind.noArrowsForDeadOrOnscreen);
+check('indicators: doors produce no arrows in combat; one per off-screen door, first in order, once cleared', ind.noDoorsInCombat && ind.doorsAfterClear);
+check('GAME.renderIndicators(ctx): does not throw for 0/1/40 items or kbm/pad devices'
+  + (ind.renderIndicatorsErr ? ' — ' + ind.renderIndicatorsErr : ''), ind.renderIndicatorsNoThrow);
 
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

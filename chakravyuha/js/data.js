@@ -198,6 +198,16 @@ DATA.ENEMIES = {
                color: '#ff9ad5', cost: 4 },
 };
 
+// ---------- WAVES (Phase 05.1: denser encounters, D-18/D-19) ----------
+DATA.WAVES = {
+  maxAlive: 26,                          // tunable: perf + readability cap on simultaneous living enemies
+  weak: { hp: 0.5, dmg: 0.6, cost: 0.5 },// fodder multipliers; a weak unit costs half its budget
+  nextWaveAt: 0.3,                       // next wave when alive <= ceil(lastWaveSize * nextWaveAt)
+  waveDelay: 0.7, dripEvery: 0.35, dripBatch: 3,
+  spawnMin: 360, spawnMax: 950, packSize: [3, 6], packJitter: 70,
+  engageRange: 640, eliteCost: 3,
+};
+
 // ---------- BOSSES ----------
 DATA.BOSSES = {
   tataka: {
@@ -229,24 +239,28 @@ DATA.BIOMES = [
     bg: '#160a0e', floor: '#241016', accent: '#ff5533', wall: '#3d1a20',
     enemies: ['preta', 'rakshasa', 'archer'], boss: 'tataka', hazard: 'fireVent',
     scale: 1.0, budget: [4, 9], droneHz: 110,
+    waves: { count: [3, 3], perWave: [4, 9], fodder: ['preta'], fodderShare: [0.85, 0.35], eliteShare: [0, 0.15] },
   },
   {
     id: 'patala', name: 'PATALA', sub: 'Realm of the Serpent Kings', rooms: 6,
     bg: '#061412', floor: '#0b201c', accent: '#2ee6a8', wall: '#143830',
     enemies: ['naga', 'vetala', 'archer', 'rakshasa'], boss: 'ahiravana', hazard: 'venomPool',
     scale: 1.35, budget: [7, 12], droneHz: 98,
+    waves: { count: [3, 4], perWave: [6, 11], fodder: ['preta', 'rakshasa'], fodderShare: [0.7, 0.3], eliteShare: [0.1, 0.3] },
   },
   {
     id: 'ranabhoomi', name: 'RANABHOOMI', sub: 'Field of the Fallen Warriors', rooms: 6,
     bg: '#171107', floor: '#241b0d', accent: '#ffcf5c', wall: '#403018',
     enemies: ['daitya', 'bhuta', 'yatudhana', 'vetala'], boss: 'kumbhakarna', hazard: 'arrowVolley',
     scale: 1.8, budget: [9, 15], droneHz: 123,
+    waves: { count: [3, 4], perWave: [8, 14], fodder: ['preta', 'rakshasa'], fodderShare: [0.6, 0.25], eliteShare: [0.2, 0.45] },
   },
   {
     id: 'vaitarani', name: 'VAITARANI', sub: 'The River Between Worlds', rooms: 2,
     bg: '#0a0e16', floor: '#121828', accent: '#9fb8ff', wall: '#222c4a',
     enemies: ['preta', 'rakshasa', 'naga', 'vetala', 'bhuta', 'daitya'], boss: 'yama', hazard: 'riverCurrent',
     scale: 2.1, budget: [12, 16], droneHz: 82,
+    waves: { count: [4, 4], perWave: [10, 15], fodder: ['preta'], fodderShare: [0.45, 0.25], eliteShare: [0.3, 0.45] },
   },
 ];
 
@@ -262,48 +276,100 @@ DATA.HAZARDS = {
                  surgeEvery:[5,8], surgeWarn:0.8, surgeDur:1.5, color:'#9fb8ff', damaging:false },
 };
 
+// ---------- ARENA SIZING (Phase 05.1) ----------
+// D-01: arena top-left stays fixed at `origin`; only w/h change per room kind.
+// `padBySize` is the wall/HUD/art framing around the arena, per room kind — rest arena + its pad
+// == exactly 1280x720 (legacy, unchanged). combat/boss arenas get a much larger pad (05.4
+// cross-phase contract: architectural walls sit outside the arena edge, so the camera must be able
+// to scroll far enough to reveal that art — ~200px above, ~110-120px left/right/below).
+DATA.ARENA = {
+  origin: { x: 50, y: 84 },
+  sizes: { combat: { w: 2240, h: 1300 }, boss: { w: 1600, h: 960 }, rest: { w: 1180, h: 580 } },  // tunable
+  padBySize: {
+    combat: { l: 120, r: 120, t: 200, b: 110 },
+    boss:   { l: 120, r: 120, t: 200, b: 110 },
+    rest:   { l: 50, r: 50, t: 84, b: 56 },   // legacy — keeps rest rooms' identity transform unchanged
+  },
+  legacyArea: 1180 * 580,
+  largeArea: 1180 * 580 * 1.5,              // arenas at/above this area get template `large` extras
+  maxObstacleScale: 1.4,                    // cap for circle-obstacle radius scaling
+};
+
 // ---------- ROOM LAYOUT TEMPLATES ----------
 // Normalized arena coordinates: circles x/y = center fraction, r in px;
 // rects x/y = top-left fraction, w/h = size fraction.
+// Optional `large` list (same fraction format): extra obstacles that only materialize when the
+// arena area is at/above DATA.ARENA.largeArea (i.e. combat rooms), filling the outer bands that
+// feel empty at 2240x1300. Kept well clear of the spawn (left edge) and door candidates (right
+// edge) by staying inside x fraction [0.12, 0.88].
 DATA.LAYOUTS = {
   naraka: [
     { id: 'naraka_colonnade', name: 'Iron Colonnade', obstacles: [
       {kind:'pillar',x:.32,y:.25,r:30},{kind:'pillar',x:.52,y:.25,r:30},{kind:'pillar',x:.72,y:.25,r:30},
-      {kind:'pillar',x:.32,y:.75,r:30},{kind:'pillar',x:.52,y:.75,r:30},{kind:'pillar',x:.72,y:.75,r:30} ] },
+      {kind:'pillar',x:.32,y:.75,r:30},{kind:'pillar',x:.52,y:.75,r:30},{kind:'pillar',x:.72,y:.75,r:30} ],
+      large: [
+        {kind:'pillar',x:.16,y:.15,r:26},{kind:'pillar',x:.84,y:.15,r:26},
+        {kind:'pillar',x:.16,y:.85,r:26},{kind:'pillar',x:.84,y:.85,r:26} ] },
     { id: 'naraka_forge', name: 'Forge Cross', obstacles: [
-      {kind:'wall',x:.42,y:.46,w:.20,h:.08},{kind:'wall',x:.49,y:.22,w:.06,h:.56} ] },
+      {kind:'wall',x:.42,y:.46,w:.20,h:.08},{kind:'wall',x:.49,y:.22,w:.06,h:.56} ],
+      large: [
+        {kind:'wall',x:.15,y:.10,w:.14,h:.06},{kind:'wall',x:.70,y:.10,w:.14,h:.06},
+        {kind:'wall',x:.15,y:.84,w:.14,h:.06},{kind:'wall',x:.70,y:.84,w:.14,h:.06} ] },
     { id: 'naraka_chains', name: 'Chained Pits', obstacles: [
-      {kind:'pit',x:.42,y:.28,r:60},{kind:'pit',x:.60,y:.72,r:60},{kind:'pillar',x:.74,y:.40,r:34} ] },
+      {kind:'pit',x:.42,y:.28,r:60},{kind:'pit',x:.60,y:.72,r:60},{kind:'pillar',x:.74,y:.40,r:34} ],
+      large: [
+        {kind:'pit',x:.20,y:.85,r:38},{kind:'pit',x:.80,y:.15,r:38} ] },
   ],
   patala: [
     { id: 'patala_coil', name: 'Serpent Coil', obstacles: [
       {kind:'pillar',x:.30,y:.22,r:26},{kind:'pillar',x:.40,y:.36,r:26},{kind:'pillar',x:.50,y:.50,r:26},
-      {kind:'pillar',x:.60,y:.64,r:26},{kind:'pillar',x:.70,y:.78,r:26} ] },
+      {kind:'pillar',x:.60,y:.64,r:26},{kind:'pillar',x:.70,y:.78,r:26} ],
+      large: [
+        {kind:'pillar',x:.18,y:.14,r:22},{kind:'pillar',x:.80,y:.86,r:22},{kind:'pillar',x:.84,y:.30,r:22} ] },
     { id: 'patala_abyss', name: 'Twin Abyss', obstacles: [
-      {kind:'pit',x:.28,y:.08,w:.16,h:.30},{kind:'pit',x:.56,y:.62,w:.16,h:.30} ] },
+      {kind:'pit',x:.28,y:.08,w:.16,h:.30},{kind:'pit',x:.56,y:.62,w:.16,h:.30} ],
+      large: [
+        {kind:'pit',x:.16,y:.62,w:.14,h:.28},{kind:'pit',x:.72,y:.08,w:.14,h:.28} ] },
     { id: 'patala_halls', name: 'Naga Halls', obstacles: [
-      {kind:'wall',x:.28,y:.27,w:.48,h:.05},{kind:'wall',x:.28,y:.68,w:.48,h:.05} ] },
+      {kind:'wall',x:.28,y:.27,w:.48,h:.05},{kind:'wall',x:.28,y:.68,w:.48,h:.05} ],
+      large: [
+        {kind:'wall',x:.14,y:.14,w:.10,h:.05},{kind:'wall',x:.14,y:.81,w:.10,h:.05},
+        {kind:'wall',x:.76,y:.14,w:.10,h:.05},{kind:'wall',x:.76,y:.81,w:.10,h:.05} ] },
   ],
   ranabhoomi: [
     { id: 'rana_chariots', name: 'Broken Chariots', obstacles: [
       {kind:'wall',x:.30,y:.15,w:.08,h:.14},{kind:'wall',x:.52,y:.58,w:.10,h:.12},
-      {kind:'wall',x:.70,y:.22,w:.07,h:.16},{kind:'pillar',x:.42,y:.80,r:22} ] },
+      {kind:'wall',x:.70,y:.22,w:.07,h:.16},{kind:'pillar',x:.42,y:.80,r:22} ],
+      large: [
+        {kind:'wall',x:.16,y:.60,w:.08,h:.12},{kind:'pillar',x:.80,y:.42,r:24} ] },
     { id: 'rana_trench', name: 'The Trench', obstacles: [
-      {kind:'pit',x:.50,y:.04,w:.04,h:.34},{kind:'pit',x:.50,y:.62,w:.04,h:.34} ] },
+      {kind:'pit',x:.50,y:.04,w:.04,h:.34},{kind:'pit',x:.50,y:.62,w:.04,h:.34} ],
+      large: [
+        {kind:'pit',x:.18,y:.30,w:.05,h:.40},{kind:'pit',x:.78,y:.30,w:.05,h:.40} ] },
     { id: 'rana_banners', name: 'Ring of Banners', obstacles: [
       {kind:'pillar',x:.687,y:.5,r:22},{kind:'pillar',x:.62,y:.724,r:22},{kind:'pillar',x:.497,y:.724,r:22},
-      {kind:'pillar',x:.433,y:.5,r:22},{kind:'pillar',x:.497,y:.276,r:22},{kind:'pillar',x:.62,y:.276,r:22} ] },
+      {kind:'pillar',x:.433,y:.5,r:22},{kind:'pillar',x:.497,y:.276,r:22},{kind:'pillar',x:.62,y:.276,r:22} ],
+      large: [
+        {kind:'pillar',x:.15,y:.35,r:20},{kind:'pillar',x:.15,y:.65,r:20},
+        {kind:'pillar',x:.85,y:.35,r:20},{kind:'pillar',x:.85,y:.65,r:20} ] },
   ],
   vaitarani: [
     { id: 'vait_fords', name: 'The Fords', obstacles: [
-      {kind:'pit',x:.46,y:0,w:.07,h:.20},{kind:'pit',x:.46,y:.32,w:.07,h:.36},{kind:'pit',x:.46,y:.80,w:.07,h:.20} ] },
+      {kind:'pit',x:.46,y:0,w:.07,h:.20},{kind:'pit',x:.46,y:.32,w:.07,h:.36},{kind:'pit',x:.46,y:.80,w:.07,h:.20} ],
+      large: [
+        {kind:'pit',x:.18,y:.40,w:.06,h:.25},{kind:'pit',x:.78,y:.40,w:.06,h:.25} ] },
     { id: 'vait_islands', name: 'Bone Islands', obstacles: [
       {kind:'pit',x:.34,y:.28,r:50},{kind:'pit',x:.34,y:.72,r:50},{kind:'pit',x:.64,y:.28,r:50},
-      {kind:'pit',x:.64,y:.72,r:50},{kind:'pillar',x:.49,y:.50,r:34} ] },
+      {kind:'pit',x:.64,y:.72,r:50},{kind:'pillar',x:.49,y:.50,r:34} ],
+      large: [
+        {kind:'pit',x:.16,y:.50,r:34},{kind:'pit',x:.82,y:.50,r:34} ] },
     { id: 'vait_posts', name: 'Ferry Posts', obstacles: [
       {kind:'pillar',x:.30,y:.20,r:20},{kind:'pillar',x:.30,y:.50,r:20},{kind:'pillar',x:.30,y:.80,r:20},
       {kind:'pillar',x:.55,y:.35,r:20},{kind:'pillar',x:.55,y:.65,r:20},
-      {kind:'pillar',x:.78,y:.20,r:20},{kind:'pillar',x:.78,y:.50,r:20},{kind:'pillar',x:.78,y:.80,r:20} ] },
+      {kind:'pillar',x:.78,y:.20,r:20},{kind:'pillar',x:.78,y:.50,r:20},{kind:'pillar',x:.78,y:.80,r:20} ],
+      large: [
+        {kind:'pillar',x:.16,y:.35,r:18},{kind:'pillar',x:.16,y:.65,r:18},
+        {kind:'pillar',x:.86,y:.35,r:18},{kind:'pillar',x:.86,y:.65,r:18} ] },
   ],
 };
 

@@ -14,6 +14,7 @@ const PAD = {
   },
 
   _prevButtons: {},
+  _aimAng: null,   // last right-stick angle (world-space) — held while the stick is released (D-14)
 
   applyDeadzone(x, y, dz) {
     const mag = Math.hypot(x, y);
@@ -75,10 +76,13 @@ const PAD = {
     INPUT.ax = left.x;
     INPUT.ay = left.y;
 
-    if (right.mag > 0 && typeof GAME !== 'undefined' && GAME.player) {
-      const ang = Math.atan2(right.y, right.x);
-      INPUT.mx = GAME.player.x + Math.cos(ang) * this.CFG.AIM_REACH;
-      INPUT.my = GAME.player.y + Math.sin(ang) * this.CFG.AIM_REACH;
+    // D-14: world-space aim target. The stick angle is remembered (_aimAng) so releasing the stick
+    // keeps aiming the last direction rather than snapping back; INPUT.mx/my are no longer touched
+    // here — the mouse handler owns screen-space mx/my exclusively.
+    if (right.mag > 0) this._aimAng = Math.atan2(right.y, right.x);
+    if (INPUT.device === 'pad' && this._aimAng !== null && typeof GAME !== 'undefined' && GAME.player) {
+      INPUT.wx = GAME.player.x + Math.cos(this._aimAng) * this.CFG.AIM_REACH;
+      INPUT.wy = GAME.player.y + Math.sin(this._aimAng) * this.CFG.AIM_REACH;
     }
 
     INPUT.lmb = m.buttons.RT || m.buttons.A;

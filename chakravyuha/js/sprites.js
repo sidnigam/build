@@ -77,6 +77,10 @@ const SPRITES = {
       // KNOWN LIMITATION: renderEffects primitives (projectiles, orbits, rings, damage text) draw on
       // this world bridge and therefore render UNDER Pixi entity sprites. Accepted for now — the fx
       // layer moves to Pixi (fxContainer) in a later plan.
+      // Phase 05.1 (D-10): CAMERA.begin() re-positions/re-scales this sprite every frame as the
+      // exact inverse of the worldContainer transform (position = -tx/tz, scale = 1/tz), so the
+      // 1280x720 bridge canvas — always drawn in world space via CAMERA.applyCtx(ctx) — still maps
+      // 1:1 to screen pixels once worldContainer's own position/scale are applied on top.
 
       // HUD bridge — separate canvas in hudContainer: unaffected by camera shake, above entities.
       this.hudBridgeCanvas = document.createElement('canvas');
@@ -98,8 +102,29 @@ const SPRITES = {
    * Clear the hidden bridge canvas at the start of each frame.
    */
   clearBridge() {
-    if (this.bridgeCtx) this.bridgeCtx.clearRect(0, 0, 1280, 720);
-    if (this.hudBridgeCtx) this.hudBridgeCtx.clearRect(0, 0, 1280, 720);
+    // Reset any transform left by a thrown frame before clearing, so the clear always covers the
+    // full backing canvas regardless of the previous frame's camera scroll/zoom (Phase 05.1).
+    if (this.bridgeCtx) {
+      if (this.bridgeCtx.setTransform) this.bridgeCtx.setTransform(1, 0, 0, 1, 0, 0);
+      this.bridgeCtx.clearRect(0, 0, 1280, 720);
+    }
+    if (this.hudBridgeCtx) {
+      if (this.hudBridgeCtx.setTransform) this.hudBridgeCtx.setTransform(1, 0, 0, 1, 0, 0);
+      this.hudBridgeCtx.clearRect(0, 0, 1280, 720);
+    }
+  },
+
+  /**
+   * coverFit(texW, texH, rect) — pure. Uniform scale + position so a texW x texH texture covers
+   * (overflows, never letterboxes) the given rect, centered.
+   */
+  coverFit(texW, texH, rect) {
+    const scale = Math.max(rect.w / texW, rect.h / texH);
+    return {
+      scale,
+      x: rect.x + rect.w / 2 - (texW * scale) / 2,
+      y: rect.y + rect.h / 2 - (texH * scale) / 2,
+    };
   },
 
   /**
@@ -627,6 +652,19 @@ const SPRITES = {
   },
 
   /**
+   * cullEntity(e) — CAM-05: an entity is off-screen this frame. Mark it seen (so endEntities()'
+   * mark-and-sweep doesn't destroy/recreate its sprite next time it scrolls into view) and hide its
+   * sprite/marker/weapon. drawEntity/drawWeapon re-show them the next time the entity is drawn.
+   */
+  cullEntity(e) {
+    if (!e._pixiSprite) return;
+    this._markSeen(e);
+    e._pixiSprite.visible = false;
+    if (e._pixiMarker) e._pixiMarker.visible = false;
+    if (e._pixiWeapon) e._pixiWeapon.visible = false;
+  },
+
+  /**
    * endEntities() — destroy sprites of entities not drawn this frame
    * (replaced via G.enemies = [], or not rendered because we are in the hub).
    * Dead entities are retired (fade out via tickDying) instead of destroyed outright (02-07).
@@ -730,6 +768,7 @@ const SPRITES = {
     }
 
     const spr = e._pixiSprite;
+    spr.visible = true;   // CAM-05: re-show after a possible cullEntity() while off-screen
     const layout = e._pixiLayout;
     const isPlayerEntity = e.spriteKey === 'player' || e.type === undefined;
     // Facing: player faces aim; enemies/bosses face the player.
@@ -1062,6 +1101,7 @@ const SPRITES = {
       }
 
       const root = e._pixiWeapon;
+      root.visible = true;   // CAM-05: re-show after a possible cullEntity() while off-screen
       root.position.set(pose.x, pose.y);
       root.rotation = pose.rot;
       const s = e.r * this.CFG.WEAPON_SCALE_PER_R;
@@ -1101,10 +1141,13 @@ const SPRITES = {
   // ---------------- Biome background sprite (02-10) ----------------
 
   /**
-   * setBackground(key) — shows the cover-fit illustrated biome background below the bridge canvas
-   * (worldContainer index 0), or hides it when key is falsy / the texture hasn't loaded (D-11).
+   * setBackground(key, rect) — shows the cover-fit illustrated biome background below the bridge
+   * canvas (worldContainer index 0), or hides it when key is falsy / the texture hasn't loaded
+   * (D-11). `rect` defaults to the legacy shake-padded viewport rect (-30,-30,1340,780); Phase 05.1
+   * passes the current room's world rect (expanded by the shake margin) so the background covers
+   * larger arenas; Phase 05.4 art up to 2400x1440 is placed against ROOMS.worldRect().
    */
-  setBackground(key) {
+  setBackground(key, rect = { x: -30, y: -30, w: 1340, h: 780 }) {
     if (!this.worldContainer) return false;
     const tex = key && this.textures[key];
     if (tex) {
@@ -1115,11 +1158,10 @@ const SPRITES = {
       } else if (this.bgSprite.texture !== tex) {
         this.bgSprite.texture = tex;
       }
-      // Cover-fit the shake-padded rect (-30,-30,1340,780) uniformly.
-      const sc = Math.max(1340 / tex.width, 780 / tex.height);
-      this.bgSprite.scale.set(sc);
-      this.bgSprite.x = 640 - (tex.width * sc) / 2;
-      this.bgSprite.y = 360 - (tex.height * sc) / 2;
+      const fit = this.coverFit(tex.width, tex.height, rect);
+      this.bgSprite.scale.set(fit.scale);
+      this.bgSprite.x = fit.x;
+      this.bgSprite.y = fit.y;
       this.bgSprite.visible = true;
       return true;
     }

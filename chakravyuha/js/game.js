@@ -5,6 +5,7 @@
 
 const INPUT = {
   keys: {}, mx: 640, my: 360, lmb: false, rmb: false,
+  wx: 640, wy: 360,          // world-space aim target (Phase 05.1) — mx/my stay screen-space
   ax: 0, ay: 0, device: 'kbm',
   bindings: {
     moveUp: ['w', 'arrowup'], moveDown: ['s', 'arrowdown'],
@@ -17,6 +18,7 @@ const GAME = {
   canvas: null, ctx: null,
   W: 1280, H: 720,
   arena: { x: 50, y: 84, w: 1180, h: 580 },
+  arenaPad: { l: 50, r: 50, t: 84, b: 56 },   // current room's world-rect padding (ROOMS.setArena) — 05.4 art contract
   state: 'hub',           // hub | combat | cleared | choosing | paused | dead | victory
   time: 0, dt: 0, runTime: 0,
   shake: 0,
@@ -25,6 +27,7 @@ const GAME = {
   // run state
   player: null, biome: DATA.BIOMES[0], biomeIdx: 0, roomIdx: 0, totalRooms: 0,
   reward: null, waves: [], waveDelay: 0,
+  spawnQueue: [], lastWaveSize: 0, dripT: 0,   // Phase 05.1 (WAVE-02/03): overlapping waves + alive-cap drip queue
   kills: 0, bossRef: null, bossRewarded: false, bossHurtT: 0,
   shopSeenThisBiome: false, nooseT: 0, prePause: null,
 
@@ -123,6 +126,16 @@ const GAME = {
 
   playing() { return this.state === 'combat' || this.state === 'cleared'; },
 
+  // World-space mouse aim (Phase 05.1, D-13): converts last frame's on-screen mouse position through
+  // the camera's inverse transform. Only from frame() — smoke sims driving update() directly must not
+  // depend on it. Gamepad owns INPUT.wx/wy itself while INPUT.device === 'pad' (js/gamepad.js).
+  syncAim() {
+    if (INPUT.device !== 'pad') {
+      const w = CAMERA.screenToWorld(INPUT.mx, INPUT.my);
+      INPUT.wx = w.x; INPUT.wy = w.y;
+    }
+  },
+
   // ---------------- run lifecycle ----------------
   startRun() {
     UI.hideAll();
@@ -177,12 +190,14 @@ const GAME = {
   // ---------------- frame ----------------
   frame(tms) {
     PAD.poll();
+    this.syncAim();               // uses last frame's on-screen transform — the one the player saw
     const t = tms / 1000;
     this.dt = Math.min(0.033, t - (this._last || t));
     this._last = t;
     this.time += this.dt;
 
     if (this.playing()) this.update(this.dt);
+    CAMERA.follow(this.dt);       // real dt: smooth-follow the player every frame, even through hitstop
     CAMERA.update(this.dt);       // real dt: keeps animating through hitstop/paused/choosing states
     VFX.tick(this.dt);            // real dt: flash fade + FPS EMA keep running through hitstop
     this.render();
@@ -221,20 +236,19 @@ const GAME = {
       if (!wasLast) this.bossRef = null;
     }
 
-    // wave / room-clear logic
+    // wave / room-clear logic (Phase 05.1, D-21): waves overlap (next wave triggers once the
+    // previous one is mostly cleared), overflow spawns drip in from a queue under the alive cap,
+    // and the room only clears once there is nothing alive, queued, or left to spawn.
     if (this.state === 'combat' && !this.bossRef) {
-      const alive = this.enemies.some(e => !e.dead);
-      if (!alive) {
-        if (this.waves.length > 0) {
-          this.waveDelay += dt;
-          if (this.waveDelay > 0.7) {
-            this.waveDelay = 0;
-            ROOMS.spawnWave(this.waves.shift());
-          }
-        } else {
-          this.state = 'cleared';
-          ROOMS.onRoomClear();
-        }
+      ROOMS.drainQueue(dt);
+      const alive = ROOMS.aliveCount();
+      const queued = this.spawnQueue.length;
+      if (this.waves.length > 0 && queued === 0 && alive <= ROOMS.nextWaveThreshold()) {
+        this.waveDelay += dt;
+        if (this.waveDelay > DATA.WAVES.waveDelay) { this.waveDelay = 0; ROOMS.spawnWave(this.waves.shift()); }
+      } else if (this.waves.length === 0 && queued === 0 && alive === 0) {
+        this.state = 'cleared';
+        ROOMS.onRoomClear();
       }
     }
 
@@ -335,15 +349,18 @@ const GAME = {
     }
     this.orbits = this.orbits.filter(o => o.t > 0);
 
-    // pickups
+    // pickups (Phase 05.1, WAVE-04: once the room is cleared, vacuum coins to the player from
+    // anywhere so the post-clear walk to the doors doesn't leave loot behind in the larger arenas)
+    const magR = this.state === 'cleared' ? 1e9 : 90;
+    const pull = this.state === 'cleared' ? 900 : 380;
     for (const pk of this.pickups) {
       pk.t -= dt;
       pk.x += (pk.vx || 0) * dt; pk.y += (pk.vy || 0) * dt;
       pk.vx = (pk.vx || 0) * 0.9; pk.vy = (pk.vy || 0) * 0.9;
       const d = U.dist(pk.x, pk.y, P.x, P.y);
-      if (d < 90) { // magnet
+      if (d < magR) { // magnet
         const a = U.angle(pk.x, pk.y, P.x, P.y);
-        pk.x += Math.cos(a) * 380 * dt; pk.y += Math.sin(a) * 380 * dt;
+        pk.x += Math.cos(a) * pull * dt; pk.y += Math.sin(a) * pull * dt;
       }
       if (d < P.r + 10) {
         pk.t = 0;
@@ -369,7 +386,7 @@ const GAME = {
 
     // cosmetic arrays
     VFX.update(dt);
-    VFX.ambient(this.biome.id, this.arena, dt);
+    VFX.ambient(this.biome.id, this.ambientRect(), dt);   // CAM-05: ambient spawns only near the visible part of the arena
     for (const t of this.texts) { t.t -= dt; t.y -= 36 * dt; }
     this.texts = this.texts.filter(t => t.t > 0);
     for (const r of this.rings) r.t -= dt;
@@ -491,6 +508,11 @@ const GAME = {
     const H = this.hazards || [];
     for (const h of H) {
       const def = DATA.HAZARDS[h.type];
+      if (h.type === 'fireVent' || h.type === 'venomPool') {
+        if (!CAMERA.visible(h.x, h.y, h.r * 1.5)) continue;
+      } else if (h.type === 'riverCurrent') {
+        if (!CAMERA.visibleRect(h.x, h.y, h.w, h.h)) continue;
+      }
       if (h.type === 'fireVent') {
         if (h.phase === 'dormant' || !h.phase) {
           ctx.fillStyle = 'rgba(0,0,0,0.45)';
@@ -540,6 +562,7 @@ const GAME = {
         }
       } else if (h.type === 'arrowVolley') {
         for (const m of h.markers) {
+          if (!CAMERA.visible(m.x, m.y, m.r)) continue;
           const frac = 1 - m.t / def.warn;
           ctx.strokeStyle = def.color; ctx.lineWidth = 2;
           ctx.beginPath(); ctx.arc(m.x, m.y, m.r, 0, U.TAU); ctx.stroke();
@@ -585,7 +608,8 @@ const GAME = {
     const inRun = this.state !== 'hub';
 
     SPRITES.clearBridge();
-    CAMERA.begin();                              // drives worldContainer; no ctx argument (D-03)
+    CAMERA.begin();                              // computes+stores tx/ty/tz, drives worldContainer/bridge sprite
+    CAMERA.applyCtx(ctx);                         // bridge primitives now draw in world space (CAM-03)
     this.renderBackground(ctx);
     SPRITES.beginEntities();
     if (inRun) {
@@ -594,6 +618,7 @@ const GAME = {
     } else VFX.render(ctx);
     // Sweep sprites whose entities were not drawn this frame (G.enemies = [] on room change, hub state).
     SPRITES.endEntities();
+    CAMERA.resetCtx(ctx);
     CAMERA.end();
     // UI pass — separate HUD bridge in hudContainer: unaffected by shake, above sprites (D-10/D-11)
     this.renderHUD(SPRITES.hudBridgeCtx || ctx);
@@ -601,19 +626,39 @@ const GAME = {
     SPRITES.uploadBridge();                      // re-upload bridge canvas to Pixi texture
   },
 
+  // World rect (current room, shake-padded) the illustrated biome background cover-fits against.
+  _bgRect() {
+    const R = ROOMS.worldRect();
+    return { x: R.x - 30, y: R.y - 30, w: R.w + 60, h: R.h + 60 };
+  },
+
+  // CAM-05: intersection of the arena with the current view (+margin) — biome ambient particles
+  // spawn only near what's actually on screen instead of anywhere in a 2240x1300 arena. Falls back
+  // to the full arena when the view doesn't overlap it (never returns an empty rect).
+  ambientRect() {
+    const A = this.arena;
+    const V = CAMERA.viewRect(120);
+    const x1 = Math.max(A.x, V.x), y1 = Math.max(A.y, V.y);
+    const x2 = Math.min(A.x + A.w, V.x + V.w), y2 = Math.min(A.y + A.h, V.y + V.h);
+    if (x2 <= x1 || y2 <= y1) return A;
+    return { x: x1, y: y1, w: x2 - x1, h: y2 - y1 };
+  },
+
   renderBackground(ctx) {
     const A = this.arena;
     const inRun = this.state !== 'hub';
     const biome = this.biome;
 
-    // background — illustrated biome image when loaded (02-10), else the primitive fill (D-11)
-    const hasBg = SPRITES.setBackground(inRun ? SPRITES.bgKeyFor(biome) : null);   // hub shows no biome bg
+    // background — illustrated biome image when loaded (02-10), else the primitive fill (D-11).
+    // Cover-fit against the current room's world rect (Phase 05.1) — not the fixed viewport size.
+    const hasBg = SPRITES.setBackground(inRun ? SPRITES.bgKeyFor(biome) : null, inRun ? this._bgRect() : undefined);   // hub shows no biome bg
+    const V = CAMERA.viewRect(40);                // world-space outer fill covers whatever is on screen, incl. shake margin
     if (hasBg) {
       ctx.fillStyle = 'rgba(0,0,0,' + SPRITES.CFG.BG_DIM_OUTER + ')';               // dim everything outside the arena
-      ctx.fillRect(-30, -30, this.W + 60, this.H + 60);
+      ctx.fillRect(V.x, V.y, V.w, V.h);
     } else {
       ctx.fillStyle = inRun ? biome.bg : '#0b0710';
-      ctx.fillRect(-30, -30, this.W + 60, this.H + 60);
+      ctx.fillRect(V.x, V.y, V.w, V.h);
     }
 
     if (!inRun) { this.renderHubBg(ctx); return; }
@@ -664,6 +709,7 @@ const GAME = {
 
     // boss slam danger zones
     for (const dz of this.dangerZones || []) {
+      if (!CAMERA.visible(dz.x, dz.y, dz.r)) continue;
       ctx.fillStyle = 'rgba(255,68,68,0.12)';
       ctx.strokeStyle = 'rgba(255,68,68,0.7)';
       ctx.lineWidth = 2;
@@ -673,6 +719,7 @@ const GAME = {
 
     // zones
     for (const z of this.zones) {
+      if (!CAMERA.visible(z.x, z.y, z.r)) continue;
       if (z.type === 'fire') {
         ctx.fillStyle = `rgba(255,90,40,${0.18 + 0.08 * Math.sin(this.time * 10)})`;
         ctx.beginPath(); ctx.arc(z.x, z.y, z.r, 0, U.TAU); ctx.fill();
@@ -694,6 +741,7 @@ const GAME = {
 
     // doors
     for (const d of this.doors) {
+      if (!CAMERA.visible(d.x, d.y, d.r + 60)) continue;   // margin covers the reward-name label
       const pulse = 0.7 + 0.3 * Math.sin(this.time * 4);
       const grad = ctx.createRadialGradient(d.x, d.y, 4, d.x, d.y, d.r + 16);
       grad.addColorStop(0, d.reward.color + 'cc');
@@ -717,6 +765,7 @@ const GAME = {
 
     // pickups
     for (const pk of this.pickups) {
+      if (!CAMERA.visible(pk.x, pk.y, 6)) continue;
       ctx.fillStyle = '#ffcf5c';
       ctx.beginPath(); ctx.arc(pk.x, pk.y, 5, 0, U.TAU); ctx.fill();
       ctx.strokeStyle = '#a87b1d'; ctx.lineWidth = 1.5;
@@ -730,6 +779,7 @@ const GAME = {
     SPRITES.tickDying(this.dt);                      // death shrink/fade (02-07)
     for (const e of this.enemies) {
       if (e.dead) { if (e._pixiSprite) SPRITES.retireEntity(e); continue; }
+      if (!CAMERA.visible(e.x, e.y, e.r * 3, 96)) { SPRITES.cullEntity(e); continue; }   // CAM-05: off-screen — hide sprite, keep tracked
       if (SPRITES.has(e.type)) { this.renderSpriteExtras(ctx, e); SPRITES.drawEntity(e); }
       else e.draw(ctx);                              // D-11: silent fallback to primitive
     }
@@ -891,6 +941,7 @@ const GAME = {
   renderEffects(ctx) {
     // orbits
     for (const o of this.orbits) {
+      if (!CAMERA.visible(o.x, o.y, 14)) continue;
       ctx.fillStyle = '#ffd34d';
       ctx.save();
       ctx.translate(o.x, o.y);
@@ -907,6 +958,7 @@ const GAME = {
 
     // projectiles
     for (const p of this.pprojectiles) {
+      if (!CAMERA.visible(p.x, p.y, p.r + 16)) continue;
       ctx.fillStyle = p.color;
       if (p.chakra) {
         ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(this.time * 14);
@@ -930,6 +982,7 @@ const GAME = {
       }
     }
     for (const p of this.eprojectiles) {
+      if (!CAMERA.visible(p.x, p.y, p.r + 16)) continue;
       ctx.fillStyle = p.color;
       ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, U.TAU); ctx.fill();
       ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 1.5;
@@ -938,6 +991,7 @@ const GAME = {
 
     // lightning bolts
     for (const b of this.bolts) {
+      if (!CAMERA.visibleRect(Math.min(b.x1, b.x2), Math.min(b.y1, b.y2), Math.abs(b.x2 - b.x1), Math.abs(b.y2 - b.y1), 16)) continue;
       ctx.strokeStyle = `rgba(255,224,120,${b.t / 0.18})`;
       ctx.lineWidth = 3;
       ctx.beginPath();
@@ -953,6 +1007,7 @@ const GAME = {
 
     // expanding rings
     for (const r of this.rings) {
+      if (!CAMERA.visible(r.x, r.y, r.r * 1.3 + 4)) continue;
       ctx.strokeStyle = r.color;
       ctx.globalAlpha = r.t / 0.25 * 0.8;
       ctx.lineWidth = 4;
@@ -965,6 +1020,7 @@ const GAME = {
 
     // damage texts
     for (const t of this.texts) {
+      if (!CAMERA.visible(t.x, t.y, 60)) continue;
       ctx.globalAlpha = U.clamp(t.t / 0.4, 0, 1);
       ctx.fillStyle = t.color;
       ctx.font = `bold ${t.size}px Georgia`;
@@ -977,6 +1033,7 @@ const GAME = {
   renderObstacles(ctx) {
     const biome = this.biome;
     for (const o of this.pillars) {
+      if (o.shape === 'rect' ? !CAMERA.visibleRect(o.x, o.y - 8, o.w, o.h + 16) : !CAMERA.visible(o.x, o.y + 6, o.r + 8)) continue;
       const kind = o.kind || 'pillar';
       if (kind === 'pit') {
         const isRect = o.shape === 'rect';
@@ -1214,16 +1271,93 @@ const GAME = {
       ctx.textAlign = 'left';
     }
 
-    // crosshair (D-11: screen-space, outside camera transform)
+    // off-screen indicators (CAM-06): alive enemies (clustered) + doors after clear.
+    if (this.state !== 'hub') this.renderIndicators(ctx);
+
+    // crosshair (D-11/D-15: screen-space, outside camera transform)
+    // kbm aims at the literal cursor position; pad has no cursor, so project its world-space
+    // aim target back to screen space through the current camera transform.
+    const cross = INPUT.device === 'pad' ? CAMERA.worldToScreen(INPUT.wx, INPUT.wy) : { x: INPUT.mx, y: INPUT.my };
     ctx.strokeStyle = 'rgba(255,255,255,0.8)';
     ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.arc(INPUT.mx, INPUT.my, 8, 0, U.TAU); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cross.x, cross.y, 8, 0, U.TAU); ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(INPUT.mx - 12, INPUT.my); ctx.lineTo(INPUT.mx - 4, INPUT.my);
-    ctx.moveTo(INPUT.mx + 4, INPUT.my); ctx.lineTo(INPUT.mx + 12, INPUT.my);
-    ctx.moveTo(INPUT.mx, INPUT.my - 12); ctx.lineTo(INPUT.mx, INPUT.my - 4);
-    ctx.moveTo(INPUT.mx, INPUT.my + 4); ctx.lineTo(INPUT.mx, INPUT.my + 12);
+    ctx.moveTo(cross.x - 12, cross.y); ctx.lineTo(cross.x - 4, cross.y);
+    ctx.moveTo(cross.x + 4, cross.y); ctx.lineTo(cross.x + 12, cross.y);
+    ctx.moveTo(cross.x, cross.y - 12); ctx.lineTo(cross.x, cross.y - 4);
+    ctx.moveTo(cross.x, cross.y + 4); ctx.lineTo(cross.x, cross.y + 12);
     ctx.stroke();
+  },
+
+  // ---- CAM-06: off-screen indicators (edge arrows for alive enemies + cleared-room doors) ----
+
+  // World-space items eligible for an edge indicator: every alive enemy (including still-spawning
+  // ones — telegraphed threats deserve a heads-up too) plus, once the room is cleared, its doors.
+  indicatorItems() {
+    const items = [];
+    for (const e of this.enemies) {
+      if (e.dead) continue;
+      items.push({ x: e.x, y: e.y, kind: e.boss ? 'boss' : 'enemy', color: e.boss ? e.color : '#ff5566' });
+    }
+    if (this.state === 'cleared') {
+      for (const d of this.doors) items.push({ x: d.x, y: d.y, kind: 'door', color: d.reward.color, sym: d.reward.sym });
+    }
+    return items;
+  },
+
+  // Filled triangle (local +x = "forward"/tip) rotated to point along `angle`, with a thin dark
+  // outline for contrast against any background. Screen-space only (HUD bridge).
+  _drawIndicatorTriangle(ctx, x, y, angle, size, fill) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.moveTo(size, 0);
+    ctx.lineTo(-size * 0.6, size * 0.7);
+    ctx.lineTo(-size * 0.6, -size * 0.7);
+    ctx.closePath();
+    ctx.fillStyle = fill;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+  },
+
+  // renderIndicators(ctx) — CAM-06: draws CAMERA.clusterIndicators(indicatorItems()) on the HUD
+  // bridge (screen space, inset clear of the HP panel/title/boss bar). Enemy arrows pulse gently and
+  // show a count badge when clustered; door arrows show the reward glyph inside a colored ring.
+  renderIndicators(ctx) {
+    const arrows = CAMERA.clusterIndicators(this.indicatorItems());
+    const alpha = 0.75 + 0.25 * Math.sin(this.time * 6);
+    for (const ar of arrows) {
+      if (ar.kind === 'door') {
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = ar.color; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(ar.x, ar.y, 13, 0, U.TAU); ctx.stroke();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 13px Georgia';
+        ctx.textAlign = 'center';
+        ctx.fillText(ar.sym || '', ar.x, ar.y + 4);
+        const tx = ar.x + Math.cos(ar.angle) * 17, ty = ar.y + Math.sin(ar.angle) * 17;
+        this._drawIndicatorTriangle(ctx, tx, ty, ar.angle, 9, ar.color);
+        continue;
+      }
+      const isBoss = ar.kind === 'boss';
+      const size = isBoss ? 14 : 9;
+      ctx.globalAlpha = alpha;
+      this._drawIndicatorTriangle(ctx, ar.x, ar.y, ar.angle, size, ar.color);
+      if (ar.count > 1) {
+        ctx.globalAlpha = 1;
+        const ix = ar.x - Math.cos(ar.angle) * 16, iy = ar.y - Math.sin(ar.angle) * 16;
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 11px Georgia';
+        ctx.textAlign = 'center';
+        ctx.fillText(String(ar.count), ix, iy + 4);
+      }
+    }
+    ctx.globalAlpha = 1;
+    ctx.textAlign = 'left';
   },
 
   // -- HUD motif helpers (Indian-motif pass, quick-260926-d5o) --

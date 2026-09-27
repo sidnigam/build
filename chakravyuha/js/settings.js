@@ -19,6 +19,7 @@ const SETTINGS = {
     masterVolume: 1,
     musicVolume: 1,
     sfxVolume: 1,
+    musicDynamics: 1,
     resolutionMode: 'auto',
     aimAssist: true,
     rumble: true,

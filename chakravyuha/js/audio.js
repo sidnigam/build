@@ -1,16 +1,23 @@
 // ============================================================
 // CHAKRAVYUHA — audio.js : WebAudio synthesized SFX + music
 // All sound is generated in code (no assets, fully open source).
-// Music = tanpura-style drone (sa–pa) with slow shimmer per biome.
+// Music = MUSIC, the adaptive procedural Hindustani score in js/music.js
+// (raga/tala per biome, intensity-driven, stingers on state transitions —
+// see js/music.js's header for the full layer breakdown). This file wires
+// MUSIC to a real AudioContext on init() and keeps the legacy
+// startDrone/stopDrone call sites (rooms/game/ui) working as thin shims.
 // ============================================================
 'use strict';
+
+// SFX whose tonal content would clash with the current raga's key; while
+// MUSIC is actually audible it plays an in-key equivalent instead (D-12).
+const AUDIO_MUSIC_SWAP = { death: 1, victory: 1, roomclear: 1, boon: 1, defiance: 1 };
 
 const AUDIO = {
   ctx: null,
   master: null,
   musicGain: null,
   sfxGain: null,
-  musicNodes: [],
   muted: false,
   currentDrone: null,
 
@@ -29,6 +36,7 @@ const AUDIO = {
       this.sfxGain.connect(this.master);
     } catch (e) { this.ctx = null; }
     this._applyVolumes();
+    if (this.ctx && typeof MUSIC !== 'undefined' && MUSIC.attach(this)) MUSIC.start();
   },
 
   resume() { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); },
@@ -99,6 +107,7 @@ const AUDIO = {
   // --- game SFX vocabulary ---
   sfx(name) {
     if (!this.ctx || this.muted) return;
+    if (AUDIO_MUSIC_SWAP[name] && typeof MUSIC !== 'undefined' && MUSIC.isAudible()) return;
     switch (name) {
       case 'swing':    this.noise({ dur: 0.08, vol: 0.12, freq: 2400 }); break;
       case 'hit':      this.tone({ freq: 220, end: 90, dur: 0.08, type: 'square', vol: 0.12 });
@@ -146,40 +155,17 @@ const AUDIO = {
     }
   },
 
-  // --- tanpura-style drone, root note per biome ---
+  // --- legacy drone API (kept for rooms.js/game.js/ui.js call sites) ---
+  // The actual tanpura is MUSIC's own free-time cycle (js/music.js), driven
+  // by polling GAME.biome — these are now no-op-on-audio shims that just
+  // record/notify the current biome root for MUSIC's own bookkeeping.
   startDrone(rootHz) {
-    this.stopDrone();
-    if (!this.ctx) return;
-    const make = (freq, vol, detune = 0) => {
-      const osc = this.ctx.createOscillator();
-      const g = this.ctx.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.value = freq;
-      osc.detune.value = detune;
-      const filt = this.ctx.createBiquadFilter();
-      filt.type = 'lowpass'; filt.frequency.value = freq * 4; filt.Q.value = 2;
-      // slow amplitude shimmer like a plucked tanpura string ringing
-      const lfo = this.ctx.createOscillator();
-      const lfoG = this.ctx.createGain();
-      lfo.frequency.value = U.rand(0.08, 0.2);
-      lfoG.gain.value = vol * 0.4;
-      g.gain.value = vol * 0.6;
-      lfo.connect(lfoG); lfoG.connect(g.gain);
-      osc.connect(filt); filt.connect(g); g.connect(this.musicGain);
-      osc.start(); lfo.start();
-      this.musicNodes.push(osc, lfo);
-    };
-    // sa, sa (octave), pa — the classic tanpura tuning
-    make(rootHz, 0.5);
-    make(rootHz, 0.25, 6);
-    make(rootHz * 2, 0.2, -4);
-    make(rootHz * 1.5, 0.3, 3);
     this.currentDrone = rootHz;
+    if (typeof MUSIC !== 'undefined') MUSIC.hint('biome', rootHz);
   },
 
   stopDrone() {
-    for (const n of this.musicNodes) { try { n.stop(); } catch (e) {} }
-    this.musicNodes = [];
     this.currentDrone = null;
+    if (typeof MUSIC !== 'undefined') MUSIC.hint('stop');
   },
 };

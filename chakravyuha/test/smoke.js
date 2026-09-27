@@ -80,11 +80,14 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 
 // ---------------- load game scripts ----------------
-const files = ['utils.js', 'settings.js', 'renderer.js', 'sprites.js', 'vfx.js', 'audio.js', 'data.js', 'meta.js', 'entities.js', 'rooms.js', 'ui.js', 'game.js', 'storage.js', 'gamepad.js', 'glyphs.js', 'focus.js'];
+const files = ['utils.js', 'settings.js', 'renderer.js', 'sprites.js', 'vfx.js', 'audio.js', 'music.js', 'data.js', 'meta.js', 'entities.js', 'rooms.js', 'ui.js', 'game.js', 'storage.js', 'gamepad.js', 'glyphs.js', 'focus.js'];
 for (const f of files) {
   const src = fs.readFileSync(path.join(__dirname, '..', 'js', f), 'utf8');
   vm.runInContext(src, sandbox, { filename: f });
 }
+// captured immediately after load, before any simulation runs, so it only
+// reflects timeouts scheduled by loading the scripts themselves (05.3-01).
+const __musicLoadTimeouts = sandbox.__timeouts.length;
 
 let failures = 0;
 function check(label, cond) {
@@ -4904,6 +4907,1804 @@ globalThis.__e2eResults = {};
   check('△ (Y) press casts an astra with no menu panel visible (FOCUS does not swallow combat input)', er.castFired);
   check('Options (Start) while paused resumes back to the pre-pause state via the combat/pause dispatch path', er.wasPaused && er.resumedByOptions);
   check('unplugging the pad (getGamepads() -> []) sets INPUT.device back to "kbm" and PAD.state.connected to false', er.deviceBackToKbm && er.padDisconnected);
+}
+
+// ---------------- MUSIC theory/generators (05.3-01) ----------------
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+  console.log('\n— MUSIC theory/generators (05.3-01) —');
+
+  check('MUSIC loads headless with ctx === null', R('MUSIC.ctx') === null);
+  check('MUSIC load added no __timeouts', __musicLoadTimeouts === 0);
+
+  const pc = d => ((d % 12) + 12) % 12;
+  const biomeIds = JSON.parse(R('JSON.stringify(DATA.BIOMES.map(b => b.id))'));
+  const T = JSON.parse(R('JSON.stringify(MUSIC.theory)'));
+
+  {
+    const ids = Object.keys(T.BIOME_RAGA);
+    const coversAll = ids.includes('hub') && biomeIds.every(id => ids.includes(id));
+    const mapsToRaga = ids.every(id => T.RAGAS[T.BIOME_RAGA[id]] !== undefined);
+    const talaExists = ids.every(id => T.TALAS[T.RAGAS[T.BIOME_RAGA[id]].tala] !== undefined);
+    check('BIOME_RAGA covers hub + every DATA.BIOMES id, each mapping to a real raga with a real tala',
+      coversAll && mapsToRaga && talaExists);
+  }
+
+  {
+    let ok = true;
+    const bad = [];
+    for (const rid of Object.keys(T.RAGAS)) {
+      const raga = T.RAGAS[rid];
+      const sorted = raga.notes.slice().sort((a, b) => a - b);
+      if (JSON.stringify(sorted) !== JSON.stringify(raga.notes)) { ok = false; bad.push(rid + ':notes-not-sorted'); }
+      if (!raga.notes.every(n => n >= 0 && n <= 11)) { ok = false; bad.push(rid + ':notes-out-of-0-11'); }
+      if (!raga.notes.includes(0)) { ok = false; bad.push(rid + ':notes-missing-0'); }
+      if (!raga.up.every(n => raga.notes.includes(n))) { ok = false; bad.push(rid + ':up-not-subset'); }
+      if (!raga.down.every(n => raga.notes.includes(n))) { ok = false; bad.push(rid + ':down-not-subset'); }
+      if (!raga.notes.includes(pc(raga.vadi))) { ok = false; bad.push(rid + ':vadi-not-in-notes'); }
+      if (!raga.notes.includes(pc(raga.samvadi))) { ok = false; bad.push(rid + ':samvadi-not-in-notes'); }
+      if (!raga.nyas.every(n => raga.notes.includes(pc(n)))) { ok = false; bad.push(rid + ':nyas-not-in-notes'); }
+      const banks = [].concat(raga.pakad, raga.chalan, [raga.mukhda]);
+      for (const phrase of banks) {
+        for (const pair of phrase) {
+          const deg = pair[0];
+          if (!raga.notes.includes(pc(deg))) { ok = false; bad.push(rid + ':bank-deg-pc-not-in-notes:' + deg); }
+          if (deg < raga.range[0] || deg > raga.range[1]) { ok = false; bad.push(rid + ':bank-deg-out-of-range:' + deg); }
+        }
+      }
+    }
+    check('raga sanity: notes sorted/0..11/has-0; up/down subset of notes; vadi/samvadi/nyas pc in notes; bank degrees pc in notes and inside range'
+      + (bad.length ? ' — ' + bad.join(', ') : ''), ok);
+  }
+
+  check('malkauns droneFirst=5 and excludes pc 7; all other ragas droneFirst=7',
+    T.RAGAS.malkauns.droneFirst === 5 && !T.RAGAS.malkauns.notes.includes(7) &&
+    ['yaman', 'bhairav', 'adana', 'bhairavi'].every(id => T.RAGAS[id].droneFirst === 7));
+
+  {
+    let ok = true;
+    const bad = [];
+    for (const tid of Object.keys(T.TALAS)) {
+      const tala = T.TALAS[tid];
+      if (tala.theka.length !== tala.matras) { ok = false; bad.push(tid + ':theka-length'); }
+      const sum = tala.vibhags.reduce((a, b) => a + b, 0);
+      if (sum !== tala.matras) { ok = false; bad.push(tid + ':vibhags-sum'); }
+      if (tala.marks.length !== tala.vibhags.length) { ok = false; bad.push(tid + ':marks-length'); }
+    }
+    if (T.TALAS.rupak.samIsKhali !== true) { ok = false; bad.push('rupak:samIsKhali'); }
+    check('tala sanity: theka.length===matras, sum(vibhags)===matras, marks.length===vibhags.length, rupak sam is khali'
+      + (bad.length ? ' — ' + bad.join(', ') : ''), ok);
+  }
+
+  {
+    const talaStepsOk = R("Object.keys(MUSIC.theory.TALAS).every(k => MUSIC.theory.talaSteps(MUSIC.theory.TALAS[k]) === MUSIC.theory.TALAS[k].matras * 4)");
+    check('talaSteps(t) === matras*4 for every tala', talaStepsOk === true);
+
+    const vss = JSON.parse(R('JSON.stringify(MUSIC.theory.vibhagStartSteps(MUSIC.theory.TALAS.teentaal))'));
+    check('vibhagStartSteps(teentaal) deep-equals [0,16,32,48]', JSON.stringify(vss) === JSON.stringify([0, 16, 32, 48]));
+
+    check('nextBoundary(rupak, 0, "vibhag") === 12', R("MUSIC.theory.nextBoundary(MUSIC.theory.TALAS.rupak, 0, 'vibhag')") === 12);
+    check('nextBoundary(rupak, 5, "sam") === 23', R("MUSIC.theory.nextBoundary(MUSIC.theory.TALAS.rupak, 5, 'sam')") === 23);
+
+    const nbRange = R(`(() => {
+      const T = MUSIC.theory;
+      let ok = true;
+      for (const tid of Object.keys(T.TALAS)) {
+        const tala = T.TALAS[tid];
+        const cs = T.talaSteps(tala);
+        for (let s = 0; s < cs; s++) {
+          for (const kind of ['vibhag', 'sam']) {
+            const n = T.nextBoundary(tala, s, kind);
+            if (n < 1 || n > cs) ok = false;
+          }
+        }
+      }
+      return ok;
+    })()`);
+    check('nextBoundary(t, s, kind) always in 1..talaSteps for every tala/step/kind', nbRange === true);
+  }
+
+  {
+    const tirakita = JSON.parse(R("JSON.stringify(MUSIC.theory.expandBol('TiRaKiTa'))"));
+    check("expandBol('TiRaKiTa') deep-equals ['Te','Re','Ke','Te']", JSON.stringify(tirakita) === JSON.stringify(['Te', 'Re', 'Ke', 'Te']));
+
+    const bolsOk = R(`(() => {
+      const T = MUSIC.theory;
+      const allowed = T.TABLA_KEYS.concat([null]);
+      for (const tid of Object.keys(T.TALAS)) {
+        for (const bol of T.TALAS[tid].theka) {
+          const keys = T.expandBol(bol);
+          if (!keys.every(k => allowed.includes(k))) return false;
+        }
+      }
+      return true;
+    })()`);
+    check('every theka bol of every tala expands to keys within TABLA_KEYS ∪ {null}', bolsOk === true);
+  }
+
+  {
+    const I = T.INTENSITY;
+    let ok = I.length === 6;
+    const monoUp = ['tabla', 'big', 'metal', 'sub'];
+    for (const key of monoUp) for (let i = 1; i < 6; i++) if (I[i][key] < I[i - 1][key]) ok = false;
+    for (let i = 1; i < 6; i++) if (I[i].drone > I[i - 1].drone) ok = false;
+    if (!(I[0].tabla === 0 && I[0].big === 0 && I[0].metal === 0)) ok = false;
+    const sum = o => Object.keys(o).reduce((a, k) => a + o[k], 0);
+    if (!(sum(I[5]) / sum(I[1]) <= 2.2)) ok = false;
+    check('INTENSITY: 6 rows, tabla/big/metal/sub non-decreasing, drone non-increasing, L0 percussion silent, loudness ratio <= 2.2', ok);
+  }
+
+  check('semiToHz(110,12) === 220', Math.abs(R('MUSIC.theory.semiToHz(110, 12)') - 220) < 1e-9);
+  check('semiToHz(110,7) ≈ 164.81', Math.abs(R('MUSIC.theory.semiToHz(110, 7)') - 164.81) < 0.01);
+
+  {
+    const seq = n => JSON.parse(R(`JSON.stringify((() => { const r = MUSIC.gen.rng(${n}); return [r(), r(), r(), r(), r()]; })())`));
+    const a1 = seq(42), a2 = seq(42), b = seq(43);
+    check('rng(42) produces the same first 5 values twice', JSON.stringify(a1) === JSON.stringify(a2));
+    check('rng values all within [0,1)', a1.every(v => v >= 0 && v < 1));
+    check('rng(42) differs from rng(43)', JSON.stringify(a1) !== JSON.stringify(b));
+  }
+}
+
+// ---------------- MUSIC lead stream (05.3-01 task 2) ----------------
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+  console.log('\n— MUSIC lead stream (05.3-01 task 2) —');
+
+  R(`
+    globalThis.__collectStream = function (ragaId, level, seed, cycles) {
+      const raga = MUSIC.theory.RAGAS[ragaId];
+      const tala = MUSIC.theory.TALAS[raga.tala];
+      const cs = MUSIC.theory.talaSteps(tala);
+      const stream = MUSIC.gen.createLeadStream(raga, tala, seed);
+      const events = [];
+      // scan extra lookahead cycles so a mukhda's final note (which can
+      // land a full cycle past wherever its own phrase was planned, since
+      // the stream always plans one cycle ahead) isn't truncated out of a
+      // completed phrase by the collection window itself.
+      for (let s = 0; s < (cycles + 2) * cs; s++) {
+        const evs = stream.eventsAt(s, level);
+        for (const e of evs) events.push(e);
+      }
+      return JSON.stringify({ cs, windowSteps: cycles * cs, events });
+    };
+  `);
+
+  const pc = d => ((d % 12) + 12) % 12;
+  const T = JSON.parse(R('JSON.stringify(MUSIC.theory)'));
+  const ragaIds = Object.keys(T.RAGAS);
+  const ragaOf = {}; for (const rid of ragaIds) ragaOf[rid] = T.RAGAS[rid];
+  // groups events by phraseId in first-seen order, dropping the trailing
+  // phrase: it may still be mid-flight at the edge of the collection
+  // window (e.g. a mukhda whose final note lands a cycle further out
+  // than anything else we scanned), so it isn't a safe structural sample.
+  function groupPhrases(events) {
+    const byPhrase = {}; const order = [];
+    for (const e of events) {
+      if (!byPhrase[e.phraseId]) { byPhrase[e.phraseId] = []; order.push(e.phraseId); }
+      byPhrase[e.phraseId].push(e);
+    }
+    return order.slice(0, -1).map(pid => byPhrase[pid]);
+  }
+
+  // gather all 5 ragas x 6 levels at the canonical seed (1234), 32 cycles
+  // (+1 lookahead cycle so trailing mukhda phrases are never truncated)
+  const data = {};
+  for (const rid of ragaIds) {
+    data[rid] = {};
+    for (let level = 0; level <= 5; level++) {
+      const raw = R(`__collectStream('${rid}', ${level}, 1234, 32)`);
+      data[rid][level] = JSON.parse(raw);
+    }
+  }
+
+  // ---- per-event property checks over every raga x level ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const raga = ragaOf[rid];
+      for (let level = 0; level <= 5; level++) {
+        const { cs, events } = data[rid][level];
+        for (const e of events) {
+          if (pc(e.deg) !== undefined && raga.notes.indexOf(pc(e.deg)) === -1) { ok = false; bad.push(`${rid}L${level}:pc-not-in-notes:${e.deg}`); }
+          if (e.deg < raga.range[0] || e.deg > raga.range[1]) { ok = false; bad.push(`${rid}L${level}:deg-out-of-range:${e.deg}`); }
+          if (!(e.dur >= 1)) { ok = false; bad.push(`${rid}L${level}:dur<1`); }
+          if (!(e.vel >= 0.2 && e.vel <= 1)) { ok = false; bad.push(`${rid}L${level}:vel-oob:${e.vel}`); }
+          if (!Number.isInteger(e.at)) { ok = false; bad.push(`${rid}L${level}:at-not-int`); }
+          if (rid === 'adana' && e.src === 'walk' && pc(e.deg) === 3) { ok = false; bad.push(`${rid}L${level}:adana-walk-pc3`); }
+        }
+        if (bad.length > 12) break;
+      }
+      if (bad.length > 12) break;
+    }
+    check('every note: pc in raga.notes, in range, dur>=1, 0.2<=vel<=1, integer at; adana walk notes never pc 3'
+      + (bad.length ? ' — ' + bad.slice(0, 12).join(', ') : ''), ok);
+  }
+
+  // ---- walk-note directionality (moving up -> pc in up, down -> pc in down) ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const raga = ragaOf[rid];
+      for (let level = 0; level <= 5; level++) {
+        const events = data[rid][level].events;
+        for (const notes of groupPhrases(events)) {
+          for (let i = 1; i < notes.length; i++) {
+            if (notes[i].src !== 'walk') continue;
+            const goingUp = notes[i].deg >= notes[i - 1].deg;
+            const dirSet = goingUp ? raga.up : raga.down;
+            if (dirSet.indexOf(pc(notes[i].deg)) === -1) { ok = false; bad.push(`${rid}L${level}:walk-dir-pc:${notes[i].deg}`); }
+          }
+        }
+        if (bad.length > 12) break;
+      }
+      if (bad.length > 12) break;
+    }
+    check('walk-tagged notes: ascending steps land on pc in raga.up, descending on pc in raga.down' + (bad.length ? ' — ' + bad.slice(0, 12).join(', ') : ''), ok);
+  }
+
+  // ---- within-phrase leap constraint ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      for (let level = 0; level <= 5; level++) {
+        const events = data[rid][level].events;
+        for (const notes of groupPhrases(events)) {
+          for (let i = 1; i < notes.length; i++) {
+            const d = Math.abs(notes[i].deg - notes[i - 1].deg);
+            const bothSa = pc(notes[i].deg) === 0 && pc(notes[i - 1].deg) === 0;
+            if (d > 7 && !(d === 12 && bothSa)) { ok = false; bad.push(`${rid}L${level}:leap:${d}`); }
+          }
+        }
+      }
+    }
+    check('consecutive notes inside one phrase: |delta|<=7 unless the Sa-Sa\' octave' + (bad.length ? ' — ' + bad.slice(0, 8).join(', ') : ''), ok);
+  }
+
+  // ---- phrase-ending nyas + duration floor ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const raga = ragaOf[rid];
+      const nyasPcs = raga.nyas.concat([0]).map(pc);
+      for (let level = 0; level <= 5; level++) {
+        const events = data[rid][level].events;
+        for (const notes of groupPhrases(events)) {
+          const last = notes[notes.length - 1];
+          if (nyasPcs.indexOf(pc(last.deg)) === -1) { ok = false; bad.push(`${rid}L${level}:last-not-nyas:${last.deg}`); }
+          const floor = last.kind === 'taan' ? 2 : 4;
+          if (!(last.dur >= floor)) { ok = false; bad.push(`${rid}L${level}:last-dur<${floor}`); }
+        }
+      }
+    }
+    check('every phrase ends on a nyas note (nyas U {0}) with dur>=4 (>=2 for taans)' + (bad.length ? ' — ' + bad.slice(0, 8).join(', ') : ''), ok);
+  }
+
+  // ---- mukhda lands on sam ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      for (let level = 0; level <= 5; level++) {
+        const { cs, events } = data[rid][level];
+        for (const notes of groupPhrases(events)) {
+          if (notes[0].src !== 'mukhda') continue;
+          const last = notes[notes.length - 1];
+          if (((last.at % cs) + cs) % cs !== 0) { ok = false; bad.push(`${rid}L${level}:mukhda-not-on-sam:${last.at}%${cs}`); }
+        }
+      }
+    }
+    check('every mukhda occurrence lands its final note exactly on sam (at % cycleSteps === 0)' + (bad.length ? ' — ' + bad.slice(0, 8).join(', ') : ''), ok);
+  }
+
+  // ---- silence ratios + notes-per-cycle ordering ----
+  {
+    const silence = {}; const notesPerCycle = {};
+    for (const rid of ragaIds) {
+      silence[rid] = {}; notesPerCycle[rid] = {};
+      for (let level = 0; level <= 5; level++) {
+        const { cs, windowSteps, events } = data[rid][level];
+        const total = windowSteps;
+        const covered = new Uint8Array(total);
+        for (const e of events) {
+          for (let s = e.at; s < Math.min(total, e.at + e.dur); s++) if (s >= 0) covered[s] = 1;
+        }
+        let coveredCount = 0; for (let i = 0; i < total; i++) coveredCount += covered[i];
+        silence[rid][level] = 1 - coveredCount / total;
+        notesPerCycle[rid][level] = events.filter(e => e.at < windowSteps).length / 32;
+      }
+    }
+    let silOk = true; const silBad = [];
+    for (const rid of ragaIds) {
+      if (silence[rid][0] < 0.30) { silOk = false; silBad.push(`${rid}L0:${silence[rid][0].toFixed(2)}`); }
+      if (silence[rid][1] < 0.25) { silOk = false; silBad.push(`${rid}L1:${silence[rid][1].toFixed(2)}`); }
+      if (silence[rid][5] > 0.30) { silOk = false; silBad.push(`${rid}L5:${silence[rid][5].toFixed(2)}`); }
+    }
+    check('lead-silent step ratio: L0>=0.30, L1>=0.25, L5<=0.30' + (silBad.length ? ' — ' + silBad.join(', ') : ''), silOk);
+
+    let densOk = true; const densBad = [];
+    for (const rid of ragaIds) {
+      const n0 = notesPerCycle[rid][0], n2 = notesPerCycle[rid][2], n4 = notesPerCycle[rid][4];
+      if (!(n0 < n2 && n2 < n4)) { densOk = false; densBad.push(`${rid}:${n0.toFixed(1)}/${n2.toFixed(1)}/${n4.toFixed(1)}`); }
+    }
+    check('notes-per-cycle strictly increasing: L0 < L2 < L4' + (densBad.length ? ' — ' + densBad.join(', ') : ''), densOk);
+  }
+
+  // ---- L2: >=1 breath cycle (zero notes) and >=1 tar-register note over 32 cycles ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const { cs, events } = data[rid][2];
+      const perCycle = new Array(32).fill(0);
+      let sawTar = false;
+      for (const e of events) {
+        const cyc = Math.floor(e.at / cs);
+        if (cyc >= 0 && cyc < 32) perCycle[cyc]++;
+        if (e.deg >= 12) sawTar = true;
+      }
+      if (!perCycle.some(c => c === 0)) { ok = false; bad.push(`${rid}:no-breath-cycle`); }
+      if (!sawTar) { ok = false; bad.push(`${rid}:no-tar-note`); }
+    }
+    check('at L2 over 32 cycles: >=1 zero-note breath cycle and >=1 note with deg>=12' + (bad.length ? ' — ' + bad.join(', ') : ''), ok);
+  }
+
+  // ---- no back-to-back repeated non-mukhda phrase signatures ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      for (let level = 0; level <= 5; level++) {
+        const events = data[rid][level].events;
+        let prevSig = null;
+        for (const notes of groupPhrases(events)) {
+          if (notes[0].src === 'mukhda') continue;
+          const sig = notes.map(n => n.deg).join(',');
+          if (prevSig !== null && sig === prevSig) { ok = false; bad.push(`${rid}L${level}:repeat`); }
+          prevSig = sig;
+        }
+      }
+    }
+    check('no two consecutive non-mukhda phrases share the same signature (mukhda exempt)' + (bad.length ? ' — ' + bad.slice(0, 8).join(', ') : ''), ok);
+  }
+
+  // ---- bank-phrase data sanity (raw RAGAS data, not generated output) ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const raga = ragaOf[rid];
+      const nyasPcs = raga.nyas.concat([0]).map(pc);
+      const banks = [].concat(raga.pakad, raga.chalan, [raga.mukhda]);
+      for (const phrase of banks) {
+        for (let i = 1; i < phrase.length; i++) {
+          const d = Math.abs(phrase[i][0] - phrase[i - 1][0]);
+          if (d > 7) { ok = false; bad.push(`${rid}:bank-leap:${d}`); }
+        }
+        const lastDeg = phrase[phrase.length - 1][0];
+        if (nyasPcs.indexOf(pc(lastDeg)) === -1) { ok = false; bad.push(`${rid}:bank-end-not-nyas:${lastDeg}`); }
+      }
+    }
+    check('every bank phrase (pakad/chalan/mukhda) ends on pc in nyas U {0} and has no internal leap > 7' + (bad.length ? ' — ' + bad.join(', ') : ''), ok);
+  }
+
+  // ---- determinism ----
+  {
+    const a = R(`__collectStream('yaman', 2, 1234, 4)`);
+    const b = R(`__collectStream('yaman', 2, 1234, 4)`);
+    const c = R(`__collectStream('yaman', 2, 99, 4)`);
+    check('createLeadStream: same seed -> JSON-identical note list', a === b);
+    check('createLeadStream: seed 1234 vs 99 -> different', a !== c);
+  }
+
+  // ---- placeMukhda offset formula ----
+  {
+    let ok = true;
+    for (const rid of ragaIds) {
+      const raga = ragaOf[rid];
+      const cs = R(`MUSIC.theory.talaSteps(MUSIC.theory.TALAS[MUSIC.theory.RAGAS['${rid}'].tala])`);
+      const start = R(`MUSIC.gen.placeMukhda(MUSIC.theory.RAGAS['${rid}'].mukhda, ${cs})`);
+      const sumExceptLast = raga.mukhda.slice(0, -1).reduce((a, p) => a + p[1], 0);
+      if (start + sumExceptLast !== cs) ok = false;
+    }
+    check('placeMukhda(mukhda, cycleSteps): start + sum(durs except last) === cycleSteps', ok);
+  }
+
+  // ---- stream.tail(3) ----
+  // Note: createLeadStream's scheduler always keeps ~1-2 cycles of
+  // lookahead planned ahead of the highest absStep queried (by design —
+  // "one-cycle horizon" per D-09), so state.lastCompleted (what tail()
+  // exposes) can be a phrase whose events haven't been *observed* yet via
+  // eventsAt. This checks the API contract (bounded length, valid raga
+  // degrees, and that it changes as the stream advances) rather than
+  // trying to independently reconstruct "the last phrase" by absStep,
+  // which is structurally mismatched with the lookahead design.
+  {
+    const tailRaw = R(`(() => {
+      const raga = MUSIC.theory.RAGAS.yaman;
+      const tala = MUSIC.theory.TALAS[raga.tala];
+      const cs = MUSIC.theory.talaSteps(tala);
+      const stream = MUSIC.gen.createLeadStream(raga, tala, 1234);
+      const snaps = [];
+      for (let s = 0; s < 12 * cs; s++) {
+        stream.eventsAt(s, 2);
+        if (s % cs === cs - 1) snaps.push(stream.tail(3));
+      }
+      return JSON.stringify(snaps);
+    })()`);
+    const snaps = JSON.parse(tailRaw);
+    const raga = ragaOf.yaman;
+    const lenOk = snaps.every(s => s.length <= 3);
+    const degOk = snaps.every(s => s.every(n => raga.notes.indexOf(pc(n.deg)) !== -1));
+    const varies = new Set(snaps.map(s => JSON.stringify(s.map(n => n.deg)))).size > 1;
+    check('stream.tail(3) returns <=3 valid-degree notes and changes as the stream advances', lenOk && degOk && varies);
+  }
+}
+
+// ---------------- MUSIC drums/pluck/tanpura/tihai (05.3-01 task 3) ----------------
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+  console.log('\n— MUSIC drums/pluck/tanpura/tihai (05.3-01 task 3) —');
+
+  const pc = d => ((d % 12) + 12) % 12;
+  const T = JSON.parse(R('JSON.stringify(MUSIC.theory)'));
+  const ragaIds = Object.keys(T.RAGAS);
+  const ragaOf = {}; for (const rid of ragaIds) ragaOf[rid] = T.RAGAS[rid];
+
+  R(`
+    globalThis.__collectDrums = function (ragaId, level, seed, cycles, lowHp) {
+      const raga = MUSIC.theory.RAGAS[ragaId];
+      const tala = MUSIC.theory.TALAS[raga.tala];
+      const cs = MUSIC.theory.talaSteps(tala);
+      const rand = MUSIC.gen.rng(seed);
+      const events = [];
+      for (let s = 0; s < cycles * cs; s++) {
+        const evs = MUSIC.gen.drumsAt(tala, raga, s, level, rand, { lowHp: !!lowHp });
+        for (const e of evs) events.push(Object.assign({ at: s }, e));
+      }
+      return JSON.stringify({ cs, events });
+    };
+    globalThis.__collectPluck = function (ragaId, level, seed, cycles) {
+      const raga = MUSIC.theory.RAGAS[ragaId];
+      const tala = MUSIC.theory.TALAS[raga.tala];
+      const cs = MUSIC.theory.talaSteps(tala);
+      const rand = MUSIC.gen.rng(seed);
+      const events = [];
+      for (let s = 0; s < cycles * cs; s++) {
+        const evs = MUSIC.gen.pluckAt(raga, tala, s, level, rand, null);
+        for (const e of evs) events.push(Object.assign({ at: s }, e));
+      }
+      return JSON.stringify({ cs, events });
+    };
+  `);
+
+  const drumData = {};
+  for (const rid of ragaIds) {
+    drumData[rid] = {};
+    for (let level = 0; level <= 5; level++) {
+      drumData[rid][level] = JSON.parse(R(`__collectDrums('${rid}', ${level}, 4242, 8, false)`));
+    }
+  }
+
+  // ---- level 0 silent ----
+  {
+    let ok = true;
+    for (const rid of ragaIds) if (drumData[rid][0].events.length !== 0) ok = false;
+    check('drumsAt level 0 returns [] for every step of 4+ cycles', ok);
+  }
+
+  // ---- level 1: no big/metal; strokes only at vibhag starts ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const raga = ragaOf[rid];
+      const tala = T.TALAS[raga.tala];
+      const { cs, events } = drumData[rid][1];
+      const vibhagStarts = (() => { const out = []; let acc = 0; for (const v of tala.vibhags) { out.push(acc); acc += v * 4; } return out; })();
+      for (const e of events) {
+        if (e.voice !== 'tabla') { ok = false; bad.push(`${rid}:voice=${e.voice}`); }
+        const s = e.at % cs;
+        if (vibhagStarts.indexOf(s) === -1) { ok = false; bad.push(`${rid}:not-vibhag-start:${s}`); }
+      }
+    }
+    check('level 1: no big/metal events; strokes only at vibhag starts' + (bad.length ? ' — ' + bad.slice(0, 6).join(', ') : ''), ok);
+  }
+
+  // ---- level 2, non-fill cycle: every matra's sub0 tabla key matches expandBol(theka[m])[0]; rupak sam is 'Tin' ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const raga = ragaOf[rid];
+      const tala = T.TALAS[raga.tala];
+      const { cs, events } = drumData[rid][2];
+      const cycle0 = events.filter(e => e.at < cs && e.at % 4 === 0 && e.voice === 'tabla');
+      for (let m = 0; m < tala.matras; m++) {
+        const expected = R(`MUSIC.theory.expandBol(MUSIC.theory.TALAS['${raga.tala}'].theka[${m}])[0]`);
+        const found = cycle0.find(e => Math.floor(e.at / 4) === m);
+        if (!found || found.key !== expected) { ok = false; bad.push(`${rid}:m${m}:expected=${expected}:got=${found && found.key}`); }
+      }
+      if (raga.tala === 'rupak') {
+        const samEv = cycle0.find(e => e.at === 0);
+        if (!samEv || samEv.key !== 'Tin') { ok = false; bad.push(`${rid}:rupak-sam-not-Tin`); }
+      }
+    }
+    check('level 2 (non-fill cycle): every matra sub0 tabla key === expandBol(theka[m])[0]; rupak sam is Tin'
+      + (bad.length ? ' — ' + bad.slice(0, 6).join(', ') : ''), ok);
+  }
+
+  // ---- strokes-per-cycle strictly increasing L1<L2<L3<L4, L5>=L4 ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const counts = [];
+      for (let level = 1; level <= 5; level++) {
+        const { events } = drumData[rid][level];
+        counts.push(events.length / 8);
+      }
+      const [c1, c2, c3, c4, c5] = counts;
+      if (!(c1 < c2 && c2 < c3 && c3 < c4 && c5 >= c4)) { ok = false; bad.push(`${rid}:${counts.map(c => c.toFixed(1)).join('/')}`); }
+    }
+    check('strokes-per-cycle (tabla+big+metal, avg over 8 cycles) strictly increasing L1<L2<L3<L4, L5>=L4'
+      + (bad.length ? ' — ' + bad.join(', ') : ''), ok);
+  }
+
+  // ---- every key valid for its voice; every vel in (0,1] ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      for (let level = 1; level <= 5; level++) {
+        for (const e of drumData[rid][level].events) {
+          const okKey = e.voice === 'tabla' ? T.TABLA_KEYS.indexOf(e.key) !== -1
+            : e.voice === 'big' ? T.BIG_KEYS.indexOf(e.key) !== -1
+            : e.voice === 'metal' ? T.METAL_KEYS.indexOf(e.key) !== -1 : false;
+          if (!okKey) { ok = false; bad.push(`${rid}L${level}:bad-key:${e.voice}/${e.key}`); }
+          if (!(e.vel > 0 && e.vel <= 1)) { ok = false; bad.push(`${rid}L${level}:vel-oob:${e.vel}`); }
+        }
+      }
+    }
+    check('every drum key valid for its voice; every vel in (0,1]' + (bad.length ? ' — ' + bad.slice(0, 6).join(', ') : ''), ok);
+  }
+
+  // ---- opts.lowHp at level 3: heartbeat dhol at sam sub0 AND sub1 ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const raga = ragaOf[rid];
+      const { cs, events } = JSON.parse(R(`__collectDrums('${rid}', 3, 4242, 4, true)`));
+      const sub0 = events.some(e => e.at % cs === 0 && e.voice === 'big' && e.key === 'dhol');
+      const sub1 = events.some(e => e.at % cs === 1 && e.voice === 'big' && e.key === 'dhol');
+      if (!sub0 || !sub1) { ok = false; bad.push(`${rid}:sub0=${sub0},sub1=${sub1}`); }
+    }
+    check('opts.lowHp at level 3 adds a heartbeat dhol at sam sub0 AND sub1' + (bad.length ? ' — ' + bad.join(', ') : ''), ok);
+  }
+
+  // ---- level 5: nagara triplet (3 events) inside the last matra before sam ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const raga = ragaOf[rid];
+      const tala = T.TALAS[raga.tala];
+      const { cs, events } = drumData[rid][5];
+      const lastMatraStart = (tala.matras - 1) * 4;
+      const triplet = events.filter(e => (e.at % cs) === lastMatraStart && e.voice === 'big' && e.key === 'nagara' && e.frac !== undefined);
+      if (triplet.length < 3) { ok = false; bad.push(`${rid}:triplet=${triplet.length}`); }
+    }
+    check('level 5: a nagara triplet (3 events) inside the last matra before sam' + (bad.length ? ' — ' + bad.join(', ') : ''), ok);
+  }
+
+  // ---- pluckAt: L3 ostinato in order + pc validity; L0 gliss on section starts ----
+  const pluckData = {};
+  for (const rid of ragaIds) {
+    pluckData[rid] = {};
+    for (const level of [0, 2, 3, 4, 5]) pluckData[rid][level] = JSON.parse(R(`__collectPluck('${rid}', ${level}, 4242, 6)`));
+  }
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const raga = ragaOf[rid];
+      const { cs, events } = pluckData[rid][3];
+      // ostinato index is keyed off the matra (m = s>>2), which resets every
+      // tala cycle — so "in order" holds *within* each cycle, restarting
+      // from index 0 each cycle (exactly matching the per-cycle formula);
+      // it doesn't stay globally sequential across a cycle boundary unless
+      // the tala's matra count happens to be a multiple of 4.
+      const byCycle = {};
+      for (const e of events) { const cyc = Math.floor(e.at / cs); (byCycle[cyc] = byCycle[cyc] || []).push(e.deg); }
+      for (const cyc of Object.keys(byCycle)) {
+        const seq = byCycle[cyc];
+        const expected = seq.map((_, i) => raga.ostinato[i % raga.ostinato.length]);
+        if (JSON.stringify(seq) !== JSON.stringify(expected)) { ok = false; bad.push(`${rid}:order-mismatch:cycle${cyc}`); }
+      }
+      for (let level = 0; level <= 5; level++) {
+        if (!pluckData[rid][level]) continue;
+        for (const e of pluckData[rid][level].events) if (raga.notes.indexOf(pc(e.deg)) === -1) { ok = false; bad.push(`${rid}L${level}:pc-not-in-notes:${e.deg}`); }
+      }
+    }
+    check('pluckAt L3 plays raga.ostinato in order; every pluck deg has pc in raga.notes' + (bad.length ? ' — ' + bad.slice(0, 6).join(', ') : ''), ok);
+  }
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const { cs, events } = pluckData[rid][0];
+      const byStep = {};
+      for (const e of events) { (byStep[e.at] = byStep[e.at] || []).push(e); }
+      const glisses = Object.keys(byStep).filter(k => byStep[k].length >= 5);
+      if (!glisses.length) { ok = false; bad.push(`${rid}:no-gliss`); }
+      for (const k of glisses) {
+        const at = Number(k);
+        if (at % cs !== 0 || Math.floor(at / cs) % 2 !== 0) { ok = false; bad.push(`${rid}:gliss-not-on-section-start:${at}`); }
+        if (!byStep[k].every(e => e.frac !== undefined)) { ok = false; bad.push(`${rid}:gliss-missing-frac`); }
+      }
+    }
+    check('pluckAt L0 emits a >=5-note gliss with frac offsets only on sam of every 2nd cycle' + (bad.length ? ' — ' + bad.join(', ') : ''), ok);
+  }
+
+  // ---- tanpuraCycle ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const raga = ragaOf[rid];
+      const cyc = JSON.parse(R(`JSON.stringify(MUSIC.gen.tanpuraCycle(MUSIC.theory.RAGAS['${rid}']))`));
+      const degs = cyc.map(c => c.deg);
+      const gaps = cyc.map(c => c.gap);
+      const expectedDegs = [raga.droneFirst - 12, 0, 0, -12];
+      if (cyc.length !== 4 || JSON.stringify(degs) !== JSON.stringify(expectedDegs)) { ok = false; bad.push(`${rid}:degs=${JSON.stringify(degs)}`); }
+      if (JSON.stringify(gaps) !== JSON.stringify([0.55, 0.55, 0.55, 1.1])) { ok = false; bad.push(`${rid}:gaps=${JSON.stringify(gaps)}`); }
+    }
+    const malkaunsDegs = JSON.parse(R(`JSON.stringify(MUSIC.gen.tanpuraCycle(MUSIC.theory.RAGAS.malkauns).map(c => c.deg))`));
+    if (JSON.stringify(malkaunsDegs) !== JSON.stringify([-7, 0, 0, -12])) { ok = false; bad.push('malkauns-degs-mismatch'); }
+    check('tanpuraCycle(raga): 4 strings, degs [droneFirst-12,0,0,-12] (malkauns -> [-7,0,0,-12]), gaps [.55,.55,.55,1.1]'
+      + (bad.length ? ' — ' + bad.join(', ') : ''), ok);
+  }
+
+  // ---- fitTihai ----
+  {
+    let ok = true; const bad = [];
+    for (const cycleSteps of [28, 40, 48, 64]) {
+      for (let rem = 1; rem <= cycleSteps; rem++) {
+        const plan = JSON.parse(R(`JSON.stringify(MUSIC.gen.fitTihai(${rem}, ${cycleSteps}))`));
+        const { p, g, start, landing } = plan;
+        if (!(p >= 3 && p <= 12)) { ok = false; bad.push(`p-oob:${rem}/${cycleSteps}:${p}`); }
+        if (!(g >= 0 && g <= 4)) { ok = false; bad.push(`g-oob:${rem}/${cycleSteps}:${g}`); }
+        if (!(start >= 1)) { ok = false; bad.push(`start<1:${rem}/${cycleSteps}:${start}`); }
+        if (start + 2 * (p + g) + (p - 1) !== landing) { ok = false; bad.push(`identity:${rem}/${cycleSteps}`); }
+        const validLanding = landing === rem || (rem < 9 && landing === rem + cycleSteps);
+        if (!validLanding) { ok = false; bad.push(`landing:${rem}/${cycleSteps}:${landing}`); }
+        if (bad.length > 8) break;
+      }
+      if (bad.length > 8) break;
+    }
+    check('fitTihai(rem, cycleSteps): p in [3,12], g in [0,4], start>=1, identity holds, landing===rem (or rem+cycleSteps when rem<9)'
+      + (bad.length ? ' — ' + bad.slice(0, 8).join(', ') : ''), ok);
+  }
+
+  // ---- tihaiEvents ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const raga = ragaOf[rid];
+      const plan = JSON.parse(R(`JSON.stringify(MUSIC.gen.fitTihai(20, 64))`));
+      const events = JSON.parse(R(`JSON.stringify(MUSIC.gen.tihaiEvents(${JSON.stringify(plan)}, MUSIC.theory.RAGAS['${rid}']))`));
+      const bigHits = events.filter(e => e.voice === 'big');
+      if (bigHits.length !== 3) { ok = false; bad.push(`${rid}:big-count=${bigHits.length}`); }
+      for (let k = 0; k < 3; k++) {
+        const expectedAt = plan.start + k * (plan.p + plan.g) + (plan.p - 1);
+        if (!bigHits.some(e => e.at === expectedAt)) { ok = false; bad.push(`${rid}:missing-landing-k${k}`); }
+        const repTabla = events.filter(e => e.voice === 'tabla' && e.at >= plan.start + k * (plan.p + plan.g) && e.at < plan.start + k * (plan.p + plan.g) + plan.p);
+        if (!repTabla.length || repTabla[0].key !== 'Dha' || repTabla[repTabla.length - 1].key !== 'Dha') { ok = false; bad.push(`${rid}:rep${k}-not-Dha-bookend`); }
+      }
+      const finalLanding = plan.start + 2 * (plan.p + plan.g) + (plan.p - 1);
+      if (!events.some(e => e.deg === 0 && e.at === finalLanding)) { ok = false; bad.push(`${rid}:no-deg0-at-final-landing`); }
+      if (!events.every(e => e.exact === true)) { ok = false; bad.push(`${rid}:missing-exact-flag`); }
+    }
+    check('tihaiEvents: 3 big landing hits at start+k*(p+g)+(p-1); deg 0 lead note at final landing; each repetition bookended by Dha; all events exact'
+      + (bad.length ? ' — ' + bad.join(', ') : ''), ok);
+  }
+}
+
+// ---------------- MUSIC logic + polling contract (05.3-02) ----------------
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+  console.log('\n— MUSIC logic + polling contract (05.3-02) —');
+
+  // ---- snapshot() defensive defaults ----
+  {
+    const s1 = JSON.parse(R('JSON.stringify(MUSIC.logic.snapshot(undefined))'));
+    const s2 = JSON.parse(R('JSON.stringify(MUSIC.logic.snapshot({}))'));
+    const expectedDefault = { state: 'hub', prePause: null, biomeId: null, droneHz: null, boss: false, bossPhase: 0, alive: 0, hpFrac: 1, boonCount: 0, defiance: 0 };
+    check('snapshot(undefined) returns safe defaults without throwing', JSON.stringify(s1) === JSON.stringify(expectedDefault));
+    check('snapshot({}) returns safe defaults without throwing', JSON.stringify(s2) === JSON.stringify(expectedDefault));
+  }
+  {
+    const s = JSON.parse(R(`JSON.stringify(MUSIC.logic.snapshot({
+      state: 'hub', bossRef: { dead: false, phase: 2 },
+      enemies: [{ dead: false, boss: false }, { dead: true, boss: false }, { dead: false, boss: true }],
+      player: { hp: 3, maxhp: 0, boonRanks: { a: 1 }, defiance: 2 },
+    }))`));
+    check('snapshot forces boss=false, bossPhase=0 at hub', s.boss === false && s.bossPhase === 0);
+    check('snapshot alive counts only !dead && !boss enemies', s.alive === 1);
+    check('snapshot hpFrac clamps to 1 when maxhp is 0', s.hpFrac === 1);
+  }
+  {
+    const s = JSON.parse(R(`JSON.stringify(MUSIC.logic.snapshot({
+      state: 'combat', bossRef: { dead: false, phase: 1 },
+      enemies: Array.from({length: 250}, () => ({ dead: false, boss: false })),
+      player: { hp: 200, maxhp: 100, boonRanks: {}, defiance: -1 },
+    }))`));
+    check('snapshot alive-count loop capped at 200', s.alive === 200);
+    check('snapshot hpFrac clamps to [0,1] (hp > maxhp)', s.hpFrac === 1);
+  }
+
+  // ---- deriveTarget ----
+  {
+    const D = (snap, override, dyn) => JSON.parse(R(`JSON.stringify(MUSIC.logic.deriveTarget(${JSON.stringify(snap)}, ${JSON.stringify(override) || 'undefined'}, ${dyn === undefined ? 'undefined' : dyn}))`));
+    let t = D({ state: 'hub', boss: false, bossPhase: 0, alive: 0, hpFrac: 1, biomeId: null, droneHz: null, boonCount: 0, defiance: 0 });
+    check('deriveTarget hub -> yaman L0 play no-duck', t.ragaId === 'yaman' && t.level === 0 && t.mode === 'play' && t.duck === false);
+
+    t = D({ state: 'combat', boss: false, bossPhase: 0, alive: 2, hpFrac: 1, biomeId: 'naraka', droneHz: 110, boonCount: 0, defiance: 0 });
+    check('deriveTarget combat naraka 2 alive full hp -> bhairav L2', t.ragaId === 'bhairav' && t.level === 2);
+
+    t = D({ state: 'combat', boss: false, bossPhase: 0, alive: 7, hpFrac: 1, biomeId: 'naraka', droneHz: 110, boonCount: 0, defiance: 0 });
+    check('deriveTarget combat 7 alive -> L3', t.level === 3);
+
+    t = D({ state: 'combat', boss: false, bossPhase: 0, alive: 1, hpFrac: 0.2, biomeId: 'naraka', droneHz: 110, boonCount: 0, defiance: 0 });
+    check('deriveTarget combat hpFrac .2 -> L3 + lowHp true', t.level === 3 && t.lowHp === true);
+
+    t = D({ state: 'combat', boss: true, bossPhase: 1, alive: 0, hpFrac: 1, biomeId: 'naraka', droneHz: 110, boonCount: 0, defiance: 0 });
+    check('deriveTarget boss phase1 -> L4', t.level === 4);
+
+    t = D({ state: 'combat', boss: true, bossPhase: 2, alive: 0, hpFrac: 1, biomeId: 'naraka', droneHz: 110, boonCount: 0, defiance: 0 });
+    check('deriveTarget boss phase2 -> L5', t.level === 5);
+
+    for (const st of ['cleared', 'choosing', 'victory']) {
+      t = D({ state: st, boss: false, bossPhase: 0, alive: 0, hpFrac: 1, biomeId: 'naraka', droneHz: 110, boonCount: 0, defiance: 0 });
+      check(`deriveTarget ${st} -> L1`, t.level === 1);
+    }
+
+    t = D({ state: 'paused', prePause: 'combat', boss: false, bossPhase: 0, alive: 2, hpFrac: 1, biomeId: 'naraka', droneHz: 110, boonCount: 0, defiance: 0 });
+    check('deriveTarget paused prePause combat -> L2 + duck true', t.level === 2 && t.duck === true);
+
+    t = D({ state: 'dead', boss: false, bossPhase: 0, alive: 0, hpFrac: 0, biomeId: 'naraka', droneHz: 110, boonCount: 0, defiance: 0 });
+    check("deriveTarget dead -> mode 'elegy'", t.mode === 'elegy');
+
+    t = D({ state: 'combat', boss: false, bossPhase: 0, alive: 1, hpFrac: 1, biomeId: 'foo', droneHz: 100, boonCount: 0, defiance: 0 });
+    check("deriveTarget unknown biome 'foo' droneHz 100 -> bhairav / saHz 100", t.ragaId === 'bhairav' && Math.abs(t.saHz - 100) < 1e-9);
+
+    t = D({ state: 'combat', boss: false, bossPhase: 0, alive: 1, hpFrac: 1, biomeId: 'naraka', droneHz: 110, boonCount: 0, defiance: 0 }, { level: 3, raga: 'patala' });
+    check('deriveTarget override {level:3,raga:patala} -> malkauns L3 regardless of state', t.ragaId === 'malkauns' && t.level === 3);
+  }
+
+  // ---- capLevel ----
+  {
+    const cl = (l, d) => R(`MUSIC.logic.capLevel(${l}, ${d})`);
+    check('capLevel(5,0)===1', cl(5, 0) === 1);
+    check('capLevel(5,1)===5', cl(5, 1) === 5);
+    check('capLevel(3,.5)===3', cl(3, 0.5) === 3);
+    check('capLevel(0,0)===0', cl(0, 0) === 0);
+    check('capLevel(5,.5)===3', cl(5, 0.5) === 3);
+  }
+
+  // ---- createGovernor ----
+  {
+    R(`
+      var __gov1 = MUSIC.logic.createGovernor({ downHoldSec: 3 });
+      __gov1.update(3, 0);
+      __gov1.update(2, 1);
+      __gov1.update(2, 1);
+    `);
+    check('governor: down does not apply before 3s held', R('__gov1.level') === 3);
+    R('__gov1.update(2, 1.5);');
+    check('governor: down applies once held >= 3s', R('__gov1.level') === 2);
+
+    R(`
+      var __gov2 = MUSIC.logic.createGovernor({ downHoldSec: 3 });
+      __gov2.update(3, 0);
+      __gov2.update(2, 1);
+      __gov2.update(3, 1);
+      __gov2.update(2, 1);
+      __gov2.update(2, 1);
+    `);
+    check('governor: up is immediate', true); // implicit in the update(3,0) above never dropping below 3 until held
+    check('governor: flicker 3->2->3 within 3s never drops', R('__gov2.level') === 3);
+
+    R('var __gov3 = MUSIC.logic.createGovernor({ downHoldSec: 3 }); __gov3.update(4, 0); __gov3.force(1);');
+    check('governor: force() sets immediately', R('__gov3.level') === 1);
+  }
+
+  // ---- detectEvents ----
+  {
+    const snap = (over) => Object.assign({ state: 'hub', prePause: null, biomeId: null, droneHz: null, boss: false, bossPhase: 0, alive: 0, hpFrac: 1, boonCount: 0, defiance: 0 }, over);
+    const ev = (prev, cur) => JSON.parse(R(`JSON.stringify(MUSIC.logic.detectEvents(${prev === null ? 'null' : JSON.stringify(prev)}, ${JSON.stringify(cur)}))`));
+
+    check('detectEvents: first call (prev=null) -> []', ev(null, snap()).length === 0);
+    check('detectEvents: identical snapshots -> []', ev(snap({ state: 'combat' }), snap({ state: 'combat' })).length === 0);
+
+    check('detectEvents: bossIntro fires when boss appears in combat',
+      JSON.stringify(ev(snap({ state: 'combat' }), snap({ state: 'combat', boss: true, bossPhase: 1 }))) === JSON.stringify(['bossIntro']));
+    check('detectEvents: bossIntro does not fire on hub -> combat (no boss)',
+      ev(snap({ state: 'hub' }), snap({ state: 'combat' })).indexOf('bossIntro') === -1);
+
+    check('detectEvents: bossPhase fires 1->2',
+      JSON.stringify(ev(snap({ state: 'combat', boss: true, bossPhase: 1 }), snap({ state: 'combat', boss: true, bossPhase: 2 }))) === JSON.stringify(['bossPhase']));
+
+    {
+      const r = ev(snap({ state: 'combat', boss: true, bossPhase: 2 }), snap({ state: 'combat', boss: false }));
+      check('detectEvents: bossDefeated fires exactly on boss->!boss, combat->combat (incl. final boss, bossRef stays but dead)', r.indexOf('bossDefeated') !== -1);
+    }
+    check('detectEvents: bossDefeated never fires on hub->combat',
+      ev(snap({ state: 'hub', boss: false }), snap({ state: 'combat', boss: false })).indexOf('bossDefeated') === -1);
+    check('detectEvents: bossDefeated never fires on death',
+      ev(snap({ state: 'combat', boss: true, bossPhase: 1 }), snap({ state: 'dead', boss: true, bossPhase: 1 })).indexOf('bossDefeated') === -1);
+
+    check('detectEvents: roomClear fires combat->cleared with no boss',
+      JSON.stringify(ev(snap({ state: 'combat' }), snap({ state: 'cleared' }))) === JSON.stringify(['roomClear']));
+    check('detectEvents: roomClear does not fire combat->cleared with a boss just defeated',
+      ev(snap({ state: 'combat', boss: true }), snap({ state: 'cleared', boss: false })).indexOf('roomClear') === -1);
+
+    check('detectEvents: reward fires on boonCount increase within a run',
+      JSON.stringify(ev(snap({ state: 'combat', boonCount: 1 }), snap({ state: 'combat', boonCount: 2 }))) === JSON.stringify(['reward']));
+    check('detectEvents: reward never fires across hub->run',
+      ev(snap({ state: 'hub', boonCount: 0 }), snap({ state: 'combat', boonCount: 1 })).indexOf('reward') === -1);
+
+    check('detectEvents: revive fires on defiance decrease within a run',
+      JSON.stringify(ev(snap({ state: 'combat', defiance: 2 }), snap({ state: 'combat', defiance: 1 }))) === JSON.stringify(['revive']));
+    check('detectEvents: revive never fires across run->hub',
+      ev(snap({ state: 'combat', defiance: 2 }), snap({ state: 'hub', defiance: 1 })).indexOf('revive') === -1);
+
+    check('detectEvents: death fires on state -> dead',
+      JSON.stringify(ev(snap({ state: 'combat' }), snap({ state: 'dead' }))) === JSON.stringify(['death']));
+    check('detectEvents: victory fires on state -> victory',
+      JSON.stringify(ev(snap({ state: 'combat' }), snap({ state: 'victory' }))) === JSON.stringify(['victory']));
+
+    check('detectEvents: biomeChange fires on differing non-null biomeIds outside hub',
+      JSON.stringify(ev(snap({ state: 'combat', biomeId: 'naraka' }), snap({ state: 'combat', biomeId: 'patala' }))) === JSON.stringify(['biomeChange']));
+    check('detectEvents: toHub fires entering hub',
+      JSON.stringify(ev(snap({ state: 'cleared' }), snap({ state: 'hub' }))) === JSON.stringify(['toHub']));
+  }
+
+  // ---- polling contract (main sandbox, real GAME/DATA/Boss) ----
+  {
+    // re-boot to a known hub state first (many earlier sections left GAME
+    // mid-run); the contract only cares that a real GAME object snapshots
+    // cleanly at boot, not that it happens at the file's very first tick.
+    vm.runInContext(`META.load(); GAME.init(); UI.hub();`, sandbox);
+    const snapBoot = JSON.parse(R('JSON.stringify(MUSIC.logic.snapshot(GAME))'));
+    check("polling contract: snapshot(GAME) at boot -> state 'hub'", snapBoot.state === 'hub');
+    const biomeIds = JSON.parse(R('JSON.stringify(DATA.BIOMES.map(b => b.id))'));
+    check('polling contract: every DATA.BIOMES id is in BIOME_RAGA', biomeIds.every(id => R(`!!MUSIC.theory.BIOME_RAGA['${id}']`) === true));
+    R(`var __tataka = new Boss('tataka', 0, 0);`);
+    check("polling contract: new Boss('tataka',0,0) has phase===1 and dead falsy", R('__tataka.phase') === 1 && !R('__tataka.dead'));
+    const r1 = vm.runInContext('simulateRun({ godMode: true })', sandbox);
+    check('polling contract: after simulateRun, GAME.player.boonRanks is an object', R("typeof GAME.player.boonRanks === 'object' && GAME.player.boonRanks !== null") === true);
+    check('polling contract: after simulateRun, GAME.player.defiance is numeric', R("typeof GAME.player.defiance === 'number'") === true);
+    check('polling contract: after simulateRun, GAME.enemies is an array', R('Array.isArray(GAME.enemies)') === true);
+    // restore boot state for any later sections
+    vm.runInContext(`META.load(); GAME.init(); UI.hub();`, sandbox);
+  }
+}
+
+// ---------------- MUSIC dsp (05.3-02) ----------------
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+  console.log('\n— MUSIC dsp (05.3-02) —');
+
+  // ---- Node-side analysis helpers ----
+  function autocorrF0(samples, sr, t0, t1) {
+    const i0 = Math.max(0, Math.floor(sr * t0)), i1 = Math.min(samples.length, Math.floor(sr * t1));
+    const seg = samples.slice(i0, i1);
+    const n = seg.length;
+    const minLag = Math.max(1, Math.floor(sr / 1200));
+    const maxLag = Math.min(n - 2, Math.floor(sr / 50));
+    function ac(lag) { let s = 0; for (let i = 0; i < n - lag; i++) s += seg[i] * seg[i + lag]; return s; }
+    let bestLag = minLag, bestVal = -Infinity;
+    for (let lag = minLag; lag <= maxLag; lag++) {
+      const v = ac(lag);
+      if (v > bestVal) { bestVal = v; bestLag = lag; }
+    }
+    const y0 = ac(Math.max(1, bestLag - 1)), y1 = bestVal, y2 = ac(bestLag + 1);
+    const denom = y0 - 2 * y1 + y2;
+    const shift = Math.abs(denom) > 1e-9 ? 0.5 * (y0 - y2) / denom : 0;
+    const refined = bestLag + Math.max(-0.5, Math.min(0.5, shift));
+    return sr / refined;
+  }
+  function centsOff(hz, target) { return 1200 * Math.log2(hz / target); }
+  function zcrWindow(samples, sr, t0, t1) {
+    const i0 = Math.max(1, Math.floor(sr * t0)), i1 = Math.min(samples.length, Math.floor(sr * t1));
+    let count = 0;
+    for (let i = i0; i < i1; i++) if ((samples[i - 1] < 0) !== (samples[i] < 0)) count++;
+    return count / Math.max(1, i1 - i0);
+  }
+  function rms(samples, i0, i1) {
+    i0 = Math.max(0, i0); i1 = Math.min(samples.length, i1);
+    let s = 0; for (let i = i0; i < i1; i++) s += samples[i] * samples[i];
+    return Math.sqrt(s / Math.max(1, i1 - i0));
+  }
+  function getBuf(src) { return JSON.parse(R(`JSON.stringify(Array.from(${src}))`)); }
+
+  // ---- ks tuning (jawari 0) ----
+  {
+    let bad = [];
+    for (const hz of [220, 440, 880]) {
+      const buf = getBuf(`MUSIC.dsp.ks({hz:${hz}, sr:32000, dur:1.0, t60:1.4, bright:0.6, jawari:0, seed:1})`);
+      const f0 = autocorrF0(buf, 32000, 0.3, 0.5);
+      const cents = centsOff(f0, hz);
+      if (Math.abs(cents) > 10) bad.push(`${hz}Hz off by ${cents.toFixed(2)}c`);
+    }
+    check('ks(220/440/880, jawari 0): autocorrelation f0 within 10 cents' + (bad.length ? ' — ' + bad.join(', ') : ''), bad.length === 0);
+  }
+
+  // ---- generic per-render invariants ----
+  function checkRenderInvariants(label, samples, rising) {
+    const bad = [];
+    if (!samples.every(x => Number.isFinite(x))) bad.push('non-finite sample');
+    let peak = 0; for (const x of samples) peak = Math.max(peak, Math.abs(x));
+    if (!(peak >= 0.85 && peak <= 0.95)) bad.push(`peak=${peak.toFixed(3)}`);
+    if (Math.abs(samples[0]) >= 0.02) bad.push(`first=${samples[0]}`);
+    const tailN = Math.min(256, samples.length);
+    let tailAbsSum = 0; for (let i = samples.length - tailN; i < samples.length; i++) tailAbsSum += Math.abs(samples[i]);
+    const tailMean = tailAbsSum / tailN;
+    if (tailMean >= 0.01) bad.push(`tail256Mean=${tailMean.toFixed(4)}`);
+    const n = samples.length;
+    const firstQ = rms(samples, 0, Math.floor(n * 0.25));
+    const lastQ = rms(samples, Math.floor(n * 0.75), n);
+    const first25 = rms(samples, 0, Math.floor(n * 0.25));
+    const last10 = rms(samples, Math.floor(n * 0.9), n);
+    if (rising) {
+      if (!(lastQ > firstQ)) bad.push(`rising: lastQ=${lastQ.toFixed(4)} firstQ=${firstQ.toFixed(4)}`);
+    } else {
+      if (!(last10 < 0.1 * first25)) bad.push(`decay: last10=${last10.toFixed(4)} first25*.1=${(first25 * 0.1).toFixed(4)}`);
+    }
+    check(label + (bad.length ? ' — ' + bad.join(', ') : ''), bad.length === 0);
+  }
+
+  const ragaIds = ['yaman', 'bhairav', 'malkauns', 'adana', 'bhairavi'];
+  const RISING = { riser: 1, swell: 1 };
+
+  // ---- every bankSpec job + impulse: finiteness / peak / click-free / decay ----
+  {
+    for (const rid of ragaIds) {
+      const jobs = JSON.parse(R(`JSON.stringify(MUSIC.dsp.bankSpec(MUSIC.theory.RAGAS['${rid}']).map(j => j.key))`));
+      for (const key of jobs) {
+        const idxSrc = `MUSIC.dsp.bankSpec(MUSIC.theory.RAGAS['${rid}']).findIndex(j => j.key === ${JSON.stringify(key)})`;
+        const samples = getBuf(`MUSIC.dsp.renderJob(MUSIC.dsp.bankSpec(MUSIC.theory.RAGAS['${rid}'])[${R(idxSrc)}], 32000)`);
+        const kind = key.split(':')[0] === 'f' ? key.split(':')[1] : null;
+        checkRenderInvariants(`${rid} job '${key}' render invariants`, samples, !!(kind && RISING[kind]));
+      }
+    }
+    const [L, R2] = JSON.parse(R('JSON.stringify(MUSIC.dsp.impulse(32000, 2.4, 42).map(ch => Array.from(ch)))'));
+    checkRenderInvariants('impulse L channel render invariants', L, false);
+    checkRenderInvariants('impulse R channel render invariants', R2, false);
+    check('impulse: L and R channels differ', JSON.stringify(L) !== JSON.stringify(R2));
+  }
+
+  // ---- impulse basic shape ----
+  {
+    const stereo = JSON.parse(R('JSON.stringify(MUSIC.dsp.impulse(32000, 2.4, 1).map(ch => Array.from(ch)))'));
+    check('impulse(32000,2.4) -> 2 channels', stereo.length === 2);
+    check('impulse channels are finite', stereo[0].every(Number.isFinite) && stereo[1].every(Number.isFinite));
+  }
+
+  // ---- leadWave ----
+  {
+    let bad = [];
+    for (const id of ['bansuri', 'bowed', 'reed', 'sub']) {
+      const w = JSON.parse(R(`JSON.stringify((function () { const w = MUSIC.dsp.leadWave('${id}'); return { real: Array.from(w.real), imag: Array.from(w.imag) }; })())`));
+      if (w.real.length !== w.imag.length) bad.push(`${id}: length mismatch`);
+      if (w.real[0] !== 0 || w.imag[0] !== 0) bad.push(`${id}: index0 nonzero`);
+      if (!w.real.every(Number.isFinite) || !w.imag.every(Number.isFinite)) bad.push(`${id}: non-finite`);
+      if (w.imag.every(x => x === 0)) bad.push(`${id}: all zero`);
+    }
+    check('leadWave(bansuri/bowed/reed/sub): {real,imag} same length, index0 zero, finite, not all zero' + (bad.length ? ' — ' + bad.join(', ') : ''), bad.length === 0);
+  }
+
+  // ---- bankSpec coherence ----
+  {
+    let bad = [];
+    const T = JSON.parse(R('JSON.stringify(MUSIC.theory)'));
+    for (const rid of ragaIds) {
+      const raga = JSON.parse(R(`JSON.stringify(MUSIC.theory.RAGAS['${rid}'])`));
+      const keys = JSON.parse(R(`JSON.stringify(MUSIC.dsp.bankSpec(MUSIC.theory.RAGAS['${rid}']).map(j => j.key))`));
+      const keySet = new Set(keys);
+      for (const k of T.TABLA_KEYS) if (!keySet.has('t:' + k)) bad.push(`${rid}: missing t:${k}`);
+      for (const k of T.BIG_KEYS) if (!keySet.has('b:' + k)) bad.push(`${rid}: missing b:${k}`);
+      for (const k of T.METAL_KEYS) if (!keySet.has('m:' + k)) bad.push(`${rid}: missing m:${k}`);
+      for (const k of T.FX_KEYS) if (!keySet.has('f:' + k)) bad.push(`${rid}: missing f:${k}`);
+      const tanDegs = JSON.parse(R(`JSON.stringify(Array.from(new Set(MUSIC.gen.tanpuraCycle(MUSIC.theory.RAGAS['${rid}']).concat(MUSIC.gen.tanpuraCycle(MUSIC.theory.RAGAS['${rid}'], true)).map(c => c.deg))))`));
+      for (const d of tanDegs) if (!keySet.has('d:' + d)) bad.push(`${rid}: missing d:${d}`);
+      for (let d = -12; d <= 24; d++) if (raga.notes.indexOf(((d % 12) + 12) % 12) !== -1 && !keySet.has('p:' + d)) bad.push(`${rid}: missing p:${d}`);
+
+      // emitted keys from gen.drumsAt/pluckAt/tanpuraCycle over 8 cycles x levels 0-5 (with echo) must be covered
+      const emitted = JSON.parse(R(`JSON.stringify((function () {
+        const raga = MUSIC.theory.RAGAS['${rid}'];
+        const tala = MUSIC.theory.TALAS[raga.tala];
+        const cs = MUSIC.theory.talaSteps(tala);
+        const rand = MUSIC.gen.rng(123);
+        const keys = {};
+        let echo = null;
+        for (let level = 0; level <= 5; level++) {
+          for (let s = 0; s < cs * 8; s++) {
+            for (const e of MUSIC.gen.drumsAt(tala, raga, s, level, rand, {})) {
+              if (e.voice === 'tabla') keys['t:' + e.key] = 1;
+              else if (e.voice === 'big') keys['b:' + e.key] = 1;
+              else if (e.voice === 'metal') keys['m:' + e.key] = 1;
+            }
+            const pl = MUSIC.gen.pluckAt(raga, tala, s, level, rand, echo);
+            for (const e of pl) keys['p:' + e.deg] = 1;
+            if (pl.length) echo = pl;
+          }
+        }
+        for (const c of MUSIC.gen.tanpuraCycle(raga, false)) keys['d:' + c.deg] = 1;
+        for (const c of MUSIC.gen.tanpuraCycle(raga, true)) keys['d:' + c.deg] = 1;
+        return Object.keys(keys);
+      })())`));
+      for (const k of emitted) if (!keySet.has(k)) bad.push(`${rid}: emitted key '${k}' has no bank job`);
+    }
+    check('bankSpec(raga) coherence: t:/b:/m:/f:/d:/p: keys cover TABLA/BIG/METAL/FX_KEYS + tanpuraCycle degs + raga notes in [-12,24], and cover every key emitted by drumsAt/pluckAt/tanpuraCycle over 8 cycles x levels 0-5'
+      + (bad.length ? ' — ' + bad.slice(0, 12).join(', ') + (bad.length > 12 ? ` (+${bad.length - 12} more)` : '') : ''), bad.length === 0);
+  }
+
+  // ---- performance (steady-state, after a JIT warm-up pass; matches how
+  // the real engine renders many jobs across a session rather than a single
+  // cold call) ----
+  {
+    let bad = [];
+    const raga = 'bhairav';
+    R(`var __jobs = MUSIC.dsp.bankSpec(MUSIC.theory.RAGAS['${raga}']);`);
+    const keys = JSON.parse(R('JSON.stringify(__jobs.map(j => j.key))'));
+    // warm-up pass (untimed) so JIT tiering-up noise doesn't dominate a
+    // single-call measurement
+    for (let i = 0; i < keys.length; i++) R(`MUSIC.dsp.renderJob(__jobs[${i}], 32000)`);
+    let totalMs = 0;
+    for (let i = 0; i < keys.length; i++) {
+      // take the min of 3 timed calls per job: a single Date.now()-bracketed
+      // sample is occasionally hit by an unrelated GC pause in this vm
+      // sandbox, which the min (not mean) reliably filters out.
+      let best = Infinity;
+      for (let r = 0; r < 3; r++) {
+        const t0 = Date.now();
+        R(`MUSIC.dsp.renderJob(__jobs[${i}], 32000)`);
+        best = Math.min(best, Date.now() - t0);
+      }
+      totalMs += best;
+      if (best > 50) bad.push(`${keys[i]}: ${best}ms`);
+    }
+    check('every single bankSpec job renders in < 50ms' + (bad.length ? ' — ' + bad.join(', ') : ''), bad.length === 0);
+    check(`full bank for one raga renders in < 800ms (measured ${totalMs}ms)`, totalMs < 800);
+  }
+
+  // ---- bol pitch-bend (Ge) ----
+  {
+    const tabla = getBuf(`MUSIC.dsp.bol('Ge', 'tabla', MUSIC.theory.RAGAS.bhairav.sa, 32000, 7)`);
+    const pakhawaj = getBuf(`MUSIC.dsp.bol('Ge', 'pakhawaj', MUSIC.theory.RAGAS.malkauns.sa, 32000, 7)`);
+    const tEarly = zcrWindow(tabla, 32000, 0, 0.04);
+    const tLate = zcrWindow(tabla, 32000, 0.12, 0.16);
+    const pEarly = zcrWindow(pakhawaj, 32000, 0, 0.04);
+    const pLate = zcrWindow(pakhawaj, 32000, 0.12, 0.16);
+    check(`bol('Ge','tabla') shows upward pitch bend (zcr late ${tLate.toFixed(4)} > zcr early ${tEarly.toFixed(4)})`, tLate > tEarly * 1.05);
+    check(`bol('Ge','pakhawaj') shows no bend (zcr late ${pLate.toFixed(4)} ~ zcr early ${pEarly.toFixed(4)})`, pLate <= pEarly * 1.15);
+  }
+}
+
+// ---------------- MUSIC engine (mock AudioContext) (05.3-02) ----------------
+// Strict MockAudioContext: throws on non-finite AudioParam values/times,
+// on exponentialRampToValueAtTime(<=0), and on setTargetAtTime(timeConstant
+// <= 0); records connect() destinations and per-node-type creation counts;
+// records late (`start(t)` with t before currentTime) calls. Reusable by
+// 05.3-03.
+class MockAudioContext {
+  constructor() {
+    this.currentTime = 0;
+    this.sampleRate = 48000;
+    this.state = 'running';
+    this.late = 0;
+    this.count = {};
+    this._sources = [];
+    this.destination = this._nodeBase();
+  }
+  _bump(kind) { this.count[kind] = (this.count[kind] || 0) + 1; }
+  _nodeBase() {
+    return {
+      _dsts: [],
+      connect(dst) { this._dsts.push(dst); return dst; },
+      disconnect() { this._dsts = []; },
+    };
+  }
+  _assertFinite(x, label) {
+    if (typeof x !== 'number' || !Number.isFinite(x)) throw new TypeError('MockAudioContext: non-finite ' + label + ' (' + x + ')');
+  }
+  _param(initial) {
+    const self = this;
+    return {
+      value: initial,
+      _events: [],
+      setValueAtTime(v, t) {
+        self._assertFinite(v, 'value'); self._assertFinite(t, 'time');
+        this.value = v; this._events.push({ type: 'set', v, t }); return this;
+      },
+      linearRampToValueAtTime(v, t) {
+        self._assertFinite(v, 'value'); self._assertFinite(t, 'time');
+        this.value = v; this._events.push({ type: 'lin', v, t }); return this;
+      },
+      exponentialRampToValueAtTime(v, t) {
+        self._assertFinite(v, 'value'); self._assertFinite(t, 'time');
+        if (!(v > 0)) throw new RangeError('MockAudioContext: exponentialRampToValueAtTime value <= 0 (' + v + ')');
+        this.value = v; this._events.push({ type: 'exp', v, t }); return this;
+      },
+      setTargetAtTime(v, t, tc) {
+        self._assertFinite(v, 'value'); self._assertFinite(t, 'time'); self._assertFinite(tc, 'timeConstant');
+        if (!(tc > 0)) throw new RangeError('MockAudioContext: setTargetAtTime timeConstant <= 0 (' + tc + ')');
+        this.value = v; this._events.push({ type: 'target', v, t, tc }); return this;
+      },
+      cancelScheduledValues(t) {
+        self._assertFinite(t, 'time'); this._events.push({ type: 'cancel', t }); return this;
+      },
+    };
+  }
+  createGain() { this._bump('gain'); return Object.assign(this._nodeBase(), { gain: this._param(1) }); }
+  createOscillator() {
+    this._bump('osc');
+    const self = this;
+    return Object.assign(this._nodeBase(), {
+      type: 'sine', frequency: this._param(440), detune: this._param(0), periodicWave: null,
+      setPeriodicWave(w) { this.periodicWave = w; this.type = 'custom'; },
+      _started: false,
+      start(t) { self._assertFinite(t, 'osc.start time'); if (t < self.currentTime - 1e-3) self.late++; this._started = true; },
+      stop(t) { self._assertFinite(t, 'osc.stop time'); },
+      onended: null,
+    });
+  }
+  createBufferSource() {
+    this._bump('bufferSource');
+    const self = this;
+    return Object.assign(this._nodeBase(), {
+      buffer: null, playbackRate: this._param(1), loop: false, onended: null, _endTime: null,
+      start(t) {
+        self._assertFinite(t, 'bufferSource.start time');
+        if (t < self.currentTime - 1e-3) self.late++;
+        const rate = this.playbackRate.value || 1;
+        const dur = this.buffer ? (this.buffer.length / this.buffer.sampleRate) / rate : 0;
+        this._endTime = this.loop ? Infinity : t + dur;
+        self._sources.push(this);
+      },
+      stop(t) {
+        self._assertFinite(t, 'bufferSource.stop time');
+        this._endTime = (this._endTime === null) ? t : Math.min(this._endTime, t);
+      },
+    });
+  }
+  createBuffer(ch, len, sr) {
+    this._bump('buffer');
+    const data = [];
+    for (let i = 0; i < ch; i++) data.push(new Float32Array(len));
+    return { numberOfChannels: ch, length: len, sampleRate: sr, getChannelData(i) { return data[i]; } };
+  }
+  createBiquadFilter() { this._bump('biquad'); return Object.assign(this._nodeBase(), { type: 'lowpass', frequency: this._param(350), Q: this._param(1), gain: this._param(0), detune: this._param(0) }); }
+  createConvolver() { this._bump('convolver'); return Object.assign(this._nodeBase(), { buffer: null, normalize: true }); }
+  createDynamicsCompressor() { this._bump('compressor'); return Object.assign(this._nodeBase(), { threshold: this._param(-24), knee: this._param(30), ratio: this._param(12), attack: this._param(0.003), release: this._param(0.25), reduction: 0 }); }
+  createStereoPanner() { this._bump('panner'); return Object.assign(this._nodeBase(), { pan: this._param(0) }); }
+  createPeriodicWave(real, imag) { this._bump('periodicWave'); return { real, imag }; }
+  resume() { this.state = 'running'; return { then() {} }; }
+  advance(sec) {
+    this.currentTime += sec;
+    for (let i = this._sources.length - 1; i >= 0; i--) {
+      const s = this._sources[i];
+      if (s._endTime !== null && s._endTime <= this.currentTime) {
+        this._sources.splice(i, 1);
+        if (typeof s.onended === 'function') s.onended();
+      }
+    }
+  }
+}
+
+// fresh vm context (never the main sandbox) with a strict MockAudioContext.
+// Loads utils/settings/storage/audio/music only (music's engine layer
+// doesn't need renderer/sprites/data/entities/rooms/ui/game/gamepad).
+function makeMusicSandbox() {
+  const storage = {};
+  const timers = [];
+  const noop2 = () => {};
+  const sb = {
+    console, Math, JSON, Set, Map, Array, Object, Number, String, Boolean, Date, Promise, Float32Array,
+    parseInt, parseFloat, isNaN,
+    setTimeout: (fn, ms) => { timers.push({ fn, ms }); return timers.length; },
+    clearTimeout: noop2,
+    __timers: timers,
+    performance: { now: () => { const h = process.hrtime(); return h[0] * 1000 + h[1] / 1e6; } },
+    addEventListener: noop2, removeEventListener: noop2,
+    location: { search: '' },
+    localStorage: {
+      getItem: k => (k in storage ? storage[k] : null),
+      setItem: (k, v) => { storage[k] = String(v); },
+      removeItem: k => { delete storage[k]; },
+    },
+    AudioContext: MockAudioContext,
+  };
+  sb.window = sb;
+  sb.globalThis = sb;
+  vm.createContext(sb);
+  const R = (src) => vm.runInContext(src, sb);
+  for (const f of ['utils.js', 'settings.js', 'storage.js', 'audio.js', 'music.js']) {
+    const musicSrc = fs.readFileSync(path.join(__dirname, '..', 'js', f), 'utf8');
+    vm.runInContext(musicSrc, sb, { filename: f });
+  }
+  return { sb, R };
+}
+
+{
+  console.log('\n— MUSIC engine (mock AudioContext) (05.3-02) —');
+
+  // ---- main sandbox stays fully inert ----
+  check('main sandbox: MUSIC.ctx === null', vm.runInContext('MUSIC.ctx', sandbox) === null);
+  check('main sandbox: MUSIC.attach({ctx:null}) === false', vm.runInContext('MUSIC.attach({ctx:null})', sandbox) === false);
+  check('main sandbox: MUSIC.isAudible() === false', vm.runInContext('MUSIC.isAudible()', sandbox) === false);
+  const __preTimeouts = vm.runInContext('__timeouts.length', sandbox);
+  check('main sandbox: no __timeouts added by any of the above', vm.runInContext('__timeouts.length', sandbox) === __preTimeouts);
+
+  // ---- mock sandbox ----
+  let engineErr = null;
+  let mock = null;
+  try {
+    const { R } = makeMusicSandbox();
+    // AUDIO.init() (05.3-03 task 2) now auto-attaches + starts MUSIC itself,
+    // so by the time we get control back MUSIC is already attached/running —
+    // an explicit re-attach here must therefore report "already attached".
+    R('AUDIO.init();');
+    check('AUDIO.init() already attached MUSIC (MUSIC.ctx === AUDIO.ctx)', R('MUSIC.ctx === AUDIO.ctx') === true);
+    check('AUDIO.init() already started MUSIC (MUSIC.running)', R('MUSIC.running') === true);
+    const attach2 = R('MUSIC.attach(AUDIO)');
+    check('re-attach after AUDIO.init()\'s auto-attach returns false', attach2 === false);
+    mock = R('AUDIO.ctx');
+
+    // ---- bus graph ----
+    check("trim node's recorded destinations include AUDIO.musicGain",
+      R('MUSIC.nodes.trim._dsts.indexOf(AUDIO.musicGain) !== -1') === true);
+    const nodeCount = Object.values(mock.count).reduce((a, b) => a + b, 0);
+    check(`persistent node count after attach+autostart < 120 (counted ${nodeCount})`, nodeCount < 120);
+    check("stems exist for every STEM_NAMES entry + 'fx'",
+      R("MUSIC.theory.STEM_NAMES.concat(['fx']).every(s => !!MUSIC.nodes.stems[s])") === true);
+
+    // ---- setStemLevels ----
+    R('MUSIC.setStemLevels(4, AUDIO.ctx.currentTime, 0.5);');
+    check('setStemLevels(4,t,.5): each stem gain last automation is setTargetAtTime to INTENSITY[4][s]*MIX[s]*bigBoost',
+      R(`(function () {
+        const T = MUSIC.theory;
+        const raga = T.RAGAS[MUSIC.raga];
+        for (const s of T.STEM_NAMES) {
+          const target = T.INTENSITY[4][s] * MUSIC.MIX[s] * (s === 'big' ? (raga.bigBoost || 1) : 1);
+          const evs = MUSIC.nodes.stems[s].gain._events;
+          const last = evs[evs.length - 1];
+          if (!last || last.type !== 'target' || Math.abs(last.v - target) > 1e-9) return false;
+        }
+        return true;
+      })()`) === true);
+
+    // ---- playOneShot ----
+    {
+      const t0 = R('AUDIO.ctx.currentTime');
+      check("playOneShot('tabla','t:Dha', t, .8) -> true", R(`MUSIC.playOneShot('tabla', 't:Dha', ${t0}, 0.8)`) === true);
+      check('BufferSource buffer.sampleRate === min(ctx.sampleRate, 32000)',
+        R(`MUSIC._buffer('t:Dha').sampleRate === Math.min(AUDIO.ctx.sampleRate, MUSIC.RENDER_SR_MAX)`) === true);
+
+      mock.advance(2); // let the t:Dha one-shot above finish so the cap test below starts from a clean (0-active) slate
+      R('MUSIC.stats.dropped = 0;');
+      let successes = 0;
+      for (let i = 0; i < 10; i++) if (R(`MUSIC.playOneShot('tabla', 't:Na', ${t0}, 0.5)`) === true) successes++;
+      const caps = R('MUSIC.CAPS.tabla');
+      check(`10 calls at once -> exactly CAPS.tabla (${caps}) succeed, stats.dropped increments`,
+        successes === caps && R('MUSIC.stats.dropped') === 10 - caps);
+
+      mock.advance(3);
+      check('after advance(3) all onended fire and active counts return to 0', R('MUSIC.stats.active') === 0);
+    }
+
+    // ---- leadNote ----
+    {
+      const tp = R('AUDIO.ctx.currentTime');
+      R(`MUSIC.leadNote(${tp}, 0, 0.3, 0.5, {});`); // primer note: establishes prevHz for the glide below
+
+      const t0 = R('AUDIO.ctx.currentTime');
+      R(`MUSIC.leadNote(${t0}, 7, 0.5, 0.7, {glide:true});`);
+      check('leadNote(glide:true) schedules finite frequency automation including an exponential ramp',
+        R(`(function () {
+          const evs = MUSIC.lead.osc.frequency._events;
+          return evs.length > 0 && evs.every(e => Number.isFinite(e.v) && Number.isFinite(e.t)) && evs.some(e => e.type === 'exp');
+        })()`) === true);
+
+      const t1 = R('AUDIO.ctx.currentTime');
+      R(`MUSIC.setRaga('bhairav'); MUSIC.leadNote(${t1}, 8, 1.0, 0.7, {});`);
+      check('a note on an andolan degree (bhairav deg 8, dur >= 1 matra) sets the LFO rate to 1.6 Hz',
+        Math.abs(R('MUSIC.lead.vibLfo.frequency.value') - 1.6) < 1e-9);
+
+      const t2 = R('AUDIO.ctx.currentTime');
+      R(`MUSIC.leadNote(${t2}, 4, 0.5, 0.7, {kan:true});`);
+      check('kan inserts a ~35ms grace frequency before the main pitch',
+        R(`(function () {
+          const evs = MUSIC.lead.osc.frequency._events;
+          const last2 = evs.slice(-2);
+          return last2.length === 2 && last2[0].v !== last2[1].v && Math.abs((last2[1].t - last2[0].t) - 0.035) < 1e-9;
+        })()`) === true);
+    }
+
+    // ---- setDuck ----
+    {
+      const t0 = R('AUDIO.ctx.currentTime');
+      R(`MUSIC.setDuck(true, ${t0});`);
+      check('setDuck(true,t) -> duck lowpass target 1100 and duck gain .6',
+        R('MUSIC.nodes.duckLP.frequency.value === 1100 && Math.abs(MUSIC.nodes.duckGain.gain.value - 0.6) < 1e-9') === true);
+      R(`MUSIC.setDuck(false, ${t0});`);
+      check('setDuck(false,t) -> 18000 / 1',
+        R('MUSIC.nodes.duckLP.frequency.value === 18000 && MUSIC.nodes.duckGain.gain.value === 1') === true);
+    }
+
+    // ---- setRaga / setTension ----
+    {
+      const t0 = R('AUDIO.ctx.currentTime');
+      R(`MUSIC.setRaga('malkauns');`);
+      check("setRaga('malkauns') -> bank for malkauns exists", R("!!MUSIC._banks['malkauns']") === true);
+      check("tanpura job keys include 'd:-7'", R("MUSIC._banks['malkauns'].jobs.some(j => j.key === 'd:-7')") === true);
+      check('pad oscillator frequency target = 98',
+        R('MUSIC.pads.padOsc.frequency._events[MUSIC.pads.padOsc.frequency._events.length - 1].v') === 98);
+
+      R(`MUSIC.setTension(true, ${t0});`);
+      check('setTension(true,t) raises the tension gain above 0', R('MUSIC.pads.tensionGain.gain.value') > 0);
+    }
+
+    // ---- _renderSlice ----
+    {
+      R("MUSIC.setRaga('adana');");
+      let guard = 0;
+      while (R('!!(MUSIC._banks[MUSIC.raga] && MUSIC._banks[MUSIC.raga].done)') !== true && guard++ < 500) {
+        R('MUSIC._renderSlice(4);');
+      }
+      check('repeated _renderSlice(4) calls eventually mark the bank done',
+        R('!!(MUSIC._banks[MUSIC.raga] && MUSIC._banks[MUSIC.raga].done)') === true);
+    }
+  } catch (e) {
+    engineErr = e;
+  }
+  check('mock engine sequence never threw' + (engineErr ? ' — ' + engineErr.message : ''), engineErr === null);
+  check('mock.late === 0 (no start() call scheduled before currentTime)', mock !== null && mock.late === 0);
+}
+
+// ---------------- MUSIC scheduler (mock) (05.3-03) ----------------
+{
+  console.log('\n— MUSIC scheduler (mock) (05.3-03) —');
+
+  // main sandbox: start() must stay a no-op (no ctx, no timer).
+  {
+    const preLen = vm.runInContext('__timeouts.length', sandbox);
+    check('main sandbox: MUSIC.start() === false (no ctx)', vm.runInContext('MUSIC.start()', sandbox) === false);
+    check('main sandbox: no timer registered by start()', vm.runInContext('__timeouts.length', sandbox) === preLen);
+  }
+
+  let schedErr = null;
+  let mock = null;
+  try {
+    const { sb, R } = makeMusicSandbox();
+    const timers = sb.__timers;
+    // A minimal fake "audio" object (not the real AUDIO singleton) so this
+    // task's tests can drive MUSIC.attach()/start()/stop() directly without
+    // AUDIO.init()'s own auto-attach+start (05.3-03 task 2) racing ahead of
+    // the test's own explicit start() call.
+    R(`
+      var FAKE_AUDIO = { ctx: new AudioContext(), muted: false };
+      FAKE_AUDIO.musicGain = FAKE_AUDIO.ctx.createGain();
+      MUSIC.attach(FAKE_AUDIO);
+      var GAME = { state: 'hub', prePause: null, biome: { id: 'hub', droneHz: 138.59 }, bossRef: null,
+        enemies: [], player: { hp: 100, maxhp: 100, boonRanks: {}, defiance: 1 } };
+      MUSIC._testCounts = {};
+      MUSIC._origPlayOneShot = MUSIC.playOneShot;
+      MUSIC.playOneShot = function (stem, key, t, vel, opts) {
+        MUSIC._testCounts[stem] = (MUSIC._testCounts[stem] || 0) + 1;
+        return MUSIC._origPlayOneShot.call(this, stem, key, t, vel, opts);
+      };
+      MUSIC._leadCount = 0;
+      MUSIC._origLeadNote = MUSIC.leadNote;
+      MUSIC.leadNote = function () { MUSIC._leadCount++; return MUSIC._origLeadNote.apply(this, arguments); };
+    `);
+    mock = R('FAKE_AUDIO.ctx');
+
+    function run(sec) {
+      const steps = Math.max(1, Math.round(sec / 0.025));
+      for (let i = 0; i < steps; i++) {
+        mock.advance(0.025);
+        let guard = 0;
+        while (timers.length && guard++ < 1000) timers.shift().fn();
+      }
+    }
+    function counts(stem) { return R(`MUSIC._testCounts[${JSON.stringify(stem)}] || 0`); }
+    function resetCounts() { R('MUSIC._testCounts = {}; MUSIC._leadCount = 0;'); }
+    function sumCounts() {
+      const c = R('MUSIC._testCounts');
+      return Object.values(c).reduce((a, b) => a + b, 0);
+    }
+
+    // ---- start() / stop() basics ----
+    const preTimers = timers.length;
+    check('mock: MUSIC.start() === true with a real ctx', R('MUSIC.start(424242)') === true);
+    check('mock: start() registered exactly one timer', timers.length === preTimers + 1);
+    check('mock: second start() === false (already running)', R('MUSIC.start()') === false);
+
+    // ---- hub 20s: no percussion, lead notes, tanpura plucks ----
+    resetCounts();
+    run(20);
+    check('hub 20s: zero tabla one-shots', counts('tabla') === 0);
+    check('hub 20s: zero big one-shots', counts('big') === 0);
+    check('hub 20s: zero metal one-shots', counts('metal') === 0);
+    check('hub 20s: >= 3 lead notes', R('MUSIC._leadCount') >= 3);
+    check('hub 20s: >= 8 tanpura (drone) one-shots', counts('drone') >= 8);
+    check('hub 20s: mock.late === 0', mock.late === 0);
+
+    // ---- combat, biome naraka, 3 enemies: raga crossfade to bhairav, level 2 lands on a vibhag ----
+    R("GAME.state = 'combat'; GAME.biome = { id: 'naraka', droneHz: 110 }; GAME.enemies = [{}, {}, {}];");
+    run(0.05);
+    check('biome change begins a raga crossfade (pendingRagaTarget set)', R('!!MUSIC.pendingRagaTarget') === true);
+    check('raga stays yaman while the crossfade is in flight', R('MUSIC.raga') === 'yaman');
+    run(1.4); // > the 1.25s changeAt
+    check('crossfade completes: MUSIC.raga === "bhairav"', R('MUSIC.raga') === 'bhairav');
+
+    resetCounts();
+    {
+      let guard = 0;
+      while (R('MUSIC.applied.level') !== 2 && guard++ < 400) run(0.1);
+      check('level 2 eventually applies in combat (naraka, 3 enemies)', R('MUSIC.applied.level') === 2);
+      const cs = R('MUSIC.theory.talaSteps(MUSIC.tala)');
+      const abs = R('MUSIC.lastApply.abs');
+      const starts = R('MUSIC.theory.vibhagStartSteps(MUSIC.tala)');
+      check('level 2 applied at a vibhag-aligned step', starts.indexOf(((abs % cs) + cs) % cs) !== -1);
+      run(1.5); // let the tabla theka actually play once level 2 has landed
+      check('tabla one-shots follow once level 2 has landed', counts('tabla') > 0);
+    }
+
+    // ---- 8 enemies -> heavy combat -> level 3 at the next vibhag ----
+    R('GAME.enemies = [{}, {}, {}, {}, {}, {}, {}, {}];');
+    {
+      let guard = 0;
+      while (R('MUSIC.applied.level') !== 3 && guard++ < 400) run(0.1);
+      check('8 enemies (heavy combat) escalates to level 3', R('MUSIC.applied.level') === 3);
+    }
+
+    // ---- back to 2 enemies: governor holds >= 3s before dropping, then lands on a boundary ----
+    R('GAME.enemies = [{}, {}];');
+    run(2.5);
+    check('level does not drop before the 3s down-hold has elapsed', R('MUSIC.applied.level') === 3);
+    {
+      let guard = 0;
+      while (R('MUSIC.applied.level') !== 2 && guard++ < 400) run(0.1);
+      const cs = R('MUSIC.theory.talaSteps(MUSIC.tala)');
+      const abs = R('MUSIC.lastApply.abs');
+      const starts = R('MUSIC.theory.vibhagStartSteps(MUSIC.tala)');
+      check('level eventually drops back to 2 once held, landing on a tala boundary',
+        R('MUSIC.applied.level') === 2 && starts.indexOf(((abs % cs) + cs) % cs) !== -1);
+    }
+
+    // ---- boss appears: level jumps to 4 within one vibhag; bpm glides towards raga.bpm*1.15 ----
+    R('GAME.bossRef = { dead: false, phase: 1 };');
+    {
+      let guard = 0;
+      while (R('MUSIC.applied.level') !== 4 && guard++ < 400) run(0.1);
+      check('boss (phase 1) escalates to level 4', R('MUSIC.applied.level') === 4);
+      const bpmBefore = R('MUSIC.bpm');
+      run(0.2);
+      const bpmAfter = R('MUSIC.bpm');
+      const targetBpm = 104 * 1.15;
+      check('bpm glides toward raga.bpm*TEMPO_MUL[4] (104*1.15) without overshoot',
+        Math.abs(targetBpm - bpmAfter) <= Math.abs(targetBpm - bpmBefore) + 1e-9);
+    }
+
+    // ---- skip-ahead: a long real-time gap must not cause a catch-up burst ----
+    resetCounts();
+    mock.advance(3); // advance the clock directly, WITHOUT draining any pending timer
+    R('MUSIC._tick();');
+    check('skip-ahead: mock.late === 0 after the gap', mock.late === 0);
+    check('skip-ahead: re-prime avoids a scheduling burst (< 12 events in that tick)', sumCounts() + R('MUSIC._leadCount') < 12);
+
+    // ---- mute: no new one-shots while muted; scheduling position still advances; unmute resumes ----
+    resetCounts();
+    const absBeforeMute = R('MUSIC.absStep');
+    R('FAKE_AUDIO.muted = true;');
+    run(3);
+    check('muted: no new one-shots created over 3s', sumCounts() === 0);
+    check('muted: absStep keeps advancing while muted', R('MUSIC.absStep') > absBeforeMute);
+    R('FAKE_AUDIO.muted = false;');
+    run(2);
+    check('unmute: one-shots resume', sumCounts() > 0);
+
+    // ---- lead never double-books a ctx time; every automation stayed finite ----
+    check('lead notes never share an exact ctx time (no double-booking)',
+      R(`(function () {
+        const evs = MUSIC.lead.osc.frequency._events.filter(e => e.type === 'set' || e.type === 'exp');
+        const seen = new Set();
+        for (const e of evs) { const k = e.t.toFixed(6); if (seen.has(k)) return false; seen.add(k); }
+        return true;
+      })()`) === true);
+
+    // ---- stop() ----
+    R('MUSIC.stop();');
+    check('stop() clears running', R('MUSIC.running') === false);
+  } catch (e) {
+    schedErr = e;
+  }
+  check('scheduler sequence never threw' + (schedErr ? ' — ' + schedErr.stack : ''), schedErr === null);
+}
+
+// ---------------- MUSIC stingers + AUDIO integration (05.3-03) ----------------
+{
+  console.log('\n— MUSIC stingers + AUDIO integration (05.3-03) —');
+
+  // ---- main sandbox stays inert even with the new AUDIO/debug plumbing ----
+  {
+    const preLen = vm.runInContext('__timeouts.length', sandbox);
+    let mainErr = null;
+    try {
+      vm.runInContext("AUDIO.sfx('death');", sandbox);
+      check('main sandbox: MUSIC.start() === false', vm.runInContext('MUSIC.start()', sandbox) === false);
+      vm.runInContext('MUSIC.debug();', sandbox);
+    } catch (e) { mainErr = e; }
+    check('main sandbox: sfx/start/debug() did not throw' + (mainErr ? ' — ' + mainErr.message : ''), mainErr === null);
+    check('main sandbox: no __timeouts added', vm.runInContext('__timeouts.length', sandbox) === preLen);
+  }
+
+  let intErr = null;
+  try {
+    const { sb, R } = makeMusicSandbox();
+    const timers = sb.__timers;
+    R(`
+      AUDIO.init();
+      // AUDIO.init() starts MUSIC with its own live Date.now()-derived seed
+      // (by design, D-09); pin it to a fixed seed right after so the rest
+      // of this integration test is deterministic (only the one already-
+      // scheduled hub/level-0 tick above used the live seed).
+      MUSIC.rand = MUSIC.gen.rng(777777);
+      var GAME = { state: 'combat', prePause: null, biome: { id: 'naraka', droneHz: 110 }, bossRef: null,
+        enemies: [{}, {}, {}], player: { hp: 100, maxhp: 100, boonRanks: {}, defiance: 1 } };
+      MUSIC._testCounts = {};
+      MUSIC._origPlayOneShot = MUSIC.playOneShot;
+      MUSIC.playOneShot = function (stem, key, t, vel, opts) {
+        MUSIC._testCounts[stem] = (MUSIC._testCounts[stem] || 0) + 1;
+        return MUSIC._origPlayOneShot.call(this, stem, key, t, vel, opts);
+      };
+      MUSIC._leadLog = [];
+      MUSIC._origLeadNote = MUSIC.leadNote;
+      MUSIC.leadNote = function (t, deg, dur, vel, opts) {
+        MUSIC._leadLog.push(deg);
+        return MUSIC._origLeadNote.apply(this, arguments);
+      };
+    `);
+    const mock = R('AUDIO.ctx');
+    check('AUDIO.init() alone attaches and starts MUSIC', R('MUSIC.ctx === AUDIO.ctx && MUSIC.running === true') === true);
+
+    function run(sec) {
+      const steps = Math.max(1, Math.round(sec / 0.025));
+      for (let i = 0; i < steps; i++) {
+        mock.advance(0.025);
+        let guard = 0;
+        while (timers.length && guard++ < 1000) timers.shift().fn();
+      }
+    }
+    function counts(stem) { return R(`MUSIC._testCounts[${JSON.stringify(stem)}] || 0`); }
+    function resetCounts() { R('MUSIC._testCounts = {};'); }
+    function untilLevel(lvl, capSec) {
+      let guard = 0;
+      const capSteps = Math.round((capSec || 10) / 0.1);
+      while (R('MUSIC.applied.level') !== lvl && guard++ < capSteps) run(0.1);
+      return R('MUSIC.applied.level') === lvl;
+    }
+
+    // ---- crossfade into naraka/bhairav, settle at combat level 2 ----
+    check('crossfade lands on bhairav', (function () { let g = 0; while (R('MUSIC.raga') !== 'bhairav' && g++ < 100) run(0.1); return R('MUSIC.raga') === 'bhairav'; })());
+    check('settles at level 2 (3 enemies, no boss)', untilLevel(2));
+
+    // ---- bossIntro ----
+    resetCounts();
+    R('GAME.bossRef = { dead: false, phase: 1 };');
+    run(0.2);
+    check('bossIntro: immediate big + fx one-shots (nagara/sub/riser)', counts('big') >= 1 && counts('fx') >= 1);
+    check('bossIntro escalates to level 4 within the intro window', untilLevel(4, 8));
+    check('bossIntro: stab+nagara land at the level-4 apply step', counts('big') >= 2 && counts('fx') >= 1);
+
+    // ---- bossPhase (1 -> 2) ----
+    resetCounts();
+    R('GAME.bossRef.phase = 2;');
+    run(0.1);
+    check('bossPhase: immediate stab/nagara/swell', counts('fx') >= 1 && counts('big') >= 1);
+    check('bossPhase escalates to level 5 at the next sam', untilLevel(5, 8));
+
+    // ---- bossDefeated (boss vanishes, still in combat) ----
+    resetCounts();
+    R('GAME.bossRef = null;');
+    run(0.1);
+    check('bossDefeated: immediate nagara + chak', counts('big') >= 1 && counts('metal') >= 1);
+    check('bossDefeated eventually settles back to level 2 (tihai landing)', untilLevel(2, 30) || R('MUSIC.applied.level') <= 2);
+
+    // ---- roomClear (combat -> cleared, no boss) ----
+    R("GAME.state = 'combat'; GAME.enemies = [{}];");
+    run(0.5); // let prevSnap record state === 'combat' before the transition
+    resetCounts();
+    R("GAME.state = 'cleared'; GAME.enemies = [];");
+    run(0.1);
+    check('roomClear: immediate nagara + chak', counts('big') >= 1 && counts('metal') >= 1);
+    check('roomClear settles to level 1 at the tihai landing', untilLevel(1, 30));
+
+    // ---- reward (boon claimed) ----
+    R("GAME.state = 'combat'; GAME.enemies = [{}, {}, {}];");
+    run(0.5);
+    resetCounts();
+    R("GAME.player.boonRanks = { test: 1 };");
+    run(0.3);
+    check('reward: bell + gliss pluck notes', counts('fx') >= 1 && counts('pluck') >= 5);
+
+    // AUDIO.sfx('boon') is suppressed in-key while MUSIC is audible, and
+    // plays again once music volume is effectively silenced.
+    {
+      const oscBefore = mock.count.osc || 0;
+      R("AUDIO.sfx('boon');");
+      check("AUDIO.sfx('boon') suppressed while MUSIC is audible", (mock.count.osc || 0) === oscBefore);
+      R("SETTINGS.set('musicVolume', 0);");
+      const oscBefore2 = mock.count.osc || 0;
+      R("AUDIO.sfx('boon');");
+      check("AUDIO.sfx('boon') plays again with music volume 0", (mock.count.osc || 0) > oscBefore2);
+      R("SETTINGS.set('musicVolume', 1);");
+    }
+
+    // ---- revive ----
+    resetCounts();
+    R('GAME.player.defiance = 0;');
+    run(0.1);
+    check('revive: swell + stab', counts('fx') >= 1);
+
+    // ---- death ----
+    resetCounts();
+    R('MUSIC._leadLog = [];');
+    R("GAME.state = 'dead';");
+    run(0.1);
+    check('death: percussion/pluck/sub stems ramp to (near) 0 within 0.3s',
+      R(`(function () {
+        const stems = ['tabla', 'big', 'metal', 'pluck', 'sub'];
+        return stems.every(s => {
+          const evs = MUSIC.nodes.stems[s].gain._events;
+          const last = evs[evs.length - 1];
+          return last && last.type === 'target' && Math.abs(last.v) < 1e-6;
+        });
+      })()`) === true);
+    run(3);
+    check('death: descending lead phrase played (>= 6 notes, non-increasing, ends on Sa)',
+      R(`(function () {
+        const log = MUSIC._leadLog;
+        if (log.length < 6) return false;
+        for (let i = 1; i < log.length; i++) if (log[i] > log[i - 1]) return false;
+        return log[log.length - 1] === 0;
+      })()`) === true);
+    resetCounts();
+    run(10);
+    check('death: zero tabla one-shots over 10s (elegy — tanpura only)', counts('tabla') === 0);
+
+    // ---- victory ----
+    R("GAME.state = 'victory';");
+    run(0.1);
+    check('victory: stab + nagara hits', counts('big') >= 1);
+    check('victory eventually settles to level 1', untilLevel(1, 15));
+
+    // ---- hub return ----
+    R("GAME.state = 'hub'; GAME.biome = { id: 'hub', droneHz: 138.59 };");
+    { let g = 0; while (R('MUSIC.raga') !== 'yaman' && g++ < 150) run(0.1); }
+    check('hub return crossfades back to yaman', R('MUSIC.raga') === 'yaman');
+
+    // ---- pause ducks, unpause undoes it ----
+    R("GAME.state = 'paused'; GAME.prePause = 'hub';");
+    run(0.1);
+    check('pause: duck on (lowpass -> 1100)', R('MUSIC.nodes.duckLP.frequency.value') === 1100);
+    R("GAME.state = 'hub'; GAME.prePause = null;");
+    run(0.1);
+    check('unpause: duck off (lowpass -> 18000)', R('MUSIC.nodes.duckLP.frequency.value') === 18000);
+
+    // ---- AUDIO volume / drone shims ----
+    R("AUDIO.setVolume('music', 0.5);");
+    check("AUDIO.setVolume('music', .5) -> musicGain.gain.value === 0.08",
+      Math.abs(R('AUDIO.musicGain.gain.value') - 0.08) < 1e-9);
+    R("SETTINGS.set('musicVolume', 1); AUDIO._applyVolumes();");
+    {
+      const oscBeforeDrone = mock.count.osc || 0;
+      let droneErr = null;
+      try { R('AUDIO.startDrone(110); AUDIO.stopDrone();'); } catch (e) { droneErr = e; }
+      check('AUDIO.startDrone/stopDrone do not throw', droneErr === null);
+      check('AUDIO.startDrone/stopDrone create no oscillators', (mock.count.osc || 0) === oscBeforeDrone);
+      check('AUDIO.currentDrone reflects the last startDrone arg, then null',
+        R("(function(){ AUDIO.startDrone(220); const v = AUDIO.currentDrone; AUDIO.stopDrone(); return v === 220 && AUDIO.currentDrone === null; })()") === true);
+    }
+
+    // ---- musicDynamics caps the level even for a fresh boss ----
+    R("SETTINGS.set('musicDynamics', 0);");
+    check('SETTINGS.DEFAULTS.musicDynamics === 1', R('SETTINGS.DEFAULTS.musicDynamics') === 1);
+    R("GAME.state = 'combat'; GAME.enemies = [{}, {}, {}]; GAME.bossRef = { dead: false, phase: 2 };");
+    { let g = 0; while (g++ < 100) run(0.1); }
+    check('musicDynamics=0 caps a fresh boss (phase 2) at level <= 1', R('MUSIC.applied.level') <= 1);
+    R("SETTINGS.set('musicDynamics', 1); GAME.bossRef = null; GAME.state = 'hub';");
+
+    // ---- debug / audition hook ----
+    { let g = 0; while (R('MUSIC.raga') !== 'yaman' && g++ < 150) run(0.1); }
+    R("MUSIC.debug(5, 'patala');");
+    { let g = 0; while (R('MUSIC.raga') !== 'malkauns' && g++ < 150) run(0.1); }
+    check("MUSIC.debug(5,'patala') crossfades to malkauns", R('MUSIC.raga') === 'malkauns');
+    check('MUSIC.debug(5,...) eventually applies level 5', untilLevel(5, 15));
+    R('MUSIC.debug(null);');
+    { let g = 0; while (R('MUSIC.raga') !== 'yaman' && g++ < 150) run(0.1); }
+    check('MUSIC.debug(null) returns to the natural (hub/yaman) target', R('MUSIC.raga') === 'yaman');
+    resetCounts();
+    R("MUSIC.debugStinger('bossIntro');");
+    run(0.1);
+    check('MUSIC.debugStinger fires the named stinger (riser)', counts('fx') >= 1);
+    const state = R('MUSIC.debug()');
+    check('MUSIC.debug() returns {ragaId, level, bpm, section, stats}',
+      typeof state.ragaId === 'string' && typeof state.level === 'number' && typeof state.bpm === 'number' && typeof state.stats === 'object');
+  } catch (e) {
+    intErr = e;
+  }
+  check('stinger/integration sequence never threw' + (intErr ? ' — ' + intErr.stack : ''), intErr === null);
+}
+
+// ---------------- MUSIC stress/budget (05.3-03 task 3) ----------------
+{
+  console.log('\n— MUSIC stress/budget (05.3-03) —');
+  let stressErr = null;
+  try {
+    const { sb, R } = makeMusicSandbox();
+    const timers = sb.__timers;
+    R(`
+      var FAKE_AUDIO = { ctx: new AudioContext(), muted: false };
+      FAKE_AUDIO.musicGain = FAKE_AUDIO.ctx.createGain();
+      MUSIC.attach(FAKE_AUDIO);
+      var GAME = { state: 'hub', prePause: null, biome: { id: 'hub', droneHz: 138.59 }, bossRef: null,
+        enemies: [], player: { hp: 100, maxhp: 100, boonRanks: {}, defiance: 1 } };
+      MUSIC.start(13131313);
+    `);
+    const mock = R('FAKE_AUDIO.ctx');
+    function run(sec) {
+      const steps = Math.max(1, Math.round(sec / 0.025));
+      for (let i = 0; i < steps; i++) {
+        mock.advance(0.025);
+        let guard = 0;
+        while (timers.length && guard++ < 1000) timers.shift().fn();
+      }
+    }
+    function untilRaga(rid) { let g = 0; while (R('MUSIC.raga') !== rid && g++ < 200) run(0.1); }
+
+    // one L5 densest-texture 120s soak per biome raga: CPU budget + voice caps.
+    const ragaIds = ['bhairav', 'malkauns', 'adana', 'bhairavi']; // naraka/patala/ranabhoomi/vaitarani
+    for (const rid of ragaIds) {
+      R(`MUSIC.debug(5, ${JSON.stringify(rid)});`);
+      untilRaga(rid);
+      R('MUSIC.stats.ticks = 0; MUSIC.stats.avgTickMs = 0; MUSIC.stats.maxTickMs = 0; MUSIC.stats.peakActive = 0;');
+      const nodesBefore = Object.values(mock.count).reduce((a, b) => a + b, 0);
+      run(120);
+      const nodesAfter = Object.values(mock.count).reduce((a, b) => a + b, 0);
+      const nodesPerSec = (nodesAfter - nodesBefore) / 120;
+      const stats = R('MUSIC.stats');
+      console.log(`  info  ${rid} L5/120s: avgTickMs=${stats.avgTickMs.toFixed(4)} maxTickMs=${stats.maxTickMs.toFixed(3)} ` +
+        `dropped=${stats.dropped} peakActive=${stats.peakActive} nodes/s=${nodesPerSec.toFixed(1)}`);
+      check(`${rid} L5/120s: avgTickMs < 0.75 (3% of the 25ms period)`, stats.avgTickMs < 0.75);
+      check(`${rid} L5/120s: peakActive <= CAPS.total`, stats.peakActive <= R('MUSIC.CAPS.total'));
+      check(`${rid} L5/120s: mock.late === 0`, mock.late === 0);
+      check(`${rid} L5/120s: created nodes/sec < 120`, nodesPerSec < 120);
+    }
+
+    // long-form variety (MUS-07): >= 8 distinct 5-note phrase-degree
+    // sequences over 64 tala cycles at bhairav level 2 (no back-to-back
+    // repeats, generator regenerates on collision — 05.3-01 D-09).
+    R("MUSIC.debug(2, 'bhairav');");
+    untilRaga('bhairav');
+    R(`
+      MUSIC._degLog = [];
+      MUSIC._origLeadNote2 = MUSIC.leadNote;
+      MUSIC.leadNote = function (t, deg) { MUSIC._degLog.push(deg); return MUSIC._origLeadNote2.apply(this, arguments); };
+    `);
+    const cycleSec = R("MUSIC.theory.talaSteps(MUSIC.tala) * (60 / MUSIC.bpm / MUSIC.theory.STEPS_PER_MATRA)");
+    run(64 * cycleSec);
+    const degLog = R('MUSIC._degLog');
+    const sigs = new Set();
+    for (let i = 0; i + 4 < degLog.length; i += 5) sigs.add(degLog.slice(i, i + 5).join(','));
+    check(`long-form variety: >= 8 distinct 5-note degree windows over 64 bhairav cycles (measured ${sigs.size} from ${degLog.length} notes)`,
+      sigs.size >= 8);
+  } catch (e) {
+    stressErr = e;
+  }
+  check('stress/budget sequence never threw' + (stressErr ? ' — ' + stressErr.stack : ''), stressErr === null);
 }
 
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);

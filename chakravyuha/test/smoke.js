@@ -80,11 +80,14 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 
 // ---------------- load game scripts ----------------
-const files = ['utils.js', 'settings.js', 'renderer.js', 'sprites.js', 'vfx.js', 'audio.js', 'data.js', 'meta.js', 'entities.js', 'rooms.js', 'ui.js', 'game.js', 'storage.js', 'gamepad.js'];
+const files = ['utils.js', 'settings.js', 'renderer.js', 'sprites.js', 'vfx.js', 'audio.js', 'music.js', 'data.js', 'meta.js', 'entities.js', 'rooms.js', 'ui.js', 'game.js', 'storage.js', 'gamepad.js'];
 for (const f of files) {
   const src = fs.readFileSync(path.join(__dirname, '..', 'js', f), 'utf8');
   vm.runInContext(src, sandbox, { filename: f });
 }
+// captured immediately after load, before any simulation runs, so it only
+// reflects timeouts scheduled by loading the scripts themselves (05.3-01).
+const __musicLoadTimeouts = sandbox.__timeouts.length;
 
 let failures = 0;
 function check(label, cond) {
@@ -2663,6 +2666,143 @@ console.log('\n— character readability: ground marker spec (quick 260926-djs) 
 
   // restore clean state
   R(`META.dialogue = ${__snapDialogue2}; META.runs = ${__snapRuns2}; META.save();`);
+}
+
+// ---------------- MUSIC theory/generators (05.3-01) ----------------
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+  console.log('\n— MUSIC theory/generators (05.3-01) —');
+
+  check('MUSIC loads headless with ctx === null', R('MUSIC.ctx') === null);
+  check('MUSIC load added no __timeouts', __musicLoadTimeouts === 0);
+
+  const pc = d => ((d % 12) + 12) % 12;
+  const biomeIds = JSON.parse(R('JSON.stringify(DATA.BIOMES.map(b => b.id))'));
+  const T = JSON.parse(R('JSON.stringify(MUSIC.theory)'));
+
+  {
+    const ids = Object.keys(T.BIOME_RAGA);
+    const coversAll = ids.includes('hub') && biomeIds.every(id => ids.includes(id));
+    const mapsToRaga = ids.every(id => T.RAGAS[T.BIOME_RAGA[id]] !== undefined);
+    const talaExists = ids.every(id => T.TALAS[T.RAGAS[T.BIOME_RAGA[id]].tala] !== undefined);
+    check('BIOME_RAGA covers hub + every DATA.BIOMES id, each mapping to a real raga with a real tala',
+      coversAll && mapsToRaga && talaExists);
+  }
+
+  {
+    let ok = true;
+    const bad = [];
+    for (const rid of Object.keys(T.RAGAS)) {
+      const raga = T.RAGAS[rid];
+      const sorted = raga.notes.slice().sort((a, b) => a - b);
+      if (JSON.stringify(sorted) !== JSON.stringify(raga.notes)) { ok = false; bad.push(rid + ':notes-not-sorted'); }
+      if (!raga.notes.every(n => n >= 0 && n <= 11)) { ok = false; bad.push(rid + ':notes-out-of-0-11'); }
+      if (!raga.notes.includes(0)) { ok = false; bad.push(rid + ':notes-missing-0'); }
+      if (!raga.up.every(n => raga.notes.includes(n))) { ok = false; bad.push(rid + ':up-not-subset'); }
+      if (!raga.down.every(n => raga.notes.includes(n))) { ok = false; bad.push(rid + ':down-not-subset'); }
+      if (!raga.notes.includes(pc(raga.vadi))) { ok = false; bad.push(rid + ':vadi-not-in-notes'); }
+      if (!raga.notes.includes(pc(raga.samvadi))) { ok = false; bad.push(rid + ':samvadi-not-in-notes'); }
+      if (!raga.nyas.every(n => raga.notes.includes(pc(n)))) { ok = false; bad.push(rid + ':nyas-not-in-notes'); }
+      const banks = [].concat(raga.pakad, raga.chalan, [raga.mukhda]);
+      for (const phrase of banks) {
+        for (const pair of phrase) {
+          const deg = pair[0];
+          if (!raga.notes.includes(pc(deg))) { ok = false; bad.push(rid + ':bank-deg-pc-not-in-notes:' + deg); }
+          if (deg < raga.range[0] || deg > raga.range[1]) { ok = false; bad.push(rid + ':bank-deg-out-of-range:' + deg); }
+        }
+      }
+    }
+    check('raga sanity: notes sorted/0..11/has-0; up/down subset of notes; vadi/samvadi/nyas pc in notes; bank degrees pc in notes and inside range'
+      + (bad.length ? ' — ' + bad.join(', ') : ''), ok);
+  }
+
+  check('malkauns droneFirst=5 and excludes pc 7; all other ragas droneFirst=7',
+    T.RAGAS.malkauns.droneFirst === 5 && !T.RAGAS.malkauns.notes.includes(7) &&
+    ['yaman', 'bhairav', 'adana', 'bhairavi'].every(id => T.RAGAS[id].droneFirst === 7));
+
+  {
+    let ok = true;
+    const bad = [];
+    for (const tid of Object.keys(T.TALAS)) {
+      const tala = T.TALAS[tid];
+      if (tala.theka.length !== tala.matras) { ok = false; bad.push(tid + ':theka-length'); }
+      const sum = tala.vibhags.reduce((a, b) => a + b, 0);
+      if (sum !== tala.matras) { ok = false; bad.push(tid + ':vibhags-sum'); }
+      if (tala.marks.length !== tala.vibhags.length) { ok = false; bad.push(tid + ':marks-length'); }
+    }
+    if (T.TALAS.rupak.samIsKhali !== true) { ok = false; bad.push('rupak:samIsKhali'); }
+    check('tala sanity: theka.length===matras, sum(vibhags)===matras, marks.length===vibhags.length, rupak sam is khali'
+      + (bad.length ? ' — ' + bad.join(', ') : ''), ok);
+  }
+
+  {
+    const talaStepsOk = R("Object.keys(MUSIC.theory.TALAS).every(k => MUSIC.theory.talaSteps(MUSIC.theory.TALAS[k]) === MUSIC.theory.TALAS[k].matras * 4)");
+    check('talaSteps(t) === matras*4 for every tala', talaStepsOk === true);
+
+    const vss = JSON.parse(R('JSON.stringify(MUSIC.theory.vibhagStartSteps(MUSIC.theory.TALAS.teentaal))'));
+    check('vibhagStartSteps(teentaal) deep-equals [0,16,32,48]', JSON.stringify(vss) === JSON.stringify([0, 16, 32, 48]));
+
+    check('nextBoundary(rupak, 0, "vibhag") === 12', R("MUSIC.theory.nextBoundary(MUSIC.theory.TALAS.rupak, 0, 'vibhag')") === 12);
+    check('nextBoundary(rupak, 5, "sam") === 23', R("MUSIC.theory.nextBoundary(MUSIC.theory.TALAS.rupak, 5, 'sam')") === 23);
+
+    const nbRange = R(`(() => {
+      const T = MUSIC.theory;
+      let ok = true;
+      for (const tid of Object.keys(T.TALAS)) {
+        const tala = T.TALAS[tid];
+        const cs = T.talaSteps(tala);
+        for (let s = 0; s < cs; s++) {
+          for (const kind of ['vibhag', 'sam']) {
+            const n = T.nextBoundary(tala, s, kind);
+            if (n < 1 || n > cs) ok = false;
+          }
+        }
+      }
+      return ok;
+    })()`);
+    check('nextBoundary(t, s, kind) always in 1..talaSteps for every tala/step/kind', nbRange === true);
+  }
+
+  {
+    const tirakita = JSON.parse(R("JSON.stringify(MUSIC.theory.expandBol('TiRaKiTa'))"));
+    check("expandBol('TiRaKiTa') deep-equals ['Te','Re','Ke','Te']", JSON.stringify(tirakita) === JSON.stringify(['Te', 'Re', 'Ke', 'Te']));
+
+    const bolsOk = R(`(() => {
+      const T = MUSIC.theory;
+      const allowed = T.TABLA_KEYS.concat([null]);
+      for (const tid of Object.keys(T.TALAS)) {
+        for (const bol of T.TALAS[tid].theka) {
+          const keys = T.expandBol(bol);
+          if (!keys.every(k => allowed.includes(k))) return false;
+        }
+      }
+      return true;
+    })()`);
+    check('every theka bol of every tala expands to keys within TABLA_KEYS ∪ {null}', bolsOk === true);
+  }
+
+  {
+    const I = T.INTENSITY;
+    let ok = I.length === 6;
+    const monoUp = ['tabla', 'big', 'metal', 'sub'];
+    for (const key of monoUp) for (let i = 1; i < 6; i++) if (I[i][key] < I[i - 1][key]) ok = false;
+    for (let i = 1; i < 6; i++) if (I[i].drone > I[i - 1].drone) ok = false;
+    if (!(I[0].tabla === 0 && I[0].big === 0 && I[0].metal === 0)) ok = false;
+    const sum = o => Object.keys(o).reduce((a, k) => a + o[k], 0);
+    if (!(sum(I[5]) / sum(I[1]) <= 2.2)) ok = false;
+    check('INTENSITY: 6 rows, tabla/big/metal/sub non-decreasing, drone non-increasing, L0 percussion silent, loudness ratio <= 2.2', ok);
+  }
+
+  check('semiToHz(110,12) === 220', Math.abs(R('MUSIC.theory.semiToHz(110, 12)') - 220) < 1e-9);
+  check('semiToHz(110,7) ≈ 164.81', Math.abs(R('MUSIC.theory.semiToHz(110, 7)') - 164.81) < 0.01);
+
+  {
+    const seq = n => JSON.parse(R(`JSON.stringify((() => { const r = MUSIC.gen.rng(${n}); return [r(), r(), r(), r(), r()]; })())`));
+    const a1 = seq(42), a2 = seq(42), b = seq(43);
+    check('rng(42) produces the same first 5 values twice', JSON.stringify(a1) === JSON.stringify(a2));
+    check('rng values all within [0,1)', a1.every(v => v >= 0 && v < 1));
+    check('rng(42) differs from rng(43)', JSON.stringify(a1) !== JSON.stringify(b));
+  }
 }
 
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);

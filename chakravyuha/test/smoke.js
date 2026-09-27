@@ -4043,5 +4043,140 @@ console.log('\n— PAD DualSense core (05.2-01) —');
   delete sandbox.__mkGp;
 }
 
+// ---------------- PAD aim/dash/poll (05.2-01) ----------------
+console.log('\n— PAD aim/dash/poll (05.2-01) —');
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+
+  // ---- pure: resolveAim ----
+  check('resolveAim: right stick deflected -> right, angle PI/2',
+    R(`(() => { const r = PAD.resolveAim({x:0,y:0,mag:0}, {x:0,y:1,mag:1}, 0); return Math.abs(r.angle - Math.PI/2) < 1e-9 && r.source === 'right'; })()`) === true);
+  check('resolveAim: right idle, left deflected -> move, angle 0',
+    R(`(() => { const r = PAD.resolveAim({x:1,y:0,mag:1}, {x:0,y:0,mag:0}, 2); return Math.abs(r.angle) < 1e-9 && r.source === 'move'; })()`) === true);
+  check('resolveAim: both idle -> hold last angle',
+    R(`(() => { const r = PAD.resolveAim({x:0,y:0,mag:0}, {x:0,y:0,mag:0}, 1.23); return Math.abs(r.angle - 1.23) < 1e-9 && r.source === 'hold'; })()`) === true);
+
+  // ---- pure: aimAssist ----
+  check('aimAssist: snaps to an in-cone/in-range enemy',
+    R(`(() => {
+      const r = PAD.aimAssist(0, 0, 0, [{x:300,y:40,r:14}]);
+      return Math.abs(r.angle - Math.atan2(40,300)) < 1e-9 && r.target && r.target.x === 300;
+    })()`) === true);
+  check('aimAssist: out-of-cone / out-of-range / dead / spawning enemies never bend aim; empty list unchanged',
+    R(`(() => {
+      const outCone = PAD.aimAssist(0, 0, 0, [{x:300,y:200,r:14}]);
+      const outRange = PAD.aimAssist(0, 0, 0, [{x:600,y:0,r:14}]);
+      const deadE = PAD.aimAssist(0, 0, 0, [{x:300,y:40,r:14,dead:true}]);
+      const spawningE = PAD.aimAssist(0, 0, 0, [{x:300,y:40,r:14,spawnT:0.3}]);
+      const emptyE = PAD.aimAssist(0, 0, 0, []);
+      return [outCone, outRange, deadE, spawningE, emptyE].every(r => r.angle === 0 && r.target === null);
+    })()`) === true);
+  check('aimAssist: picks the better-scored of two in-cone enemies',
+    R(`(() => {
+      const near = { x: 300, y: 10, r: 14 };   // small angle diff, closer
+      const far  = { x: 400, y: 80, r: 14 };   // larger angle diff, farther
+      const r = PAD.aimAssist(0, 0, 0, [far, near]);
+      return r.target === near;
+    })()`) === true);
+
+  // ---- pure: chooseDashDir ----
+  check('chooseDashDir: analog left stick wins',
+    R("Math.abs(PAD.chooseDashDir(0.8, 0, {dx:0,dy:0}, 2)) < 1e-9") === true);
+  check('chooseDashDir: falls back to the keyboard vector when the stick is neutral',
+    R("Math.abs(PAD.chooseDashDir(0, 0, {dx:0,dy:-1}, 2) - (-Math.PI/2)) < 1e-9") === true);
+  check('chooseDashDir: falls back to aim when stick and keyboard vector are both zero',
+    R("PAD.chooseDashDir(0, 0, {dx:0,dy:0}, 2)") === 2);
+
+  // ---- integration: fake navigator drives poll() end-to-end ----
+  vm.runInContext(`
+globalThis.__padIntResults = {};
+(function() {
+  const R = __padIntResults;
+  const savedDevice = INPUT.device, savedAx = INPUT.ax, savedAy = INPUT.ay, savedLmb = INPUT.lmb;
+  const savedWx = INPUT.wx, savedWy = INPUT.wy, savedMx = INPUT.mx, savedMy = INPUT.my;
+  const savedPlayer = GAME.player, savedState = GAME.state, savedEnemies = GAME.enemies;
+  const savedAimAng = PAD._aimAng, savedPrevPressed = PAD._prevPressed, savedStateIndex = PAD.state.index;
+  const savedCapture = PAD._capture, savedCaptureCb = PAD._captureCb;
+
+  try {
+    GAME.startRun();
+    GAME.state = 'combat';
+    GAME.enemies = [];                 // keep aim-assist from bending the exact-angle assertion
+    GAME.player.dashCharges = Math.max(GAME.player.dashCharges, 1);
+    GAME.player.dashT = 0;
+
+    PAD._aimAng = null; PAD._prevPressed = {}; PAD.state.index = -1; PAD._capture = null;
+    const gp = { id: 'DualSense Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 0ce6)', mapping: 'standard', connected: true, axes: [0, 0, 0, 0], buttons: Array.from({ length: 18 }, () => ({ pressed: false, value: 0 })) };
+    globalThis.navigator = { getGamepads: () => [gp] };
+
+    // 1. right stick -> world-space aim below the player; Player.update aims at it (~PI/2)
+    INPUT.device = 'kbm';
+    gp.axes = [0, 0, 0, 1];
+    PAD.poll();
+    R.deviceSwitchedOk = INPUT.device === 'pad';
+    R.aimBelowPlayer = INPUT.wy > GAME.player.y;
+    GAME.player.update(1 / 60);
+    R.playerAimOk = Math.abs(GAME.player.aim - Math.PI / 2) < 1e-3;
+
+    // 2. D-07: a kbm player with a merely-connected, idle pad keeps mouse attacks
+    gp.axes = [0, 0, 0, 0];
+    INPUT.device = 'kbm';
+    INPUT.lmb = true;
+    PAD.poll();
+    R.mouseLmbUntouchedWhileIdle = INPUT.device === 'kbm' && INPUT.lmb === true;
+
+    // 3. dash: left stick direction wins over aim when B (dash) is pressed
+    INPUT.device = 'pad';
+    PAD.poll();                                    // idle poll first: establishes a clean edge baseline
+    const dashChargesBefore = GAME.player.dashCharges;
+    gp.axes = [-1, 0, 0, 0];
+    gp.buttons[PAD.CFG.BTN.B] = { pressed: true, value: 1 };
+    PAD.poll();
+    R.dashFired = GAME.player.dashT > 0 && GAME.player.dashCharges === dashChargesBefore - 1;
+    R.dashDirOk = Math.abs(GAME.player.dashDir - Math.PI) < 1e-3;
+    gp.buttons[PAD.CFG.BTN.B] = { pressed: false, value: 0 };
+    gp.axes = [0, 0, 0, 0];
+    PAD.poll();
+
+    // 4. captureNext: A held before capture starts -> waits for release -> LB fires; no dash/attack meanwhile
+    const dashChargesBeforeCapture = GAME.player.dashCharges;
+    const dashTBeforeCapture = GAME.player.dashT;
+    INPUT.lmb = false;
+    gp.buttons[PAD.CFG.BTN.A] = { pressed: true, value: 1 };
+    let captured = null, captureCalls = 0;
+    PAD.captureNext((name) => { captured = name; captureCalls++; });
+    PAD.poll();                                    // A still held -> waiting for release
+    gp.buttons[PAD.CFG.BTN.A] = { pressed: false, value: 0 };
+    PAD.poll();                                    // released -> now armed, nothing pressed yet
+    gp.buttons[PAD.CFG.BTN.LB] = { pressed: true, value: 1 };
+    PAD.poll();                                    // LB rising edge -> fires
+    R.captureFiredOnce = captured === 'LB' && captureCalls === 1 && PAD._capture === null;
+    R.noDashOrAttackDuringCapture = GAME.player.dashCharges === dashChargesBeforeCapture
+      && GAME.player.dashT === dashTBeforeCapture && INPUT.lmb === false;
+    gp.buttons[PAD.CFG.BTN.LB] = { pressed: false, value: 0 };
+
+    // 5. poll() still never throws when navigator is undefined
+    delete globalThis.navigator;
+    let pollThrew = false;
+    try { PAD.poll(); } catch (e) { pollThrew = true; }
+    R.noThrowHeadless = pollThrew === false;
+  } finally {
+    delete globalThis.navigator;
+    INPUT.device = savedDevice; INPUT.ax = savedAx; INPUT.ay = savedAy; INPUT.lmb = savedLmb;
+    INPUT.wx = savedWx; INPUT.wy = savedWy; INPUT.mx = savedMx; INPUT.my = savedMy;
+    GAME.player = savedPlayer; GAME.state = savedState; GAME.enemies = savedEnemies;
+    PAD._aimAng = savedAimAng; PAD._prevPressed = savedPrevPressed; PAD.state.index = savedStateIndex;
+    PAD._capture = savedCapture; PAD._captureCb = savedCaptureCb;
+  }
+})();
+  `, sandbox);
+  const pi = vm.runInContext('__padIntResults', sandbox);
+  check('PAD.poll(): right stick drives INPUT.device to pad and writes a world-space aim target below the player; Player.update aims at it', pi.deviceSwitchedOk && pi.aimBelowPlayer && pi.playerAimOk);
+  check('PAD.poll(): a kbm player with an idle, merely-connected pad keeps INPUT.lmb from a mouse click untouched (D-07 fix)', pi.mouseLmbUntouchedWhileIdle);
+  check('PAD.poll() + tryDash(): dash button fires; dash direction follows the held left stick (PAD.chooseDashDir), not hardcoded WASD', pi.dashFired && pi.dashDirOk);
+  check('PAD.captureNext(): fires exactly once with the next button pressed after release; dash/attack are suppressed while capturing', pi.captureFiredOnce && pi.noDashOrAttackDuringCapture);
+  check('PAD.poll() does not throw once navigator is removed again', pi.noThrowHeadless);
+}
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

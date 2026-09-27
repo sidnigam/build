@@ -329,14 +329,9 @@ class Player {
     let iv = 0.32;
     if (this.has('dur_dash')) iv *= 1 + this.val('dur_dash') / 100;
     this.iframes = Math.max(this.iframes, iv);
-    // dash toward movement keys, else toward aim
+    // dash toward the left stick if held (pad), else toward movement keys (rebindable), else toward aim
     const I = INPUT;
-    let mx = 0, my = 0;
-    if (I.keys['w'] || I.keys['arrowup']) my -= 1;
-    if (I.keys['s'] || I.keys['arrowdown']) my += 1;
-    if (I.keys['a'] || I.keys['arrowleft']) mx -= 1;
-    if (I.keys['d'] || I.keys['arrowright']) mx += 1;
-    this.dashDir = (mx || my) ? Math.atan2(my, mx) : this.aim;
+    this.dashDir = PAD.chooseDashDir(I.ax || 0, I.ay || 0, PAD.digitalMoveVector(I.keys, I.bindings), this.aim);
     for (const e of GAME.enemies) e.galeHit = false;
     AUDIO.sfx('dash');
 

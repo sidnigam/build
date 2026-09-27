@@ -2455,10 +2455,6 @@ console.log('\n— character readability: ground marker spec (quick 260926-djs) 
   }
   const R = (src) => vm.runInContext(src, sandbox);
 
-  console.log('BISECT top-level typeof DIALOGUE:', R('typeof DIALOGUE'));
-  vm.runInContext('GAME.player = new Player("khanda"); META.dialogue = {}; UI.offerBoon("krishna");', sandbox);
-  console.log('BISECT lastGodLine:', R('UI._lastGodLine && UI._lastGodLine.id'));
-
   // snapshot so later blocks (and the content block) see a clean state
   const __snapDialogue = R('JSON.stringify(META.dialogue)');
   const __snapRuns = R('META.runs');
@@ -6857,6 +6853,79 @@ globalThis.__godPresenceErrors = [];
   const godPresenceErrors = R('__godPresenceErrors');
   check('god presence on boon panel: all behavior assertions pass' + (godPresenceErrors.length ? ' — ' + godPresenceErrors.join(' | ') : ''),
     godPresenceErrors.length === 0);
+}
+
+// ---------------- codex gods section (Phase 05.5) ----------------
+console.log('\n— codex gods section (Phase 05.5) —');
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+  vm.runInContext(`
+globalThis.__codexGodsErrors = [];
+(function() {
+  var E = __codexGodsErrors;
+  var savedDialogue = META.dialogue;
+  function allText(el) {
+    var acc = el.textContent || '';
+    var kids = el.children || [];
+    for (var i = 0; i < kids.length; i++) acc += ' ' + allText(kids[i]);
+    return acc;
+  }
+  try {
+    META.dialogue = {};
+    var ctxK = DIALOGUE.buildContext('krishna', {});
+    var lineK = DIALOGUE.select('krishna', ctxK, DIALOGUE.mem());
+    DIALOGUE.record(lineK, 'krishna');
+    var ctxD = DIALOGUE.buildContext('durga', {});
+    var lineD = DIALOGUE.select('durga', ctxD, DIALOGUE.mem());
+    DIALOGUE.record(lineD, 'durga');
+
+    UI.codex();
+    var list = document.getElementById('codex-list');
+    if (list.children.length !== DATA.CODEX.length + 1)
+      E.push('codex-list children expected ' + (DATA.CODEX.length + 1) + ', got ' + list.children.length);
+    var section = list.children[0];
+    if (!section || section.className !== 'codex-gods') E.push('first child className expected codex-gods, got ' + (section && section.className));
+    else {
+      var rows = section.children.slice(1); // [0] is the heading
+      if (rows.length !== 6) E.push('expected 6 god rows, got ' + rows.length);
+      var metCount = rows.filter(function (r) { return !r.classList.contains('unmet'); }).length;
+      if (metCount !== 2) E.push('expected exactly 2 met rows, got ' + metCount);
+      var metRow = rows.find(function (r) { return !r.classList.contains('unmet'); });
+      var metText = metRow ? allText(metRow) : '';
+      if (metText.indexOf('Krishna') === -1 && !rows.some(function (r) { return !r.classList.contains('unmet') && allText(r).indexOf('Krishna') !== -1; }))
+        E.push('no met row mentions Krishna: ' + JSON.stringify(rows.map(allText)));
+      var krishnaRow = rows.find(function (r) { return !r.classList.contains('unmet') && allText(r).indexOf('Krishna') !== -1; });
+      if (krishnaRow) {
+        var loreSub = DIALOGUE.LORE.krishna.d.slice(0, 15);
+        if (allText(krishnaRow).indexOf(loreSub) === -1) E.push('krishna row missing LORE text: ' + allText(krishnaRow));
+      } else E.push('no krishna row found among met rows');
+      var unmetRow = rows.find(function (r) { return r.classList.contains('unmet'); });
+      if (!unmetRow || allText(unmetRow).indexOf('Not yet met') === -1) E.push('unmet row missing "Not yet met": ' + (unmetRow && allText(unmetRow)));
+    }
+
+    // stub metGods() -> [] : everything renders unmet
+    var savedMetGods = DIALOGUE.metGods;
+    DIALOGUE.metGods = function () { return []; };
+    var threwStub = false;
+    try { UI.codex(); } catch (e) { threwStub = true; }
+    DIALOGUE.metGods = savedMetGods;
+    if (threwStub) E.push('UI.codex() threw with metGods() stubbed to []');
+    else {
+      var list2 = document.getElementById('codex-list');
+      var section2 = list2.children[0];
+      var rows2 = section2 ? section2.children.slice(1) : [];
+      if (rows2.length !== 6 || !rows2.every(function (r) { return r.classList.contains('unmet'); }))
+        E.push('expected all 6 rows unmet with metGods() stubbed to []; got ' + rows2.length + ' rows');
+    }
+  } catch (e) {
+    E.push('exception: ' + e.stack);
+  }
+  META.dialogue = savedDialogue;
+})();
+`, sandbox);
+  const codexGodsErrors = R('__codexGodsErrors');
+  check('codex gods section: met/unmet rendering, thumbnails/lore, "Not yet met", stubbed-metGods fallback'
+    + (codexGodsErrors.length ? ' — ' + codexGodsErrors.join(' | ') : ''), codexGodsErrors.length === 0);
 }
 
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);

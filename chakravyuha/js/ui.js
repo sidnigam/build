@@ -380,6 +380,91 @@ const UI = {
     });
   },
 
+  renderCodexGods(list) {
+    const D = this._dlg();
+    if (!D) return;
+    this.preloadGodPortraits();
+    const met = D.metGods();
+    const section = document.createElement('div');
+    section.className = 'codex-gods';
+    const heading = document.createElement('div');
+    heading.className = 'codex-t';
+    heading.textContent = 'The Devas Who Answer';
+    const headingSub = document.createElement('span');
+    headingSub.className = 'codex-s';
+    headingSub.textContent = '— your patrons in the wheel';
+    heading.appendChild(headingSub);
+    section.appendChild(heading);
+
+    for (const id of Object.keys(DATA.GODS)) {
+      const g = DATA.GODS[id];
+      const isMet = met.includes(id);
+      const row = document.createElement('div');
+      row.className = 'codex-god';
+      if (!isMet) row.classList.add('unmet');
+      row.style.cssText = '--god:' + g.color;
+
+      if (isMet) {
+        let icon;
+        if (this._portraitOk[id] === true) {
+          icon = document.createElement('img');
+          icon.className = 'codex-god-thumb';
+          icon.src = D.portraitPath(id);
+          icon.alt = g.name;
+          icon.onerror = () => icon.classList.add('hidden');
+        } else {
+          icon = document.createElement('div');
+          icon.className = 'codex-god-sym';
+          icon.textContent = g.sym;
+        }
+        row.appendChild(icon);
+
+        const col = document.createElement('div');
+        const t = document.createElement('div');
+        t.className = 'codex-t';
+        t.textContent = g.name;
+        const dev = document.createElement('div');
+        dev.className = 'codex-god-dev';
+        dev.textContent = this.DEVANAGARI.gods[id] || '';
+        const title = document.createElement('div');
+        title.className = 'codex-s';
+        title.textContent = g.title;
+        const lore = D.LORE[id];
+        const d = document.createElement('div');
+        d.className = 'codex-d';
+        d.textContent = lore ? (lore.d + ' (' + lore.s + ')') : '';
+        const metCount = document.createElement('div');
+        metCount.className = 'codex-s';
+        const n = D.mem().met[id] | 0;
+        metCount.textContent = 'Met ' + n + ' time' + (n === 1 ? '' : 's');
+        col.appendChild(t);
+        col.appendChild(dev);
+        col.appendChild(title);
+        col.appendChild(d);
+        col.appendChild(metCount);
+        row.appendChild(col);
+      } else {
+        const icon = document.createElement('div');
+        icon.className = 'codex-god-sym';
+        icon.textContent = '?';
+        row.appendChild(icon);
+
+        const col = document.createElement('div');
+        const t = document.createElement('div');
+        t.className = 'codex-t';
+        t.textContent = 'Not yet met';
+        const d = document.createElement('div');
+        d.className = 'codex-d';
+        d.textContent = 'A god who has not yet answered you in the wheel.';
+        col.appendChild(t);
+        col.appendChild(d);
+        row.appendChild(col);
+      }
+      section.appendChild(row);
+    }
+    list.appendChild(section);
+  },
+
   // ---------- Kubera's shop ----------
   openShop() {
     GAME.state = 'choosing';
@@ -506,6 +591,7 @@ const UI = {
     META.codexSeen = true; META.save();
     const list = this.el('codex-list');
     list.innerHTML = '';
+    this.renderCodexGods(list);
     for (const e of DATA.CODEX) {
       const div = document.createElement('div');
       div.className = 'codex-entry';

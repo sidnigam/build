@@ -627,50 +627,6 @@
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Accepted on attempt 0: rakshasa sorcerer conjurer, magenta-pink robes, wide-brimmed hat, bead necklace, bone staff topped with a glowing pink orb. Distinct silhouette (hat + robe + staff-orb), no halo, no text, clean cutout."
-    },
-    {
-      "filename": "krishna-portrait.png",
-      "path": "assets/sprites/gods/krishna-portrait.png",
-      "actor": "krishna",
-      "kind": "god",
-      "tool": "ComfyUI (local)",
-      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
-      "method": "txt2img",
-      "sampler": "dpmpp_2m",
-      "scheduler": "karras",
-      "steps": 32,
-      "cfg": 7.0,
-      "width": 896,
-      "height": 1152,
-      "seed": 71403,
-      "prompt": "Krishna, a young Hindu god with dark blue skin, gentle smile, wavy black hair, a single peacock feather tucked into a simple thin gold headband, bare chest with one yellow silk cloth draped over one shoulder, playing a wooden bansuri flute held sideways to his lips with both hands raised, elbows bent, exactly two arms and two hands total, both hands busy holding the flute, no other hands, standing upright, half-body portrait cropped at the chest, head shoulders and chest only, no legs, no lower body, plain flat solid pale grey background, painterly illustration, deep blue skin, peacock teal and pitambara yellow, Hades-inspired illustrated character portrait, half-body bust from head to waist, three-quarter view turned slightly to the right, facing the viewer, painterly digital illustration with bold confident ink linework, richly detailed rendering, luminous warm rim lighting, divine serene presence, ornate traditional Indian gold jewelry and silk textiles, inspired by the Mahabharata and Ramayana and classical Indian temple murals and Pahari miniature painting, single figure, centered, head fully in frame with space above, plain flat solid pale grey background, high detail, concept art",
-      "negative_prompt": "pixel art, 3d render, photorealistic, photo, blurry, lowres, jpeg artifacts, deformed, bad anatomy, fused fingers, extra fingers, mutated hands, watermark, text, letters, signature, logo, caption, cropped head, out of frame, full body, legs, multiple characters, crowd, collage, character sheet, turnaround, busy background, scenery, landscape, frame, border, halo disc, circular background, sun disc, mandala background, western medieval armor, roman armor, greek toga, samurai armor, sexualized, seductive, cleavage, revealing clothing, nudity, pin-up, demonic, demon, evil, menacing, snarl, fangs, horns, claws, glowing red eyes, skull, skulls, blood, gore, severed head, horror, creepy, zombie, grotesque, cartoon, chibi, caricature, meme, mocking, swastika symbol, namaste, folded hands, prayer hands, blessing mudra, four hands, six hands, multiple pairs of hands, extra hand, third arm, fourth arm, third hand, fourth hand, seated, sitting cross-legged, padmasana, lotus position, throne, pedestal, architectural arch, arched doorway, pillars, decorative gold frame, picture frame border, vignette frame, teal background, painted scenery background, flowers, grass, ground, floor, calendar art, religious poster, devotional print, child, baby, infant, feminine, woman, trident, snake around neck, third eye, ash, Shiva, crescent moon, conch, discus",
-      "rejected_seeds": [
-        71400,
-        71401,
-        71402,
-        71404,
-        71405,
-        71406
-      ],
-      "rejected_count": 6,
-      "post_processing": [
-        "rembg u2net cutout",
-        "alpha clean <16",
-        "despeckle 2%",
-        "trim",
-        "fit 600x768 bottom-aligned",
-        "bottom alpha feather 12%"
-      ],
-      "raw_image": "assets/sprites/_raw/gods/krishna/",
-      "gen_sidecar": "assets/sprites/_raw/gods/krishna/krishna-portrait.gen.json",
-      "generated_date": "2026-09-27",
-      "recorded_date": "2026-09-26",
-      "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "FLAGGED: H1-H7 pass (correct deity, serene expression, no sexualization/gore, no conflated iconography, no text/watermark, one figure) and Krishna H-god pass (two arms, adult, peacock feather, flute, yellow silk, not Shiva, dignified, unmirrored); S1 fails \u2014 full standing figure shipped instead of a tight half-body bust crop (composition happened to fit the 600x768 canvas well; not regenerated further, 7/7 attempts exhausted). S3/S4/S5 pass (clean cutout, matches painterly house style, reads at 64px thumbnail).",
-      "cultural_review": "pending \u2014 human cultural reviewer (QA-03)",
-      "iconography_notes": "two arms confirmed (both hands on the flute); peacock feather tuft in hair; bansuri flute held to lips; yellow silk dhoti/pitambara; gold jewelry; no conch/discus/trident/third eye (not Shiva/Vishnu-coded); no text or watermark on the finished cutout"
     }
   ],
   "review_sheet": "assets/sprites/_review/contact-sheet.png"

@@ -695,6 +695,11 @@ const MUSIC = {
       resync(absStep) { state.queue = []; state.planned = absStep; state.spill = 0; },
       tail(n) { return state.lastCompleted.slice(-n); },
       section() { return state.section; },
+      // earliest still-queued event (05.3-03): lets the scheduler check
+      // whether the note immediately following the one it just scheduled
+      // is a glide (meend) starting exactly where the current one ends,
+      // so it can skip the early leadRelease for a legato join.
+      peek() { return state.queue.length ? state.queue[0] : null; },
     };
   };
 })();
@@ -2097,5 +2102,280 @@ MUSIC.theory.LEAD_PRESETS = {
     if (!this.ctx || !this.audio) return false;
     const vol = (typeof SETTINGS !== 'undefined') ? SETTINGS.get('musicVolume') : 1;
     return !!(this.running && !this.audio.muted && vol > 0.02);
+  };
+
+  // ================================================================
+  // Lookahead scheduler (05.3-03 task 1): polls game state every 25ms,
+  // quantizes intensity transitions to vibhag/sam boundaries (D-06),
+  // crossfades raga changes, and drives the tanpura free-time cycle.
+  // Stingers (D-07) are dispatched from here but implemented in task 2.
+  // ================================================================
+
+  MUSIC.hint = function (kind, hz) {
+    this._lastHint = { kind, hz, t: this.ctx ? this.ctx.currentTime : 0 };
+  };
+
+  // no-op until task 2 replaces it with the real stinger dispatcher.
+  MUSIC._stinger = function (name) { /* implemented in 05.3-03 task 2 */ };
+
+  function stepSecFor(bpm) { return 60 / bpm / MUSIC.theory.STEPS_PER_MATRA; }
+
+  MUSIC.start = function () {
+    if (!this.ctx || this.running) return false;
+    this.running = true;
+    this._seed = (Date.now() >>> 0);
+    this._changeCount = 0;
+    this.rand = MUSIC.gen.rng(this._seed);
+    this.governor = MUSIC.logic.createGovernor();
+    const raga0 = MUSIC.theory.RAGAS[this.raga] || MUSIC.theory.RAGAS.yaman;
+    this.applied = { level: 0, ragaId: raga0.id };
+    this.absStep = 0;
+    const t0 = this.ctx.currentTime;
+    this.nextStepTime = t0 + 0.1;
+    this.bpm = raga0.bpm;
+    this.targetBpm = raga0.bpm;
+    this.leadStream = MUSIC.gen.createLeadStream(raga0, this.tala, this._seed);
+    this.stepQueue = new Map();
+    this.freeQueue = [];
+    this.nextTanpura = t0 + 0.05;
+    this._tanpuraCycleIdx = 0;
+    this.prevSnap = null;
+    this.pending = null;
+    this.pendingRagaTarget = null;
+    this.changeAt = null;
+    this.leadLockUntil = -Infinity;
+    this.tihaiWindow = null;
+    this.elegy = false;
+    this._lastTickWall = null;
+    this._lastDuck = false;
+    this._lastLowHp = false;
+    this.lastApply = { abs: 0, t: t0, level: 0 };
+    this.setStemLevels(0, t0, 0.5);
+    this._loop();
+    return true;
+  };
+
+  MUSIC.stop = function () {
+    if (!this.running) return;
+    this.running = false;
+    if (this._timer) { clearTimeout(this._timer); this._timer = null; }
+    if (this.ctx) {
+      const t = this.ctx.currentTime;
+      this.setStemLevels(0, t, 0.5);
+      this.leadCancel(t);
+    }
+  };
+
+  MUSIC._loop = function () {
+    this._tick();
+    if (this.running) {
+      const self = this;
+      this._timer = setTimeout(function () { self._loop(); }, 25);
+    }
+  };
+
+  MUSIC._beginRagaChange = function (target) {
+    const t = this.ctx.currentTime;
+    this.setStemLevels(0, t, 1.2);
+    this.leadCancel(t);
+    this.stepQueue = new Map();
+    this.freeQueue = [];
+    this.pending = null;
+    this.tihaiWindow = null;
+    this.leadLockUntil = -Infinity;
+    this.pendingRagaTarget = target;
+    this.changeAt = t + 1.25;
+  };
+
+  MUSIC._completeRagaChange = function () {
+    const target = this.pendingRagaTarget;
+    this.setRaga(target.ragaId, target.saHz);
+    const raga = MUSIC.theory.RAGAS[this.raga];
+    this.absStep = 0;
+    const t = this.ctx.currentTime;
+    this.nextStepTime = t + 0.05;
+    this._changeCount++;
+    this.leadStream = MUSIC.gen.createLeadStream(raga, this.tala, this._seed + this._changeCount);
+    this.bpm = raga.bpm * MUSIC.theory.TEMPO_MUL[target.level];
+    this.targetBpm = this.bpm;
+    this.governor.force(target.level);
+    this.applied = { level: target.level, ragaId: raga.id };
+    this.lastApply = { abs: 0, t: this.nextStepTime, level: target.level };
+    this.setStemLevels(target.level, this.nextStepTime, 1.0);
+    this.nextTanpura = t + 0.05;
+    this._tanpuraCycleIdx = 0;
+    this.pendingRagaTarget = null;
+    this.changeAt = null;
+  };
+
+  MUSIC._tick = function () {
+    if (!this.ctx || !this.running || this.ctx.state !== 'running') return;
+    const t0 = now();
+    const T = MUSIC.theory;
+    const G = (typeof GAME !== 'undefined') ? GAME : null;
+    const snap = MUSIC.logic.snapshot(G);
+    const events = MUSIC.logic.detectEvents(this.prevSnap, snap);
+    this.prevSnap = snap;
+
+    const dyn = (typeof SETTINGS !== 'undefined') ? SETTINGS.get('musicDynamics') : 1;
+    const target = MUSIC.logic.deriveTarget(snap, this.override, dyn === undefined ? 1 : dyn);
+
+    if (!this.pendingRagaTarget) {
+      const saDiffers = target.saHz !== undefined && isFinite(target.saHz) && Math.abs(target.saHz - this.sa) > 1e-6;
+      if (target.ragaId !== this.raga || saDiffers) this._beginRagaChange(target);
+    }
+    if (this.pendingRagaTarget && this.ctx.currentTime >= this.changeAt) {
+      this._completeRagaChange();
+    }
+
+    for (let i = 0; i < events.length; i++) this._stinger(events[i]);
+
+    const dt = this._lastTickWall === null ? 0.025 : Math.max(0, (t0 - this._lastTickWall) / 1000);
+    this._lastTickWall = t0;
+
+    const nowCtx = this.ctx.currentTime;
+    const changing = !!this.pendingRagaTarget;
+
+    if (!changing) {
+      if (target.duck !== this._lastDuck) { this.setDuck(target.duck, nowCtx); this._lastDuck = target.duck; }
+      if (target.lowHp !== this._lastLowHp) { this.setTension(target.lowHp, nowCtx); this._lastLowHp = target.lowHp; }
+      this.elegy = target.mode === 'elegy';
+
+      const desired = this.governor.update(target.level, dt);
+      if (desired !== this.applied.level && !this.pending) {
+        const up = desired > this.applied.level;
+        const kind = up ? 'vibhag' : 'sam';
+        let stepsAway = T.nextBoundary(this.tala, this.absStep, kind);
+        if (!up) {
+          const secAway = stepsAway * stepSecFor(this.bpm);
+          if (secAway > 4) stepsAway = T.nextBoundary(this.tala, this.absStep, 'vibhag');
+        }
+        this.pending = { level: desired, atAbs: this.absStep + stepsAway };
+      }
+    }
+
+    // re-prime after a long gap without ticks (no catch-up burst).
+    if (this.nextStepTime < nowCtx - 0.05) this.nextStepTime = nowCtx + 0.05;
+    if (this.nextTanpura < nowCtx - 0.05) this.nextTanpura = nowCtx + 0.05;
+
+    if (!changing) {
+      let guard = 0;
+      while (this.nextStepTime < nowCtx + 0.12 && guard++ < 64) {
+        this._scheduleStep(this.absStep, this.nextStepTime);
+        this.bpm += Math.max(-2, Math.min(2, this.targetBpm - this.bpm));
+        this.nextStepTime += stepSecFor(this.bpm);
+        this.absStep++;
+      }
+      for (let i = this.freeQueue.length - 1; i >= 0; i--) {
+        const item = this.freeQueue[i];
+        if (item.t < nowCtx + 0.12) {
+          this.freeQueue.splice(i, 1);
+          item.fn(item.t);
+        }
+      }
+    }
+
+    // tanpura: free-time, not locked to tala; continues through raga
+    // changes/elegy so the drone never abruptly cuts out. The cursor still
+    // advances while muted/inaudible (no catch-up burst on unmute), but no
+    // node is actually created/played — nobody would hear it anyway.
+    const hub = this.raga === 'yaman';
+    const audible = this.isAudible();
+    let tGuard = 0;
+    while (this.nextTanpura < nowCtx + 0.12 && tGuard++ < 16) {
+      const cyc = MUSIC.gen.tanpuraCycle(MUSIC.theory.RAGAS[this.raga], hub);
+      const step = cyc[this._tanpuraCycleIdx % cyc.length];
+      if (audible) {
+        const jitter = this.rand() * 0.03;
+        this.playOneShot('drone', 'd:' + step.deg, this.nextTanpura + jitter, 0.7 + this.rand() * 0.15);
+      }
+      this.nextTanpura += step.gap;
+      this._tanpuraCycleIdx++;
+    }
+
+    this._renderSlice(Math.max(0.5, 4 - (now() - t0)));
+
+    const elapsed = now() - t0;
+    MUSIC.stats.ticks++;
+    MUSIC.stats.avgTickMs = MUSIC.stats.avgTickMs + 0.05 * (elapsed - MUSIC.stats.avgTickMs);
+    MUSIC.stats.maxTickMs = Math.max(MUSIC.stats.maxTickMs, elapsed);
+  };
+
+  MUSIC._scheduleStep = function (abs, t) {
+    const T = MUSIC.theory;
+    const raga = T.RAGAS[this.raga];
+
+    if (this.pending && abs === this.pending.atAbs) {
+      const lvl = this.pending.level;
+      const matraSec = 60 / this.bpm;
+      const rampSec = lvl > this.applied.level ? matraSec : matraSec * 2;
+      this.setStemLevels(lvl, t, rampSec);
+      if (this.leadStream) this.leadStream.resync(abs);
+      this.targetBpm = raga.bpm * T.TEMPO_MUL[lvl];
+      this.applied.level = lvl;
+      this.lastApply = { abs, t, level: lvl };
+      this.pending = null;
+    }
+
+    if (!this.isAudible()) return; // muted/silent: bookkeeping above still happened, nothing to play
+
+    if (this.stepQueue.has(abs)) {
+      const evs = this.stepQueue.get(abs);
+      this.stepQueue.delete(abs);
+      const stepSec = stepSecFor(this.bpm);
+      for (let i = 0; i < evs.length; i++) {
+        const ev = evs[i];
+        if (ev.voice === 'lead') {
+          this.leadNote(t, ev.deg, (ev.durSteps || 2) * stepSec, ev.vel, {});
+        } else {
+          const prefix = ev.voice === 'tabla' ? 't:' : ev.voice === 'big' ? 'b:' : ev.voice === 'metal' ? 'm:' : 'f:';
+          this.playOneShot(ev.voice, prefix + ev.key, t, ev.vel);
+        }
+      }
+    }
+
+    const inLock = abs < this.leadLockUntil;
+    const inTihai = !!(this.tihaiWindow && abs >= this.tihaiWindow[0] && abs < this.tihaiWindow[1]);
+    const level = this.applied.level;
+    const stepSec = stepSecFor(this.bpm);
+
+    if (!this.elegy && !inLock && this.leadStream) {
+      const evs = this.leadStream.eventsAt(abs, level);
+      for (let i = 0; i < evs.length; i++) {
+        const ev = evs[i];
+        let jt = this.rand() * 0.01;
+        if (level === 0) jt += (this.rand() * 2 - 1) * 0.04;
+        const noteT = Math.max(t + jt, this.ctx.currentTime);
+        const opts = {};
+        if (ev.orn === 'kan') opts.kan = true;
+        if (ev.orn === 'murki') opts.murki = true;
+        if (ev.glide) opts.glide = true;
+        this.leadNote(noteT, ev.deg, ev.dur * stepSec, ev.vel, opts);
+        const peeked = this.leadStream.peek();
+        const legato = !!(peeked && peeked.at === ev.at + ev.dur && peeked.glide);
+        if (!legato) this.leadRelease(noteT + ev.dur * stepSec * 0.95);
+      }
+    }
+
+    if (!this.elegy && !inTihai) {
+      const drums = MUSIC.gen.drumsAt(this.tala, raga, abs, level, this.rand, { lowHp: this._lastLowHp });
+      for (let i = 0; i < drums.length; i++) {
+        const d = drums[i];
+        const frac = d.frac || 0;
+        const dt = t + frac * stepSec + this.rand() * 0.006;
+        const vel = Math.max(0, Math.min(1, d.vel * (1 + (this.rand() * 2 - 1) * 0.08)));
+        const prefix = d.voice === 'tabla' ? 't:' : d.voice === 'big' ? 'b:' : 'm:';
+        this.playOneShot(d.voice, prefix + d.key, dt, vel);
+      }
+      const resting = this.leadStream && this.leadStream.section() === 'breath';
+      const echo = resting ? this.leadStream.tail(3) : null;
+      const pluck = MUSIC.gen.pluckAt(raga, this.tala, abs, level, this.rand, echo);
+      for (let i = 0; i < pluck.length; i++) {
+        const p = pluck[i];
+        const frac = p.frac || 0;
+        const pt = t + frac * stepSec + this.rand() * 0.006;
+        this.playOneShot('pluck', 'p:' + p.deg, pt, p.vel);
+      }
+    }
   };
 })();

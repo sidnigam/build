@@ -4019,5 +4019,162 @@ function makeMusicSandbox() {
   check('mock.late === 0 (no start() call scheduled before currentTime)', mock !== null && mock.late === 0);
 }
 
+// ---------------- MUSIC scheduler (mock) (05.3-03) ----------------
+{
+  console.log('\n— MUSIC scheduler (mock) (05.3-03) —');
+
+  // main sandbox: start() must stay a no-op (no ctx, no timer).
+  {
+    const preLen = vm.runInContext('__timeouts.length', sandbox);
+    check('main sandbox: MUSIC.start() === false (no ctx)', vm.runInContext('MUSIC.start()', sandbox) === false);
+    check('main sandbox: no timer registered by start()', vm.runInContext('__timeouts.length', sandbox) === preLen);
+  }
+
+  let schedErr = null;
+  let mock = null;
+  try {
+    const { sb, R } = makeMusicSandbox();
+    const timers = sb.__timers;
+    R(`
+      AUDIO.init();
+      MUSIC.attach(AUDIO);
+      var GAME = { state: 'hub', prePause: null, biome: { id: 'hub', droneHz: 138.59 }, bossRef: null,
+        enemies: [], player: { hp: 100, maxhp: 100, boonRanks: {}, defiance: 1 } };
+      MUSIC._testCounts = {};
+      MUSIC._origPlayOneShot = MUSIC.playOneShot;
+      MUSIC.playOneShot = function (stem, key, t, vel, opts) {
+        MUSIC._testCounts[stem] = (MUSIC._testCounts[stem] || 0) + 1;
+        return MUSIC._origPlayOneShot.call(this, stem, key, t, vel, opts);
+      };
+      MUSIC._leadCount = 0;
+      MUSIC._origLeadNote = MUSIC.leadNote;
+      MUSIC.leadNote = function () { MUSIC._leadCount++; return MUSIC._origLeadNote.apply(this, arguments); };
+    `);
+    mock = R('AUDIO.ctx');
+
+    function run(sec) {
+      const steps = Math.max(1, Math.round(sec / 0.025));
+      for (let i = 0; i < steps; i++) {
+        mock.advance(0.025);
+        let guard = 0;
+        while (timers.length && guard++ < 1000) timers.shift().fn();
+      }
+    }
+    function counts(stem) { return R(`MUSIC._testCounts[${JSON.stringify(stem)}] || 0`); }
+    function resetCounts() { R('MUSIC._testCounts = {}; MUSIC._leadCount = 0;'); }
+    function sumCounts() {
+      const c = R('MUSIC._testCounts');
+      return Object.values(c).reduce((a, b) => a + b, 0);
+    }
+
+    // ---- start() / stop() basics ----
+    const preTimers = timers.length;
+    check('mock: MUSIC.start() === true with a real ctx', R('MUSIC.start()') === true);
+    check('mock: start() registered exactly one timer', timers.length === preTimers + 1);
+    check('mock: second start() === false (already running)', R('MUSIC.start()') === false);
+
+    // ---- hub 20s: no percussion, lead notes, tanpura plucks ----
+    resetCounts();
+    run(20);
+    check('hub 20s: zero tabla one-shots', counts('tabla') === 0);
+    check('hub 20s: zero big one-shots', counts('big') === 0);
+    check('hub 20s: zero metal one-shots', counts('metal') === 0);
+    check('hub 20s: >= 3 lead notes', R('MUSIC._leadCount') >= 3);
+    check('hub 20s: >= 8 tanpura (drone) one-shots', counts('drone') >= 8);
+    check('hub 20s: mock.late === 0', mock.late === 0);
+
+    // ---- combat, biome naraka, 3 enemies: raga crossfade to bhairav, level 2 lands on a vibhag ----
+    R("GAME.state = 'combat'; GAME.biome = { id: 'naraka', droneHz: 110 }; GAME.enemies = [{}, {}, {}];");
+    run(0.05);
+    check('biome change begins a raga crossfade (pendingRagaTarget set)', R('!!MUSIC.pendingRagaTarget') === true);
+    check('raga stays yaman while the crossfade is in flight', R('MUSIC.raga') === 'yaman');
+    run(1.4); // > the 1.25s changeAt
+    check('crossfade completes: MUSIC.raga === "bhairav"', R('MUSIC.raga') === 'bhairav');
+
+    resetCounts();
+    {
+      let guard = 0;
+      while (R('MUSIC.applied.level') !== 2 && guard++ < 400) run(0.1);
+      check('level 2 eventually applies in combat (naraka, 3 enemies)', R('MUSIC.applied.level') === 2);
+      const cs = R('MUSIC.theory.talaSteps(MUSIC.tala)');
+      const abs = R('MUSIC.lastApply.abs');
+      const starts = R('MUSIC.theory.vibhagStartSteps(MUSIC.tala)');
+      check('level 2 applied at a vibhag-aligned step', starts.indexOf(((abs % cs) + cs) % cs) !== -1);
+      run(1.5); // let the tabla theka actually play once level 2 has landed
+      check('tabla one-shots follow once level 2 has landed', counts('tabla') > 0);
+    }
+
+    // ---- 8 enemies -> heavy combat -> level 3 at the next vibhag ----
+    R('GAME.enemies = [{}, {}, {}, {}, {}, {}, {}, {}];');
+    {
+      let guard = 0;
+      while (R('MUSIC.applied.level') !== 3 && guard++ < 400) run(0.1);
+      check('8 enemies (heavy combat) escalates to level 3', R('MUSIC.applied.level') === 3);
+    }
+
+    // ---- back to 2 enemies: governor holds >= 3s before dropping, then lands on a boundary ----
+    R('GAME.enemies = [{}, {}];');
+    run(2.5);
+    check('level does not drop before the 3s down-hold has elapsed', R('MUSIC.applied.level') === 3);
+    {
+      let guard = 0;
+      while (R('MUSIC.applied.level') !== 2 && guard++ < 400) run(0.1);
+      const cs = R('MUSIC.theory.talaSteps(MUSIC.tala)');
+      const abs = R('MUSIC.lastApply.abs');
+      const starts = R('MUSIC.theory.vibhagStartSteps(MUSIC.tala)');
+      check('level eventually drops back to 2 once held, landing on a tala boundary',
+        R('MUSIC.applied.level') === 2 && starts.indexOf(((abs % cs) + cs) % cs) !== -1);
+    }
+
+    // ---- boss appears: level jumps to 4 within one vibhag; bpm glides towards raga.bpm*1.15 ----
+    R('GAME.bossRef = { dead: false, phase: 1 };');
+    {
+      let guard = 0;
+      while (R('MUSIC.applied.level') !== 4 && guard++ < 400) run(0.1);
+      check('boss (phase 1) escalates to level 4', R('MUSIC.applied.level') === 4);
+      const bpmBefore = R('MUSIC.bpm');
+      run(0.2);
+      const bpmAfter = R('MUSIC.bpm');
+      const targetBpm = 104 * 1.15;
+      check('bpm glides toward raga.bpm*TEMPO_MUL[4] (104*1.15) without overshoot',
+        Math.abs(targetBpm - bpmAfter) <= Math.abs(targetBpm - bpmBefore) + 1e-9);
+    }
+
+    // ---- skip-ahead: a long real-time gap must not cause a catch-up burst ----
+    resetCounts();
+    mock.advance(3); // advance the clock directly, WITHOUT draining any pending timer
+    R('MUSIC._tick();');
+    check('skip-ahead: mock.late === 0 after the gap', mock.late === 0);
+    check('skip-ahead: re-prime avoids a scheduling burst (< 12 events in that tick)', sumCounts() + R('MUSIC._leadCount') < 12);
+
+    // ---- mute: no new one-shots while muted; scheduling position still advances; unmute resumes ----
+    resetCounts();
+    const absBeforeMute = R('MUSIC.absStep');
+    R('AUDIO.muted = true;');
+    run(3);
+    check('muted: no new one-shots created over 3s', sumCounts() === 0);
+    check('muted: absStep keeps advancing while muted', R('MUSIC.absStep') > absBeforeMute);
+    R('AUDIO.muted = false;');
+    run(2);
+    check('unmute: one-shots resume', sumCounts() > 0);
+
+    // ---- lead never double-books a ctx time; every automation stayed finite ----
+    check('lead notes never share an exact ctx time (no double-booking)',
+      R(`(function () {
+        const evs = MUSIC.lead.osc.frequency._events.filter(e => e.type === 'set' || e.type === 'exp');
+        const seen = new Set();
+        for (const e of evs) { const k = e.t.toFixed(6); if (seen.has(k)) return false; seen.add(k); }
+        return true;
+      })()`) === true);
+
+    // ---- stop() ----
+    R('MUSIC.stop();');
+    check('stop() clears running', R('MUSIC.running') === false);
+  } catch (e) {
+    schedErr = e;
+  }
+  check('scheduler sequence never threw' + (schedErr ? ' — ' + schedErr.stack : ''), schedErr === null);
+}
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

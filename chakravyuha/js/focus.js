@@ -316,8 +316,17 @@ const FOCUS = {
     const edges = (state && state.edges) || {};
     const actionEdges = (state && state.actionEdges) || {};
     if (this.armed) {
-      if (edges.A) this.confirm();
-      else if (edges.B) this.back();
+      if (edges.A) {
+        // Phase 05.5-03: while the boon-panel god dialogue is typing, ✕
+        // advances/skips it instead of confirming a (still-dimmed) card.
+        // Still gated by `this.armed`, so the held-✕ boon guard applies.
+        if (panelId === 'boonpick' && typeof UI !== 'undefined' &&
+            typeof UI.godDialogueBusy === 'function' && UI.godDialogueBusy()) {
+          UI.skipGodDialogue();
+        } else {
+          this.confirm();
+        }
+      } else if (edges.B) this.back();
     }
     if (actionEdges.pause) {
       if (panelId === 'pause') { if (typeof UI !== 'undefined') UI.resume(); }

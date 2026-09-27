@@ -230,6 +230,56 @@
     width: 360px; margin: 8px 0; gap: 16px; color: var(--ash); font-size: 14px; letter-spacing: 0.06em; }
   #settings-rebind-list .settings-row { font-size: 13px; }
 </style>
+<style id="gods-css">
+  #boonpick.has-portrait { padding-left: 34%; }
+  #boonpick.has-portrait .god-sym { display: none; }
+  #boonpick.has-portrait .card { width: 220px; }
+
+  #god-portrait-wrap { position: absolute; left: 0; bottom: 0; width: 34%; height: 96%; pointer-events: none; z-index: 0; }
+  #boonpick > :not(#god-portrait-wrap) { position: relative; z-index: 1; }
+
+  #god-aura { position: absolute; left: 50%; top: 28%; width: 80%; aspect-ratio: 1; transform: translate(-50%, -50%);
+    background: radial-gradient(circle, color-mix(in srgb, var(--god, var(--gold)) 45%, transparent) 0%, transparent 65%); }
+  #god-aura::after { content: ''; position: absolute; inset: 0; mask: var(--svg-mandala) center / contain no-repeat;
+    -webkit-mask: var(--svg-mandala) center / contain no-repeat; background: var(--god, var(--gold)); opacity: .18; }
+
+  #god-portrait { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); max-height: 100%; max-width: 100%;
+    object-fit: contain; filter: drop-shadow(0 0 18px color-mix(in srgb, var(--god) 40%, transparent)); }
+  #god-portrait-2 { position: absolute; top: 0; right: 0; width: 96px; height: 96px; border-radius: 50%; object-fit: cover;
+    object-position: top; border: 2px solid var(--god2, var(--gold)); }
+
+  #god-portrait-wrap.enter { animation: godIn .45s ease-out both; }
+  @keyframes godIn { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: none; } }
+
+  @media (prefers-reduced-motion: no-preference) {
+    #god-portrait { animation: godBob 4s ease-in-out infinite alternate; }
+    @keyframes godBob { from { transform: translateX(-50%) translateY(0); } to { transform: translateX(-50%) translateY(-6px); } }
+    #god-aura::after { animation: auraSpin 60s linear infinite; }
+    @keyframes auraSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  }
+
+  #god-dialogue { position: relative; max-width: 720px; width: 100%; margin-top: var(--sp-md); padding: 14px 44px 14px 18px;
+    text-align: left; background: rgba(10,6,16,.9); border: 1px solid var(--gold-soft); border-left: 3px solid var(--god, var(--gold));
+    min-height: 64px; cursor: pointer; }
+  .dlg-beat { font-size: 15.5px; line-height: 1.55; color: #e8e0f2; margin-top: 6px; }
+  .dlg-speaker { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--god, var(--gold)); display: block; }
+  .dlg-beat.abhimanyu { color: #cfe3ff; font-style: italic; padding-left: 18px; }
+  .dlg-beat.abhimanyu .dlg-speaker { color: #9fb8ff; }
+  #god-dialogue-skip { position: absolute; top: 6px; right: 6px; padding: 2px 9px; font-size: 13px; }
+  #god-dialogue-hint { display: block; margin-top: 8px; font-size: 11.5px; opacity: .65; letter-spacing: .04em; }
+
+  .cards.awaiting .card { opacity: .4; pointer-events: none; transform: none; }
+  .cards .card { transition: opacity .25s, transform .12s, box-shadow .12s; }
+
+  .codex-gods { margin-bottom: 28px; }
+  .codex-god { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 18px; }
+  .codex-god-thumb { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; object-position: top;
+    border: 2px solid var(--god, var(--gold)); flex: none; background: #140c1c; }
+  .codex-god-sym { width: 64px; height: 64px; font-size: 32px; display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; border: 1px solid var(--gold-soft); flex: none; }
+  .codex-god.unmet { opacity: .45; }
+  .codex-god-dev { font-family: var(--font-dev); color: var(--god, var(--gold)); font-size: 14px; }
+</style>
 <style id="controller-css">
   .glyph { display: inline-flex; align-items: center; justify-content: center; min-width: 1.5em; height: 1.5em;
     padding: 0 .35em; border: 1px solid var(--gold-soft); border-radius: 4px; background: rgba(10, 6, 16, .85);
@@ -311,7 +361,9 @@
 
   <!-- BOON PICK -->
   <div id="boonpick" class="panel hidden">
+    <div id="god-portrait-wrap" class="hidden"><div id="god-aura"></div><img id="god-portrait" alt=""><img id="god-portrait-2" class="hidden" alt=""></div>
     <div id="boon-god"></div>
+    <div id="god-dialogue" class="hidden"><div id="god-dialogue-lines"></div><button id="god-dialogue-skip" title="Skip">✕</button><span id="god-dialogue-hint" class="hidden"></span></div>
     <div class="cards" id="boon-cards"></div>
   </div>
 

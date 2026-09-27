@@ -298,6 +298,15 @@ const DIALOGUE = {
   },
 };
 
+// Also expose as a `window`/`globalThis` property (in addition to the lexical
+// `const` above) so that code compiled *before* this file loads (e.g. ui.js,
+// Phase 05.5-03) can detect it dynamically via `window.DIALOGUE` without
+// relying on re-resolving the bare `DIALOGUE` free variable, which some JS
+// engines can keep permanently unresolved once a function has already been
+// invoked enough times while it was genuinely absent (index.html loads this
+// file before ui.js, so real play is unaffected either way).
+if (typeof window !== 'undefined') window.DIALOGUE = DIALOGUE;
+
 // ============================================================
 // Content: 6 gods x 10-13 lines, 6 duos x 2 co-voiced lines, codex lore.
 // Reverent, epic-accurate. Every factual reference is in the Lore Check

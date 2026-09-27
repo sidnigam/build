@@ -650,19 +650,436 @@ const ENV = {
   },
 
   // ================================================================
-  // Pixi build/sync (Task 2 fills these in; headless-safe stubs for now — D-13a).
+  // Pixi build/sync (D-02/D-13/D-13a). Everything below is guarded on window.PIXI/SPRITES and
+  // wrapped so a failure degrades to `console.warn` + return false — the legacy renderBackground
+  // path always still works. Fully inert (never touched) headless.
   // ================================================================
   _active: false,
   _plan: null,
   _manifests: {},
+  _atlases: {},
+  _tileTextures: {},
+  _biomeStatus: {},
+  _layersReady: false,
+  _objs: [],
+  _aabbs: [],
+  _entityItems: [],
+  _riverBands: [],
+  _driftObjs: [],
+  _gateObjs: [],
+  _skinnedSet: null,
+  _roomKey: null,
+  _doorsCount: -1,
+  _lastView: null,
+  _lastVisibleCount: 0,
+  _driftT: 0,
 
-  ensureLoaded() { return 'fallback'; },
-  sync() { return false; },
-  build() {},
-  clear() {},
-  isActive() { return this._active; },
-  hasSkin() { return false; },
-  stats() { return { items: 0, byLayer: {}, visible: 0 }; },
+  // ---------------- layer setup (D-02) ----------------
+  initLayers() {
+    if (this._layersReady) return true;
+    if (typeof window === 'undefined' || !window.PIXI || !SPRITES.worldContainer || !SPRITES.bridgeSprite || !SPRITES.bgContainer) return false;
+    try {
+      const PIXI = window.PIXI;
+      this.floorLayer = new PIXI.Container();
+      this.lightLayer = new PIXI.Container();
+      this.structLayer = new PIXI.Container();
+      this.atmosLayer = new PIXI.Container();
+
+      const bridgeIdx = SPRITES.worldContainer.getChildIndex(SPRITES.bridgeSprite);
+      SPRITES.worldContainer.addChildAt(this.floorLayer, bridgeIdx); // directly below the bridge
+      SPRITES.bgContainer.addChild(this.lightLayer, this.structLayer); // bgContainer already sits above the bridge
+      SPRITES.worldContainer.addChild(this.atmosLayer);
+      const entIdx = SPRITES.worldContainer.getChildIndex(SPRITES.entityContainer);
+      if (entIdx >= 0) SPRITES.worldContainer.setChildIndex(this.atmosLayer, Math.min(entIdx + 1, SPRITES.worldContainer.children.length - 1));
+
+      this._procTextures(PIXI);
+
+      this.vignette = new PIXI.Sprite(this._proc.vignette);
+      this.vignette.anchor.set(0.5);
+      this.vignette.visible = false;
+      if (SPRITES.app && SPRITES.app.stage) {
+        SPRITES.app.stage.addChildAt(this.vignette, Math.min(1, SPRITES.app.stage.children.length));
+        this._resizeVignette();
+      }
+      this._layersReady = true;
+      return true;
+    } catch (e) {
+      console.warn('ENV.initLayers failed', e);
+      return false;
+    }
+  },
+  _resizeVignette() {
+    if (!this.vignette || !SPRITES.app) return;
+    const w = SPRITES.app.screen ? SPRITES.app.screen.width : 1280;
+    const h = SPRITES.app.screen ? SPRITES.app.screen.height : 720;
+    this.vignette.width = w * 1.6;
+    this.vignette.height = h * 1.6;
+    this.vignette.position.set(w / 2, h / 2);
+  },
+  _procTextures(PIXI) {
+    if (this._proc) return;
+    const mk = (w, h, draw) => {
+      const cv = document.createElement('canvas');
+      cv.width = w; cv.height = h;
+      draw(cv.getContext('2d'), w, h);
+      return PIXI.Texture.from(cv);
+    };
+    this._proc = {
+      pool: mk(128, 128, (c, s) => {
+        const g = c.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+        g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+        c.fillStyle = g; c.fillRect(0, 0, s, s);
+      }),
+      beam: mk(64, 256, (c, w, h) => {
+        const g = c.createLinearGradient(0, 0, 0, h);
+        g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.5, 'rgba(255,255,255,0.9)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+        c.fillStyle = g; c.fillRect(0, 0, w, h);
+      }),
+      mist: mk(128, 128, (c, s) => {
+        const g = c.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+        g.addColorStop(0, 'rgba(255,255,255,0.6)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+        c.fillStyle = g; c.fillRect(0, 0, s, s);
+      }),
+      vignette: mk(256, 256, (c, s) => {
+        const g = c.createRadialGradient(s / 2, s / 2, s * 0.32, s / 2, s / 2, s * 0.5);
+        g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,1)');
+        c.fillStyle = g; c.fillRect(0, 0, s, s);
+      }),
+    };
+  },
+  _biomeWallColor(biomeId) {
+    const b = (typeof DATA !== 'undefined' && DATA.BIOMES && DATA.BIOMES.find(x => x.id === biomeId));
+    return (b && b.wall) || '#333333';
+  },
+
+  // ---------------- loading (D-13a) ----------------
+  // Returns 'loading' | 'ready' | 'fallback' | 'unavailable' (no env manifest AND no legacy bg —
+  // sync() then returns false so the full legacy primitive path runs).
+  ensureLoaded(biomeId) {
+    if (!biomeId) return 'unavailable';
+    const st = this._biomeStatus[biomeId];
+    if (st) return st;
+    this._biomeStatus[biomeId] = 'loading';
+    this._loadBiome(biomeId);
+    return 'loading';
+  },
+  async _loadBiome(biomeId) {
+    try {
+      if (typeof window === 'undefined' || !window.PIXI) { this._biomeStatus[biomeId] = 'unavailable'; return; }
+      const PIXI = window.PIXI;
+      let manifest = null;
+      try { manifest = await PIXI.Assets.load(`assets/sprites/env/${biomeId}/${biomeId}-env.json`); } catch (e) { manifest = null; }
+      if (manifest) {
+        const v = this.validateManifest(manifest, { strict: false });
+        if (!v.ok) { console.warn('ENV: manifest invalid for', biomeId, v.errors); manifest = null; }
+      }
+      if (manifest) {
+        try {
+          const atlas = await PIXI.Assets.load(manifest.atlas);
+          const tileTex = {};
+          for (const key of Object.keys(manifest.tiles || {})) {
+            const t = await PIXI.Assets.load(manifest.tiles[key].path);
+            if (t && t.source) { try { t.source.addressMode = 'repeat'; } catch (e2) {} }
+            tileTex[key] = t;
+          }
+          this._atlases[biomeId] = atlas;
+          this._tileTextures[biomeId] = tileTex;
+          this._manifests[biomeId] = manifest;
+          this._biomeStatus[biomeId] = 'ready';
+          return;
+        } catch (e) {
+          console.warn('ENV: atlas/tiles failed to load for', biomeId, e);
+        }
+      }
+      // D-13a fallback kit: legacy bg tiled as the floor, procedural walls.
+      const legacyTex = SPRITES.textures && SPRITES.textures['bg:' + biomeId];
+      if (!legacyTex) { this._biomeStatus[biomeId] = 'unavailable'; return; }
+      this._tileTextures[biomeId] = { floor_a: legacyTex };
+      this._manifests[biomeId] = {
+        schema: 1, biome: biomeId,
+        tiles: { floor_a: { size: [legacyTex.width, legacyTex.height], role: 'floor', ground_safe: true } },
+        frames: {}, skins: { wall: '@cap', pit: '@abyss' }, hazards: {},
+        floor: { tileScale: 1, macroScale: 1, macroAlpha: 0 },
+      };
+      this._biomeStatus[biomeId] = 'fallback';
+    } catch (e) {
+      console.warn('ENV.ensureLoaded failed for', biomeId, e);
+      this._biomeStatus[biomeId] = 'unavailable';
+    }
+  },
+
+  // ---------------- build (D-13) ----------------
+  clear() {
+    const destroyAll = (arr) => { for (const o of (arr || [])) { try { if (o.parent) o.parent.removeChild(o); if (o.destroy) o.destroy(); } catch (e) {} } };
+    destroyAll(this._objs);
+    destroyAll(this._gateObjs);
+    this._objs = []; this._aabbs = []; this._entityItems = []; this._riverBands = []; this._driftObjs = [];
+    this._gateObjs = []; this._skinnedSet = new Set(); this._plan = null; this._roomKey = null; this._doorsCount = -1;
+  },
+  build(biomeId, plan) {
+    if (!this.initLayers()) return false;
+    this.clear();
+    const PIXI = window.PIXI;
+    const manifest = plan.manifest || {};
+    const atlas = this._atlases[biomeId];
+    const tileTex = this._tileTextures[biomeId] || {};
+    const wallColor = this._biomeWallColor(biomeId);
+    const skinnedSet = new Set();
+    const entityItems = [];
+    const riverBands = [];
+    const driftObjs = [];
+
+    const frameTexOf = (key) => {
+      const fdef = manifest.frames && manifest.frames[key];
+      return atlas && atlas.textures && fdef && atlas.textures[fdef.frame];
+    };
+    const spriteFor = (it) => {
+      const t = it.frame && frameTexOf(it.frame);
+      if (!t) return null;
+      const s = new PIXI.Sprite(t);
+      s.anchor.set(it.anchor ? it.anchor[0] : 0.5, it.anchor ? it.anchor[1] : 0.5);
+      s.position.set(it.x, it.y);
+      s.scale.set((it.scale || 1) * (it.flip ? -1 : 1), it.scale || 1);
+      s.rotation = it.rot || 0;
+      s.alpha = it.alpha != null ? it.alpha : 1;
+      if (it.tint) { try { s.tint = it.tint; } catch (e) {} }
+      return s;
+    };
+    const rectGfx = (w, h, color, alpha) => new PIXI.Graphics().rect(0, 0, Math.max(1, w), Math.max(1, h)).fill({ color: color, alpha: alpha == null ? 1 : alpha });
+
+    for (const it of plan.items) {
+      let obj = null;
+      if (it.kind === 'floor-base' || it.kind === 'floor-overlay') {
+        const tex = tileTex[it.frame];
+        if (tex) {
+          obj = new PIXI.TilingSprite({ texture: tex, width: it.aabb.w, height: it.aabb.h });
+          obj.position.set(it.aabb.x, it.aabb.y);
+          obj.tileScale.set(it.scale || 1);
+          if (it.tilePosition) obj.tilePosition.set(it.tilePosition.x, it.tilePosition.y);
+          obj.alpha = it.alpha;
+          this.floorLayer.addChild(obj);
+        }
+      } else if (it.kind === 'wall-face' || it.kind === 'wall-cap-strip') {
+        const tex = it.frame && tileTex[it.frame];
+        obj = tex ? new PIXI.TilingSprite({ texture: tex, width: it.aabb.w, height: it.aabb.h }) : rectGfx(it.aabb.w, it.aabb.h, wallColor);
+        obj.position.set(it.aabb.x, it.aabb.y);
+        this.structLayer.addChild(obj);
+      } else if (it.kind === 'water-strip') {
+        const tex = it.frame && tileTex[it.frame];
+        obj = tex ? new PIXI.TilingSprite({ texture: tex, width: it.aabb.w, height: it.aabb.h }) : rectGfx(it.aabb.w, it.aabb.h, '#0a1830', 0.8);
+        obj.position.set(it.aabb.x, it.aabb.y);
+        this.floorLayer.addChild(obj);
+      } else if (it.kind === 'plinth' || it.kind === 'wall-lip') {
+        obj = rectGfx(it.aabb.w, it.aabb.h, wallColor, 0.85);
+        obj.position.set(it.aabb.x, it.aabb.y);
+        this.structLayer.addChild(obj);
+      } else if (it.kind === 'column' || it.kind === 'gate') {
+        obj = spriteFor(it) || (() => { const g = rectGfx(it.aabb.w, it.aabb.h, wallColor); g.position.set(it.aabb.x, it.aabb.y); return g; })();
+        this.structLayer.addChild(obj);
+      } else if (it.kind === 'prop') {
+        obj = spriteFor(it) || (() => { const g = rectGfx(it.aabb.w, it.aabb.h, wallColor, 0.75); g.position.set(it.aabb.x, it.aabb.y); return g; })();
+        obj.zIndex = it.z != null ? it.z : it.y;
+        SPRITES.entityContainer.addChild(obj);
+        entityItems.push({ item: it, obj });
+      } else if (it.kind === 'pillar-skin' || it.kind === 'wall-skin') {
+        obj = spriteFor(it) || (() => {
+          const g = new PIXI.Graphics().circle(0, 0, (it.footW || Math.max(it.aabb.w, it.aabb.h)) / 2).fill({ color: wallColor });
+          g.position.set(it.x, it.y);
+          return g;
+        })();
+        obj.zIndex = it.z != null ? it.z : it.y;
+        SPRITES.entityContainer.addChild(obj);
+        entityItems.push({ item: it, obj });
+        if (it.obstacleIndex != null) skinnedSet.add(it.obstacleIndex);
+      } else if (it.kind === 'wall-cap') {
+        const tex = tileTex.wallcap;
+        obj = tex ? new PIXI.TilingSprite({ texture: tex, width: it.aabb.w, height: it.aabb.h }) : rectGfx(it.aabb.w, it.aabb.h, wallColor);
+        obj.position.set(it.aabb.x, it.aabb.y);
+        this.structLayer.addChild(obj);
+        if (it.obstacleIndex != null) skinnedSet.add(it.obstacleIndex);
+      } else if (it.kind === 'wall-front') {
+        obj = rectGfx(it.aabb.w, it.aabb.h, '#000000', 0.35);
+        obj.position.set(it.aabb.x, it.aabb.y);
+        this.structLayer.addChild(obj);
+      } else if (it.kind === 'shadow') {
+        obj = rectGfx(it.aabb.w, it.aabb.h, '#000000', it.alpha);
+        obj.position.set(it.aabb.x, it.aabb.y);
+        this.floorLayer.addChild(obj);
+      } else if (it.kind === 'abyss') {
+        obj = rectGfx(it.aabb.w, it.aabb.h, '#000000', 0.9);
+        obj.position.set(it.aabb.x, it.aabb.y);
+        this.floorLayer.addChild(obj);
+        if (it.obstacleIndex != null) skinnedSet.add(it.obstacleIndex);
+      } else if (it.kind === 'water') {
+        const tex = tileTex.water;
+        obj = tex ? new PIXI.TilingSprite({ texture: tex, width: it.aabb.w, height: it.aabb.h }) : rectGfx(it.aabb.w, it.aabb.h, '#0a1830', 0.85);
+        obj.position.set(it.aabb.x, it.aabb.y);
+        this.floorLayer.addChild(obj);
+        if (it.obstacleIndex != null) skinnedSet.add(it.obstacleIndex);
+      } else if (it.kind === 'decal') {
+        obj = spriteFor(it);
+        if (obj) this.floorLayer.addChild(obj);
+      } else if (it.kind === 'hazard-skin') {
+        obj = spriteFor(it);
+        if (obj) this.floorLayer.addChild(obj);
+      } else if (it.kind === 'venom-rim') {
+        obj = new PIXI.Graphics().circle(0, 0, it.aabb.w / 2).stroke({ color: 0x7dff5a, width: 2, alpha: it.alpha });
+        obj.position.set(it.x, it.y);
+        this.floorLayer.addChild(obj);
+      } else if (it.kind === 'water-band') {
+        const tex = tileTex.water;
+        obj = tex ? new PIXI.TilingSprite({ texture: tex, width: it.aabb.w, height: it.aabb.h }) : rectGfx(it.aabb.w, it.aabb.h, '#0a1830', 0.7);
+        obj.position.set(it.aabb.x, it.aabb.y);
+        this.floorLayer.addChild(obj);
+        riverBands.push({ obj, hz: it });
+      } else if (it.kind === 'pool') {
+        obj = new PIXI.Sprite(this._proc.pool);
+        obj.anchor.set(0.5); obj.position.set(it.x, it.y);
+        obj.width = it.aabb.w; obj.height = it.aabb.h;
+        obj.alpha = it.alpha; obj.blendMode = 'add';
+        if (it.color) { try { obj.tint = it.color; } catch (e) {} }
+        this.lightLayer.addChild(obj);
+      } else if (it.kind === 'light') {
+        obj = new PIXI.Sprite(this._proc.pool);
+        obj.anchor.set(0.5); obj.position.set(it.x, it.y);
+        obj.width = it.aabb.w; obj.height = it.aabb.h;
+        obj.alpha = it.alpha; obj.blendMode = 'add';
+        if (it.color) { try { obj.tint = it.color; } catch (e) {} }
+        this.lightLayer.addChild(obj);
+      } else if (it.kind === 'shaft') {
+        obj = new PIXI.Sprite(this._proc.beam);
+        obj.anchor.set(0.5, 0); obj.position.set(it.x, it.y);
+        obj.width = 80; obj.height = it.aabb.h; obj.rotation = it.rot || 0;
+        obj.alpha = it.alpha; obj.blendMode = 'add';
+        this.atmosLayer.addChild(obj);
+        driftObjs.push({ obj, baseX: it.x, phase: Math.random() * Math.PI * 2 });
+      } else if (it.kind === 'mist') {
+        obj = new PIXI.Sprite(this._proc.mist);
+        obj.anchor.set(0.5); obj.position.set(it.x, it.y);
+        obj.width = it.aabb.w; obj.height = it.aabb.h;
+        obj.alpha = it.alpha;
+        this.atmosLayer.addChild(obj);
+        driftObjs.push({ obj, baseX: it.x, phase: Math.random() * Math.PI * 2 });
+      }
+      if (obj) { this._objs.push(obj); this._aabbs.push(it.aabb); }
+      else { this._objs.push(null); this._aabbs.push(it.aabb); }
+    }
+    this._entityItems = entityItems;
+    this._riverBands = riverBands;
+    this._driftObjs = driftObjs;
+    this._skinnedSet = skinnedSet;
+    return true;
+  },
+  _buildGates(biomeId, doors, arena) {
+    const destroyAll = (arr) => { for (const o of (arr || [])) { try { if (o.parent) o.parent.removeChild(o); if (o.destroy) o.destroy(); } catch (e) {} } };
+    destroyAll(this._gateObjs);
+    this._gateObjs = [];
+    if (!window.PIXI) return;
+    const PIXI = window.PIXI;
+    const manifest = this._manifests[biomeId] || {};
+    const atlas = this._atlases[biomeId];
+    const wallColor = this._biomeWallColor(biomeId);
+    const items = this.gateItems(doors, arena, manifest, this.pad());
+    for (const it of items) {
+      const fdef = it.frame && manifest.frames && manifest.frames[it.frame];
+      const tex = atlas && atlas.textures && fdef && atlas.textures[fdef.frame];
+      let obj;
+      if (tex) {
+        obj = new PIXI.Sprite(tex);
+        obj.anchor.set(it.anchor[0], it.anchor[1]);
+        obj.position.set(it.x, it.y);
+      } else {
+        obj = new PIXI.Graphics().rect(-it.aabb.w / 2, -it.aabb.h, it.aabb.w, it.aabb.h).fill({ color: wallColor });
+        obj.position.set(it.x, it.y);
+      }
+      this.structLayer.addChild(obj);
+      this._gateObjs.push(obj);
+    }
+  },
+
+  // ---------------- per-frame sync (called from GAME.renderBackground) ----------------
+  sync(G) {
+    if (!G || G.state === 'hub') { if (this._active || this._plan) this.clear(); this._active = false; return false; }
+    if (typeof window === 'undefined' || !window.PIXI || !SPRITES.worldContainer) return false;
+    if (!this.initLayers()) return false;
+    const biomeId = G.biome && G.biome.id;
+    if (!biomeId) return false;
+    const status = this.ensureLoaded(biomeId);
+    if (status === 'loading' || status === 'unavailable') { if (this._active) this.clear(); this._active = false; return false; }
+
+    const A = G.arena;
+    const roomKey = biomeId + '|' + A.x + ',' + A.y + ',' + A.w + ',' + A.h + '|' + this._idOf(G.pillars) + '|' + ((G.hazards || []).length) + '|' + this._idOf(G.hazards);
+    if (roomKey !== this._roomKey) {
+      const manifest = this._manifests[biomeId];
+      const pad = this.pad();
+      const seed = (Math.random() * 4294967296) >>> 0;
+      const plan = this.layout({ biomeId, arena: A, obstacles: G.pillars || [], hazards: G.hazards || [], isBoss: G.reward === 'boss', seed, manifest, pad });
+      plan.manifest = manifest;
+      this._plan = plan;
+      this._roomKey = roomKey;
+      this.build(biomeId, plan);
+      this._doorsCount = -1;
+    }
+    const doors = G.doors || [];
+    if (doors.length !== this._doorsCount) {
+      this._buildGates(biomeId, doors, A);
+      this._doorsCount = doors.length;
+    }
+
+    this._perFrame(G);
+    this._active = true;
+    return true;
+  },
+  // Identity fingerprint for arrays (avoids storing references across rebuilds while still
+  // detecting "a new array was assigned" the way ROOMS/game.js replace G.pillars/G.hazards).
+  _idOf(arr) {
+    if (!arr) return '0';
+    if (!arr.__envId) { try { Object.defineProperty(arr, '__envId', { value: ++ENV._idSeq, enumerable: false }); } catch (e) { return String(arr.length); } }
+    return String(arr.__envId);
+  },
+  _idSeq: 0,
+  _perFrame(G) {
+    const view = this.viewRect();
+    const moved = !this._lastView || Math.abs(view.x - this._lastView.x) > this.CFG.CULL_MOVE || Math.abs(view.y - this._lastView.y) > this.CFG.CULL_MOVE
+      || Math.abs(view.w - this._lastView.w) > 0.01;
+    if (moved) {
+      this._lastView = view;
+      const visible = this.visibleIndices(this._aabbs, view);
+      const visSet = new Set(visible);
+      this._objs.forEach((o, i) => { if (o) o.visible = visSet.has(i); });
+      this._lastVisibleCount = visible.length;
+    }
+    const actors = [G.player].concat(G.enemies || []).filter(Boolean);
+    for (const { item, obj } of this._entityItems) {
+      if (item.z == null || !obj) continue;
+      const target = this.occluded(item, actors) ? this.CFG.OCCLUDE_ALPHA : 1;
+      obj.alpha += (target - obj.alpha) * 0.25;
+    }
+    const dt = 1 / 60;
+    const tileScale = (this._plan && this._plan.floor && this._plan.floor.tileScale) || 1;
+    for (const rb of this._riverBands) {
+      if (!rb.obj.tilePosition) continue;
+      const speed = (rb.hz.phase === 'surge' && typeof DATA !== 'undefined') ? DATA.HAZARDS.riverCurrent.surgePush : (typeof DATA !== 'undefined' ? DATA.HAZARDS.riverCurrent.push : 120);
+      rb.obj.tilePosition.x += (rb.hz.dir || 1) * speed * tileScale * dt;
+    }
+    this._driftT += dt;
+    for (const d of this._driftObjs) d.obj.position.x = d.baseX + Math.sin(this._driftT * 0.5 + d.phase) * 12;
+    if (this.vignette) {
+      this.vignette.alpha = this.grade('vignette', 0.4);
+      this.vignette.visible = true;
+      this._resizeVignette();
+    }
+  },
+
+  isActive() { return !!this._active; },
+  hasSkin(o) {
+    if (!this._active || !this._skinnedSet || !o) return false;
+    const idx = (typeof GAME !== 'undefined' && GAME.pillars) ? GAME.pillars.indexOf(o) : -1;
+    return idx >= 0 && this._skinnedSet.has(idx);
+  },
+  stats() {
+    return { items: this._objs.length, byLayer: { entity: this._entityItems.length, river: this._riverBands.length, drift: this._driftObjs.length }, visible: this._lastVisibleCount };
+  },
   grade(key, dflt) {
     const m = this._plan && this._plan.manifest;
     return (m && m.grade && m.grade[key] != null) ? m.grade[key] : dflt;

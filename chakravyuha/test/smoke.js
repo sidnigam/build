@@ -6640,7 +6640,7 @@ function makeMusicSandbox() {
 }
 
 // ---------------- MUSIC stress/budget (05.3-03 task 3) ----------------
-{
+if (!process.env.SMOKE_FAST) {   // ~90s music soak; skip with SMOKE_FAST=1 for quick dev loops (full suite still runs it by default)
   console.log('\n— MUSIC stress/budget (05.3-03) —');
   let stressErr = null;
   try {

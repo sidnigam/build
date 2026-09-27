@@ -698,3 +698,215 @@ const MUSIC = {
     };
   };
 })();
+
+// ================================================================
+// MUSIC.gen.drumsAt / pluckAt / tanpuraCycle / fitTihai / tihaiEvents
+// Tala-driven percussion/pluck/tanpura pattern generators per intensity
+// level, and tihai (3x cadence) fitting. Pure: seeded rand only. D-05/D-07.
+// ================================================================
+(function () {
+  const T = MUSIC.theory;
+  const G = MUSIC.gen;
+  const KAYDA = ['Dha', 'Te', 'Re', 'Ke', 'Te', 'Dha', 'Te', 'Re', 'Ke', 'Te', 'Dha', 'Ge', 'Tin', 'Na', 'Ke', 'Na'];
+  const TIHAI_MID = ['Te', 'Re', 'Ke', 'Te', 'Dha', 'Ge', 'Na'];
+
+  G.drumsAt = function (tala, raga, absStep, level, rand, opts) {
+    opts = opts || {};
+    if (level === 0) return [];
+    const cs = T.talaSteps(tala);
+    const s = ((absStep % cs) + cs) % cs;
+    const cycle = Math.floor(absStep / cs);
+    const m = s >> 2;
+    const sub = s & 3;
+    const vi = T.vibhagIndexAt(tala, s);
+    const khali = T.isKhaliVibhag(tala, vi);
+    const isSam = s === 0;
+    const vibhagStarts = T.vibhagStartSteps(tala);
+    const isVibhagStart = sub === 0 && vibhagStarts.indexOf(s) !== -1;
+    const bolKeys = T.expandBol(tala.theka[m]);
+    const bigBoost = raga.bigBoost || 1;
+    const out = [];
+
+    function pushBig(key, vel, frac) {
+      const v = Math.min(1, vel * (level >= 5 ? bigBoost : 1));
+      const ev = { voice: 'big', key, vel: v };
+      if (frac !== undefined) ev.frac = frac;
+      out.push(ev);
+    }
+
+    if (level === 1) {
+      if (isVibhagStart) out.push({ voice: 'tabla', key: bolKeys[0], vel: khali ? 0.3 : 0.45 });
+      return out;
+    }
+
+    if (level === 2 || level === 3) {
+      const isFillCycle = level === 2 ? (cycle % 4 === 3) : (cycle % 2 === 1);
+      const lastVibhagStart = vibhagStarts[vibhagStarts.length - 1];
+      const lastVibhagLen = cs - lastVibhagStart;
+
+      if (isFillCycle && s >= lastVibhagStart) {
+        const idx = s - lastVibhagStart;
+        if (idx < lastVibhagLen - 1) out.push({ voice: 'tabla', key: KAYDA[idx % KAYDA.length], vel: 0.6 });
+      } else if (bolKeys[sub]) {
+        let vel = 0.7;
+        if (isSam) vel = 0.9;
+        else if (khali) vel *= 0.8;
+        else vel *= 1.15;
+        out.push({ voice: 'tabla', key: bolKeys[sub], vel: Math.min(1, vel) });
+      } else if (level === 3 && sub === 2) {
+        out.push({ voice: 'tabla', key: 'Na', vel: 0.35 });
+      }
+
+      if (isSam) pushBig('nagara', 0.7);
+      if (level === 2) {
+        if (isVibhagStart && !khali) pushBig('dhol', 0.45);
+      } else {
+        if (sub === 0) pushBig('dhol', 0.5);
+      }
+      if (opts.lowHp && level === 3 && isSam && sub === 0) pushBig('dhol', 0.7);
+      if (opts.lowHp && level === 3 && s === 1) pushBig('dhol', 0.45);
+
+      if (sub === 0) out.push({ voice: 'metal', key: 'ching', vel: 0.35 });
+      if (sub === 2) out.push({ voice: 'metal', key: 'chak', vel: 0.25 });
+      return out;
+    }
+
+    // ---- L4 / L5: rela ----
+    if (sub === 0) {
+      out.push({ voice: 'tabla', key: bolKeys[0], vel: 0.85 });
+    } else {
+      const pattern = (m % 2 === 0) ? ['Te', 'Re', 'Ke'] : ['Ge', 'Te', 'Re'];
+      out.push({ voice: 'tabla', key: pattern[sub - 1], vel: 0.35 + rand() * 0.15 });
+    }
+
+    if (isSam) pushBig('nagara', 0.85);
+    else if (isVibhagStart && !khali) pushBig('nagara', 0.85);
+    if (sub === 0) pushBig('dhol', 0.6);
+    if (sub === 2) pushBig('dholHi', 0.4);
+    if (level === 5 && sub === 3) pushBig('dhol', 0.5);
+    if (level === 5 && m === tala.matras - 1 && sub === 0) {
+      [0, 1.33, 2.67].forEach(frac => pushBig('nagara', 0.85, frac));
+    }
+
+    if (sub === 0) out.push({ voice: 'metal', key: 'ching', vel: 0.35 });
+    if (sub === 2) out.push({ voice: 'metal', key: 'chak', vel: 0.4 });
+    if (level === 5 && sub !== 2) out.push({ voice: 'metal', key: 'chak', vel: 0.15 });
+
+    return out;
+  };
+
+  G.pluckAt = function (raga, tala, absStep, level, rand, echo) {
+    const cs = T.talaSteps(tala);
+    const s = ((absStep % cs) + cs) % cs;
+    const cycle = Math.floor(absStep / cs);
+    const m = s >> 2;
+    const sub = s & 3;
+    const vi = T.vibhagIndexAt(tala, s);
+    const khali = T.isKhaliVibhag(tala, vi);
+    const isSam = s === 0;
+    const vibhagStarts = T.vibhagStartSteps(tala);
+    const isVibhagStart = sub === 0 && vibhagStarts.indexOf(s) !== -1;
+
+    if (level === 0) {
+      if (isSam && cycle % 2 === 0) {
+        const degs = T.scaleDegrees(raga, 'notes', 0, 19).slice(0, 8);
+        return degs.map((d, i) => ({ deg: d, vel: 0.3 + (i / Math.max(1, degs.length - 1)) * 0.15, frac: i * 0.25 }));
+      }
+      return [];
+    }
+
+    if (level === 1) {
+      const out = [];
+      if (isVibhagStart) {
+        out.push({ deg: 0, vel: 0.35 });
+        if (khali) out.push({ deg: raga.droneFirst - 12, vel: 0.3 });
+      }
+      return out;
+    }
+
+    if (level === 2) {
+      const out = [];
+      if (sub === 2) out.push({ deg: 12, vel: 0.22 });
+      if (sub === 0 && echo && echo.length) {
+        const idx = m % echo.length;
+        const d = Math.max(raga.range[0], Math.min(raga.range[1], echo[idx].deg - 12));
+        out.push({ deg: d, vel: 0.3 });
+      }
+      return out;
+    }
+
+    if (level === 3 || level === 4) {
+      const out = [];
+      if (sub === 0 || sub === 2) {
+        const idx = (m * 2 + (sub >> 1)) % raga.ostinato.length;
+        let vel = sub === 0 ? 0.45 : 0.3;
+        if (isVibhagStart) vel += 0.15;
+        vel = Math.min(1, vel);
+        out.push({ deg: raga.ostinato[idx], vel });
+        if (level === 4 && isSam && sub === 0) out.push({ deg: raga.ostinato[idx] + 12, vel });
+      }
+      return out;
+    }
+
+    // level 5: jhala 16ths
+    if (sub === 0) {
+      const idx = m % raga.ostinato.length;
+      return [{ deg: raga.ostinato[idx], vel: 0.6 }];
+    }
+    return [{ deg: 12, vel: 0.28 + rand() * 0.07 }];
+  };
+
+  G.tanpuraCycle = function (raga, hub) {
+    const degs = [raga.droneFirst - 12, 0, 0, -12];
+    const gaps = hub ? [0.7, 0.7, 0.7, 1.4] : [0.55, 0.55, 0.55, 1.1];
+    return degs.map((d, i) => ({ deg: d, gap: gaps[i] }));
+  };
+
+  function searchTihai(target) {
+    let best = null;
+    for (let p = 12; p >= 3; p--) {
+      for (let g = 0; g <= 4; g++) {
+        const total = 3 * p + 2 * g - 1;
+        if (total <= target - 1) {
+          if (!best || total > best.total || (total === best.total && p > best.p)) best = { p, g, total };
+        }
+      }
+    }
+    return best;
+  }
+
+  G.fitTihai = function (rem, cycleSteps) {
+    let landing = rem;
+    let best = searchTihai(landing);
+    if (!best && rem < 9) {
+      landing = rem + cycleSteps;
+      best = searchTihai(landing);
+    }
+    if (!best) {
+      best = { p: 3, g: 0, total: 3 * 3 + 0 - 1 };
+      landing = Math.max(landing, best.total + 1);
+    }
+    return { p: best.p, g: best.g, start: landing - best.total, landing };
+  };
+
+  G.tihaiEvents = function (plan, raga) {
+    const p = plan.p, g = plan.g, start = plan.start;
+    const events = [];
+    for (let k = 0; k < 3; k++) {
+      const repStart = start + k * (p + g);
+      for (let i = 0; i < p; i++) {
+        const key = (i === 0 || i === p - 1) ? 'Dha' : TIHAI_MID[(i - 1) % TIHAI_MID.length];
+        events.push({ at: repStart + i, voice: 'tabla', key, vel: 0.8, exact: true });
+      }
+      const landing = repStart + (p - 1);
+      events.push({ at: landing, voice: 'big', key: k === 2 ? 'nagara' : 'dhol', vel: k === 2 ? 1 : 0.85, exact: true });
+      // lead cell: nearest descending raga notes, ending on Sa (deg 0) exactly at the landing
+      const above = T.scaleDegrees(raga, 'down', 1, 12).slice(0, 2);
+      const leadDegs = above.concat([0]);
+      for (let i = 0; i < leadDegs.length; i++) {
+        events.push({ at: landing - (leadDegs.length - 1 - i), voice: 'lead', deg: leadDegs[i], vel: 0.8, exact: true });
+      }
+    }
+    return events;
+  };
+})();

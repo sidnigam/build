@@ -3096,5 +3096,266 @@ console.log('\n— character readability: ground marker spec (quick 260926-djs) 
   }
 }
 
+// ---------------- MUSIC drums/pluck/tanpura/tihai (05.3-01 task 3) ----------------
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+  console.log('\n— MUSIC drums/pluck/tanpura/tihai (05.3-01 task 3) —');
+
+  const pc = d => ((d % 12) + 12) % 12;
+  const T = JSON.parse(R('JSON.stringify(MUSIC.theory)'));
+  const ragaIds = Object.keys(T.RAGAS);
+  const ragaOf = {}; for (const rid of ragaIds) ragaOf[rid] = T.RAGAS[rid];
+
+  R(`
+    globalThis.__collectDrums = function (ragaId, level, seed, cycles, lowHp) {
+      const raga = MUSIC.theory.RAGAS[ragaId];
+      const tala = MUSIC.theory.TALAS[raga.tala];
+      const cs = MUSIC.theory.talaSteps(tala);
+      const rand = MUSIC.gen.rng(seed);
+      const events = [];
+      for (let s = 0; s < cycles * cs; s++) {
+        const evs = MUSIC.gen.drumsAt(tala, raga, s, level, rand, { lowHp: !!lowHp });
+        for (const e of evs) events.push(Object.assign({ at: s }, e));
+      }
+      return JSON.stringify({ cs, events });
+    };
+    globalThis.__collectPluck = function (ragaId, level, seed, cycles) {
+      const raga = MUSIC.theory.RAGAS[ragaId];
+      const tala = MUSIC.theory.TALAS[raga.tala];
+      const cs = MUSIC.theory.talaSteps(tala);
+      const rand = MUSIC.gen.rng(seed);
+      const events = [];
+      for (let s = 0; s < cycles * cs; s++) {
+        const evs = MUSIC.gen.pluckAt(raga, tala, s, level, rand, null);
+        for (const e of evs) events.push(Object.assign({ at: s }, e));
+      }
+      return JSON.stringify({ cs, events });
+    };
+  `);
+
+  const drumData = {};
+  for (const rid of ragaIds) {
+    drumData[rid] = {};
+    for (let level = 0; level <= 5; level++) {
+      drumData[rid][level] = JSON.parse(R(`__collectDrums('${rid}', ${level}, 4242, 8, false)`));
+    }
+  }
+
+  // ---- level 0 silent ----
+  {
+    let ok = true;
+    for (const rid of ragaIds) if (drumData[rid][0].events.length !== 0) ok = false;
+    check('drumsAt level 0 returns [] for every step of 4+ cycles', ok);
+  }
+
+  // ---- level 1: no big/metal; strokes only at vibhag starts ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const raga = ragaOf[rid];
+      const tala = T.TALAS[raga.tala];
+      const { cs, events } = drumData[rid][1];
+      const vibhagStarts = (() => { const out = []; let acc = 0; for (const v of tala.vibhags) { out.push(acc); acc += v * 4; } return out; })();
+      for (const e of events) {
+        if (e.voice !== 'tabla') { ok = false; bad.push(`${rid}:voice=${e.voice}`); }
+        const s = e.at % cs;
+        if (vibhagStarts.indexOf(s) === -1) { ok = false; bad.push(`${rid}:not-vibhag-start:${s}`); }
+      }
+    }
+    check('level 1: no big/metal events; strokes only at vibhag starts' + (bad.length ? ' — ' + bad.slice(0, 6).join(', ') : ''), ok);
+  }
+
+  // ---- level 2, non-fill cycle: every matra's sub0 tabla key matches expandBol(theka[m])[0]; rupak sam is 'Tin' ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const raga = ragaOf[rid];
+      const tala = T.TALAS[raga.tala];
+      const { cs, events } = drumData[rid][2];
+      const cycle0 = events.filter(e => e.at < cs && e.at % 4 === 0 && e.voice === 'tabla');
+      for (let m = 0; m < tala.matras; m++) {
+        const expected = R(`MUSIC.theory.expandBol(MUSIC.theory.TALAS['${raga.tala}'].theka[${m}])[0]`);
+        const found = cycle0.find(e => Math.floor(e.at / 4) === m);
+        if (!found || found.key !== expected) { ok = false; bad.push(`${rid}:m${m}:expected=${expected}:got=${found && found.key}`); }
+      }
+      if (raga.tala === 'rupak') {
+        const samEv = cycle0.find(e => e.at === 0);
+        if (!samEv || samEv.key !== 'Tin') { ok = false; bad.push(`${rid}:rupak-sam-not-Tin`); }
+      }
+    }
+    check('level 2 (non-fill cycle): every matra sub0 tabla key === expandBol(theka[m])[0]; rupak sam is Tin'
+      + (bad.length ? ' — ' + bad.slice(0, 6).join(', ') : ''), ok);
+  }
+
+  // ---- strokes-per-cycle strictly increasing L1<L2<L3<L4, L5>=L4 ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const counts = [];
+      for (let level = 1; level <= 5; level++) {
+        const { events } = drumData[rid][level];
+        counts.push(events.length / 8);
+      }
+      const [c1, c2, c3, c4, c5] = counts;
+      if (!(c1 < c2 && c2 < c3 && c3 < c4 && c5 >= c4)) { ok = false; bad.push(`${rid}:${counts.map(c => c.toFixed(1)).join('/')}`); }
+    }
+    check('strokes-per-cycle (tabla+big+metal, avg over 8 cycles) strictly increasing L1<L2<L3<L4, L5>=L4'
+      + (bad.length ? ' — ' + bad.join(', ') : ''), ok);
+  }
+
+  // ---- every key valid for its voice; every vel in (0,1] ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      for (let level = 1; level <= 5; level++) {
+        for (const e of drumData[rid][level].events) {
+          const okKey = e.voice === 'tabla' ? T.TABLA_KEYS.indexOf(e.key) !== -1
+            : e.voice === 'big' ? T.BIG_KEYS.indexOf(e.key) !== -1
+            : e.voice === 'metal' ? T.METAL_KEYS.indexOf(e.key) !== -1 : false;
+          if (!okKey) { ok = false; bad.push(`${rid}L${level}:bad-key:${e.voice}/${e.key}`); }
+          if (!(e.vel > 0 && e.vel <= 1)) { ok = false; bad.push(`${rid}L${level}:vel-oob:${e.vel}`); }
+        }
+      }
+    }
+    check('every drum key valid for its voice; every vel in (0,1]' + (bad.length ? ' — ' + bad.slice(0, 6).join(', ') : ''), ok);
+  }
+
+  // ---- opts.lowHp at level 3: heartbeat dhol at sam sub0 AND sub1 ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const raga = ragaOf[rid];
+      const { cs, events } = JSON.parse(R(`__collectDrums('${rid}', 3, 4242, 4, true)`));
+      const sub0 = events.some(e => e.at % cs === 0 && e.voice === 'big' && e.key === 'dhol');
+      const sub1 = events.some(e => e.at % cs === 1 && e.voice === 'big' && e.key === 'dhol');
+      if (!sub0 || !sub1) { ok = false; bad.push(`${rid}:sub0=${sub0},sub1=${sub1}`); }
+    }
+    check('opts.lowHp at level 3 adds a heartbeat dhol at sam sub0 AND sub1' + (bad.length ? ' — ' + bad.join(', ') : ''), ok);
+  }
+
+  // ---- level 5: nagara triplet (3 events) inside the last matra before sam ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const raga = ragaOf[rid];
+      const tala = T.TALAS[raga.tala];
+      const { cs, events } = drumData[rid][5];
+      const lastMatraStart = (tala.matras - 1) * 4;
+      const triplet = events.filter(e => (e.at % cs) === lastMatraStart && e.voice === 'big' && e.key === 'nagara' && e.frac !== undefined);
+      if (triplet.length < 3) { ok = false; bad.push(`${rid}:triplet=${triplet.length}`); }
+    }
+    check('level 5: a nagara triplet (3 events) inside the last matra before sam' + (bad.length ? ' — ' + bad.join(', ') : ''), ok);
+  }
+
+  // ---- pluckAt: L3 ostinato in order + pc validity; L0 gliss on section starts ----
+  const pluckData = {};
+  for (const rid of ragaIds) {
+    pluckData[rid] = {};
+    for (const level of [0, 2, 3, 4, 5]) pluckData[rid][level] = JSON.parse(R(`__collectPluck('${rid}', ${level}, 4242, 6)`));
+  }
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const raga = ragaOf[rid];
+      const { cs, events } = pluckData[rid][3];
+      // ostinato index is keyed off the matra (m = s>>2), which resets every
+      // tala cycle — so "in order" holds *within* each cycle, restarting
+      // from index 0 each cycle (exactly matching the per-cycle formula);
+      // it doesn't stay globally sequential across a cycle boundary unless
+      // the tala's matra count happens to be a multiple of 4.
+      const byCycle = {};
+      for (const e of events) { const cyc = Math.floor(e.at / cs); (byCycle[cyc] = byCycle[cyc] || []).push(e.deg); }
+      for (const cyc of Object.keys(byCycle)) {
+        const seq = byCycle[cyc];
+        const expected = seq.map((_, i) => raga.ostinato[i % raga.ostinato.length]);
+        if (JSON.stringify(seq) !== JSON.stringify(expected)) { ok = false; bad.push(`${rid}:order-mismatch:cycle${cyc}`); }
+      }
+      for (let level = 0; level <= 5; level++) {
+        if (!pluckData[rid][level]) continue;
+        for (const e of pluckData[rid][level].events) if (raga.notes.indexOf(pc(e.deg)) === -1) { ok = false; bad.push(`${rid}L${level}:pc-not-in-notes:${e.deg}`); }
+      }
+    }
+    check('pluckAt L3 plays raga.ostinato in order; every pluck deg has pc in raga.notes' + (bad.length ? ' — ' + bad.slice(0, 6).join(', ') : ''), ok);
+  }
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const { cs, events } = pluckData[rid][0];
+      const byStep = {};
+      for (const e of events) { (byStep[e.at] = byStep[e.at] || []).push(e); }
+      const glisses = Object.keys(byStep).filter(k => byStep[k].length >= 5);
+      if (!glisses.length) { ok = false; bad.push(`${rid}:no-gliss`); }
+      for (const k of glisses) {
+        const at = Number(k);
+        if (at % cs !== 0 || Math.floor(at / cs) % 2 !== 0) { ok = false; bad.push(`${rid}:gliss-not-on-section-start:${at}`); }
+        if (!byStep[k].every(e => e.frac !== undefined)) { ok = false; bad.push(`${rid}:gliss-missing-frac`); }
+      }
+    }
+    check('pluckAt L0 emits a >=5-note gliss with frac offsets only on sam of every 2nd cycle' + (bad.length ? ' — ' + bad.join(', ') : ''), ok);
+  }
+
+  // ---- tanpuraCycle ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const raga = ragaOf[rid];
+      const cyc = JSON.parse(R(`JSON.stringify(MUSIC.gen.tanpuraCycle(MUSIC.theory.RAGAS['${rid}']))`));
+      const degs = cyc.map(c => c.deg);
+      const gaps = cyc.map(c => c.gap);
+      const expectedDegs = [raga.droneFirst - 12, 0, 0, -12];
+      if (cyc.length !== 4 || JSON.stringify(degs) !== JSON.stringify(expectedDegs)) { ok = false; bad.push(`${rid}:degs=${JSON.stringify(degs)}`); }
+      if (JSON.stringify(gaps) !== JSON.stringify([0.55, 0.55, 0.55, 1.1])) { ok = false; bad.push(`${rid}:gaps=${JSON.stringify(gaps)}`); }
+    }
+    const malkaunsDegs = JSON.parse(R(`JSON.stringify(MUSIC.gen.tanpuraCycle(MUSIC.theory.RAGAS.malkauns).map(c => c.deg))`));
+    if (JSON.stringify(malkaunsDegs) !== JSON.stringify([-7, 0, 0, -12])) { ok = false; bad.push('malkauns-degs-mismatch'); }
+    check('tanpuraCycle(raga): 4 strings, degs [droneFirst-12,0,0,-12] (malkauns -> [-7,0,0,-12]), gaps [.55,.55,.55,1.1]'
+      + (bad.length ? ' — ' + bad.join(', ') : ''), ok);
+  }
+
+  // ---- fitTihai ----
+  {
+    let ok = true; const bad = [];
+    for (const cycleSteps of [28, 40, 48, 64]) {
+      for (let rem = 1; rem <= cycleSteps; rem++) {
+        const plan = JSON.parse(R(`JSON.stringify(MUSIC.gen.fitTihai(${rem}, ${cycleSteps}))`));
+        const { p, g, start, landing } = plan;
+        if (!(p >= 3 && p <= 12)) { ok = false; bad.push(`p-oob:${rem}/${cycleSteps}:${p}`); }
+        if (!(g >= 0 && g <= 4)) { ok = false; bad.push(`g-oob:${rem}/${cycleSteps}:${g}`); }
+        if (!(start >= 1)) { ok = false; bad.push(`start<1:${rem}/${cycleSteps}:${start}`); }
+        if (start + 2 * (p + g) + (p - 1) !== landing) { ok = false; bad.push(`identity:${rem}/${cycleSteps}`); }
+        const validLanding = landing === rem || (rem < 9 && landing === rem + cycleSteps);
+        if (!validLanding) { ok = false; bad.push(`landing:${rem}/${cycleSteps}:${landing}`); }
+        if (bad.length > 8) break;
+      }
+      if (bad.length > 8) break;
+    }
+    check('fitTihai(rem, cycleSteps): p in [3,12], g in [0,4], start>=1, identity holds, landing===rem (or rem+cycleSteps when rem<9)'
+      + (bad.length ? ' — ' + bad.slice(0, 8).join(', ') : ''), ok);
+  }
+
+  // ---- tihaiEvents ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const raga = ragaOf[rid];
+      const plan = JSON.parse(R(`JSON.stringify(MUSIC.gen.fitTihai(20, 64))`));
+      const events = JSON.parse(R(`JSON.stringify(MUSIC.gen.tihaiEvents(${JSON.stringify(plan)}, MUSIC.theory.RAGAS['${rid}']))`));
+      const bigHits = events.filter(e => e.voice === 'big');
+      if (bigHits.length !== 3) { ok = false; bad.push(`${rid}:big-count=${bigHits.length}`); }
+      for (let k = 0; k < 3; k++) {
+        const expectedAt = plan.start + k * (plan.p + plan.g) + (plan.p - 1);
+        if (!bigHits.some(e => e.at === expectedAt)) { ok = false; bad.push(`${rid}:missing-landing-k${k}`); }
+        const repTabla = events.filter(e => e.voice === 'tabla' && e.at >= plan.start + k * (plan.p + plan.g) && e.at < plan.start + k * (plan.p + plan.g) + plan.p);
+        if (!repTabla.length || repTabla[0].key !== 'Dha' || repTabla[repTabla.length - 1].key !== 'Dha') { ok = false; bad.push(`${rid}:rep${k}-not-Dha-bookend`); }
+      }
+      const finalLanding = plan.start + 2 * (plan.p + plan.g) + (plan.p - 1);
+      if (!events.some(e => e.deg === 0 && e.at === finalLanding)) { ok = false; bad.push(`${rid}:no-deg0-at-final-landing`); }
+      if (!events.every(e => e.exact === true)) { ok = false; bad.push(`${rid}:missing-exact-flag`); }
+    }
+    check('tihaiEvents: 3 big landing hits at start+k*(p+g)+(p-1); deg 0 lead note at final landing; each repetition bookended by Dha; all events exact'
+      + (bad.length ? ' — ' + bad.join(', ') : ''), ok);
+  }
+}
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

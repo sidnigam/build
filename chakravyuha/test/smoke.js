@@ -3538,5 +3538,207 @@ console.log('\n— character readability: ground marker spec (quick 260926-djs) 
   }
 }
 
+// ---------------- MUSIC dsp (05.3-02) ----------------
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+  console.log('\n— MUSIC dsp (05.3-02) —');
+
+  // ---- Node-side analysis helpers ----
+  function autocorrF0(samples, sr, t0, t1) {
+    const i0 = Math.max(0, Math.floor(sr * t0)), i1 = Math.min(samples.length, Math.floor(sr * t1));
+    const seg = samples.slice(i0, i1);
+    const n = seg.length;
+    const minLag = Math.max(1, Math.floor(sr / 1200));
+    const maxLag = Math.min(n - 2, Math.floor(sr / 50));
+    function ac(lag) { let s = 0; for (let i = 0; i < n - lag; i++) s += seg[i] * seg[i + lag]; return s; }
+    let bestLag = minLag, bestVal = -Infinity;
+    for (let lag = minLag; lag <= maxLag; lag++) {
+      const v = ac(lag);
+      if (v > bestVal) { bestVal = v; bestLag = lag; }
+    }
+    const y0 = ac(Math.max(1, bestLag - 1)), y1 = bestVal, y2 = ac(bestLag + 1);
+    const denom = y0 - 2 * y1 + y2;
+    const shift = Math.abs(denom) > 1e-9 ? 0.5 * (y0 - y2) / denom : 0;
+    const refined = bestLag + Math.max(-0.5, Math.min(0.5, shift));
+    return sr / refined;
+  }
+  function centsOff(hz, target) { return 1200 * Math.log2(hz / target); }
+  function zcrWindow(samples, sr, t0, t1) {
+    const i0 = Math.max(1, Math.floor(sr * t0)), i1 = Math.min(samples.length, Math.floor(sr * t1));
+    let count = 0;
+    for (let i = i0; i < i1; i++) if ((samples[i - 1] < 0) !== (samples[i] < 0)) count++;
+    return count / Math.max(1, i1 - i0);
+  }
+  function rms(samples, i0, i1) {
+    i0 = Math.max(0, i0); i1 = Math.min(samples.length, i1);
+    let s = 0; for (let i = i0; i < i1; i++) s += samples[i] * samples[i];
+    return Math.sqrt(s / Math.max(1, i1 - i0));
+  }
+  function getBuf(src) { return JSON.parse(R(`JSON.stringify(Array.from(${src}))`)); }
+
+  // ---- ks tuning (jawari 0) ----
+  {
+    let bad = [];
+    for (const hz of [220, 440, 880]) {
+      const buf = getBuf(`MUSIC.dsp.ks({hz:${hz}, sr:32000, dur:1.0, t60:1.4, bright:0.6, jawari:0, seed:1})`);
+      const f0 = autocorrF0(buf, 32000, 0.3, 0.5);
+      const cents = centsOff(f0, hz);
+      if (Math.abs(cents) > 10) bad.push(`${hz}Hz off by ${cents.toFixed(2)}c`);
+    }
+    check('ks(220/440/880, jawari 0): autocorrelation f0 within 10 cents' + (bad.length ? ' — ' + bad.join(', ') : ''), bad.length === 0);
+  }
+
+  // ---- generic per-render invariants ----
+  function checkRenderInvariants(label, samples, rising) {
+    const bad = [];
+    if (!samples.every(x => Number.isFinite(x))) bad.push('non-finite sample');
+    let peak = 0; for (const x of samples) peak = Math.max(peak, Math.abs(x));
+    if (!(peak >= 0.85 && peak <= 0.95)) bad.push(`peak=${peak.toFixed(3)}`);
+    if (Math.abs(samples[0]) >= 0.02) bad.push(`first=${samples[0]}`);
+    const tailN = Math.min(256, samples.length);
+    let tailAbsSum = 0; for (let i = samples.length - tailN; i < samples.length; i++) tailAbsSum += Math.abs(samples[i]);
+    const tailMean = tailAbsSum / tailN;
+    if (tailMean >= 0.01) bad.push(`tail256Mean=${tailMean.toFixed(4)}`);
+    const n = samples.length;
+    const firstQ = rms(samples, 0, Math.floor(n * 0.25));
+    const lastQ = rms(samples, Math.floor(n * 0.75), n);
+    const first25 = rms(samples, 0, Math.floor(n * 0.25));
+    const last10 = rms(samples, Math.floor(n * 0.9), n);
+    if (rising) {
+      if (!(lastQ > firstQ)) bad.push(`rising: lastQ=${lastQ.toFixed(4)} firstQ=${firstQ.toFixed(4)}`);
+    } else {
+      if (!(last10 < 0.1 * first25)) bad.push(`decay: last10=${last10.toFixed(4)} first25*.1=${(first25 * 0.1).toFixed(4)}`);
+    }
+    check(label + (bad.length ? ' — ' + bad.join(', ') : ''), bad.length === 0);
+  }
+
+  const ragaIds = ['yaman', 'bhairav', 'malkauns', 'adana', 'bhairavi'];
+  const RISING = { riser: 1, swell: 1 };
+
+  // ---- every bankSpec job + impulse: finiteness / peak / click-free / decay ----
+  {
+    for (const rid of ragaIds) {
+      const jobs = JSON.parse(R(`JSON.stringify(MUSIC.dsp.bankSpec(MUSIC.theory.RAGAS['${rid}']).map(j => j.key))`));
+      for (const key of jobs) {
+        const idxSrc = `MUSIC.dsp.bankSpec(MUSIC.theory.RAGAS['${rid}']).findIndex(j => j.key === ${JSON.stringify(key)})`;
+        const samples = getBuf(`MUSIC.dsp.renderJob(MUSIC.dsp.bankSpec(MUSIC.theory.RAGAS['${rid}'])[${R(idxSrc)}], 32000)`);
+        const kind = key.split(':')[0] === 'f' ? key.split(':')[1] : null;
+        checkRenderInvariants(`${rid} job '${key}' render invariants`, samples, !!(kind && RISING[kind]));
+      }
+    }
+    const [L, R2] = JSON.parse(R('JSON.stringify(MUSIC.dsp.impulse(32000, 2.4, 42).map(ch => Array.from(ch)))'));
+    checkRenderInvariants('impulse L channel render invariants', L, false);
+    checkRenderInvariants('impulse R channel render invariants', R2, false);
+    check('impulse: L and R channels differ', JSON.stringify(L) !== JSON.stringify(R2));
+  }
+
+  // ---- impulse basic shape ----
+  {
+    const stereo = JSON.parse(R('JSON.stringify(MUSIC.dsp.impulse(32000, 2.4, 1).map(ch => Array.from(ch)))'));
+    check('impulse(32000,2.4) -> 2 channels', stereo.length === 2);
+    check('impulse channels are finite', stereo[0].every(Number.isFinite) && stereo[1].every(Number.isFinite));
+  }
+
+  // ---- leadWave ----
+  {
+    let bad = [];
+    for (const id of ['bansuri', 'bowed', 'reed', 'sub']) {
+      const w = JSON.parse(R(`JSON.stringify((function () { const w = MUSIC.dsp.leadWave('${id}'); return { real: Array.from(w.real), imag: Array.from(w.imag) }; })())`));
+      if (w.real.length !== w.imag.length) bad.push(`${id}: length mismatch`);
+      if (w.real[0] !== 0 || w.imag[0] !== 0) bad.push(`${id}: index0 nonzero`);
+      if (!w.real.every(Number.isFinite) || !w.imag.every(Number.isFinite)) bad.push(`${id}: non-finite`);
+      if (w.imag.every(x => x === 0)) bad.push(`${id}: all zero`);
+    }
+    check('leadWave(bansuri/bowed/reed/sub): {real,imag} same length, index0 zero, finite, not all zero' + (bad.length ? ' — ' + bad.join(', ') : ''), bad.length === 0);
+  }
+
+  // ---- bankSpec coherence ----
+  {
+    let bad = [];
+    const T = JSON.parse(R('JSON.stringify(MUSIC.theory)'));
+    for (const rid of ragaIds) {
+      const raga = JSON.parse(R(`JSON.stringify(MUSIC.theory.RAGAS['${rid}'])`));
+      const keys = JSON.parse(R(`JSON.stringify(MUSIC.dsp.bankSpec(MUSIC.theory.RAGAS['${rid}']).map(j => j.key))`));
+      const keySet = new Set(keys);
+      for (const k of T.TABLA_KEYS) if (!keySet.has('t:' + k)) bad.push(`${rid}: missing t:${k}`);
+      for (const k of T.BIG_KEYS) if (!keySet.has('b:' + k)) bad.push(`${rid}: missing b:${k}`);
+      for (const k of T.METAL_KEYS) if (!keySet.has('m:' + k)) bad.push(`${rid}: missing m:${k}`);
+      for (const k of T.FX_KEYS) if (!keySet.has('f:' + k)) bad.push(`${rid}: missing f:${k}`);
+      const tanDegs = JSON.parse(R(`JSON.stringify(Array.from(new Set(MUSIC.gen.tanpuraCycle(MUSIC.theory.RAGAS['${rid}']).concat(MUSIC.gen.tanpuraCycle(MUSIC.theory.RAGAS['${rid}'], true)).map(c => c.deg))))`));
+      for (const d of tanDegs) if (!keySet.has('d:' + d)) bad.push(`${rid}: missing d:${d}`);
+      for (let d = -12; d <= 24; d++) if (raga.notes.indexOf(((d % 12) + 12) % 12) !== -1 && !keySet.has('p:' + d)) bad.push(`${rid}: missing p:${d}`);
+
+      // emitted keys from gen.drumsAt/pluckAt/tanpuraCycle over 8 cycles x levels 0-5 (with echo) must be covered
+      const emitted = JSON.parse(R(`JSON.stringify((function () {
+        const raga = MUSIC.theory.RAGAS['${rid}'];
+        const tala = MUSIC.theory.TALAS[raga.tala];
+        const cs = MUSIC.theory.talaSteps(tala);
+        const rand = MUSIC.gen.rng(123);
+        const keys = {};
+        let echo = null;
+        for (let level = 0; level <= 5; level++) {
+          for (let s = 0; s < cs * 8; s++) {
+            for (const e of MUSIC.gen.drumsAt(tala, raga, s, level, rand, {})) {
+              if (e.voice === 'tabla') keys['t:' + e.key] = 1;
+              else if (e.voice === 'big') keys['b:' + e.key] = 1;
+              else if (e.voice === 'metal') keys['m:' + e.key] = 1;
+            }
+            const pl = MUSIC.gen.pluckAt(raga, tala, s, level, rand, echo);
+            for (const e of pl) keys['p:' + e.deg] = 1;
+            if (pl.length) echo = pl;
+          }
+        }
+        for (const c of MUSIC.gen.tanpuraCycle(raga, false)) keys['d:' + c.deg] = 1;
+        for (const c of MUSIC.gen.tanpuraCycle(raga, true)) keys['d:' + c.deg] = 1;
+        return Object.keys(keys);
+      })())`));
+      for (const k of emitted) if (!keySet.has(k)) bad.push(`${rid}: emitted key '${k}' has no bank job`);
+    }
+    check('bankSpec(raga) coherence: t:/b:/m:/f:/d:/p: keys cover TABLA/BIG/METAL/FX_KEYS + tanpuraCycle degs + raga notes in [-12,24], and cover every key emitted by drumsAt/pluckAt/tanpuraCycle over 8 cycles x levels 0-5'
+      + (bad.length ? ' — ' + bad.slice(0, 12).join(', ') + (bad.length > 12 ? ` (+${bad.length - 12} more)` : '') : ''), bad.length === 0);
+  }
+
+  // ---- performance (steady-state, after a JIT warm-up pass; matches how
+  // the real engine renders many jobs across a session rather than a single
+  // cold call) ----
+  {
+    let bad = [];
+    const raga = 'bhairav';
+    R(`var __jobs = MUSIC.dsp.bankSpec(MUSIC.theory.RAGAS['${raga}']);`);
+    const keys = JSON.parse(R('JSON.stringify(__jobs.map(j => j.key))'));
+    // warm-up pass (untimed) so JIT tiering-up noise doesn't dominate a
+    // single-call measurement
+    for (let i = 0; i < keys.length; i++) R(`MUSIC.dsp.renderJob(__jobs[${i}], 32000)`);
+    let totalMs = 0;
+    for (let i = 0; i < keys.length; i++) {
+      // take the min of 3 timed calls per job: a single Date.now()-bracketed
+      // sample is occasionally hit by an unrelated GC pause in this vm
+      // sandbox, which the min (not mean) reliably filters out.
+      let best = Infinity;
+      for (let r = 0; r < 3; r++) {
+        const t0 = Date.now();
+        R(`MUSIC.dsp.renderJob(__jobs[${i}], 32000)`);
+        best = Math.min(best, Date.now() - t0);
+      }
+      totalMs += best;
+      if (best > 50) bad.push(`${keys[i]}: ${best}ms`);
+    }
+    check('every single bankSpec job renders in < 50ms' + (bad.length ? ' — ' + bad.join(', ') : ''), bad.length === 0);
+    check(`full bank for one raga renders in < 800ms (measured ${totalMs}ms)`, totalMs < 800);
+  }
+
+  // ---- bol pitch-bend (Ge) ----
+  {
+    const tabla = getBuf(`MUSIC.dsp.bol('Ge', 'tabla', MUSIC.theory.RAGAS.bhairav.sa, 32000, 7)`);
+    const pakhawaj = getBuf(`MUSIC.dsp.bol('Ge', 'pakhawaj', MUSIC.theory.RAGAS.malkauns.sa, 32000, 7)`);
+    const tEarly = zcrWindow(tabla, 32000, 0, 0.04);
+    const tLate = zcrWindow(tabla, 32000, 0.12, 0.16);
+    const pEarly = zcrWindow(pakhawaj, 32000, 0, 0.04);
+    const pLate = zcrWindow(pakhawaj, 32000, 0.12, 0.16);
+    check(`bol('Ge','tabla') shows upward pitch bend (zcr late ${tLate.toFixed(4)} > zcr early ${tEarly.toFixed(4)})`, tLate > tEarly * 1.05);
+    check(`bol('Ge','pakhawaj') shows no bend (zcr late ${pLate.toFixed(4)} ~ zcr early ${pEarly.toFixed(4)})`, pLate <= pEarly * 1.15);
+  }
+}
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

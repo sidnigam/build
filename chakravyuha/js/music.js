@@ -1072,3 +1072,606 @@ const MUSIC = {
     },
   };
 })();
+
+// persistent-lead instrument presets (pure data, D-01/D-11).
+MUSIC.theory.LEAD_PRESETS = {
+  bansuri: { attack: 0.09, release: 0.18, vibRate: 5.2, vibCents: 12, vibDelay: 0.25, breath: 0.10, lpMul: 5, lpCap: 6000, formants: [], gain: 0.9, send: 0.35 },
+  bowed: { attack: 0.15, release: 0.25, vibRate: 5.8, vibCents: 18, vibDelay: 0.2, breath: 0.02, lpMul: 8, lpCap: 5000, formants: [[750, 2, 6], [2200, 3, 4]], gain: 0.6, send: 0.3 },
+  reed: { attack: 0.04, release: 0.12, vibRate: 6.2, vibCents: 22, vibDelay: 0.15, breath: 0.03, lpMul: 6, lpCap: 4500, formants: [[1200, 1.5, 5]], gain: 0.55, send: 0.25 },
+};
+
+// ================================================================
+// MUSIC.dsp — pure Float32Array synthesis (05.3-02 task 2). Seeded via
+// MUSIC.gen.rng only (no Math.random), no ctx. Every renderer returns a
+// finite, click-free (fade-in/out), decaying buffer normalized to a
+// consistent peak. D-01/D-04/D-11.
+// ================================================================
+(function () {
+  const T = MUSIC.theory;
+
+  // ---------------- shared utilities ----------------
+
+  function normalize(buf, peak) {
+    peak = peak === undefined ? 0.9 : peak;
+    let max = 0;
+    for (let i = 0; i < buf.length; i++) { const a = Math.abs(buf[i]); if (a > max) max = a; }
+    if (max < 1e-9) return buf;
+    const g = peak / max;
+    for (let i = 0; i < buf.length; i++) buf[i] *= g;
+    return buf;
+  }
+
+  function fade(buf, sr, inMs, outMs) {
+    inMs = inMs === undefined ? 2 : inMs;
+    outMs = outMs === undefined ? 40 : outMs;
+    const n = buf.length;
+    const ni = Math.max(1, Math.min(n, Math.round(sr * inMs / 1000)));
+    const no = Math.max(1, Math.min(n, Math.round(sr * outMs / 1000)));
+    for (let i = 0; i < ni; i++) buf[i] *= i / ni;
+    // cubic (not linear) fade-out: attenuates far more steeply right at the
+    // boundary so even a rising envelope (riser/swell) lands near-silent by
+    // the very last samples without needing an unmusically long tail.
+    for (let i = 0; i < no; i++) {
+      const idx = n - 1 - i;
+      if (idx < 0) break;
+      const f = i / no;
+      buf[idx] *= f * f * f;
+    }
+    return buf;
+  }
+
+  function dcBlock(buf, sr) {
+    const R = 0.995;
+    let xPrev = 0, yPrev = 0;
+    for (let i = 0; i < buf.length; i++) {
+      const x = buf[i];
+      const y = x - xPrev + R * yPrev;
+      buf[i] = y;
+      xPrev = x; yPrev = y;
+    }
+    return buf;
+  }
+
+  // rotating-phasor (coupled-form) sine generator: cheap replacement for
+  // per-sample Math.sin(2*pi*hz*t) at a fixed frequency.
+  function osc2(hz, sr) {
+    const w = 2 * Math.PI * hz / sr;
+    return {
+      cosW: Math.cos(w), sinW: Math.sin(w), a: 1, b: 0,
+      next() {
+        const out = this.b;
+        const na = this.a * this.cosW - this.b * this.sinW;
+        const nb = this.a * this.sinW + this.b * this.cosW;
+        this.a = na; this.b = nb;
+        return out;
+      },
+    };
+  }
+
+  function finishBuf(buf, sr, inMs, outMs, peak) {
+    dcBlock(buf, sr);
+    fade(buf, sr, inMs, outMs);
+    return normalize(buf, peak);
+  }
+
+  function hashKey(str) {
+    let h = 2166136261;
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+
+  // fold v into the octave range [lo, hi)
+  function foldOctave(v, lo, hi) {
+    let guard = 0;
+    while (v < lo && guard++ < 32) v *= 2;
+    guard = 0;
+    while (v >= hi && guard++ < 32) v /= 2;
+    return v;
+  }
+
+  // band-limit noise via a cascade of two one-pole filters (lowpass at hi,
+  // then subtract a further lowpass at lo to carve out the low end). Unlike
+  // a naive Chamberlin state-variable filter, this stays unconditionally
+  // stable even when hi approaches Nyquist (needed for the bright 5-12kHz
+  // metal/ta transients at a 32kHz render rate).
+  function addNoiseTransient(out, sr, spec, rand) {
+    const amp = spec.amp || 0, decay = Math.max(0.003, spec.decay || 0.01);
+    const lo = Math.max(1, spec.lo || 200), hi = Math.max(lo + 1, Math.min(sr * 0.49, spec.hi || 4000));
+    const n = out.length;
+    const coefHi = 1 - Math.exp(-2 * Math.PI * hi / sr);
+    const coefLo = 1 - Math.exp(-2 * Math.PI * lo / sr);
+    let lpHi = 0, lpLo = 0;
+    const span = Math.min(n, Math.ceil(sr * decay * 8));
+    const r = Math.exp(-1 / (sr * decay));
+    let env = amp;
+    for (let i = 0; i < span; i++) {
+      const x = rand() * 2 - 1;
+      lpHi = lpHi + coefHi * (x - lpHi);
+      lpLo = lpLo + coefLo * (lpHi - lpLo);
+      const bp = lpHi - lpLo;
+      out[i] += env * bp;
+      env *= r;
+    }
+  }
+
+  // ---------------- Karplus-Strong plucked/bowed-drone strings ----------------
+
+  function ks(opts) {
+    const hz = Math.max(20, opts.hz);
+    const sr = opts.sr;
+    const dur = opts.dur;
+    const t60 = opts.t60 !== undefined ? opts.t60 : 1.4;
+    const bright = opts.bright !== undefined ? opts.bright : 0.6;
+    const jawari = opts.jawari || 0;
+    const pickPos = opts.pickPos !== undefined ? opts.pickPos : 0.13;
+    const rand = MUSIC.gen.rng(((opts.seed >>> 0) || 1));
+
+    // classic Karplus-Strong tuning: the 2-point averaging loop filter below
+    // contributes ~0.5 sample of its own delay, so round the *remaining*
+    // delay-line length to the nearest integer rather than truncating —
+    // keeps every note within a few cents even without a fractional-delay
+    // allpass (which, empirically, actually hurt precision here for large
+    // fractional remainders near 1.0).
+    const D = sr / hz;
+    // the +1 corrects for this implementation's read-then-write ordering
+    // (output taps the delay line before the averaging filter's feedback
+    // is written back into that same slot, effectively shortening the
+    // measured loop period by one sample vs. the naive N+0.5 estimate).
+    const N = Math.max(2, Math.round(D - 0.5) + 1);
+
+    // seeded noise excitation -> one-pole lowpass (bright controls cutoff)
+    const lpCoef = Math.max(0.02, Math.min(0.98, 1 - bright));
+    let lpPrev = 0;
+    const raw = new Float32Array(N);
+    for (let i = 0; i < N; i++) {
+      const n = rand() * 2 - 1;
+      lpPrev = lpPrev + lpCoef * (n - lpPrev);
+      raw[i] = lpPrev;
+    }
+    // pick-position comb
+    const pickDelay = Math.max(1, Math.round(N * pickPos));
+    const line = new Float32Array(N);
+    for (let i = 0; i < N; i++) line[i] = raw[i] - raw[(i - pickDelay + N) % N] * 0.5;
+
+    const len = Math.max(1, Math.round(sr * dur));
+    const out = new Float32Array(len);
+    const g = Math.pow(10, -3 / (hz * Math.max(0.05, t60)));
+
+    let readIdx = 0;
+    for (let n = 0; n < len; n++) {
+      const s0 = line[readIdx];
+      const s1 = line[(readIdx + 1) % N];
+      const avg = 0.5 * (s0 + s1) * g;
+      line[readIdx] = avg;
+      out[n] = s0;
+      readIdx = (readIdx + 1) % N;
+    }
+
+    if (jawari) {
+      for (let n = 0; n < len; n++) { const y = out[n]; out[n] = y + jawari * 0.6 * y * Math.abs(y); }
+    }
+    return finishBuf(out, sr, 2, 40, 0.9);
+  }
+
+  function tanpura(hz, sr, seed) { return ks({ hz, sr, dur: 4.5, t60: 6, bright: 0.5, jawari: 0.55, seed }); }
+  function swarm(hz, sr, seed) { return ks({ hz, sr, dur: 1.2, t60: 1.0, bright: 0.9, jawari: 0, seed }); }
+
+  // ---------------- damped-partial membrane percussion ----------------
+
+  // partials: [[ratio, amp, decay], ...]; bend: {from, to, time} | null (in Hz, applies to ratio 1 fundamental relationship)
+  function membraneTonal(sr, dur, f0, partials, bend) {
+    const len = Math.max(1, Math.round(sr * dur));
+    const out = new Float32Array(len);
+    for (let p = 0; p < partials.length; p++) {
+      const ratio = partials[p][0], amp = partials[p][1], decay = Math.max(0.01, partials[p][2]);
+      // recursive exponential decay (env *= r each sample) instead of a
+      // per-sample Math.exp(-t/decay) call — a large hot-loop cost win.
+      const r = Math.exp(-1 / (sr * decay));
+      let env = amp;
+      if (bend) {
+        // frequency varies continuously only during bend.time -> Math.sin
+        // per sample is unavoidable there, but once the bend settles the
+        // frequency is exactly bend.to*ratio, so switch to the cheap
+        // fixed-frequency phasor recurrence for the (usually much longer)
+        // remainder of the note.
+        const bendSamples = Math.min(len, Math.ceil(sr * bend.time));
+        let phase = 0, n = 0;
+        for (; n < bendSamples; n++) {
+          const t = n / sr;
+          const bt = Math.min(1, t / Math.max(0.001, bend.time));
+          const freq = (bend.from * Math.pow(bend.to / bend.from, bt)) * ratio;
+          phase += 2 * Math.PI * freq / sr;
+          out[n] += env * Math.sin(phase);
+          env *= r;
+        }
+        if (n < len) {
+          const freq = bend.to * ratio;
+          const w = 2 * Math.PI * freq / sr;
+          const cosW = Math.cos(w), sinW = Math.sin(w);
+          let a = Math.cos(phase), b = Math.sin(phase);
+          for (; n < len; n++) {
+            out[n] += env * b;
+            const na = a * cosW - b * sinW, nb = a * sinW + b * cosW;
+            a = na; b = nb;
+            env *= r;
+          }
+        }
+      } else {
+        // fixed frequency -> rotating-phasor recurrence, no Math.sin at all.
+        const freq = f0 * ratio;
+        const w = 2 * Math.PI * freq / sr;
+        const cosW = Math.cos(w), sinW = Math.sin(w);
+        let a = 1, b = 0;
+        for (let n = 0; n < len; n++) {
+          out[n] += env * b;
+          const na = a * cosW - b * sinW, nb = a * sinW + b * cosW;
+          a = na; b = nb;
+          env *= r;
+        }
+      }
+    }
+    return out;
+  }
+
+  function dayanHz(sa) { return T.dayanHz(sa); }
+  function bayanHz(sa) { return foldOctave(sa, 70, 110); }
+
+  const BOL_GAIN = { Dha: 1, Dhin: 1, Na: 0.8, Ta: 0.85, Tin: 0.75, Tun: 0.8, Ge: 0.9, Ke: 0.6, Te: 0.5, Re: 0.45 };
+
+  function mixDown(buffers, weights) {
+    let len = 0;
+    for (const b of buffers) len = Math.max(len, b.length);
+    const out = new Float32Array(len);
+    for (let i = 0; i < buffers.length; i++) {
+      const b = buffers[i], w = weights ? weights[i] : 1;
+      for (let n = 0; n < b.length; n++) out[n] += b[n] * w;
+    }
+    return out;
+  }
+
+  function bol(key, kit, saHz, sr, seed) {
+    const rand = MUSIC.gen.rng(((seed >>> 0) || 1));
+    const fd = dayanHz(saHz);
+    const fb = bayanHz(saHz);
+    const isPakhawaj = kit === 'pakhawaj';
+
+    if (key === 'Dha') return finishBuf(mixDown([bol('Na', kit, saHz, sr, seed), bol('Ge', kit, saHz, sr, seed + 1)], [0.65, 0.65]), sr, 2, 40, 0.9);
+    if (key === 'Dhin') return finishBuf(mixDown([bol('Tin', kit, saHz, sr, seed), bol('Ge', kit, saHz, sr, seed + 1)], [0.65, 0.65]), sr, 2, 40, 0.9);
+
+    let out, noiseSpec = null;
+    switch (key) {
+      case 'Na':
+        out = membraneTonal(sr, 0.5, fd, [[1, 1, 0.12], [2, 0.6, 0.09], [3, 0.45, 0.07], [4, 0.3, 0.05], [5, 0.15, 0.04]], null);
+        noiseSpec = { amp: 0.25, decay: 0.012, lo: 3000, hi: 6000 };
+        break;
+      case 'Ta':
+        out = membraneTonal(sr, 0.45, fd, [[1, 1, 0.10], [2, 0.84, 0.075], [3, 0.63, 0.06], [4, 0.42, 0.045], [5, 0.21, 0.035]], null);
+        noiseSpec = { amp: 0.25, decay: 0.012, lo: 3000, hi: 6000 };
+        break;
+      case 'Tin':
+        out = membraneTonal(sr, 0.6, fd, [[1, 1, 0.15], [2, 0.35, 0.10], [3, 0.2, 0.07]], null);
+        noiseSpec = { amp: 0.12, decay: 0.01, lo: 2500, hi: 5500 };
+        break;
+      case 'Tun':
+        out = membraneTonal(sr, 0.9, fd, [[1, 1, 0.22], [2, 0.2, 0.14]], null);
+        noiseSpec = { amp: 0.08, decay: 0.008, lo: 2000, hi: 5000 };
+        break;
+      case 'Te':
+        out = membraneTonal(sr, 0.15, fd * 1.15, [[1, 0.4, 0.035], [2.3, 0.3, 0.025]], null);
+        noiseSpec = { amp: 0.5, decay: 0.02, lo: 1500, hi: 4000 };
+        break;
+      case 'Re':
+        out = membraneTonal(sr, 0.12, fd * 1.05, [[1, 0.25, 0.028], [2.3, 0.18, 0.02]], null);
+        noiseSpec = { amp: 0.3, decay: 0.015, lo: 1200, hi: 3200 };
+        break;
+      case 'Ge':
+        if (isPakhawaj) {
+          out = membraneTonal(sr, 0.9, fb * 0.9, [[1, 1, 0.22]], null);
+          noiseSpec = { amp: 0.15, decay: 0.05, lo: 60, hi: 220 };
+        } else {
+          out = membraneTonal(sr, 0.55, fb, [[1, 1, 0.13]], { from: fb, to: fb * 1.25, time: 0.15 });
+          noiseSpec = { amp: 0.06, decay: 0.02, lo: 80, hi: 260 };
+        }
+        break;
+      case 'Ke':
+        out = membraneTonal(sr, 0.2, fb * 1.2, [[1, 0.5, 0.05]], null);
+        noiseSpec = { amp: 1, decay: 0.04, lo: 400, hi: 800 };
+        break;
+      default:
+        out = membraneTonal(sr, 0.3, fd, [[1, 0.5, 0.1]], null);
+    }
+    if (noiseSpec) addNoiseTransient(out, sr, noiseSpec, rand);
+    return finishBuf(out, sr, 2, 40, 0.9);
+  }
+
+  function bigDrum(kind, saHz, sr, seed) {
+    const rand = MUSIC.gen.rng(((seed >>> 0) || 1));
+    const fn = foldOctave(saHz / 2, 40, 65);
+    let out;
+    switch (kind) {
+      case 'nagara':
+        out = membraneTonal(sr, 2.0, fn, [[1, 1, 0.5], [2, 0.3, 0.32]], { from: fn * 2.2, to: fn, time: 0.18 });
+        addNoiseTransient(out, sr, { amp: 0.5, decay: 0.2, lo: 80, hi: 400 }, rand);
+        addNoiseTransient(out, sr, { amp: 0.3, decay: 0.004, lo: 2000, hi: 8000 }, rand);
+        break;
+      case 'dhol':
+        out = membraneTonal(sr, 0.9, fn * 2, [[1, 1, 0.2]], { from: fn * 2 * 1.6, to: fn * 2, time: 0.08 });
+        addNoiseTransient(out, sr, { amp: 0.4, decay: 0.06, lo: 100, hi: 500 }, rand);
+        break;
+      case 'dholHi':
+        out = membraneTonal(sr, 0.25, 700, [[1, 0.4, 0.05]], null);
+        addNoiseTransient(out, sr, { amp: 0.6, decay: 0.035, lo: 1500, hi: 5000 }, rand);
+        break;
+      case 'sub': {
+        const dur = 2.2, len = Math.max(1, Math.round(sr * dur));
+        out = new Float32Array(len);
+        const attackN = Math.max(1, Math.round(sr * 0.005));
+        const r = Math.exp(-1 / (sr * 0.45));
+        let env = 1;
+        const w1 = 2 * Math.PI * fn / sr, w2 = 2 * Math.PI * fn * 2 / sr;
+        const c1 = Math.cos(w1), s1 = Math.sin(w1), c2 = Math.cos(w2), s2 = Math.sin(w2);
+        let a1 = 1, b1 = 0, a2 = 1, b2 = 0;
+        for (let n = 0; n < len; n++) {
+          const a = n < attackN ? n / attackN : env;
+          out[n] = a * (b1 + 0.35 * b2);
+          const na1 = a1 * c1 - b1 * s1, nb1 = a1 * s1 + b1 * c1; a1 = na1; b1 = nb1;
+          const na2 = a2 * c2 - b2 * s2, nb2 = a2 * s2 + b2 * c2; a2 = na2; b2 = nb2;
+          if (n >= attackN) env *= r;
+        }
+        break;
+      }
+      default:
+        out = new Float32Array(Math.round(sr * 0.2));
+    }
+    return finishBuf(out, sr, 2, 60, 0.9);
+  }
+
+  function metal(kind, sr, seed) {
+    const rand = MUSIC.gen.rng(((seed >>> 0) || 1));
+    const ratios = [1, 1.47, 2.09, 2.56, 3.21, 4.13];
+    const base = 2400;
+    const isChing = kind === 'ching';
+    const dur = isChing ? 1.2 : 0.15;
+    const decayHi = isChing ? 0.35 : 0.045;
+    const decayLo = isChing ? 0.12 : 0.015;
+    const partials = ratios.map((r, i) => [r, 1 / (i + 1), decayHi - (decayHi - decayLo) * (i / (ratios.length - 1))]);
+    const out = membraneTonal(sr, dur, base, partials, null);
+    addNoiseTransient(out, sr, { amp: isChing ? 0.2 : 0.5, decay: isChing ? 0.01 : 0.02, lo: 5000, hi: 12000 }, rand);
+    return finishBuf(out, sr, 1, isChing ? 60 : 20, 0.9);
+  }
+
+  function bell(saHz, sr) {
+    const base = foldOctave(saHz * 8, 600, 1200);
+    const ratios = [0.5, 1, 2, 3, 4.2, 5.4];
+    const amps = [0.5, 1, 0.35, 0.2, 0.12, 0.08];
+    const decays = [1.2, 1.0, 0.8, 0.6, 0.45, 0.35];
+    const dur = 4;
+    const len = Math.max(1, Math.round(sr * dur));
+    const out = new Float32Array(len);
+    for (let i = 0; i < ratios.length; i++) {
+      const f1 = base * ratios[i], f2 = f1 + 0.8, amp = amps[i], decay = decays[i];
+      const w1 = 2 * Math.PI * f1 / sr, w2 = 2 * Math.PI * f2 / sr;
+      const c1 = Math.cos(w1), s1 = Math.sin(w1), c2 = Math.cos(w2), s2 = Math.sin(w2);
+      let a1 = 1, b1 = 0, a2 = 1, b2 = 0;
+      const r = Math.exp(-1 / (sr * decay));
+      let env = amp * 0.5;
+      for (let n = 0; n < len; n++) {
+        out[n] += env * (b1 + b2);
+        const na1 = a1 * c1 - b1 * s1, nb1 = a1 * s1 + b1 * c1; a1 = na1; b1 = nb1;
+        const na2 = a2 * c2 - b2 * s2, nb2 = a2 * s2 + b2 * c2; a2 = na2; b2 = nb2;
+        env *= r;
+      }
+    }
+    return finishBuf(out, sr, 3, 80, 0.9);
+  }
+
+  function formantWeight(freq) {
+    function gauss(f, c, w) { const d = (f - c) / w; return Math.exp(-0.5 * d * d); }
+    return 0.15 + gauss(freq, 800, 120) + gauss(freq, 1150, 150) + gauss(freq, 2900, 300);
+  }
+
+  function stab(raga, saHz, sr) {
+    const leadMul = raga.leadMul || 2;
+    const rootHz = saHz * leadMul;
+    const degs = [0, raga.droneFirst || 7, 12];
+    const dur = 1.6;
+    const len = Math.max(1, Math.round(sr * dur));
+    const out = new Float32Array(len);
+    const detunesCents = [-6, 0, 6];
+    const envArr = new Float32Array(len);
+    for (let n = 0; n < len; n++) {
+      const t = n / sr;
+      const attack = Math.min(1, t / 0.015);
+      const decayEnv = t < 0.3 ? 1 - 0.5 * (t / 0.3) : 0.5 * Math.exp(-(t - 0.3) / 0.22);
+      envArr[n] = attack * decayEnv;
+    }
+    for (const deg of degs) {
+      const f0 = rootHz * Math.pow(2, deg / 12);
+      for (const cents of detunesCents) {
+        const freq = f0 * Math.pow(2, cents / 1200);
+        for (let h = 1; h <= 20; h++) {
+          const hf = freq * h;
+          if (hf > sr * 0.45) break;
+          const amp = (1 / h) * formantWeight(hf) / (detunesCents.length * degs.length);
+          if (amp < 0.0025) continue;
+          const w = 2 * Math.PI * hf / sr;
+          const cosW = Math.cos(w), sinW = Math.sin(w);
+          let a = 1, b = 0;
+          for (let n = 0; n < len; n++) {
+            out[n] += amp * envArr[n] * b;
+            const na = a * cosW - b * sinW, nb = a * sinW + b * cosW;
+            a = na; b = nb;
+          }
+        }
+      }
+    }
+    return finishBuf(out, sr, 2, 60, 0.9);
+  }
+
+  function riser(saHz, sr, dur) {
+    dur = dur === undefined ? 2.6 : dur;
+    const len = Math.max(1, Math.round(sr * dur));
+    const out = new Float32Array(len);
+    const rand = MUSIC.gen.rng(777);
+    // both sweeps update their frequency-derived coefficients only once per
+    // BLOCK samples (a slow multi-second sweep is inaudibly different from
+    // a piecewise-constant approximation at this block size) instead of
+    // paying a Math.pow+Math.sin/cos per sample.
+    const BLOCK = 128;
+    let low = 0, band = 0;
+    for (let start = 0; start < len; start += BLOCK) {
+      const end = Math.min(len, start + BLOCK);
+      const fracMid = ((start + end) / 2 / sr) / dur;
+      const freq = 300 * Math.pow(6000 / 300, fracMid);
+      const f = 2 * Math.sin(Math.PI * Math.min(0.49, freq / sr));
+      const q = 1 / 3;
+      for (let n = start; n < end; n++) {
+        const frac = (n / sr) / dur;
+        const x = rand() * 2 - 1;
+        const high = x - low - q * band;
+        band += f * high;
+        low += f * band;
+        out[n] += 0.6 * frac * frac * band;
+      }
+    }
+    let phase = 0;
+    for (let start = 0; start < len; start += BLOCK) {
+      const end = Math.min(len, start + BLOCK);
+      const fracMid = ((start + end) / 2 / sr) / dur;
+      const freq = saHz * 2 * Math.pow(4, fracMid);
+      const w = 2 * Math.PI * freq / sr;
+      const cosW = Math.cos(w), sinW = Math.sin(w);
+      let a = Math.cos(phase), b = Math.sin(phase);
+      for (let n = start; n < end; n++) {
+        const frac = (n / sr) / dur;
+        out[n] += 0.5 * frac * frac * b;
+        const na = a * cosW - b * sinW, nb = a * sinW + b * cosW;
+        a = na; b = nb;
+        phase += w;
+      }
+    }
+    dcBlock(out, sr);
+    fade(out, sr, 5, 60);
+    return normalize(out, 0.9);
+  }
+
+  function swell(sr, dur) {
+    dur = dur === undefined ? 1.6 : dur;
+    const len = Math.max(1, Math.round(sr * dur));
+    const out = new Float32Array(len);
+    const rand = MUSIC.gen.rng(555);
+    let xPrev = 0, yPrev = 0;
+    const R = 0.995;
+    for (let n = 0; n < len; n++) {
+      const x = rand() * 2 - 1;
+      const y = x - xPrev + R * yPrev;
+      xPrev = x; yPrev = y;
+      const t = n / sr, frac = t / dur;
+      const env = Math.exp(3 * (frac - 1));
+      out[n] = 0.8 * env * y;
+    }
+    fade(out, sr, 3, 45);
+    return normalize(out, 0.9);
+  }
+
+  function impulse(sr, seconds, seed) {
+    seconds = seconds === undefined ? 2.4 : seconds;
+    const len = Math.max(1, Math.round(sr * seconds));
+    const baseSeed = (seed >>> 0) || 9999;
+    function buildChannel(chSeed) {
+      const r = MUSIC.gen.rng(chSeed);
+      const out = new Float32Array(len);
+      const predelaySamples = Math.round(sr * 0.02);
+      const reflectTimes = [0.02, 0.03, 0.045, 0.055, 0.07, 0.08];
+      for (const rt of reflectTimes) {
+        const idx = Math.round(sr * rt);
+        if (idx < len) out[idx] += (r() * 2 - 1) * 0.4;
+      }
+      let lp = 0;
+      for (let n = predelaySamples; n < len; n++) {
+        const t = n / sr;
+        const noise = r() * 2 - 1;
+        const coef = 0.1 + 0.75 * Math.min(1, t / seconds);
+        lp = lp + coef * (noise - lp);
+        const env = Math.exp(-6.9 * t / seconds);
+        out[n] += lp * env;
+      }
+      return out;
+    }
+    const L = buildChannel(baseSeed + 1);
+    const R = buildChannel(baseSeed + 2);
+    finishBuf(L, sr, 5, 20, 0.9);
+    finishBuf(R, sr, 5, 20, 0.9);
+    return [L, R];
+  }
+
+  function leadWave(id) {
+    const tables = {
+      bansuri: [0, 1, 0.18, 0.06, 0.02, 0.01],
+      sub: [0, 1, 0.35],
+    };
+    let imagArr;
+    if (id === 'bowed') {
+      imagArr = [0];
+      for (let k = 1; k <= 24; k++) imagArr.push(1 / Math.pow(k, 1.1));
+    } else if (id === 'reed') {
+      imagArr = [0, 1, 0.9, 0.75, 0.6, 0.45, 0.3, 0.2, 0.12, 0.08, 0.05];
+    } else {
+      imagArr = tables[id] || tables.bansuri;
+    }
+    const n = imagArr.length;
+    const real = new Float32Array(n);
+    const imag = new Float32Array(imagArr);
+    return { real, imag };
+  }
+
+  // ---------------- bank spec / job dispatch ----------------
+
+  function bankSpec(raga) {
+    const jobs = [];
+    for (const k of T.TABLA_KEYS) jobs.push({ key: 't:' + k, kind: 'bol', args: { bolKey: k, kit: raga.kit, saHz: raga.sa } });
+    for (const k of T.BIG_KEYS) jobs.push({ key: 'b:' + k, kind: 'bigDrum', args: { kind: k, saHz: raga.sa } });
+    for (const k of T.METAL_KEYS) jobs.push({ key: 'm:' + k, kind: 'metal', args: { kind: k } });
+    jobs.push({ key: 'f:riser', kind: 'fx', args: { kind: 'riser', saHz: raga.sa } });
+    jobs.push({ key: 'f:swell', kind: 'fx', args: { kind: 'swell' } });
+    jobs.push({ key: 'f:stab', kind: 'fx', args: { kind: 'stab', raga, saHz: raga.sa } });
+    jobs.push({ key: 'f:bell', kind: 'fx', args: { kind: 'bell', saHz: raga.sa } });
+    const tanDegs = {};
+    for (const c of MUSIC.gen.tanpuraCycle(raga, false)) tanDegs[c.deg] = true;
+    for (const c of MUSIC.gen.tanpuraCycle(raga, true)) tanDegs[c.deg] = true;
+    for (const d of Object.keys(tanDegs)) jobs.push({ key: 'd:' + d, kind: 'tanpura', args: { hz: T.semiToHz(raga.sa, Number(d)) } });
+    for (let d = -12; d <= 24; d++) {
+      if (raga.notes.indexOf(T.pc(d)) !== -1) jobs.push({ key: 'p:' + d, kind: 'pluck', args: { hz: T.semiToHz(raga.sa * raga.pluckMul, d) } });
+    }
+    return jobs;
+  }
+
+  function renderJob(job, sr) {
+    const seed = hashKey(job.key);
+    switch (job.kind) {
+      case 'bol': return bol(job.args.bolKey, job.args.kit, job.args.saHz, sr, seed);
+      case 'bigDrum': return bigDrum(job.args.kind, job.args.saHz, sr, seed);
+      case 'metal': return metal(job.args.kind, sr, seed);
+      case 'tanpura': return tanpura(job.args.hz, sr, seed);
+      case 'pluck': return ks({ hz: job.args.hz, sr, dur: 1.6, t60: 1.4, bright: 0.7, jawari: 0.25, seed });
+      case 'fx':
+        if (job.args.kind === 'riser') return riser(job.args.saHz, sr);
+        if (job.args.kind === 'swell') return swell(sr);
+        if (job.args.kind === 'stab') return stab(job.args.raga, job.args.saHz, sr);
+        if (job.args.kind === 'bell') return bell(job.args.saHz, sr);
+        break;
+    }
+    return new Float32Array(1);
+  }
+
+  MUSIC.dsp = {
+    normalize, fade, dcBlock, osc2,
+    ks, tanpura, swarm,
+    membraneTonal, bol, bigDrum, metal, bell, stab, riser, swell, impulse, leadWave,
+    bankSpec, renderJob,
+    BOL_GAIN,
+  };
+})();

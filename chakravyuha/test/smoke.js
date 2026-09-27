@@ -3478,5 +3478,118 @@ check('SPRITES.cullEntity(e): hides sprite/marker/weapon and marks seen so endEn
 check('VFX.inView: true inside the view rect, false outside; ctx-fallback render skips off-screen particles', cull.inView && cull.particleCull);
 check('GAME.ambientRect(): contained in the arena and intersects the view; falls back to the full arena when the view does not overlap it', cull.ambientRect);
 
+// ---------------- off-screen edge indicators (Phase 05.1) ----------------
+console.log('\n— off-screen edge indicators (Phase 05.1) —');
+vm.runInContext(`
+globalThis.__indResults = {};
+(function() {
+  const R = __indResults;
+  const noop = () => {};
+  const mkCountCtx = () => {
+    const counts = {};
+    return new Proxy({ _counts: counts }, {
+      get(t, prop) {
+        if (prop === '_counts') return counts;
+        if (prop === 'createRadialGradient' || prop === 'createLinearGradient') return () => ({ addColorStop: noop });
+        if (prop === 'measureText') return () => ({ width: 0 });
+        if (prop in t) return t[prop];
+        return function() { counts[prop] = (counts[prop] || 0) + 1; };
+      },
+      set(t, prop, v) { t[prop] = v; return true; },
+    });
+  };
+
+  const savedState = GAME.state, savedEnemies = GAME.enemies, savedDoors = GAME.doors;
+  const savedCamSx = CAMERA.sx, savedCamSy = CAMERA.sy, savedDevice = INPUT.device;
+
+  try {
+    CAMERA.resetFx(); CAMERA.sx = 0; CAMERA.sy = 0; CAMERA._store(CAMERA.xform());   // identity transform — world == screen
+    GAME.state = 'combat';
+    const a = CAMERA.anchor();
+    const dirs = [0.1963, 2.1599, -2.1599];   // sector centers (16 sectors), matching the pure clusterIndicators test
+    const mkOffEnemy = (ang) => { const e = new Enemy('preta', a.x + Math.cos(ang)*3000, a.y + Math.sin(ang)*3000, 1); e.spawnT = 0; return e; };
+
+    GAME.enemies = [];
+    for (let i = 0; i < 30; i++) { const ang = dirs[i % 3] + (Math.random() - 0.5) * 0.02; GAME.enemies.push(mkOffEnemy(ang)); }
+    const items30 = GAME.indicatorItems();
+    const res30 = CAMERA.clusterIndicators(items30);
+    const sum30 = res30.reduce((s, o) => s + o.count, 0);
+    const inset = CAMERA.CFG.IND_INSET;
+    const within30 = res30.every(o => o.x >= inset.l - 0.5 && o.x <= CAMERA.VW - inset.r + 0.5 && o.y >= inset.t - 0.5 && o.y <= CAMERA.VH - inset.b + 0.5);
+    R.cluster30 = items30.length === 30 && res30.length <= 3 && sum30 === 30 && within30;
+
+    GAME.enemies = [];
+    for (let i = 0; i < 40; i++) { const ang = (i / 40) * Math.PI * 2; GAME.enemies.push(mkOffEnemy(ang)); }
+    const res40 = CAMERA.clusterIndicators(GAME.indicatorItems());
+    R.cluster40 = res40.length <= 8;
+
+    // boss off-screen ordered before enemy arrows
+    GAME.enemies = [];
+    const bossE = mkOffEnemy(0.1963); bossE.boss = true; bossE.color = '#ff00ff';
+    GAME.enemies.push(bossE);
+    for (let i = 0; i < 5; i++) GAME.enemies.push(mkOffEnemy(2.1599));
+    const resBoss = CAMERA.clusterIndicators(GAME.indicatorItems());
+    R.bossFirst = resBoss.length >= 1 && resBoss[0].kind === 'boss';
+
+    // dead + on-screen enemies produce no arrows (dead is filtered by indicatorItems itself;
+    // on-screen is filtered by clusterIndicators' edgePoint, since it's still a valid item)
+    GAME.enemies = [];
+    const deadE = mkOffEnemy(0.1963); deadE.dead = true;
+    const onscreenE = new Enemy('preta', a.x, a.y, 1); onscreenE.spawnT = 0;
+    GAME.enemies.push(deadE, onscreenE);
+    const dieItems = GAME.indicatorItems();
+    R.noArrowsForDeadOrOnscreen = dieItems.length === 1 && CAMERA.clusterIndicators(dieItems).length === 0;
+
+    // doors: only shown when state === 'cleared', first in cluster order
+    GAME.enemies = [];
+    GAME.doors = [
+      { x: a.x + Math.cos(2.1599)*3000, y: a.y + Math.sin(2.1599)*3000, reward: { color: '#0f0', sym: 'd' } },
+      { x: a.x + Math.cos(-2.1599)*3000, y: a.y + Math.sin(-2.1599)*3000, reward: { color: '#00f', sym: 'e' } },
+    ];
+    GAME.state = 'combat';
+    R.noDoorsInCombat = GAME.indicatorItems().length === 0;
+    GAME.state = 'cleared';
+    const doorItems = GAME.indicatorItems();
+    const doorRes = CAMERA.clusterIndicators(doorItems);
+    R.doorsAfterClear = doorItems.length === 2 && doorRes.length === 2 && doorRes[0].kind === 'door' && doorRes[1].kind === 'door';
+
+    // renderIndicators(ctx): no-throw for 0/1/40 items and both input devices
+    let indErr = null;
+    try {
+      GAME.enemies = [];
+      GAME.doors = [];
+      GAME.state = 'combat';
+      INPUT.device = 'kbm';
+      GAME.renderIndicators(mkCountCtx());               // 0 items
+      GAME.enemies = [mkOffEnemy(0.1963)];
+      GAME.renderIndicators(mkCountCtx());               // 1 item
+      GAME.enemies = [];
+      for (let i = 0; i < 40; i++) GAME.enemies.push(mkOffEnemy((i / 40) * Math.PI * 2));
+      GAME.renderIndicators(mkCountCtx());               // 40 items
+      INPUT.device = 'pad';
+      GAME.renderIndicators(mkCountCtx());
+    } catch (e) { indErr = e.stack.split('\\n').slice(0, 3).join(' | '); }
+    R.renderIndicatorsNoThrow = indErr === null;
+    R.renderIndicatorsErr = indErr;
+  } finally {
+    GAME.state = savedState;
+    GAME.enemies = savedEnemies;
+    GAME.doors = savedDoors;
+    INPUT.device = savedDevice;
+    CAMERA.resetFx();
+    CAMERA.sx = savedCamSx || 0; CAMERA.sy = savedCamSy || 0;
+    CAMERA._store(CAMERA.xform());
+  }
+})();
+`, sandbox);
+const ind = vm.runInContext('__indResults', sandbox);
+check('indicators: 30 enemies in 3 off-screen clusters -> <= 3 arrows summing to 30, within the HUD inset', ind.cluster30);
+check('indicators: 40 enemies scattered off-screen -> <= 8 arrows (IND_MAX)', ind.cluster40);
+check('indicators: an off-screen boss yields a boss arrow ordered before enemy arrows', ind.bossFirst);
+check('indicators: dead and on-screen enemies produce no arrows', ind.noArrowsForDeadOrOnscreen);
+check('indicators: doors produce no arrows in combat; one per off-screen door, first in order, once cleared', ind.noDoorsInCombat && ind.doorsAfterClear);
+check('GAME.renderIndicators(ctx): does not throw for 0/1/40 items or kbm/pad devices'
+  + (ind.renderIndicatorsErr ? ' — ' + ind.renderIndicatorsErr : ''), ind.renderIndicatorsNoThrow);
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

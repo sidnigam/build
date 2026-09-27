@@ -1271,6 +1271,9 @@ const GAME = {
       ctx.textAlign = 'left';
     }
 
+    // off-screen indicators (CAM-06): alive enemies (clustered) + doors after clear.
+    if (this.state !== 'hub') this.renderIndicators(ctx);
+
     // crosshair (D-11/D-15: screen-space, outside camera transform)
     // kbm aims at the literal cursor position; pad has no cursor, so project its world-space
     // aim target back to screen space through the current camera transform.
@@ -1284,6 +1287,77 @@ const GAME = {
     ctx.moveTo(cross.x, cross.y - 12); ctx.lineTo(cross.x, cross.y - 4);
     ctx.moveTo(cross.x, cross.y + 4); ctx.lineTo(cross.x, cross.y + 12);
     ctx.stroke();
+  },
+
+  // ---- CAM-06: off-screen indicators (edge arrows for alive enemies + cleared-room doors) ----
+
+  // World-space items eligible for an edge indicator: every alive enemy (including still-spawning
+  // ones — telegraphed threats deserve a heads-up too) plus, once the room is cleared, its doors.
+  indicatorItems() {
+    const items = [];
+    for (const e of this.enemies) {
+      if (e.dead) continue;
+      items.push({ x: e.x, y: e.y, kind: e.boss ? 'boss' : 'enemy', color: e.boss ? e.color : '#ff5566' });
+    }
+    if (this.state === 'cleared') {
+      for (const d of this.doors) items.push({ x: d.x, y: d.y, kind: 'door', color: d.reward.color, sym: d.reward.sym });
+    }
+    return items;
+  },
+
+  // Filled triangle (local +x = "forward"/tip) rotated to point along `angle`, with a thin dark
+  // outline for contrast against any background. Screen-space only (HUD bridge).
+  _drawIndicatorTriangle(ctx, x, y, angle, size, fill) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.moveTo(size, 0);
+    ctx.lineTo(-size * 0.6, size * 0.7);
+    ctx.lineTo(-size * 0.6, -size * 0.7);
+    ctx.closePath();
+    ctx.fillStyle = fill;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+  },
+
+  // renderIndicators(ctx) — CAM-06: draws CAMERA.clusterIndicators(indicatorItems()) on the HUD
+  // bridge (screen space, inset clear of the HP panel/title/boss bar). Enemy arrows pulse gently and
+  // show a count badge when clustered; door arrows show the reward glyph inside a colored ring.
+  renderIndicators(ctx) {
+    const arrows = CAMERA.clusterIndicators(this.indicatorItems());
+    const alpha = 0.75 + 0.25 * Math.sin(this.time * 6);
+    for (const ar of arrows) {
+      if (ar.kind === 'door') {
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = ar.color; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(ar.x, ar.y, 13, 0, U.TAU); ctx.stroke();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 13px Georgia';
+        ctx.textAlign = 'center';
+        ctx.fillText(ar.sym || '', ar.x, ar.y + 4);
+        const tx = ar.x + Math.cos(ar.angle) * 17, ty = ar.y + Math.sin(ar.angle) * 17;
+        this._drawIndicatorTriangle(ctx, tx, ty, ar.angle, 9, ar.color);
+        continue;
+      }
+      const isBoss = ar.kind === 'boss';
+      const size = isBoss ? 14 : 9;
+      ctx.globalAlpha = alpha;
+      this._drawIndicatorTriangle(ctx, ar.x, ar.y, ar.angle, size, ar.color);
+      if (ar.count > 1) {
+        ctx.globalAlpha = 1;
+        const ix = ar.x - Math.cos(ar.angle) * 16, iy = ar.y - Math.sin(ar.angle) * 16;
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 11px Georgia';
+        ctx.textAlign = 'center';
+        ctx.fillText(String(ar.count), ix, iy + 4);
+      }
+    }
+    ctx.globalAlpha = 1;
+    ctx.textAlign = 'left';
   },
 
   // -- HUD motif helpers (Indian-motif pass, quick-260926-d5o) --

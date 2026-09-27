@@ -349,15 +349,18 @@ const GAME = {
     }
     this.orbits = this.orbits.filter(o => o.t > 0);
 
-    // pickups
+    // pickups (Phase 05.1, WAVE-04: once the room is cleared, vacuum coins to the player from
+    // anywhere so the post-clear walk to the doors doesn't leave loot behind in the larger arenas)
+    const magR = this.state === 'cleared' ? 1e9 : 90;
+    const pull = this.state === 'cleared' ? 900 : 380;
     for (const pk of this.pickups) {
       pk.t -= dt;
       pk.x += (pk.vx || 0) * dt; pk.y += (pk.vy || 0) * dt;
       pk.vx = (pk.vx || 0) * 0.9; pk.vy = (pk.vy || 0) * 0.9;
       const d = U.dist(pk.x, pk.y, P.x, P.y);
-      if (d < 90) { // magnet
+      if (d < magR) { // magnet
         const a = U.angle(pk.x, pk.y, P.x, P.y);
-        pk.x += Math.cos(a) * 380 * dt; pk.y += Math.sin(a) * 380 * dt;
+        pk.x += Math.cos(a) * pull * dt; pk.y += Math.sin(a) * pull * dt;
       }
       if (d < P.r + 10) {
         pk.t = 0;

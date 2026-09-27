@@ -649,24 +649,33 @@ class Enemy {
         }
         break;
 
-      case 'shoot':
-        // keep mid range
+      case 'shoot': {
+        // keep mid range (Phase 05.1, WAVE-04): fairness in large arenas — only fire within engageRange
+        const ER = DATA.WAVES.engageRange;
         if (dToP < 200) { this.x -= Math.cos(aToP) * this.curSpeed() * dt; this.y -= Math.sin(aToP) * this.curSpeed() * dt; }
         else if (dToP > 330) { this.x += Math.cos(aToP) * this.curSpeed() * dt; this.y += Math.sin(aToP) * this.curSpeed() * dt; }
         if (this.t <= 0) {
-          enemyShot(this.x, this.y, Math.cos(aToP) * this.def.projSpeed, Math.sin(aToP) * this.def.projSpeed, this.dmg, this.color);
-          this.t = U.rand(1.6, 2.6);
+          if (dToP <= ER) {
+            enemyShot(this.x, this.y, Math.cos(aToP) * this.def.projSpeed, Math.sin(aToP) * this.def.projSpeed, this.dmg, this.color);
+            this.t = U.rand(1.6, 2.6);
+          } else this.t = 0.3;
         }
         break;
+      }
 
-      case 'spread':
+      case 'spread': {
+        const ER = DATA.WAVES.engageRange;
         if (dToP < 170) { this.x -= Math.cos(aToP) * this.curSpeed() * dt; this.y -= Math.sin(aToP) * this.curSpeed() * dt; }
+        else if (dToP > 360) { this.x += Math.cos(aToP) * this.curSpeed() * dt; this.y += Math.sin(aToP) * this.curSpeed() * dt; }
         if (this.t <= 0) {
-          for (const off of [-0.3, 0, 0.3])
-            enemyShot(this.x, this.y, Math.cos(aToP + off) * this.def.projSpeed, Math.sin(aToP + off) * this.def.projSpeed, this.dmg, this.color);
-          this.t = U.rand(2, 3.2);
+          if (dToP <= ER) {
+            for (const off of [-0.3, 0, 0.3])
+              enemyShot(this.x, this.y, Math.cos(aToP + off) * this.def.projSpeed, Math.sin(aToP + off) * this.def.projSpeed, this.dmg, this.color);
+            this.t = U.rand(2, 3.2);
+          } else this.t = 0.3;
         }
         break;
+      }
 
       case 'teleport':
         if (this.state === 'idle') {
@@ -716,12 +725,15 @@ class Enemy {
         }
         break;
 
-      case 'summon':
-        // drift away from the player, summon pretas
+      case 'summon': {
+        // drift away from the player, summon pretas (Phase 05.1, WAVE-04: approach when far,
+        // and never push the room over the alive cap)
+        const ER = DATA.WAVES.engageRange;
         if (dToP < 260) { this.x -= Math.cos(aToP) * this.curSpeed() * dt; this.y -= Math.sin(aToP) * this.curSpeed() * dt; }
+        else if (dToP > 560) { this.x += Math.cos(aToP) * this.curSpeed() * dt; this.y += Math.sin(aToP) * this.curSpeed() * dt; }
         if (this.t <= 0) {
           const livingPretas = GAME.enemies.filter(e => !e.dead && e.type === 'preta').length;
-          if (livingPretas < 5) {
+          if (dToP <= ER + 200 && livingPretas < 5 && ROOMS.aliveCount() < DATA.WAVES.maxAlive) {
             const e = new Enemy('preta', this.x + U.rand(-40, 40), this.y + U.rand(-40, 40), GAME.biome.scale);
             GAME.enemies.push(e);
             burst(this.x, this.y, this.color, 8, 120, 0.4);
@@ -729,6 +741,7 @@ class Enemy {
           this.t = 5;
         }
         break;
+      }
     }
 
     clampToArena(this);

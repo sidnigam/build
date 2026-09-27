@@ -3143,5 +3143,149 @@ check('enterRoom resets GAME.spawnQueue and GAME.lastWaveSize'
   + (resetR.error ? ' — ' + resetR.error : ''),
   !resetR.error && resetR.queueReset && resetR.lastWaveSizeReset);
 
+// ---- large-arena fairness: engage range, naga/yatudhana approach, summoner cap, coin vacuum ----
+vm.runInContext(`
+globalThis.__archerResults = {};
+try {
+  GAME.startRun();
+  GAME.biomeIdx = 0; GAME.biome = DATA.BIOMES[0];
+  ROOMS.enterRoom('mudra');
+  GAME.state = 'combat'; GAME.bossRef = null; GAME.hazards = []; GAME.pillars = []; GAME.waves = []; GAME.spawnQueue = [];
+  GAME.eprojectiles = [];
+  const P = GAME.player;
+  P.hp = 1e9; P.maxhp = 1e9;
+  P.x = GAME.arena.x + 90; P.y = GAME.arena.y + GAME.arena.h / 2;
+
+  const a1 = new Enemy('archer', P.x + 1500, P.y, 1);
+  a1.spawnT = 0;
+  GAME.enemies = [a1];
+  const x0 = a1.x;
+  for (let f = 0; f < 180; f++) GAME.update(1 / 60);
+  __archerResults.farNoFire = GAME.eprojectiles.length === 0;
+  __archerResults.farApproached = a1.x < x0;
+
+  GAME.eprojectiles = [];
+  const a2 = new Enemy('archer', P.x + 400, P.y, 1);
+  a2.spawnT = 0; a2.t = 0;
+  GAME.enemies = [a2];
+  let a2Fired = false;
+  for (let f = 0; f < 180; f++) { GAME.update(1 / 60); if (GAME.eprojectiles.length > 0) a2Fired = true; }
+  __archerResults.nearFires = a2Fired;
+} catch (e) { __archerResults.error = e.stack.split('\\n').slice(0, 3).join(' | '); }
+`, sandbox);
+const archerR = vm.runInContext('__archerResults', sandbox);
+check('archer (shoot AI): fires nothing beyond engageRange but approaches; fires within engageRange'
+  + (archerR.error ? ' — ' + archerR.error : ''),
+  !archerR.error && archerR.farNoFire && archerR.farApproached && archerR.nearFires);
+
+vm.runInContext(`
+globalThis.__nagaResults = {};
+try {
+  GAME.startRun();
+  GAME.biomeIdx = 1; GAME.biome = DATA.BIOMES[1];
+  ROOMS.enterRoom('mudra');
+  GAME.state = 'combat'; GAME.bossRef = null; GAME.hazards = []; GAME.pillars = []; GAME.waves = []; GAME.spawnQueue = [];
+  GAME.eprojectiles = [];
+  const P = GAME.player;
+  P.hp = 1e9; P.maxhp = 1e9;
+  P.x = GAME.arena.x + 90; P.y = GAME.arena.y + GAME.arena.h / 2;
+
+  const n1 = new Enemy('naga', P.x + 1500, P.y, 1);
+  n1.spawnT = 0;
+  GAME.enemies = [n1];
+  const x0 = n1.x;
+  for (let f = 0; f < 120; f++) GAME.update(1 / 60);
+  __nagaResults.farNoFire = GAME.eprojectiles.length === 0;
+  __nagaResults.farApproached = n1.x < x0;
+
+  GAME.eprojectiles = [];
+  const n2 = new Enemy('naga', P.x + 300, P.y, 1);
+  n2.spawnT = 0; n2.t = 0;
+  GAME.enemies = [n2];
+  let n2Fired = false;
+  for (let f = 0; f < 180; f++) { GAME.update(1 / 60); if (GAME.eprojectiles.length > 0) n2Fired = true; }
+  __nagaResults.nearFires = n2Fired;
+} catch (e) { __nagaResults.error = e.stack.split('\\n').slice(0, 3).join(' | '); }
+`, sandbox);
+const nagaR = vm.runInContext('__nagaResults', sandbox);
+check('naga (spread AI): fires nothing beyond engageRange but approaches; fires within engageRange'
+  + (nagaR.error ? ' — ' + nagaR.error : ''),
+  !nagaR.error && nagaR.farNoFire && nagaR.farApproached && nagaR.nearFires);
+
+vm.runInContext(`
+globalThis.__summonResults = {};
+try {
+  GAME.startRun();
+  GAME.biomeIdx = 2; GAME.biome = DATA.BIOMES[2];
+  ROOMS.enterRoom('mudra');
+  GAME.state = 'combat'; GAME.bossRef = null; GAME.hazards = []; GAME.pillars = []; GAME.waves = []; GAME.spawnQueue = [];
+  const P = GAME.player;
+  P.hp = 1e9; P.maxhp = 1e9;
+  P.x = GAME.arena.x + 90; P.y = GAME.arena.y + GAME.arena.h / 2;
+
+  // Case A: alive cap reached (26) — yatudhana must not summon
+  GAME.enemies = [];
+  const y1 = new Enemy('yatudhana', P.x + 300, P.y, 1);
+  y1.spawnT = 0; y1.t = 0;
+  GAME.enemies.push(y1);
+  for (let i = 0; i < 25; i++) { const e = new Enemy('rakshasa', P.x + 500 + i, P.y + 100, 1); e.spawnT = 0; GAME.enemies.push(e); }
+  const countBeforeA = GAME.enemies.length;
+  GAME.update(1 / 60);
+  __summonResults.noSummonAtCap = GAME.enemies.length === countBeforeA;
+
+  // Case B: only 3 living — yatudhana should summon (existing <5 living pretas rule kept)
+  GAME.enemies = [];
+  const y2 = new Enemy('yatudhana', P.x + 300, P.y, 1);
+  y2.spawnT = 0; y2.t = 0;
+  GAME.enemies.push(y2);
+  for (let i = 0; i < 2; i++) { const e = new Enemy('rakshasa', P.x + 500 + i, P.y + 100, 1); e.spawnT = 0; GAME.enemies.push(e); }
+  const countBeforeB = GAME.enemies.length;
+  GAME.update(1 / 60);
+  __summonResults.summonsBelowCap = GAME.enemies.length > countBeforeB;
+
+  // Far yatudhana (1500px) approaches
+  GAME.enemies = [];
+  const y3 = new Enemy('yatudhana', P.x + 1500, P.y, 1);
+  y3.spawnT = 0;
+  GAME.enemies.push(y3);
+  const x0 = y3.x;
+  for (let f = 0; f < 120; f++) GAME.update(1 / 60);
+  __summonResults.approachesWhenFar = y3.x < x0;
+} catch (e) { __summonResults.error = e.stack.split('\\n').slice(0, 3).join(' | '); }
+`, sandbox);
+const summonR = vm.runInContext('__summonResults', sandbox);
+check('yatudhana (summon AI): respects the alive cap (no summon at 26 alive, summons below it)'
+  + (summonR.error ? ' — ' + summonR.error : ''),
+  !summonR.error && summonR.noSummonAtCap && summonR.summonsBelowCap);
+check('yatudhana approaches the player when far (1500px)'
+  + (summonR.error ? ' — ' + summonR.error : ''),
+  !summonR.error && summonR.approachesWhenFar);
+
+vm.runInContext(`
+globalThis.__vacuumResults = {};
+try {
+  GAME.startRun();
+  GAME.biomeIdx = 0; GAME.biome = DATA.BIOMES[0];
+  ROOMS.enterRoom('mudra');
+  GAME.hazards = []; GAME.pillars = []; GAME.waves = []; GAME.spawnQueue = []; GAME.enemies = [];
+  const P = GAME.player;
+  const mudra0 = P.mudra;
+
+  GAME.state = 'combat';
+  GAME.pickups = [{ x: P.x + 200, y: P.y, val: 10, t: 30, vx: 0, vy: 0 }];
+  GAME.update(1 / 60);
+  __vacuumResults.combatNotVacuumed = GAME.pickups.length === 1 && GAME.pickups[0].t > 0;
+
+  GAME.state = 'cleared';
+  GAME.pickups = [{ x: P.x + 1500, y: P.y, val: 10, t: 30, vx: 0, vy: 0 }];
+  for (let f = 0; f < 360 && GAME.pickups.length; f++) GAME.update(1 / 60);
+  __vacuumResults.clearedVacuumed = GAME.pickups.length === 0 && P.mudra > mudra0;
+} catch (e) { __vacuumResults.error = e.stack.split('\\n').slice(0, 3).join(' | '); }
+`, sandbox);
+const vacuumR = vm.runInContext('__vacuumResults', sandbox);
+check('coin vacuum: 90px magnet unchanged in combat; cleared-room pickups fly to the player from anywhere'
+  + (vacuumR.error ? ' — ' + vacuumR.error : ''),
+  !vacuumR.error && vacuumR.combatNotVacuumed && vacuumR.clearedVacuumed);
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

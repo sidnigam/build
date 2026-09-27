@@ -3125,6 +3125,7 @@ globalThis.__aimResults = {};
   const savedDevice = INPUT.device, savedMx = INPUT.mx, savedMy = INPUT.my, savedWx = INPUT.wx, savedWy = INPUT.wy;
   const savedPlayer = GAME.player, savedState = GAME.state, savedLmb = INPUT.lmb, savedShake = GAME.shake;
   const savedAimAng = PAD._aimAng, savedPrevButtons = PAD._prevButtons;
+  const savedEnemies = GAME.enemies;   // 05.2-01: aim-assist now scans GAME.enemies — keep it empty so it can't bend this exact-angle test
 
   try {
     INPUT.lmb = false;
@@ -3150,7 +3151,8 @@ globalThis.__aimResults = {};
     // 4. PAD.poll: right stick -> world-space wx/wy; releasing the stick holds the last angle;
     //    INPUT.mx/my are never written by the pad.
     INPUT.device = 'kbm'; INPUT.mx = 77; INPUT.my = 88;
-    PAD._aimAng = null; PAD._prevButtons = {};
+    PAD._aimAng = null; PAD._prevButtons = {}; PAD._prevPressed = {};
+    GAME.enemies = [];
     const gp = { axes: [0, 0, 1, 0], buttons: [] };
     globalThis.navigator = { getGamepads: () => [gp] };
     PAD.poll();
@@ -3171,7 +3173,8 @@ globalThis.__aimResults = {};
     INPUT.device = savedDevice; INPUT.mx = savedMx; INPUT.my = savedMy; INPUT.wx = savedWx; INPUT.wy = savedWy;
     INPUT.lmb = savedLmb; GAME.shake = savedShake;
     GAME.player = savedPlayer; GAME.state = savedState;
-    PAD._aimAng = savedAimAng; PAD._prevButtons = savedPrevButtons;
+    PAD._aimAng = savedAimAng; PAD._prevButtons = savedPrevButtons; PAD._prevPressed = {};
+    GAME.enemies = savedEnemies;
     CAMERA.resetFx(); CAMERA.sx = 0; CAMERA.sy = 0; CAMERA._store(CAMERA.xform());
   }
 })();
@@ -3893,6 +3896,152 @@ check('indicators: dead and on-screen enemies produce no arrows', ind.noArrowsFo
 check('indicators: doors produce no arrows in combat; one per off-screen door, first in order, once cleared', ind.noDoorsInCombat && ind.doorsAfterClear);
 check('GAME.renderIndicators(ctx): does not throw for 0/1/40 items or kbm/pad devices'
   + (ind.renderIndicatorsErr ? ' — ' + ind.renderIndicatorsErr : ''), ind.renderIndicatorsNoThrow);
+
+// ---------------- PAD DualSense core (05.2-01) ----------------
+console.log('\n— PAD DualSense core (05.2-01) —');
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+  const mkGp = (id, mapping, btnOverrides) => {
+    const buttons = Array.from({ length: 18 }, () => ({ pressed: false, value: 0 }));
+    Object.assign(buttons, btnOverrides || {});
+    return { id, mapping: mapping || 'standard', connected: true, axes: [0, 0, 0, 0], buttons };
+  };
+  sandbox.__mkGp = mkGp;
+
+  // ---- familyFromId ----
+  check('familyFromId: DualSense Chromium id -> ps',
+    R("PAD.familyFromId('DualSense Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 0ce6)')") === 'ps');
+  check('familyFromId: DualSense Firefox id -> ps',
+    R("PAD.familyFromId('054c-0ce6-DualSense Wireless Controller')") === 'ps');
+  check('familyFromId: DualSense Edge id -> ps',
+    R("PAD.familyFromId('DualSense Edge Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 0df2)')") === 'ps');
+  check('familyFromId: DualShock 4 id -> ps',
+    R("PAD.familyFromId('Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 09cc)')") === 'ps');
+  check('familyFromId: Xbox 360 XInput id -> xbox',
+    R("PAD.familyFromId('Xbox 360 Controller (XInput STANDARD GAMEPAD)')") === 'xbox');
+  check('familyFromId: Xbox Wireless Controller id -> xbox',
+    R("PAD.familyFromId('Xbox Wireless Controller (STANDARD GAMEPAD Vendor: 045e Product: 0b13)')") === 'xbox');
+  check('familyFromId: unrecognized 8BitDo id -> generic',
+    R("PAD.familyFromId('8BitDo Pro 2 (Vendor: 2dc8 Product: 6006)')") === 'generic');
+  check('familyFromId: empty/undefined -> generic',
+    R("JSON.stringify([PAD.familyFromId(''), PAD.familyFromId(undefined)])") === JSON.stringify(['generic', 'generic']));
+
+  // ---- modelFromId ----
+  check('modelFromId: 0ce6 -> dualsense, vendor 054c',
+    R(`(() => { const m = PAD.modelFromId('DualSense Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 0ce6)'); return m.model === 'dualsense' && m.vendor === '054c' && m.product === '0ce6'; })()`) === true);
+  check('modelFromId: 0df2 -> dualsense-edge',
+    R("PAD.modelFromId('DualSense Edge Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 0df2)').model") === 'dualsense-edge');
+  check('modelFromId: 09cc -> dualshock4',
+    R("PAD.modelFromId('Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 09cc)').model") === 'dualshock4');
+  check('modelFromId: Firefox-format id parses vendor/product too',
+    R(`(() => { const m = PAD.modelFromId('054c-0ce6-DualSense Wireless Controller'); return m.vendor === '054c' && m.product === '0ce6' && m.model === 'dualsense'; })()`) === true);
+
+  // ---- mapGamepad: extended (Home/Touchpad/triggers) ----
+  check('mapGamepad: 18 buttons -> Home(16)/Touchpad(17) read when pressed',
+    R(`(() => {
+      const gp = __mkGp('x'); gp.buttons[16] = { pressed: true }; gp.buttons[17] = { pressed: true };
+      const m = PAD.mapGamepad(gp);
+      return m.buttons.Home === true && m.buttons.Touchpad === true;
+    })()`) === true);
+  check('mapGamepad: 16 buttons (no Home/Touchpad indices) -> false, no throw',
+    R(`(() => {
+      const gp = { id: 'x', mapping: 'standard', axes: [0,0,0,0], buttons: Array.from({length:16}, () => ({pressed:false})) };
+      const m = PAD.mapGamepad(gp);
+      return m.buttons.Home === false && m.buttons.Touchpad === false;
+    })()`) === true);
+  check('mapGamepad: trigger value >= threshold counts as pressed; value stored',
+    R(`(() => {
+      const gp1 = __mkGp('x'); gp1.buttons[7] = { pressed: false, value: 0.35 };
+      const m1 = PAD.mapGamepad(gp1);
+      const gp2 = __mkGp('x'); gp2.buttons[7] = { pressed: false, value: 0.2 };
+      const m2 = PAD.mapGamepad(gp2);
+      return m1.buttons.RT === true && m1.triggers.RT === 0.35 && m2.buttons.RT === false;
+    })()`) === true);
+
+  // ---- pickPad ----
+  check('pickPad([null, padA]) -> 1',
+    R("PAD.pickPad([null, __mkGp('a')])") === 1);
+  check('pickPad: previous pad kept while idle; switches to a pad that shows activity',
+    R(`(() => {
+      const padA = __mkGp('a'); const padB = __mkGp('b'); padB.buttons[0] = { pressed: true };
+      return PAD.pickPad([padA, padB], 0);
+    })()`) === 1);
+  check('pickPad: previous pad kept when both idle',
+    R(`(() => {
+      const padA = __mkGp('a'); const padB = __mkGp('b');
+      return PAD.pickPad([padA, padB], 0);
+    })()`) === 0);
+  check('pickPad: no pads -> -1', R("PAD.pickPad([], 0)") === -1);
+  check('pickPad: first pick prefers mapping standard',
+    R(`(() => {
+      const padA = __mkGp('a', 'not-standard'); const padB = __mkGp('b', 'standard');
+      return PAD.pickPad([padA, padB], -1);
+    })()`) === 1);
+
+  // ---- applyPadRebind ----
+  const DEFAULT_PAD_BINDINGS = 'PAD.DEFAULT_BINDINGS';
+  check('applyPadRebind: cast <- LB, other actions unchanged',
+    R(`(() => {
+      const r = PAD.applyPadRebind(${DEFAULT_PAD_BINDINGS}, 'cast', 'LB');
+      return JSON.stringify(r.cast) === JSON.stringify(['LB'])
+        && JSON.stringify(r.attack) === JSON.stringify(${DEFAULT_PAD_BINDINGS}.attack)
+        && JSON.stringify(r.special) === JSON.stringify(${DEFAULT_PAD_BINDINGS}.special)
+        && JSON.stringify(r.dash) === JSON.stringify(${DEFAULT_PAD_BINDINGS}.dash);
+    })()`) === true);
+  check('applyPadRebind: cast <- A steals A from attack (attack becomes [RT])',
+    R(`(() => {
+      const r = PAD.applyPadRebind(${DEFAULT_PAD_BINDINGS}, 'cast', 'A');
+      return JSON.stringify(r.cast) === JSON.stringify(['A']) && JSON.stringify(r.attack) === JSON.stringify(['RT']);
+    })()`) === true);
+  check('applyPadRebind: pause <- Touchpad keeps Start too',
+    R(`(() => {
+      const r = PAD.applyPadRebind(${DEFAULT_PAD_BINDINGS}, 'pause', 'Touchpad');
+      return r.pause.includes('Touchpad') && r.pause.includes('Start');
+    })()`) === true);
+  check('applyPadRebind: dash <- Start still leaves Start bound to pause as a fallback',
+    R(`(() => {
+      const r = PAD.applyPadRebind(${DEFAULT_PAD_BINDINGS}, 'dash', 'Start');
+      return JSON.stringify(r.dash) === JSON.stringify(['Start']) && r.pause.includes('Start');
+    })()`) === true);
+  check('applyPadRebind: Home cannot be bound -> unchanged copy',
+    R(`(() => {
+      const r = PAD.applyPadRebind(${DEFAULT_PAD_BINDINGS}, 'dash', 'Home');
+      return JSON.stringify(r) === JSON.stringify(${DEFAULT_PAD_BINDINGS});
+    })()`) === true);
+  check('applyPadRebind: never mutates its input',
+    R(`(() => {
+      const before = JSON.stringify(${DEFAULT_PAD_BINDINGS});
+      PAD.applyPadRebind(${DEFAULT_PAD_BINDINGS}, 'cast', 'A');
+      return JSON.stringify(${DEFAULT_PAD_BINDINGS}) === before;
+    })()`) === true);
+
+  // ---- actionDown ----
+  check('actionDown: true when a bound button is down',
+    R(`PAD.actionDown({ RT: true }, 'attack', ${DEFAULT_PAD_BINDINGS})`) === true);
+  check('actionDown: false when no bound button is down',
+    R(`PAD.actionDown({}, 'attack', ${DEFAULT_PAD_BINDINGS})`) === false);
+
+  // ---- captureStep ----
+  check('captureStep: button held from before capture -> fired null (waiting for release)',
+    R(`(() => { const r = PAD.captureStep({ cb: null, waitRelease: true, t: 0, timeout: 5 }, ['A'], 0.016); return r.fired === null && r.cap !== null; })()`) === true);
+  check('captureStep: release then a newly pressed button fires it',
+    R(`(() => {
+      let r = PAD.captureStep({ cb: null, waitRelease: true, t: 0, timeout: 5 }, [], 0.016);
+      r = PAD.captureStep(r.cap, ['LB'], 0.016);
+      return r.fired === 'LB' && r.cap === null;
+    })()`) === true);
+  check('captureStep: elapsed past timeout -> cap null, fired null',
+    R(`(() => { const r = PAD.captureStep({ cb: null, waitRelease: true, t: 4.99, timeout: 5 }, ['A'], 0.5); return r.cap === null && r.fired === null; })()`) === true);
+
+  // ---- SETTINGS: new Controller defaults ----
+  check("SETTINGS.get('aimAssist') === true by default", R("SETTINGS.reset() && SETTINGS.get('aimAssist')") === true);
+  check("SETTINGS.get('rumble') === true by default", R("SETTINGS.get('rumble')") === true);
+  check("SETTINGS.get('rumbleIntensity') === 0.8 by default", R("SETTINGS.get('rumbleIntensity')") === 0.8);
+  check("SETTINGS.set('rumbleIntensity', 3) clamps to 1", R("SETTINGS.set('rumbleIntensity', 3)") === 1);
+  R("SETTINGS.reset()");   // leave settings clean for any later section
+
+  delete sandbox.__mkGp;
+}
 
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

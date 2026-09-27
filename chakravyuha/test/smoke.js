@@ -2805,5 +2805,296 @@ console.log('\n— character readability: ground marker spec (quick 260926-djs) 
   }
 }
 
+// ---------------- MUSIC lead stream (05.3-01 task 2) ----------------
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+  console.log('\n— MUSIC lead stream (05.3-01 task 2) —');
+
+  R(`
+    globalThis.__collectStream = function (ragaId, level, seed, cycles) {
+      const raga = MUSIC.theory.RAGAS[ragaId];
+      const tala = MUSIC.theory.TALAS[raga.tala];
+      const cs = MUSIC.theory.talaSteps(tala);
+      const stream = MUSIC.gen.createLeadStream(raga, tala, seed);
+      const events = [];
+      // scan extra lookahead cycles so a mukhda's final note (which can
+      // land a full cycle past wherever its own phrase was planned, since
+      // the stream always plans one cycle ahead) isn't truncated out of a
+      // completed phrase by the collection window itself.
+      for (let s = 0; s < (cycles + 2) * cs; s++) {
+        const evs = stream.eventsAt(s, level);
+        for (const e of evs) events.push(e);
+      }
+      return JSON.stringify({ cs, windowSteps: cycles * cs, events });
+    };
+  `);
+
+  const pc = d => ((d % 12) + 12) % 12;
+  const T = JSON.parse(R('JSON.stringify(MUSIC.theory)'));
+  const ragaIds = Object.keys(T.RAGAS);
+  const ragaOf = {}; for (const rid of ragaIds) ragaOf[rid] = T.RAGAS[rid];
+  // groups events by phraseId in first-seen order, dropping the trailing
+  // phrase: it may still be mid-flight at the edge of the collection
+  // window (e.g. a mukhda whose final note lands a cycle further out
+  // than anything else we scanned), so it isn't a safe structural sample.
+  function groupPhrases(events) {
+    const byPhrase = {}; const order = [];
+    for (const e of events) {
+      if (!byPhrase[e.phraseId]) { byPhrase[e.phraseId] = []; order.push(e.phraseId); }
+      byPhrase[e.phraseId].push(e);
+    }
+    return order.slice(0, -1).map(pid => byPhrase[pid]);
+  }
+
+  // gather all 5 ragas x 6 levels at the canonical seed (1234), 32 cycles
+  // (+1 lookahead cycle so trailing mukhda phrases are never truncated)
+  const data = {};
+  for (const rid of ragaIds) {
+    data[rid] = {};
+    for (let level = 0; level <= 5; level++) {
+      const raw = R(`__collectStream('${rid}', ${level}, 1234, 32)`);
+      data[rid][level] = JSON.parse(raw);
+    }
+  }
+
+  // ---- per-event property checks over every raga x level ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const raga = ragaOf[rid];
+      for (let level = 0; level <= 5; level++) {
+        const { cs, events } = data[rid][level];
+        for (const e of events) {
+          if (pc(e.deg) !== undefined && raga.notes.indexOf(pc(e.deg)) === -1) { ok = false; bad.push(`${rid}L${level}:pc-not-in-notes:${e.deg}`); }
+          if (e.deg < raga.range[0] || e.deg > raga.range[1]) { ok = false; bad.push(`${rid}L${level}:deg-out-of-range:${e.deg}`); }
+          if (!(e.dur >= 1)) { ok = false; bad.push(`${rid}L${level}:dur<1`); }
+          if (!(e.vel >= 0.2 && e.vel <= 1)) { ok = false; bad.push(`${rid}L${level}:vel-oob:${e.vel}`); }
+          if (!Number.isInteger(e.at)) { ok = false; bad.push(`${rid}L${level}:at-not-int`); }
+          if (rid === 'adana' && e.src === 'walk' && pc(e.deg) === 3) { ok = false; bad.push(`${rid}L${level}:adana-walk-pc3`); }
+        }
+        if (bad.length > 12) break;
+      }
+      if (bad.length > 12) break;
+    }
+    check('every note: pc in raga.notes, in range, dur>=1, 0.2<=vel<=1, integer at; adana walk notes never pc 3'
+      + (bad.length ? ' — ' + bad.slice(0, 12).join(', ') : ''), ok);
+  }
+
+  // ---- walk-note directionality (moving up -> pc in up, down -> pc in down) ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const raga = ragaOf[rid];
+      for (let level = 0; level <= 5; level++) {
+        const events = data[rid][level].events;
+        for (const notes of groupPhrases(events)) {
+          for (let i = 1; i < notes.length; i++) {
+            if (notes[i].src !== 'walk') continue;
+            const goingUp = notes[i].deg >= notes[i - 1].deg;
+            const dirSet = goingUp ? raga.up : raga.down;
+            if (dirSet.indexOf(pc(notes[i].deg)) === -1) { ok = false; bad.push(`${rid}L${level}:walk-dir-pc:${notes[i].deg}`); }
+          }
+        }
+        if (bad.length > 12) break;
+      }
+      if (bad.length > 12) break;
+    }
+    check('walk-tagged notes: ascending steps land on pc in raga.up, descending on pc in raga.down' + (bad.length ? ' — ' + bad.slice(0, 12).join(', ') : ''), ok);
+  }
+
+  // ---- within-phrase leap constraint ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      for (let level = 0; level <= 5; level++) {
+        const events = data[rid][level].events;
+        for (const notes of groupPhrases(events)) {
+          for (let i = 1; i < notes.length; i++) {
+            const d = Math.abs(notes[i].deg - notes[i - 1].deg);
+            const bothSa = pc(notes[i].deg) === 0 && pc(notes[i - 1].deg) === 0;
+            if (d > 7 && !(d === 12 && bothSa)) { ok = false; bad.push(`${rid}L${level}:leap:${d}`); }
+          }
+        }
+      }
+    }
+    check('consecutive notes inside one phrase: |delta|<=7 unless the Sa-Sa\' octave' + (bad.length ? ' — ' + bad.slice(0, 8).join(', ') : ''), ok);
+  }
+
+  // ---- phrase-ending nyas + duration floor ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const raga = ragaOf[rid];
+      const nyasPcs = raga.nyas.concat([0]).map(pc);
+      for (let level = 0; level <= 5; level++) {
+        const events = data[rid][level].events;
+        for (const notes of groupPhrases(events)) {
+          const last = notes[notes.length - 1];
+          if (nyasPcs.indexOf(pc(last.deg)) === -1) { ok = false; bad.push(`${rid}L${level}:last-not-nyas:${last.deg}`); }
+          const floor = last.kind === 'taan' ? 2 : 4;
+          if (!(last.dur >= floor)) { ok = false; bad.push(`${rid}L${level}:last-dur<${floor}`); }
+        }
+      }
+    }
+    check('every phrase ends on a nyas note (nyas U {0}) with dur>=4 (>=2 for taans)' + (bad.length ? ' — ' + bad.slice(0, 8).join(', ') : ''), ok);
+  }
+
+  // ---- mukhda lands on sam ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      for (let level = 0; level <= 5; level++) {
+        const { cs, events } = data[rid][level];
+        for (const notes of groupPhrases(events)) {
+          if (notes[0].src !== 'mukhda') continue;
+          const last = notes[notes.length - 1];
+          if (((last.at % cs) + cs) % cs !== 0) { ok = false; bad.push(`${rid}L${level}:mukhda-not-on-sam:${last.at}%${cs}`); }
+        }
+      }
+    }
+    check('every mukhda occurrence lands its final note exactly on sam (at % cycleSteps === 0)' + (bad.length ? ' — ' + bad.slice(0, 8).join(', ') : ''), ok);
+  }
+
+  // ---- silence ratios + notes-per-cycle ordering ----
+  {
+    const silence = {}; const notesPerCycle = {};
+    for (const rid of ragaIds) {
+      silence[rid] = {}; notesPerCycle[rid] = {};
+      for (let level = 0; level <= 5; level++) {
+        const { cs, windowSteps, events } = data[rid][level];
+        const total = windowSteps;
+        const covered = new Uint8Array(total);
+        for (const e of events) {
+          for (let s = e.at; s < Math.min(total, e.at + e.dur); s++) if (s >= 0) covered[s] = 1;
+        }
+        let coveredCount = 0; for (let i = 0; i < total; i++) coveredCount += covered[i];
+        silence[rid][level] = 1 - coveredCount / total;
+        notesPerCycle[rid][level] = events.filter(e => e.at < windowSteps).length / 32;
+      }
+    }
+    let silOk = true; const silBad = [];
+    for (const rid of ragaIds) {
+      if (silence[rid][0] < 0.30) { silOk = false; silBad.push(`${rid}L0:${silence[rid][0].toFixed(2)}`); }
+      if (silence[rid][1] < 0.25) { silOk = false; silBad.push(`${rid}L1:${silence[rid][1].toFixed(2)}`); }
+      if (silence[rid][5] > 0.30) { silOk = false; silBad.push(`${rid}L5:${silence[rid][5].toFixed(2)}`); }
+    }
+    check('lead-silent step ratio: L0>=0.30, L1>=0.25, L5<=0.30' + (silBad.length ? ' — ' + silBad.join(', ') : ''), silOk);
+
+    let densOk = true; const densBad = [];
+    for (const rid of ragaIds) {
+      const n0 = notesPerCycle[rid][0], n2 = notesPerCycle[rid][2], n4 = notesPerCycle[rid][4];
+      if (!(n0 < n2 && n2 < n4)) { densOk = false; densBad.push(`${rid}:${n0.toFixed(1)}/${n2.toFixed(1)}/${n4.toFixed(1)}`); }
+    }
+    check('notes-per-cycle strictly increasing: L0 < L2 < L4' + (densBad.length ? ' — ' + densBad.join(', ') : ''), densOk);
+  }
+
+  // ---- L2: >=1 breath cycle (zero notes) and >=1 tar-register note over 32 cycles ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const { cs, events } = data[rid][2];
+      const perCycle = new Array(32).fill(0);
+      let sawTar = false;
+      for (const e of events) {
+        const cyc = Math.floor(e.at / cs);
+        if (cyc >= 0 && cyc < 32) perCycle[cyc]++;
+        if (e.deg >= 12) sawTar = true;
+      }
+      if (!perCycle.some(c => c === 0)) { ok = false; bad.push(`${rid}:no-breath-cycle`); }
+      if (!sawTar) { ok = false; bad.push(`${rid}:no-tar-note`); }
+    }
+    check('at L2 over 32 cycles: >=1 zero-note breath cycle and >=1 note with deg>=12' + (bad.length ? ' — ' + bad.join(', ') : ''), ok);
+  }
+
+  // ---- no back-to-back repeated non-mukhda phrase signatures ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      for (let level = 0; level <= 5; level++) {
+        const events = data[rid][level].events;
+        let prevSig = null;
+        for (const notes of groupPhrases(events)) {
+          if (notes[0].src === 'mukhda') continue;
+          const sig = notes.map(n => n.deg).join(',');
+          if (prevSig !== null && sig === prevSig) { ok = false; bad.push(`${rid}L${level}:repeat`); }
+          prevSig = sig;
+        }
+      }
+    }
+    check('no two consecutive non-mukhda phrases share the same signature (mukhda exempt)' + (bad.length ? ' — ' + bad.slice(0, 8).join(', ') : ''), ok);
+  }
+
+  // ---- bank-phrase data sanity (raw RAGAS data, not generated output) ----
+  {
+    let ok = true; const bad = [];
+    for (const rid of ragaIds) {
+      const raga = ragaOf[rid];
+      const nyasPcs = raga.nyas.concat([0]).map(pc);
+      const banks = [].concat(raga.pakad, raga.chalan, [raga.mukhda]);
+      for (const phrase of banks) {
+        for (let i = 1; i < phrase.length; i++) {
+          const d = Math.abs(phrase[i][0] - phrase[i - 1][0]);
+          if (d > 7) { ok = false; bad.push(`${rid}:bank-leap:${d}`); }
+        }
+        const lastDeg = phrase[phrase.length - 1][0];
+        if (nyasPcs.indexOf(pc(lastDeg)) === -1) { ok = false; bad.push(`${rid}:bank-end-not-nyas:${lastDeg}`); }
+      }
+    }
+    check('every bank phrase (pakad/chalan/mukhda) ends on pc in nyas U {0} and has no internal leap > 7' + (bad.length ? ' — ' + bad.join(', ') : ''), ok);
+  }
+
+  // ---- determinism ----
+  {
+    const a = R(`__collectStream('yaman', 2, 1234, 4)`);
+    const b = R(`__collectStream('yaman', 2, 1234, 4)`);
+    const c = R(`__collectStream('yaman', 2, 99, 4)`);
+    check('createLeadStream: same seed -> JSON-identical note list', a === b);
+    check('createLeadStream: seed 1234 vs 99 -> different', a !== c);
+  }
+
+  // ---- placeMukhda offset formula ----
+  {
+    let ok = true;
+    for (const rid of ragaIds) {
+      const raga = ragaOf[rid];
+      const cs = R(`MUSIC.theory.talaSteps(MUSIC.theory.TALAS[MUSIC.theory.RAGAS['${rid}'].tala])`);
+      const start = R(`MUSIC.gen.placeMukhda(MUSIC.theory.RAGAS['${rid}'].mukhda, ${cs})`);
+      const sumExceptLast = raga.mukhda.slice(0, -1).reduce((a, p) => a + p[1], 0);
+      if (start + sumExceptLast !== cs) ok = false;
+    }
+    check('placeMukhda(mukhda, cycleSteps): start + sum(durs except last) === cycleSteps', ok);
+  }
+
+  // ---- stream.tail(3) ----
+  // Note: createLeadStream's scheduler always keeps ~1-2 cycles of
+  // lookahead planned ahead of the highest absStep queried (by design —
+  // "one-cycle horizon" per D-09), so state.lastCompleted (what tail()
+  // exposes) can be a phrase whose events haven't been *observed* yet via
+  // eventsAt. This checks the API contract (bounded length, valid raga
+  // degrees, and that it changes as the stream advances) rather than
+  // trying to independently reconstruct "the last phrase" by absStep,
+  // which is structurally mismatched with the lookahead design.
+  {
+    const tailRaw = R(`(() => {
+      const raga = MUSIC.theory.RAGAS.yaman;
+      const tala = MUSIC.theory.TALAS[raga.tala];
+      const cs = MUSIC.theory.talaSteps(tala);
+      const stream = MUSIC.gen.createLeadStream(raga, tala, 1234);
+      const snaps = [];
+      for (let s = 0; s < 12 * cs; s++) {
+        stream.eventsAt(s, 2);
+        if (s % cs === cs - 1) snaps.push(stream.tail(3));
+      }
+      return JSON.stringify(snaps);
+    })()`);
+    const snaps = JSON.parse(tailRaw);
+    const raga = ragaOf.yaman;
+    const lenOk = snaps.every(s => s.length <= 3);
+    const degOk = snaps.every(s => s.every(n => raga.notes.indexOf(pc(n.deg)) !== -1));
+    const varies = new Set(snaps.map(s => JSON.stringify(s.map(n => n.deg)))).size > 1;
+    check('stream.tail(3) returns <=3 valid-degree notes and changes as the stream advances', lenOk && degOk && varies);
+  }
+}
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

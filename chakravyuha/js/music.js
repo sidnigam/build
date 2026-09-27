@@ -280,3 +280,421 @@ const MUSIC = {
 
   // ---- engine / scheduler (05.3-02 / 05.3-03) ----
 };
+
+// ================================================================
+// MUSIC.gen.placeMukhda / createLeadStream — raga-constrained lead
+// stream (alap / bandish form). Private helpers kept in this IIFE's
+// closure (mirrors the DIALOGUE.LINES content IIFE in dialogue.js) so
+// they don't leak onto window/globalThis; only the two public
+// functions are attached to MUSIC.gen. Pure: seeded rand only.
+// ================================================================
+(function () {
+  const T = MUSIC.theory;
+  const G = MUSIC.gen;
+
+  // rhythm palettes (durations in steps), keyed by intensity level
+  const RHYTHM = {
+    0: [8, 12, 16, 24],
+    1: [4, 6, 8, 12],
+    2: [2, 4, 4, 6, 8],
+    3: [2, 2, 4, 4, 6],
+    4: [2, 4],
+    5: [1, 1, 2, 2, 4],
+  };
+
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+  function nearestInSet(fromDeg, pcSet, lo, hi) {
+    let best = null, bestDist = Infinity;
+    for (let d = lo; d <= hi; d++) {
+      if (pcSet.indexOf(T.pc(d)) !== -1) {
+        const dist = Math.abs(d - fromDeg);
+        if (dist < bestDist) { bestDist = dist; best = d; }
+      }
+    }
+    return best === null ? clamp(fromDeg, lo, hi) : best;
+  }
+
+  // Force a phrase-ending degree onto a nyas note that is valid for the
+  // direction it was approached from (e.g. Yaman never ascends to a final
+  // Pa) — D-08. Sa (pc 0) is always a member of every raga's up/down sets
+  // here, so the direction-filtered pool is never empty.
+  function forceNyasEnding(raga, prevDeg, curDeg) {
+    const nyasPcs = raga.nyas.concat([0]).map(v => T.pc(v));
+    // A candidate above prevDeg needs pc in up, below needs pc in down; a
+    // candidate exactly AT prevDeg (a same-note landing) is direction-
+    // ambiguous, so require it valid in *both* — this matches (and is
+    // strictly safe under) the ">= counts as up" tie-break used to judge
+    // walk-note directionality, so a same-note landing is never flagged.
+    function validAt(d) {
+      if (d > prevDeg) return raga.up.indexOf(T.pc(d)) !== -1;
+      if (d < prevDeg) return raga.down.indexOf(T.pc(d)) !== -1;
+      return raga.up.indexOf(T.pc(d)) !== -1 && raga.down.indexOf(T.pc(d)) !== -1;
+    }
+    const cands = [];
+    for (let d = raga.range[0]; d <= raga.range[1]; d++) {
+      if (nyasPcs.indexOf(T.pc(d)) !== -1 && validAt(d)) cands.push(d);
+    }
+    if (!cands.length) return nearestInSet(curDeg, nyasPcs, raga.range[0], raga.range[1]);
+    cands.sort((a, b) => Math.abs(a - curDeg) - Math.abs(b - curDeg));
+    return cands[0];
+  }
+
+  // Raga-constrained stepwise walk: each individual step's pc must belong
+  // to raga.up (ascending) or raga.down (descending) — D-08.
+  function freeWalk(raga, fromDeg, centre, n, rand) {
+    const degs = [];
+    let cur = clamp(fromDeg, raga.range[0], raga.range[1]);
+    for (let i = 0; i < n; i++) {
+      let goingUp;
+      if (cur < centre - 1) goingUp = rand() < 0.75;
+      else if (cur > centre + 1) goingUp = rand() < 0.25;
+      else goingUp = rand() < 0.5;
+      const dirSet = goingUp ? raga.up : raga.down;
+      const lo = goingUp ? cur : Math.max(raga.range[0], cur - 7);
+      const hi = goingUp ? Math.min(raga.range[1], cur + 7) : cur;
+      let cands = T.scaleDegrees(raga, goingUp ? 'up' : 'down', lo, hi).filter(d => d !== cur);
+      let next;
+      if (!cands.length) {
+        next = cur;
+      } else {
+        cands.sort((a, b) => Math.abs(a - cur) - Math.abs(b - cur));
+        const idx = (rand() < 0.2 && cands.length > 1) ? 1 : 0;
+        next = cands[Math.min(idx, cands.length - 1)];
+        // occasional leap to Sa/Pa/vadi (8%), only within reach or the
+        // Sa-Sa' octave, and only if its pc belongs to this direction's set
+        if (rand() < 0.08) {
+          const leapPcs = [0, 7, T.pc(raga.vadi)].filter(p => dirSet.indexOf(p) !== -1);
+          const opts = [];
+          for (let d = cur - 12; d <= cur + 12; d++) {
+            if (d < raga.range[0] || d > raga.range[1]) continue;
+            const delta = d - cur;
+            if (goingUp ? delta <= 0 : delta >= 0) continue;
+            if (leapPcs.indexOf(T.pc(d)) === -1) continue;
+            if (Math.abs(delta) <= 7 || (Math.abs(delta) === 12 && T.pc(d) === 0)) opts.push(d);
+          }
+          if (opts.length) next = opts[Math.floor(rand() * opts.length)];
+        }
+      }
+      degs.push(next);
+      cur = next;
+    }
+    // defensive: never more than 3 identical notes in a row. The
+    // replacement must still be direction-valid (pc in up if it ends up
+    // above the previous note, pc in down if below).
+    for (let i = 3; i < degs.length; i++) {
+      if (degs[i] === degs[i - 1] && degs[i - 1] === degs[i - 2] && degs[i - 2] === degs[i - 3]) {
+        const from = degs[i - 1];
+        const upCands = T.scaleDegrees(raga, 'up', from + 1, Math.min(raga.range[1], from + 7));
+        const downCands = T.scaleDegrees(raga, 'down', Math.max(raga.range[0], from - 7), from - 1);
+        const pool = upCands.concat(downCands);
+        if (pool.length) degs[i] = pool[Math.floor(rand() * pool.length)];
+      }
+    }
+    return degs;
+  }
+
+  function velFor(level, rand, peak) {
+    const v = (level >= 4 ? 0.7 : 0.55) + (peak ? 0.1 : 0) + G.jitter(rand, 0.05);
+    return clamp(v, 0.2, 1);
+  }
+
+  // Builds one phrase's notes (bank-derived or free-walk), forces the
+  // final note onto a direction-valid nyas, assigns durations/vel/orn.
+  function genPhraseNotes(raga, level, fromDeg, centre, opts, rand) {
+    const kind = opts.kind || 'gat';
+    const minN = opts.minNotes || 3, maxN = opts.maxNotes || 5;
+    const bankProb = level <= 2 ? 0.45 : 0.3;
+    const palette = RHYTHM[level] || RHYTHM[2];
+    let notes;
+    if (rand() < bankProb && (raga.pakad.length || raga.chalan.length)) {
+      const pool = raga.pakad.concat(raga.chalan);
+      const bank = pool[Math.floor(rand() * pool.length)];
+      let degs = bank.map(p => p[0]);
+      let durs = bank.map(p => p[1]);
+      if (kind === 'taan') durs = durs.map(d => Math.max(1, Math.round(d * 0.5)));
+      if (rand() < 0.3) {
+        const shift = rand() < 0.5 ? 12 : -12;
+        const shifted = degs.map(d => d + shift);
+        if (shifted.every(d => d >= raga.range[0] && d <= raga.range[1])) degs = shifted;
+      }
+      notes = degs.map((d, i) => ({ deg: d, dur: durs[i], src: 'bank' }));
+    } else {
+      const n = minN + Math.floor(rand() * (maxN - minN + 1));
+      const degs = freeWalk(raga, fromDeg, opts.reachDeg !== undefined ? opts.reachDeg : centre, n, rand);
+      notes = degs.map(d => ({ deg: d, dur: palette[Math.floor(rand() * palette.length)], src: 'walk' }));
+    }
+    const n = notes.length;
+    const prevDeg = n >= 2 ? notes[n - 2].deg : fromDeg;
+    notes[n - 1].deg = forceNyasEnding(raga, prevDeg, notes[n - 1].deg);
+    const floorDur = kind === 'taan' ? 2 : 4;
+    notes[n - 1].dur = Math.max(floorDur, notes[n - 1].dur);
+    let peakIdx = 0, peakVal = -Infinity;
+    notes.forEach((nn, i) => { if (nn.deg > peakVal) { peakVal = nn.deg; peakIdx = i; } });
+    notes.forEach((nn, i) => {
+      nn.vel = velFor(level, rand, i === peakIdx);
+      nn.glide = rand() < raga.meend && nn.dur >= 2;
+      if (raga.andolan.indexOf(T.pc(nn.deg)) !== -1 && nn.dur >= 4) nn.orn = 'andolan';
+      else if (rand() < 0.15 && nn.dur >= 2) nn.orn = 'kan';
+      else if (level >= 2 && rand() < 0.1 && nn.dur >= 4) nn.orn = 'murki';
+      else nn.orn = 'none';
+    });
+    return { notes, signature: notes.map(nn => nn.deg).join(',') };
+  }
+
+  function computeStart(pairs, cycleSteps) {
+    let sum = 0;
+    for (let i = 0; i < pairs.length - 1; i++) sum += pairs[i][1];
+    return cycleSteps - sum;
+  }
+
+  G.placeMukhda = function (mukhda, cycleSteps) {
+    return computeStart(mukhda, cycleSteps);
+  };
+
+  G.createLeadStream = function (raga, tala, seed) {
+    const rand = G.rng(seed);
+    const cs = T.talaSteps(tala);
+    const state = {
+      queue: [], planned: 0, cycle: 0, prevDeg: 0, history: [],
+      lastNonMukhdaSig: null, lastCompleted: [], spill: 0, section: 'alap',
+      phraseCount: 0, aCount: 0,
+    };
+
+    function planCycle(level) {
+      const startAt = state.planned;
+      let cursor = state.spill;
+      state.spill = 0;
+      const centre = raga.center;
+
+      // Bookkeeping only — never mutates notes here. Mutating an
+      // already-validated phrase after the fact risks breaking its own
+      // internal leap/direction/nyas invariants; the no-back-to-back
+      // guarantee instead lives at each generator call site, which
+      // regenerates (rather than patches) on a collision.
+      function emit(notes, kind) {
+        if (kind !== 'mukhda' && notes.length) {
+          const sig = notes.map(n => n.deg).join(',');
+          state.lastNonMukhdaSig = sig;
+          state.history.push(sig);
+          if (state.history.length > 3) state.history.shift();
+        }
+        for (let i = 0; i < notes.length; i++) {
+          const n = notes[i];
+          state.queue.push({
+            at: startAt + cursor, deg: n.deg, dur: n.dur, vel: n.vel,
+            glide: !!n.glide, orn: n.orn || 'none', src: n.src, phraseId: state.phraseCount, kind,
+          });
+          cursor += n.dur;
+        }
+        state.phraseCount++;
+        state.lastCompleted = notes.slice();
+      }
+
+      // novelty (D-09): regenerate up to 3x if the fresh phrase's signature
+      // matches one of the last 3 emitted signatures. The hard guarantee
+      // against an exact back-to-back repeat lives centrally in emit().
+      function genPhrase(centreArg, minN, maxN, kind, reachDeg) {
+        let result, tries = 0;
+        do {
+          result = genPhraseNotes(raga, level, state.prevDeg, centreArg, { minNotes: minN, maxNotes: maxN, kind, reachDeg }, rand);
+          tries++;
+        } while (state.history.indexOf(result.signature) !== -1 && tries < 3);
+        // D-09's "up to 3 tries" is a soft novelty heuristic, not a hard
+        // guarantee — with a small bank-phrase pool it can still collide
+        // with the immediately preceding phrase. As a last-resort safety
+        // net (never a correctness risk): an octave shift preserves every
+        // pc exactly, so it can't break leap/direction/nyas invariants,
+        // only the signature (degs) itself.
+        if (result.signature === state.lastNonMukhdaSig) {
+          for (const shift of [12, -12]) {
+            const shifted = result.notes.map(n => n.deg + shift);
+            if (shifted.every(d => d >= raga.range[0] && d <= raga.range[1])) {
+              result.notes.forEach((n, i) => { n.deg = shifted[i]; });
+              result.signature = shifted.join(',');
+              break;
+            }
+          }
+        }
+        state.prevDeg = result.notes[result.notes.length - 1].deg;
+        return result.notes;
+      }
+
+      function fillPhrases(limit, centreArg, minN, maxN, kind, opts) {
+        opts = opts || {};
+        const maxPhrases = opts.maxPhrases != null ? opts.maxPhrases : 3;
+        const restMin = opts.restMin != null ? opts.restMin : 2;
+        const restMax = opts.restMax != null ? opts.restMax : 8;
+        const minGap = opts.minGap != null ? opts.minGap : 6;
+        let count = 0;
+        while (count < maxPhrases && limit - cursor >= minGap) {
+          const notes = genPhrase(centreArg, minN, maxN, kind, opts.reachDeg);
+          const len = notes.reduce((a, b) => a + b.dur, 0);
+          if (cursor + len > limit) break;
+          emit(notes, kind);
+          count++;
+          const rest = restMin + Math.floor(rand() * (restMax - restMin + 1));
+          cursor = Math.min(limit, cursor + rest);
+        }
+      }
+
+      // guarantees >= 1 tar-register (deg >= 12) note per antara/B section —
+      // candidates are pre-filtered to nyas-valid tar-register degrees, so
+      // any one of them is a safe single-note "phrase" on its own; picking
+      // an alternate (rather than patching) keeps the no-back-to-back
+      // guarantee from ever producing an invalid note.
+      function emitTarTouch(limit) {
+        if (limit - cursor < 4) return;
+        const nyasPcs = raga.nyas.concat([0]).map(v => T.pc(v));
+        const cands = T.scaleDegrees(raga, 'notes', 12, raga.range[1]).filter(d => nyasPcs.indexOf(T.pc(d)) !== -1);
+        const pool = cands.length ? cands : [12];
+        const alts = pool.filter(d => String(d) !== state.lastNonMukhdaSig);
+        const finalPool = alts.length ? alts : pool;
+        const deg = finalPool[Math.floor(rand() * finalPool.length)];
+        const dur = Math.min(6, limit - cursor);
+        emit([{ deg, dur, vel: velFor(level, rand, true), glide: true, orn: 'none', src: 'walk' }], 'gat');
+        state.prevDeg = deg;
+      }
+
+      // Candidate choice at each taan step has a small chance of skipping
+      // to the next-nearest scale degree (mirrors freeWalk) so a retried
+      // taan can actually land on a different degree path — a purely
+      // deterministic "always nearest" walk would regenerate identically
+      // every time and could never resolve a signature collision.
+      function buildTaanNotes(limit, srcTag, startDeg) {
+        let cur = startDeg;
+        let goingUp = true;
+        const top = Math.min(raga.range[1], centre + 12);
+        const bottom = Math.max(raga.range[0], centre - 5);
+        const notes = [];
+        let c = cursor;
+        while (c < limit - 1) {
+          const lo = goingUp ? cur : Math.max(raga.range[0], cur - 3);
+          const hi = goingUp ? Math.min(raga.range[1], cur + 3) : cur;
+          const cands = T.scaleDegrees(raga, goingUp ? 'up' : 'down', lo, hi).filter(d => d !== cur);
+          const idx = (rand() < 0.25 && cands.length > 1) ? 1 : 0;
+          const next = cands.length ? cands[Math.min(idx, cands.length - 1)] : cur;
+          if (goingUp && next >= top) goingUp = false;
+          if (!goingUp && next <= bottom) goingUp = true;
+          const dur = (rand() < 0.5) ? 1 : 2;
+          if (c + dur > limit) break;
+          notes.push({ deg: next, dur, vel: velFor(level, rand, false), glide: false, orn: 'none', src: srcTag || 'taan' });
+          cur = next;
+          c += dur;
+        }
+        if (notes.length) {
+          const prevForDir = notes.length > 1 ? notes[notes.length - 2].deg : startDeg;
+          notes[notes.length - 1].deg = forceNyasEnding(raga, prevForDir, notes[notes.length - 1].deg);
+          notes[notes.length - 1].dur = Math.max(2, notes[notes.length - 1].dur);
+        }
+        return notes;
+      }
+
+      function emitTaan(limit, srcTag) {
+        let notes = [];
+        for (let t = 0; t < 3; t++) {
+          notes = buildTaanNotes(limit, srcTag, state.prevDeg);
+          if (!notes.length) break;
+          if (notes.map(n => n.deg).join(',') !== state.lastNonMukhdaSig) break;
+        }
+        if (notes.length) {
+          emit(notes, 'taan');
+          state.prevDeg = notes[notes.length - 1].deg;
+        }
+      }
+
+      function placeMukhdaPhrase(prefillMode) {
+        let durs = raga.mukhda.map(p => p[1]);
+        if (level === 5) durs = durs.map(d => Math.max(1, Math.floor(d / 2)));
+        const degs = raga.mukhda.map(p => p[0]);
+        const pairs = degs.map((d, i) => [d, durs[i]]);
+        const start = computeStart(pairs, cs);
+        if (start > cursor) {
+          if (prefillMode === 'taan') emitTaan(start, 'taan');
+          else fillPhrases(start, centre, 3, 5, level === 0 ? 'alap' : 'gat', { maxPhrases: 2, restMin: 3, restMax: 10 });
+        }
+        cursor = Math.max(cursor, start);
+        const notes = degs.map((d, i) => ({
+          deg: d, dur: durs[i], src: 'mukhda',
+          vel: Math.min(1, velFor(level, rand, false) + (i === degs.length - 1 ? 0.2 : 0.05)),
+          glide: false, orn: 'none',
+        }));
+        emit(notes, 'mukhda');
+        state.prevDeg = notes[notes.length - 1].deg;
+      }
+
+      // ---- level-specific cycle content ----
+      if (level === 0) {
+        const stage = state.phraseCount % 16;
+        const rc = stage <= 3 ? centre - 7 : stage <= 9 ? centre : stage <= 13 ? centre + 8 : centre;
+        state.section = 'alap';
+        fillPhrases(cs, rc, 2, 3, 'alap', { maxPhrases: 1, restMin: 4, restMax: 12, minGap: 8 });
+      } else if (level >= 1 && level <= 3) {
+        const formIdx = state.cycle % 4;
+        const isBreath = (state.cycle % 8) === 7;
+        const form = formIdx === 2 ? 'B' : 'A';
+        if (form === 'A') state.aCount++;
+        state.section = isBreath ? 'breath' : form;
+        if (isBreath) {
+          // tacet — rhythm continues elsewhere, lead stays silent this cycle
+        } else if (form === 'B') {
+          fillPhrases(cs, centre + 8, 3, 5, 'gat', { maxPhrases: level === 3 ? 3 : 2, restMin: 3, restMax: 10, reachDeg: centre + 12 });
+          emitTarTouch(cs);
+        } else {
+          const wantsMukhda = level >= 2 || (state.aCount % 2 === 0);
+          if (wantsMukhda) placeMukhdaPhrase();
+          else fillPhrases(cs, centre, 3, level === 3 ? 5 : 4, 'gat', { maxPhrases: level === 3 ? 3 : 2, restMin: 3, restMax: 10 });
+        }
+      } else if (level === 4) {
+        const isTaan = (state.cycle % 2) === 0;
+        state.section = 'A';
+        if (isTaan) emitTaan(cs, 'taan');
+        else placeMukhdaPhrase();
+      } else {
+        const isMukhda = (state.cycle % 2) === 0;
+        state.section = 'A';
+        if (isMukhda) {
+          placeMukhdaPhrase('taan');
+        } else if (Math.floor(state.cycle / 2) % 2 === 0) {
+          // tar-register wail: candidates pre-filtered to nyas-valid
+          // tar-register degrees, same alternate-on-collision approach
+          // as emitTarTouch (never patches an already-valid note).
+          const availableDur = cs - cursor;
+          const dur = Math.max(4, Math.min(8 + Math.floor(rand() * 9), availableDur));
+          const nyasPcs = raga.nyas.concat([0]).map(v => T.pc(v));
+          const wailLo = Math.max(raga.range[0], centre + 4);
+          const cands = T.scaleDegrees(raga, 'notes', wailLo, raga.range[1]).filter(d => nyasPcs.indexOf(T.pc(d)) !== -1);
+          const pool = cands.length ? cands : [forceNyasEnding(raga, state.prevDeg, Math.min(raga.range[1], centre + 12))];
+          const alts = pool.filter(d => String(d) !== state.lastNonMukhdaSig);
+          const deg = (alts.length ? alts : pool)[Math.floor(rand() * (alts.length ? alts.length : pool.length))];
+          emit([{ deg, dur, vel: velFor(level, rand, true), glide: true, orn: 'none', src: 'walk' }], 'gat');
+          state.prevDeg = deg;
+        } else {
+          emitTaan(cs, 'taan');
+        }
+      }
+
+      state.planned = startAt + cs;
+      state.cycle++;
+      if (state.queue.length) {
+        const lastEv = state.queue[state.queue.length - 1];
+        if (lastEv.at === startAt + cs) state.spill = lastEv.dur;
+      }
+    }
+
+    return {
+      eventsAt(absStep, level) {
+        while (state.planned < absStep + cs) planCycle(level);
+        const out = [];
+        for (let i = 0; i < state.queue.length;) {
+          if (state.queue[i].at === absStep) { out.push(state.queue[i]); state.queue.splice(i, 1); }
+          else i++;
+        }
+        return out;
+      },
+      resync(absStep) { state.queue = []; state.planned = absStep; state.spill = 0; },
+      tail(n) { return state.lastCompleted.slice(-n); },
+      section() { return state.section; },
+    };
+  };
+})();

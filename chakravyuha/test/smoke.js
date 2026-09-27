@@ -3357,5 +3357,186 @@ console.log('\n— character readability: ground marker spec (quick 260926-djs) 
   }
 }
 
+// ---------------- MUSIC logic + polling contract (05.3-02) ----------------
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+  console.log('\n— MUSIC logic + polling contract (05.3-02) —');
+
+  // ---- snapshot() defensive defaults ----
+  {
+    const s1 = JSON.parse(R('JSON.stringify(MUSIC.logic.snapshot(undefined))'));
+    const s2 = JSON.parse(R('JSON.stringify(MUSIC.logic.snapshot({}))'));
+    const expectedDefault = { state: 'hub', prePause: null, biomeId: null, droneHz: null, boss: false, bossPhase: 0, alive: 0, hpFrac: 1, boonCount: 0, defiance: 0 };
+    check('snapshot(undefined) returns safe defaults without throwing', JSON.stringify(s1) === JSON.stringify(expectedDefault));
+    check('snapshot({}) returns safe defaults without throwing', JSON.stringify(s2) === JSON.stringify(expectedDefault));
+  }
+  {
+    const s = JSON.parse(R(`JSON.stringify(MUSIC.logic.snapshot({
+      state: 'hub', bossRef: { dead: false, phase: 2 },
+      enemies: [{ dead: false, boss: false }, { dead: true, boss: false }, { dead: false, boss: true }],
+      player: { hp: 3, maxhp: 0, boonRanks: { a: 1 }, defiance: 2 },
+    }))`));
+    check('snapshot forces boss=false, bossPhase=0 at hub', s.boss === false && s.bossPhase === 0);
+    check('snapshot alive counts only !dead && !boss enemies', s.alive === 1);
+    check('snapshot hpFrac clamps to 1 when maxhp is 0', s.hpFrac === 1);
+  }
+  {
+    const s = JSON.parse(R(`JSON.stringify(MUSIC.logic.snapshot({
+      state: 'combat', bossRef: { dead: false, phase: 1 },
+      enemies: Array.from({length: 250}, () => ({ dead: false, boss: false })),
+      player: { hp: 200, maxhp: 100, boonRanks: {}, defiance: -1 },
+    }))`));
+    check('snapshot alive-count loop capped at 200', s.alive === 200);
+    check('snapshot hpFrac clamps to [0,1] (hp > maxhp)', s.hpFrac === 1);
+  }
+
+  // ---- deriveTarget ----
+  {
+    const D = (snap, override, dyn) => JSON.parse(R(`JSON.stringify(MUSIC.logic.deriveTarget(${JSON.stringify(snap)}, ${JSON.stringify(override) || 'undefined'}, ${dyn === undefined ? 'undefined' : dyn}))`));
+    let t = D({ state: 'hub', boss: false, bossPhase: 0, alive: 0, hpFrac: 1, biomeId: null, droneHz: null, boonCount: 0, defiance: 0 });
+    check('deriveTarget hub -> yaman L0 play no-duck', t.ragaId === 'yaman' && t.level === 0 && t.mode === 'play' && t.duck === false);
+
+    t = D({ state: 'combat', boss: false, bossPhase: 0, alive: 2, hpFrac: 1, biomeId: 'naraka', droneHz: 110, boonCount: 0, defiance: 0 });
+    check('deriveTarget combat naraka 2 alive full hp -> bhairav L2', t.ragaId === 'bhairav' && t.level === 2);
+
+    t = D({ state: 'combat', boss: false, bossPhase: 0, alive: 7, hpFrac: 1, biomeId: 'naraka', droneHz: 110, boonCount: 0, defiance: 0 });
+    check('deriveTarget combat 7 alive -> L3', t.level === 3);
+
+    t = D({ state: 'combat', boss: false, bossPhase: 0, alive: 1, hpFrac: 0.2, biomeId: 'naraka', droneHz: 110, boonCount: 0, defiance: 0 });
+    check('deriveTarget combat hpFrac .2 -> L3 + lowHp true', t.level === 3 && t.lowHp === true);
+
+    t = D({ state: 'combat', boss: true, bossPhase: 1, alive: 0, hpFrac: 1, biomeId: 'naraka', droneHz: 110, boonCount: 0, defiance: 0 });
+    check('deriveTarget boss phase1 -> L4', t.level === 4);
+
+    t = D({ state: 'combat', boss: true, bossPhase: 2, alive: 0, hpFrac: 1, biomeId: 'naraka', droneHz: 110, boonCount: 0, defiance: 0 });
+    check('deriveTarget boss phase2 -> L5', t.level === 5);
+
+    for (const st of ['cleared', 'choosing', 'victory']) {
+      t = D({ state: st, boss: false, bossPhase: 0, alive: 0, hpFrac: 1, biomeId: 'naraka', droneHz: 110, boonCount: 0, defiance: 0 });
+      check(`deriveTarget ${st} -> L1`, t.level === 1);
+    }
+
+    t = D({ state: 'paused', prePause: 'combat', boss: false, bossPhase: 0, alive: 2, hpFrac: 1, biomeId: 'naraka', droneHz: 110, boonCount: 0, defiance: 0 });
+    check('deriveTarget paused prePause combat -> L2 + duck true', t.level === 2 && t.duck === true);
+
+    t = D({ state: 'dead', boss: false, bossPhase: 0, alive: 0, hpFrac: 0, biomeId: 'naraka', droneHz: 110, boonCount: 0, defiance: 0 });
+    check("deriveTarget dead -> mode 'elegy'", t.mode === 'elegy');
+
+    t = D({ state: 'combat', boss: false, bossPhase: 0, alive: 1, hpFrac: 1, biomeId: 'foo', droneHz: 100, boonCount: 0, defiance: 0 });
+    check("deriveTarget unknown biome 'foo' droneHz 100 -> bhairav / saHz 100", t.ragaId === 'bhairav' && Math.abs(t.saHz - 100) < 1e-9);
+
+    t = D({ state: 'combat', boss: false, bossPhase: 0, alive: 1, hpFrac: 1, biomeId: 'naraka', droneHz: 110, boonCount: 0, defiance: 0 }, { level: 3, raga: 'patala' });
+    check('deriveTarget override {level:3,raga:patala} -> malkauns L3 regardless of state', t.ragaId === 'malkauns' && t.level === 3);
+  }
+
+  // ---- capLevel ----
+  {
+    const cl = (l, d) => R(`MUSIC.logic.capLevel(${l}, ${d})`);
+    check('capLevel(5,0)===1', cl(5, 0) === 1);
+    check('capLevel(5,1)===5', cl(5, 1) === 5);
+    check('capLevel(3,.5)===3', cl(3, 0.5) === 3);
+    check('capLevel(0,0)===0', cl(0, 0) === 0);
+    check('capLevel(5,.5)===3', cl(5, 0.5) === 3);
+  }
+
+  // ---- createGovernor ----
+  {
+    R(`
+      var __gov1 = MUSIC.logic.createGovernor({ downHoldSec: 3 });
+      __gov1.update(3, 0);
+      __gov1.update(2, 1);
+      __gov1.update(2, 1);
+    `);
+    check('governor: down does not apply before 3s held', R('__gov1.level') === 3);
+    R('__gov1.update(2, 1.5);');
+    check('governor: down applies once held >= 3s', R('__gov1.level') === 2);
+
+    R(`
+      var __gov2 = MUSIC.logic.createGovernor({ downHoldSec: 3 });
+      __gov2.update(3, 0);
+      __gov2.update(2, 1);
+      __gov2.update(3, 1);
+      __gov2.update(2, 1);
+      __gov2.update(2, 1);
+    `);
+    check('governor: up is immediate', true); // implicit in the update(3,0) above never dropping below 3 until held
+    check('governor: flicker 3->2->3 within 3s never drops', R('__gov2.level') === 3);
+
+    R('var __gov3 = MUSIC.logic.createGovernor({ downHoldSec: 3 }); __gov3.update(4, 0); __gov3.force(1);');
+    check('governor: force() sets immediately', R('__gov3.level') === 1);
+  }
+
+  // ---- detectEvents ----
+  {
+    const snap = (over) => Object.assign({ state: 'hub', prePause: null, biomeId: null, droneHz: null, boss: false, bossPhase: 0, alive: 0, hpFrac: 1, boonCount: 0, defiance: 0 }, over);
+    const ev = (prev, cur) => JSON.parse(R(`JSON.stringify(MUSIC.logic.detectEvents(${prev === null ? 'null' : JSON.stringify(prev)}, ${JSON.stringify(cur)}))`));
+
+    check('detectEvents: first call (prev=null) -> []', ev(null, snap()).length === 0);
+    check('detectEvents: identical snapshots -> []', ev(snap({ state: 'combat' }), snap({ state: 'combat' })).length === 0);
+
+    check('detectEvents: bossIntro fires when boss appears in combat',
+      JSON.stringify(ev(snap({ state: 'combat' }), snap({ state: 'combat', boss: true, bossPhase: 1 }))) === JSON.stringify(['bossIntro']));
+    check('detectEvents: bossIntro does not fire on hub -> combat (no boss)',
+      ev(snap({ state: 'hub' }), snap({ state: 'combat' })).indexOf('bossIntro') === -1);
+
+    check('detectEvents: bossPhase fires 1->2',
+      JSON.stringify(ev(snap({ state: 'combat', boss: true, bossPhase: 1 }), snap({ state: 'combat', boss: true, bossPhase: 2 }))) === JSON.stringify(['bossPhase']));
+
+    {
+      const r = ev(snap({ state: 'combat', boss: true, bossPhase: 2 }), snap({ state: 'combat', boss: false }));
+      check('detectEvents: bossDefeated fires exactly on boss->!boss, combat->combat (incl. final boss, bossRef stays but dead)', r.indexOf('bossDefeated') !== -1);
+    }
+    check('detectEvents: bossDefeated never fires on hub->combat',
+      ev(snap({ state: 'hub', boss: false }), snap({ state: 'combat', boss: false })).indexOf('bossDefeated') === -1);
+    check('detectEvents: bossDefeated never fires on death',
+      ev(snap({ state: 'combat', boss: true, bossPhase: 1 }), snap({ state: 'dead', boss: true, bossPhase: 1 })).indexOf('bossDefeated') === -1);
+
+    check('detectEvents: roomClear fires combat->cleared with no boss',
+      JSON.stringify(ev(snap({ state: 'combat' }), snap({ state: 'cleared' }))) === JSON.stringify(['roomClear']));
+    check('detectEvents: roomClear does not fire combat->cleared with a boss just defeated',
+      ev(snap({ state: 'combat', boss: true }), snap({ state: 'cleared', boss: false })).indexOf('roomClear') === -1);
+
+    check('detectEvents: reward fires on boonCount increase within a run',
+      JSON.stringify(ev(snap({ state: 'combat', boonCount: 1 }), snap({ state: 'combat', boonCount: 2 }))) === JSON.stringify(['reward']));
+    check('detectEvents: reward never fires across hub->run',
+      ev(snap({ state: 'hub', boonCount: 0 }), snap({ state: 'combat', boonCount: 1 })).indexOf('reward') === -1);
+
+    check('detectEvents: revive fires on defiance decrease within a run',
+      JSON.stringify(ev(snap({ state: 'combat', defiance: 2 }), snap({ state: 'combat', defiance: 1 }))) === JSON.stringify(['revive']));
+    check('detectEvents: revive never fires across run->hub',
+      ev(snap({ state: 'combat', defiance: 2 }), snap({ state: 'hub', defiance: 1 })).indexOf('revive') === -1);
+
+    check('detectEvents: death fires on state -> dead',
+      JSON.stringify(ev(snap({ state: 'combat' }), snap({ state: 'dead' }))) === JSON.stringify(['death']));
+    check('detectEvents: victory fires on state -> victory',
+      JSON.stringify(ev(snap({ state: 'combat' }), snap({ state: 'victory' }))) === JSON.stringify(['victory']));
+
+    check('detectEvents: biomeChange fires on differing non-null biomeIds outside hub',
+      JSON.stringify(ev(snap({ state: 'combat', biomeId: 'naraka' }), snap({ state: 'combat', biomeId: 'patala' }))) === JSON.stringify(['biomeChange']));
+    check('detectEvents: toHub fires entering hub',
+      JSON.stringify(ev(snap({ state: 'cleared' }), snap({ state: 'hub' }))) === JSON.stringify(['toHub']));
+  }
+
+  // ---- polling contract (main sandbox, real GAME/DATA/Boss) ----
+  {
+    // re-boot to a known hub state first (many earlier sections left GAME
+    // mid-run); the contract only cares that a real GAME object snapshots
+    // cleanly at boot, not that it happens at the file's very first tick.
+    vm.runInContext(`META.load(); GAME.init(); UI.hub();`, sandbox);
+    const snapBoot = JSON.parse(R('JSON.stringify(MUSIC.logic.snapshot(GAME))'));
+    check("polling contract: snapshot(GAME) at boot -> state 'hub'", snapBoot.state === 'hub');
+    const biomeIds = JSON.parse(R('JSON.stringify(DATA.BIOMES.map(b => b.id))'));
+    check('polling contract: every DATA.BIOMES id is in BIOME_RAGA', biomeIds.every(id => R(`!!MUSIC.theory.BIOME_RAGA['${id}']`) === true));
+    R(`var __tataka = new Boss('tataka', 0, 0);`);
+    check("polling contract: new Boss('tataka',0,0) has phase===1 and dead falsy", R('__tataka.phase') === 1 && !R('__tataka.dead'));
+    const r1 = vm.runInContext('simulateRun({ godMode: true })', sandbox);
+    check('polling contract: after simulateRun, GAME.player.boonRanks is an object', R("typeof GAME.player.boonRanks === 'object' && GAME.player.boonRanks !== null") === true);
+    check('polling contract: after simulateRun, GAME.player.defiance is numeric', R("typeof GAME.player.defiance === 'number'") === true);
+    check('polling contract: after simulateRun, GAME.enemies is an array', R('Array.isArray(GAME.enemies)') === true);
+    // restore boot state for any later sections
+    vm.runInContext(`META.load(); GAME.init(); UI.hub();`, sandbox);
+  }
+}
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

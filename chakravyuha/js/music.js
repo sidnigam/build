@@ -910,3 +910,165 @@ const MUSIC = {
     return events;
   };
 })();
+
+// ================================================================
+// MUSIC.logic — pure game-state -> target derivation (05.3-02 task 1).
+// Reads only its own arguments (a snapshot object, or a real GAME passed
+// into snapshot()); never touches ctx/window/GAME/DATA directly, so it
+// stays testable with plain object fixtures. D-02/D-05/D-06/D-07.
+// ================================================================
+(function () {
+  const T = MUSIC.theory;
+  const IN_RUN = { combat: 1, cleared: 1, choosing: 1, paused: 1 };
+
+  function resolveRagaAndSa(snap) {
+    const biomeId = snap.biomeId;
+    if (biomeId && !T.RAGAS[biomeId] && !T.BIOME_RAGA[biomeId]) {
+      // unknown biome id: fall back to a default raga (ragaFor's own
+      // fallback), but prefer the caller-supplied droneHz for saHz since
+      // the raga's own tuning has no relationship to an unknown biome.
+      const raga = T.ragaFor(biomeId);
+      const saHz = (snap.droneHz !== null && snap.droneHz !== undefined && isFinite(snap.droneHz)) ? snap.droneHz : raga.sa;
+      return { raga, saHz };
+    }
+    const raga = T.ragaFor(biomeId || 'hub');
+    return { raga, saHz: raga.sa };
+  }
+
+  function deriveForState(state, snap, dyn) {
+    const L = MUSIC.logic;
+    if (state === 'hub') {
+      return { ragaId: 'yaman', saHz: T.RAGAS.yaman.sa, level: 0, mode: 'play', duck: false, lowHp: false };
+    }
+    const { raga, saHz } = resolveRagaAndSa(snap);
+    let level, lowHp = false;
+    if (snap.boss) {
+      level = snap.bossPhase >= 2 ? 5 : 4;
+    } else if (state === 'combat') {
+      const heavy = snap.alive >= L.HEAVY_ENEMIES;
+      lowHp = snap.hpFrac < L.LOW_HP;
+      level = (heavy || lowHp) ? 3 : 2;
+    } else {
+      level = 1; // cleared / choosing / victory / anything else -> calm
+    }
+    level = L.capLevel(level, dyn);
+    return { ragaId: raga.id, saHz, level, mode: 'play', duck: false, lowHp };
+  }
+
+  MUSIC.logic = {
+    HEAVY_ENEMIES: 7,
+    LOW_HP: 0.30,
+
+    // defensive read-only snapshot of GAME (or any G-shaped object).
+    snapshot(G) {
+      const state = (G && typeof G.state === 'string') ? G.state : 'hub';
+      const prePause = (G && G.prePause) ? G.prePause : null;
+      const biome = G && G.biome;
+      const biomeId = (biome && biome.id) ? biome.id : null;
+      const droneHz = (biome && typeof biome.droneHz === 'number' && isFinite(biome.droneHz)) ? biome.droneHz : null;
+      const bossRef = G && G.bossRef;
+      const boss = !!(bossRef && !bossRef.dead) && state !== 'hub';
+      const bossPhase = boss ? (Number(bossRef.phase) || 1) : 0;
+      let alive = 0;
+      if (G && Array.isArray(G.enemies)) {
+        const list = G.enemies;
+        const n = Math.min(list.length, 200);
+        for (let i = 0; i < n; i++) {
+          const e = list[i];
+          if (e && !e.dead && !e.boss) alive++;
+        }
+      }
+      const player = G && G.player;
+      let hpFrac = 1;
+      if (player) {
+        const maxhp = Number(player.maxhp) || 0;
+        const hp = Number(player.hp) || 0;
+        hpFrac = maxhp > 0 ? hp / maxhp : 1;
+        hpFrac = Math.max(0, Math.min(1, hpFrac));
+      }
+      const boonCount = (player && player.boonRanks) ? Object.keys(player.boonRanks).length : 0;
+      const defiance = player ? (Number(player.defiance) || 0) : 0;
+      return { state, prePause, biomeId, droneHz, boss, bossPhase, alive, hpFrac, boonCount, defiance };
+    },
+
+    capLevel(level, dyn) {
+      if (level === 0) return 0;
+      const d = Math.max(0, Math.min(1, dyn === undefined ? 1 : dyn));
+      const cap = 1 + Math.round(4 * d);
+      return Math.min(level, cap);
+    },
+
+    deriveTarget(snap, override, dyn) {
+      const L = MUSIC.logic;
+      dyn = dyn === undefined ? 1 : dyn;
+      snap = snap || L.snapshot(null);
+      if (override && (override.level !== undefined || override.raga)) {
+        const raga = override.raga ? T.ragaFor(override.raga) : (snap.biomeId ? T.ragaFor(snap.biomeId) : T.RAGAS.yaman);
+        const level = override.level !== undefined ? override.level : 0;
+        return { ragaId: raga.id, saHz: raga.sa, level, mode: 'play', duck: false, lowHp: false };
+      }
+      if (snap.state === 'paused') {
+        const inner = deriveForState(snap.prePause || 'combat', snap, dyn);
+        return Object.assign({}, inner, { duck: true });
+      }
+      if (snap.state === 'dead') {
+        const { raga, saHz } = resolveRagaAndSa(snap);
+        return { ragaId: raga.id, saHz, level: 0, mode: 'elegy', duck: false, lowHp: false };
+      }
+      return deriveForState(snap.state, snap, dyn);
+    },
+
+    createGovernor(opts) {
+      const downHoldSec = (opts && opts.downHoldSec) || 3;
+      return {
+        level: 0,
+        _pendingLevel: null,
+        _pendingHeld: 0,
+        update(target, dt) {
+          dt = dt || 0;
+          if (target > this.level) {
+            this.level = target;
+            this._pendingLevel = null;
+            this._pendingHeld = 0;
+          } else if (target < this.level) {
+            if (this._pendingLevel === target) this._pendingHeld += dt;
+            else { this._pendingLevel = target; this._pendingHeld = dt; }
+            if (this._pendingHeld >= downHoldSec) {
+              this.level = target;
+              this._pendingLevel = null;
+              this._pendingHeld = 0;
+            }
+          } else {
+            this._pendingLevel = null;
+            this._pendingHeld = 0;
+          }
+          return this.level;
+        },
+        force(l) {
+          this.level = l;
+          this._pendingLevel = null;
+          this._pendingHeld = 0;
+        },
+      };
+    },
+
+    // ordered transition-event detection between two snapshot()-shaped
+    // objects. First call (prev===null) always returns [] so run start /
+    // hub return never fires a false stinger.
+    detectEvents(prev, cur) {
+      if (!prev) return [];
+      const out = [];
+      if (prev.state !== 'dead' && cur.state === 'dead') out.push('death');
+      if (prev.state !== 'victory' && cur.state === 'victory') out.push('victory');
+      if (!prev.boss && cur.boss) out.push('bossIntro');
+      if (prev.boss && cur.boss && prev.bossPhase < 2 && cur.bossPhase >= 2) out.push('bossPhase');
+      if (prev.boss && !cur.boss && IN_RUN[prev.state] && IN_RUN[cur.state]) out.push('bossDefeated');
+      if (prev.state === 'combat' && cur.state === 'cleared' && !prev.boss) out.push('roomClear');
+      if (IN_RUN[prev.state] && IN_RUN[cur.state] && cur.boonCount > prev.boonCount) out.push('reward');
+      if (IN_RUN[prev.state] && IN_RUN[cur.state] && cur.defiance < prev.defiance) out.push('revive');
+      if (prev.biomeId && cur.biomeId && prev.biomeId !== cur.biomeId && cur.state !== 'hub') out.push('biomeChange');
+      if (prev.state !== 'hub' && cur.state === 'hub') out.push('toHub');
+      return out;
+    },
+  };
+})();

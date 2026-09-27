@@ -80,7 +80,7 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 
 // ---------------- load game scripts ----------------
-const files = ['utils.js', 'settings.js', 'renderer.js', 'sprites.js', 'vfx.js', 'audio.js', 'data.js', 'meta.js', 'entities.js', 'rooms.js', 'ui.js', 'game.js', 'storage.js', 'gamepad.js', 'glyphs.js'];
+const files = ['utils.js', 'settings.js', 'renderer.js', 'sprites.js', 'vfx.js', 'audio.js', 'data.js', 'meta.js', 'entities.js', 'rooms.js', 'ui.js', 'game.js', 'storage.js', 'gamepad.js', 'glyphs.js', 'focus.js'];
 for (const f of files) {
   const src = fs.readFileSync(path.join(__dirname, '..', 'js', f), 'utf8');
   vm.runInContext(src, sandbox, { filename: f });
@@ -4283,6 +4283,92 @@ console.log('\n— GLYPHS (05.2-02) —');
       try { w = GLYPHS.drawTokens(__ctxStub, 0, 0, GLYPHS.tokensFor('attack','pad','ps')); }
       catch (e) { threw = true; }
       return !threw && typeof w === 'number' && w > 0;
+    })()`) === true);
+}
+
+// ---------------- FOCUS (05.2-02) ----------------
+console.log('\n— FOCUS (05.2-02) —');
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+
+  check('pickNext: vertical list of 4 — down/down-at-end(no wrap)/up',
+    R(`(() => {
+      const rects = [0,50,100,150].map(y => ({ x: 0, y, w: 100, h: 40 }));
+      const a = FOCUS.pickNext(rects, 0, 'down');
+      const b = FOCUS.pickNext(rects, 3, 'down');
+      const c = FOCUS.pickNext(rects, 2, 'up');
+      return a === 1 && b === 3 && c === 1;
+    })()`) === true);
+
+  check('pickNext: row of 3 cards — right/left/up(no candidate -> same index)',
+    R(`(() => {
+      const rects = [0,270,540].map(x => ({ x, y: 0, w: 250, h: 300 }));
+      const a = FOCUS.pickNext(rects, 0, 'right');
+      const b = FOCUS.pickNext(rects, 1, 'left');
+      const c = FOCUS.pickNext(rects, 0, 'up');
+      return a === 1 && b === 0 && c === 0;
+    })()`) === true);
+
+  check('pickNext: 3 cards + a centred LEAVE button below — down to button; up from button to the nearest card horizontally',
+    R(`(() => {
+      const rects = [
+        { x: 0, y: 0, w: 250, h: 300 }, { x: 270, y: 0, w: 250, h: 300 }, { x: 540, y: 0, w: 250, h: 300 },
+        { x: 400, y: 400, w: 100, h: 40 },
+      ];
+      const a = FOCUS.pickNext(rects, 1, 'down');
+      const b = FOCUS.pickNext(rects, 3, 'up');
+      return a === 3 && b === 1;
+    })()`) === true);
+
+  check('navRepeat: first fire, no re-fire before 0.35s, fires at 0.35s, then every 0.12s; null dir resets',
+    R(`(() => {
+      let rep = { dir: null, t: 0, next: 0 };
+      let r = FOCUS.navRepeat(rep, 'down', 0); rep = r.rep;
+      const firstFires = r.fire === true;
+      r = FOCUS.navRepeat(rep, 'down', 0.2); rep = r.rep;
+      const noRefireAt02 = r.fire === false;
+      r = FOCUS.navRepeat(rep, 'down', 0.15); rep = r.rep;   // total 0.35
+      const firesAt035 = r.fire === true;
+      r = FOCUS.navRepeat(rep, 'down', 0.12); rep = r.rep;
+      const firesEvery012 = r.fire === true;
+      r = FOCUS.navRepeat(rep, null, 0.01);
+      const nullResets = r.rep.dir === null && r.fire === false;
+      return firstFires && noRefireAt02 && firesAt035 && firesEvery012 && nullResets;
+    })()`) === true);
+
+  check('stepRange: clamps at both ends',
+    R(`JSON.stringify([FOCUS.stepRange(50,0,100,5,1), FOCUS.stepRange(98,0,100,5,1), FOCUS.stepRange(2,0,100,5,-1)])`)
+      === JSON.stringify([55, 100, 0]));
+
+  check('dirFromPad: D-pad wins over stick; stick dominant axis; below threshold -> null',
+    R(`(() => {
+      const a = FOCUS.dirFromPad({ buttons: { DUp: true }, left: { x: 0, y: 0 } });
+      const b = FOCUS.dirFromPad({ buttons: {}, left: { x: 0.8, y: 0.2 } });
+      const c = FOCUS.dirFromPad({ buttons: {}, left: { x: 0.3, y: 0.1 } });
+      return a === 'up' && b === 'right' && c === null;
+    })()`) === true);
+
+  check('resolveBackId: known panels map to their back button; unknown -> null',
+    R(`JSON.stringify([FOCUS.resolveBackId('settings'), FOCUS.resolveBackId('pause'), FOCUS.resolveBackId('boonpick'), FOCUS.resolveBackId('ctest')])`)
+      === JSON.stringify(['btn-settings-back', 'btn-resume', null, 'btn-ctest-back']));
+
+  check('armStep: panel change disarms; unarmed+held stays disarmed; unarmed+released arms; armed stays armed',
+    R(`(() => {
+      const a = FOCUS.armStep(true, true, false) === false;
+      const b = FOCUS.armStep(false, false, true) === false;
+      const c = FOCUS.armStep(false, false, false) === true;
+      const d = FOCUS.armStep(true, false, true) === true;
+      return a && b && c && d;
+    })()`) === true);
+
+  check('isPassthrough: ctest true, settings false', R(`FOCUS.isPassthrough('ctest') === true && FOCUS.isPassthrough('settings') === false`) === true);
+
+  check('tickPad: headless stub (no visible panels) returns false and does not throw',
+    R(`(() => {
+      let threw = false, r = null;
+      try { r = FOCUS.tickPad({ buttons: {}, left: { x: 0, y: 0 }, right: { x: 0, y: 0 }, edges: {}, actionEdges: {}, dt: 0.016 }); }
+      catch (e) { threw = true; }
+      return !threw && r === false;
     })()`) === true);
 }
 

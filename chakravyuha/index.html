@@ -241,6 +241,17 @@
   .glyph.g-square { color: #ff8fd0; }
   .glyph.g-triangle { color: #3fd6a0; }
   .glyph-sep { opacity: .5; margin: 0 .2em; }
+
+  body.pad-mode .pad-focus { outline: 2px solid var(--gold); outline-offset: 3px;
+    box-shadow: 0 0 0 4px rgba(255, 211, 77, .18), 0 0 18px rgba(255, 211, 77, .45); }
+  body.pad-mode .card.pad-focus { transform: translateY(-4px); }
+  body.pad-mode button.pad-focus { background: rgba(255, 211, 77, .12); color: var(--gold); border-color: var(--gold); }
+  body.pad-mode .pad-focus::before, body.pad-mode .pad-focus::after { background: var(--gold); opacity: 1; }
+
+  #settings { justify-content: flex-start; overflow-y: auto; padding: 36px 0; }
+
+  .pad-hint { display: none; margin-top: 18px; font-size: 13px; opacity: .8; letter-spacing: .06em; }
+  body.pad-mode .pad-hint { display: block; }
 </style>
 </head>
 <body>
@@ -387,5 +398,6 @@
 <script src="js/storage.js"></script>
 <script src="js/gamepad.js"></script>
 <script src="js/glyphs.js"></script>
+<script src="js/focus.js"></script>
 </body>
 </html>

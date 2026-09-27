@@ -398,6 +398,14 @@ const PAD = {
         }
       }
 
+      // ---- rumble event detector (D-12): boss slam (shake jump) / player death ----
+      if (typeof GAME !== 'undefined') {
+        const cur = { shake: GAME.shake, state: GAME.state, boss: !!(GAME.bossRef && !GAME.bossRef.dead) };
+        const ev = this._frame ? this.rumbleEventFromFrame(this._frame, cur) : null;
+        this._frame = cur;
+        if (ev) this.rumble(ev);
+      }
+
       // ---- menu focus gate: a visible panel consumes pad input as menu navigation ----
       if (typeof FOCUS !== 'undefined' && FOCUS.tickPad(this.state)) {
         this._prevPressed = {};
@@ -421,4 +429,103 @@ const PAD = {
     this._prevPressed = {};
     for (const name of this.BUTTON_NAMES) this._prevPressed[name] = !!m.buttons[name];
   },
+
+  // ---------------- rumble (D-12) ----------------
+  RUMBLE_PRESETS: {
+    kill:  { duration: 40,  weak: 0.25, strong: 0,   tier: 0 },
+    hit:   { duration: 60,  weak: 0.35, strong: 0.1, tier: 1 },
+    crit:  { duration: 80,  weak: 0.5,  strong: 0.2, tier: 1 },
+    hurt:  { duration: 160, weak: 0.5,  strong: 0.6, tier: 2 },
+    heavy: { duration: 320, weak: 0.8,  strong: 1.0, tier: 3 },
+    test:  { duration: 500, weak: 0.6,  strong: 0.9, tier: 3 },
+  },
+  VFX_RUMBLE: { hit: 'hit', crit: 'crit', death: 'kill', hurt: 'hurt', phase: 'heavy', bossDeath: 'heavy' },
+
+  _lastRumble: null,
+  _rumbleActive: null,
+  _frame: null,
+
+  // Pure: preset name + intensity (0..1) -> playEffect args, or null (unknown preset / intensity <= 0).
+  rumblePreset(name, intensity) {
+    const p = this.RUMBLE_PRESETS[name];
+    if (!p || !(intensity > 0)) return null;
+    const clamp01 = v => Math.max(0, Math.min(1, v));
+    return {
+      duration: p.duration,
+      weakMagnitude: clamp01(p.weak * intensity),
+      strongMagnitude: clamp01(p.strong * intensity),
+      tier: p.tier,
+    };
+  },
+
+  // Pure: may a preset of `tier` play right now given the currently active preset (or null)?
+  // A weaker/equal preset never interrupts a stronger one still playing; same-tier repeats are
+  // throttled to >= 50ms apart.
+  rumbleShouldPlay(now, active, tier) {
+    if (!active || now >= active.until) return true;
+    if (tier > active.tier) return true;
+    if (tier === active.tier) return (now - active.at) >= 50;
+    return false;
+  },
+
+  // Feature-detected single-call rumble on a live gamepad object. Never throws; a rejecting
+  // playEffect promise is swallowed.
+  _playOn(gp, eff) {
+    const act = gp && gp.vibrationActuator;
+    if (!act || typeof act.playEffect !== 'function') return false;
+    try {
+      const p = act.playEffect('dual-rumble', {
+        startDelay: 0, duration: eff.duration,
+        weakMagnitude: eff.weakMagnitude, strongMagnitude: eff.strongMagnitude,
+      });
+      if (p && typeof p.catch === 'function') p.catch(() => {});
+      return true;
+    } catch (e) { return false; }
+  },
+
+  // Gated preset playback: SETTINGS.rumble on, active device is 'pad' (or opts.force), a positive
+  // rumbleIntensity, and rumbleShouldPlay's tier/throttle rules. Returns whether gating passed.
+  rumble(name, opts = {}) {
+    if (typeof SETTINGS !== 'undefined' && SETTINGS.get('rumble') === false) return false;
+    if (!(opts.force || (typeof INPUT !== 'undefined' && INPUT.device === 'pad'))) return false;
+    const intensity = typeof SETTINGS !== 'undefined' ? SETTINGS.get('rumbleIntensity') : 0.8;
+    const eff = this.rumblePreset(name, intensity);
+    if (!eff) return false;
+    const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+    if (!this.rumbleShouldPlay(now, this._rumbleActive, eff.tier)) return false;
+    this._lastRumble = name;
+    this._rumbleActive = { tier: eff.tier, at: now, until: now + eff.duration };
+    if (typeof navigator !== 'undefined' && navigator.getGamepads) {
+      const gps = navigator.getGamepads() || [];
+      const gp = gps[this.state.index];
+      if (gp) this._playOn(gp, eff);
+    }
+    return true;
+  },
+
+  // Idempotent: wraps VFX.emit once so combat's existing emit('hit'/'crit'/'death'/'hurt'/'phase'/
+  // 'bossDeath', ...) calls also trigger the matching rumble preset, with no js/vfx.js edit.
+  installRumbleHooks() {
+    if (typeof VFX === 'undefined' || VFX.emit._padRumble) return;
+    const orig = VFX.emit;
+    const wrapped = function (name, ...rest) {
+      const r = orig.call(this, name, ...rest);
+      const preset = PAD.VFX_RUMBLE[name];
+      if (preset) { try { PAD.rumble(preset); } catch (e) { /* ignore */ } }
+      return r;
+    };
+    wrapped._padRumble = true;
+    VFX.emit = wrapped;
+  },
+
+  // Pure: boss-slam (shake jump while a boss is alive) / player-death rumble-event detector,
+  // fed one frame of { shake, state, boss } at a time from poll().
+  rumbleEventFromFrame(prev, cur) {
+    if (!prev || !cur) return null;
+    if (cur.shake - prev.shake >= 10 && cur.boss) return 'heavy';
+    if (prev.state !== 'dead' && cur.state === 'dead') return 'heavy';
+    return null;
+  },
 };
+
+PAD.installRumbleHooks();   // VFX loads before gamepad.js (index.html + test/smoke.js)

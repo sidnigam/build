@@ -4445,5 +4445,131 @@ globalThis.__wireResults = {};
   check('poll(): GLYPHS.refresh() runs every frame; poll() never throws once navigator is removed', wr.refreshRan && wr.noThrowNoNav);
 }
 
+// ---------------- PAD rumble (05.2-03) ----------------
+console.log('\n— PAD rumble (05.2-03) —');
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+
+  check('rumblePreset: hurt@1 exact base magnitudes/tier; hurt@0.5 halves magnitudes; hurt@0 and unknown preset -> null; magnitudes clamp to [0,1]',
+    R(`(() => {
+      const a = PAD.rumblePreset('hurt', 1);
+      const b = PAD.rumblePreset('hurt', 0.5);
+      const c = PAD.rumblePreset('hurt', 0);
+      const d = PAD.rumblePreset('nope', 1);
+      const e = PAD.rumblePreset('heavy', 2);
+      return a.duration === 160 && a.weakMagnitude === 0.5 && a.strongMagnitude === 0.6 && a.tier === 2
+        && Math.abs(b.weakMagnitude - 0.25) < 1e-9 && Math.abs(b.strongMagnitude - 0.3) < 1e-9
+        && c === null && d === null
+        && e.weakMagnitude === 1 && e.strongMagnitude === 1;
+    })()`) === true);
+
+  check('rumbleShouldPlay: null active -> true; weaker/equal tier still active -> false; expired -> true; same-tier throttled to >=50ms; higher tier always true',
+    R(`(() => {
+      const a = PAD.rumbleShouldPlay(1000, null, 1) === true;
+      const b = PAD.rumbleShouldPlay(1100, { tier: 3, until: 1200, at: 1000 }, 1) === false;
+      const c = PAD.rumbleShouldPlay(1300, { tier: 3, until: 1200, at: 1000 }, 1) === true;
+      const d = PAD.rumbleShouldPlay(1030, { tier: 1, until: 1060, at: 1000 }, 1) === false;
+      const e = PAD.rumbleShouldPlay(1060, { tier: 1, until: 1060, at: 1000 }, 1) === true;
+      const f = PAD.rumbleShouldPlay(1010, { tier: 1, until: 5000, at: 1000 }, 3) === true;
+      return a && b && c && d && e && f;
+    })()`) === true);
+
+  check('_playOn: records exact dual-rumble args and returns true; false (no throw) when vibrationActuator/playEffect missing or playEffect throws; rejecting promise is caught',
+    R(`(() => {
+      let recorded = null;
+      const gp1 = { vibrationActuator: { playEffect: (type, args) => { recorded = [type, args]; return { catch() {} }; } } };
+      const r1 = PAD._playOn(gp1, { duration: 60, weakMagnitude: 0.3, strongMagnitude: 0.1 });
+      const okRecorded = recorded[0] === 'dual-rumble' && recorded[1].startDelay === 0 && recorded[1].duration === 60
+        && recorded[1].weakMagnitude === 0.3 && recorded[1].strongMagnitude === 0.1;
+
+      const r2 = PAD._playOn({}, { duration: 1, weakMagnitude: 0, strongMagnitude: 0 });
+      const r3 = PAD._playOn({ vibrationActuator: {} }, { duration: 1, weakMagnitude: 0, strongMagnitude: 0 });
+      const r4 = PAD._playOn({ vibrationActuator: { playEffect: () => { throw new Error('x'); } } }, { duration: 1, weakMagnitude: 0, strongMagnitude: 0 });
+
+      let rejected = false;
+      const gpReject = { vibrationActuator: { playEffect: () => ({ catch(fn) { rejected = true; fn(); } }) } };
+      const r5 = PAD._playOn(gpReject, { duration: 1, weakMagnitude: 0, strongMagnitude: 0 });
+
+      return r1 === true && okRecorded && r2 === false && r3 === false && r4 === false && r5 === true && rejected;
+    })()`) === true);
+
+  check('rumbleEventFromFrame: shake jump >=10 while boss alive -> heavy; same jump without boss -> null; combat->dead -> heavy; no change -> null',
+    R(`(() => {
+      const a = PAD.rumbleEventFromFrame({ shake: 2, state: 'combat', boss: true }, { shake: 12, state: 'combat', boss: true });
+      const b = PAD.rumbleEventFromFrame({ shake: 2, state: 'combat', boss: false }, { shake: 12, state: 'combat', boss: false });
+      const c = PAD.rumbleEventFromFrame({ shake: 0, state: 'combat', boss: false }, { shake: 0, state: 'dead', boss: false });
+      const d = PAD.rumbleEventFromFrame({ shake: 5, state: 'combat', boss: true }, { shake: 5, state: 'combat', boss: true });
+      return a === 'heavy' && b === null && c === 'heavy' && d === null;
+    })()`) === true);
+
+  vm.runInContext(`
+globalThis.__rumbleResults = {};
+(function() {
+  const R = __rumbleResults;
+  const savedDevice = INPUT.device;
+  const savedRumble = SETTINGS.get('rumble'), savedIntensity = SETTINGS.get('rumbleIntensity');
+  const savedLast = PAD._lastRumble, savedActive = PAD._rumbleActive;
+  const savedEmit = VFX.emit;
+
+  try {
+    INPUT.device = 'pad';
+    SETTINGS.set('rumble', true);
+    SETTINGS.set('rumbleIntensity', 1);
+
+    // 1. VFX.emit('hurt', ...) triggers the matching rumble preset AND the original preset still runs
+    PAD._lastRumble = null; PAD._rumbleActive = null;
+    const activeBefore = VFX.activeCount;
+    VFX.emit('hurt', 0, 0, 0);
+    R.hurtRumbled = PAD._lastRumble === 'hurt';
+    R.origVfxStillRan = VFX.activeCount > activeBefore;
+
+    // 2. death -> kill preset; phase -> heavy preset; an unknown emit name (dash) leaves rumble unchanged
+    PAD._rumbleActive = null;
+    VFX.emit('death', 0, 0, 0, '#fff');
+    R.deathToKill = PAD._lastRumble === 'kill';
+    PAD._rumbleActive = null;
+    VFX.emit('phase', 0, 0, 0, '#fff');
+    R.phaseToHeavy = PAD._lastRumble === 'heavy';
+    PAD._lastRumble = '__sentinel__'; PAD._rumbleActive = null;
+    VFX.emit('dash', 0, 0, 0);
+    R.unknownNameUnchanged = PAD._lastRumble === '__sentinel__';
+
+    // 3. gating: SETTINGS.rumble off blocks; kbm device blocks; opts.force bypasses the device check
+    PAD._lastRumble = null; PAD._rumbleActive = null;
+    SETTINGS.set('rumble', false);
+    VFX.emit('hurt', 0, 0, 0);
+    R.rumbleOffBlocks = PAD._lastRumble === null;
+    SETTINGS.set('rumble', true);
+
+    PAD._lastRumble = null; PAD._rumbleActive = null;
+    INPUT.device = 'kbm';
+    VFX.emit('hurt', 0, 0, 0);
+    R.kbmDeviceBlocks = PAD._lastRumble === null;
+
+    PAD._rumbleActive = null;
+    const forced = PAD.rumble('test', { force: true });
+    R.forcePasses = forced === true && PAD._lastRumble === 'test';
+
+    // 4. installRumbleHooks() is idempotent — calling it again never re-wraps VFX.emit
+    const before = VFX.emit;
+    PAD.installRumbleHooks();
+    PAD.installRumbleHooks();
+    R.hooksIdempotent = VFX.emit === before;
+  } finally {
+    VFX.emit = savedEmit;
+    INPUT.device = savedDevice;
+    SETTINGS.set('rumble', savedRumble);
+    SETTINGS.set('rumbleIntensity', savedIntensity);
+    PAD._lastRumble = savedLast; PAD._rumbleActive = savedActive;
+  }
+})();
+  `, sandbox);
+  const rr = vm.runInContext('__rumbleResults', sandbox);
+  check('VFX.emit("hurt", ...) triggers PAD.rumble("hurt") via installRumbleHooks AND the original VFX preset still runs', rr.hurtRumbled && rr.origVfxStillRan);
+  check('VFX_RUMBLE mapping: death -> kill, phase -> heavy; an unmapped emit name (dash) leaves PAD._lastRumble unchanged', rr.deathToKill && rr.phaseToHeavy && rr.unknownNameUnchanged);
+  check('rumble gating: SETTINGS.rumble=false blocks; INPUT.device="kbm" blocks; opts.force bypasses the device check', rr.rumbleOffBlocks && rr.kbmDeviceBlocks && rr.forcePasses);
+  check('installRumbleHooks() called twice wraps VFX.emit only once', rr.hooksIdempotent);
+}
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

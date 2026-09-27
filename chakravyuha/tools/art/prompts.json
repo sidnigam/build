@@ -142,9 +142,9 @@
     },
     "agni": {
       "kind": "god",
-      "subject": "Agni the Vedic god of fire, radiant red-gold skin, hair and crown made of rising flames, calm wise bearded face, sacred thread, holding a golden ladle (sruva) or a flaming torch, warm inner glow, two arms",
+      "subject": "half-body bust portrait cropped at the waist of Agni the Vedic god of fire, radiant red-gold skin, no crown, no headdress, no hat, no turban, no jewelry on his head at all, bare orange and red flames burn directly on top of his bare head in place of a crown, the flames look like a burning campfire sitting on his head, calm wise bearded elderly masculine face looking directly at the viewer, grey beard and moustache, warm inner glow, a simple white sacred thread (yajnopavita) crossing his bare chest, holding a single golden ladle (sruva) in one raised hand, exactly two arms, standing upright, plain flat solid pale grey background only, empty background, no other objects, no vignette, no smoke swirls",
       "palette": "flame red, ember orange and gold",
-      "negative_extra": "demon, fire demon, ifrit, balrog, burning man, charred skin, horns, ram horns, skeleton, blue skin, four arms, Vishnu, two heads",
+      "negative_extra": "demon, fire demon, ifrit, balrog, burning man, charred skin, horns, ram horns, skeleton, blue skin, four arms, Vishnu, two heads, jeweled crown, gold headdress without flames, ornate crown jewelry, halo, circular halo, radiating disc, aureole, arch, architectural arch, textured background, patterned background, throne, seated, feminine, woman, watermark, signature, stamp, text, logo, dark cone hat, conical headdress, turban, jeweled crown, gold headdress without flames, two torches, second torch, halo, circular halo, radiating disc, aureole, throne, seated, tile pattern, colorful steps, pedestal, crown, headdress, hat, turban, head jewelry, tiara, diadem, vignette, smoke swirl border, decorative border pattern, mace, scepter, staff, trident",
       "base_seed": 71100,
       "out_w": 600,
       "out_h": 768

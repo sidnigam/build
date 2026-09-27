@@ -2362,5 +2362,308 @@ console.log('\n— character readability: ground marker spec (quick 260926-djs) 
     })()`) === true);
 }
 
+// ---------------- god dialogue engine (Phase 05.5) ----------------
+{
+  if (vm.runInContext("typeof DIALOGUE", sandbox) === 'undefined') {
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js', 'dialogue.js'), 'utf8'), sandbox, { filename: 'dialogue.js' });
+  }
+  const R = (src) => vm.runInContext(src, sandbox);
+
+  // snapshot so later blocks (and the content block) see a clean state
+  const __snapDialogue = R('JSON.stringify(META.dialogue)');
+  const __snapRuns = R('META.runs');
+
+  R(`
+    var __synth = [
+      { id: 'h_first', god: 'hanuman', when: { first: true }, once: true, text: 'First hanuman line' },
+      { id: 'h_gen1', god: 'hanuman', text: 'Generic hanuman one' },
+      { id: 'h_gen2', god: 'hanuman', text: 'Generic hanuman two' },
+      { id: 'h_lowhp', god: 'hanuman', when: { lowHp: true }, text: 'Low hp hanuman' },
+      { id: 'h_holds', god: 'hanuman', when: { holds: 'vayu' }, text: 'Holds vayu' },
+      { id: 'v_first', god: 'vayu', when: { first: true }, once: true, text: 'First vayu line' },
+      { id: 'v_gen1', god: 'vayu', text: 'Generic vayu one' },
+      { id: 'v_gen2', god: 'vayu', text: 'Generic vayu two' },
+      { id: 'v_lowhp', god: 'vayu', when: { lowHp: true }, text: 'Low hp vayu' },
+      { id: 'v_holds', god: 'vayu', when: { holds: 'hanuman' }, text: 'Holds hanuman' },
+      { id: 'pav_duo', duo: 'duo_pavanaputra', beats: [ { s: 'hanuman', t: 'Father!' }, { s: 'vayu', t: 'Son!' } ] },
+    ];
+    var __blankCtx = { god: null, first: false, meetings: 1, firstThisRun: false, hpFrac: 1, biome: null,
+      justDefeated: null, holds: {}, duo: null, lastDeathBiome: null, lastDeathBoss: null,
+      lastRunWon: false, deaths: 0, wins: 0, weapon: 'khanda' };
+  `);
+
+  // --- validate(): bad synthetic list surfaces every listed problem ---
+  const __badCount = R(`(() => {
+    var bad = [
+      { id: 'dup', god: 'hanuman', text: 'ok' },
+      { id: 'dup', god: 'hanuman', text: 'ok again' },
+      { id: 'badgod', god: 'not_a_god', text: 'ok' },
+      { id: 'badwhen', god: 'hanuman', when: { notreal: true }, text: 'ok' },
+      { id: 'selfholds', god: 'hanuman', when: { holds: 'hanuman' }, text: 'ok' },
+      { id: 'toolong', god: 'hanuman', text: 'x'.repeat(241) },
+      { id: 'anglebrack', god: 'hanuman', text: 'bad <script>' },
+      { id: 'duobad', duo: 'duo_pavanaputra', beats: [ { s: 'krishna', t: 'not in duo' }, { s: 'hanuman', t: 'ok' } ] },
+      { id: 'badboss', god: 'hanuman', when: { justDefeated: 'not_a_boss' }, text: 'ok' },
+    ];
+    return DIALOGUE.validate(bad).length;
+  })()`);
+  check('DIALOGUE.validate() reports every synthetic problem (>= 8)', __badCount >= 8);
+  check('DIALOGUE.validate() on a well-formed synthetic list returns []', R('DIALOGUE.validate(__synth).length') === 0);
+
+  // --- matches() ---
+  const __matchesResult = R(`JSON.stringify([
+    DIALOGUE.matches({ first: true }, { first: true }),
+    DIALOGUE.matches({ first: true }, { first: false }),
+    DIALOGUE.matches({ lowHp: true }, { hpFrac: 0.2 }),
+    DIALOGUE.matches({ lowHp: true }, { hpFrac: 0.8 }),
+    DIALOGUE.matches({ holds: 'vayu' }, { holds: { vayu: 1 } }),
+    DIALOGUE.matches({ holds: 'vayu' }, { holds: {} }),
+    DIALOGUE.matches({ justDefeated: '*' }, { justDefeated: 'tataka' }),
+    DIALOGUE.matches({ justDefeated: '*' }, { justDefeated: null }),
+    DIALOGUE.matches({ lastDeathBoss: 'yama' }, { lastDeathBoss: 'yama' }),
+    DIALOGUE.matches({ lastDeathBoss: 'yama' }, { lastDeathBoss: 'kumbhakarna' }),
+    DIALOGUE.matches({ notarealkey: true }, {}),
+  ])`);
+  check('DIALOGUE.matches() evaluates every KNOWN_WHEN case correctly',
+    __matchesResult === JSON.stringify([true, false, true, false, true, false, true, false, true, false, false]));
+
+  // --- select(): first, priority (duo > lowHp), lowHp forced by rand=0, once never repeats ---
+  const __selectResult = R(`(() => {
+    var mem = { met: {}, seen: {}, last: {}, lastId: null, runMet: { run: 0, gods: [] }, lastRun: null };
+    var scratchMeta = { runs: 0, save() {} };
+
+    var firstCtx = Object.assign({}, __blankCtx, { god: 'hanuman', first: true, meetings: 0, firstThisRun: true });
+    var firstLine = DIALOGUE.select('hanuman', firstCtx, mem, Math.random, __synth);
+    var r1 = firstLine && firstLine.id === 'h_first';
+    DIALOGUE.record(firstLine, 'hanuman', mem, scratchMeta);
+
+    var r2 = true;
+    var laterCtx = Object.assign({}, __blankCtx, { god: 'hanuman', first: false, meetings: 1 });
+    for (var i = 0; i < 20; i++) {
+      var l = DIALOGUE.select('hanuman', laterCtx, mem, Math.random, __synth);
+      if (l.id === 'h_first') { r2 = false; break; }
+      DIALOGUE.record(l, 'hanuman', mem, scratchMeta);
+    }
+
+    var duoCtx = Object.assign({}, __blankCtx, { god: 'hanuman', first: false, meetings: 1,
+      hpFrac: 0.2, duo: 'duo_pavanaputra' });
+    var duoLine = DIALOGUE.select('hanuman', duoCtx, mem, Math.random, __synth);
+    var r3 = duoLine && duoLine.id === 'pav_duo';
+
+    var lowCtx = Object.assign({}, __blankCtx, { god: 'hanuman', first: false, meetings: 1, hpFrac: 0.2, duo: null });
+    var lowLine = DIALOGUE.select('hanuman', lowCtx, mem, () => 0, __synth);
+    var r4 = lowLine && lowLine.id === 'h_lowhp';
+
+    return JSON.stringify([r1, r2, r3, r4]);
+  })()`);
+  check('DIALOGUE.select(): first ctx picks the once/first line; it never repeats; duo (pri 90) beats lowHp (pri 50); rand=0 forces the lowHp tier',
+    __selectResult === JSON.stringify([true, true, true, true]));
+
+  // --- no back-to-back repeats + unseen-line preference, seeded LCG, 300 iterations per god ---
+  const __simResult = R(`(() => {
+    var s = 12345;
+    var rand = () => ((s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+    var mem = { met: {}, seen: {}, last: {}, lastId: null, runMet: { run: 0, gods: [] }, lastRun: null };
+    var scratchMeta = { runs: 0, save() {} };
+    var noBackToBack = true;
+    var seenGeneric = {};
+    for (const god of ['hanuman', 'vayu']) {
+      var other = god === 'hanuman' ? 'vayu' : 'hanuman';
+      var prev = null;
+      for (var i = 0; i < 300; i++) {
+        var ctx = Object.assign({}, __blankCtx, {
+          god, first: (mem.met[god] | 0) === 0, meetings: mem.met[god] | 0,
+          hpFrac: rand() < 0.3 ? 0.2 : 0.9,
+          holds: rand() < 0.5 ? { [other]: 1 } : {},
+        });
+        var line = DIALOGUE.select(god, ctx, mem, rand, __synth);
+        if (!line) { noBackToBack = false; break; }
+        if (prev !== null && line.id === prev) { noBackToBack = false; break; }
+        if (!line.when || Object.keys(line.when).length === 0) seenGeneric[line.id] = true;
+        DIALOGUE.record(line, god, mem, scratchMeta);
+        prev = line.id;
+      }
+    }
+    var coverage = ['h_gen1', 'h_gen2', 'v_gen1', 'v_gen2'].every(id => seenGeneric[id]);
+    return JSON.stringify([noBackToBack, coverage]);
+  })()`);
+  check('DIALOGUE.select(): no back-to-back repeats over 300 iterations per god, and every generic line gets chosen',
+    __simResult === JSON.stringify([true, true]));
+
+  // --- persistence: record -> save -> corrupt -> load restores; wipe resets ---
+  const __persistResult = R(`(() => {
+    var m = DIALOGUE.mem(META);
+    var ctx = Object.assign({}, __blankCtx, { god: 'hanuman', first: true, meetings: 0, firstThisRun: true });
+    var line = DIALOGUE.select('hanuman', ctx, m, Math.random, __synth);
+    DIALOGUE.record(line, 'hanuman', m, META);
+    META.save();
+    META.dialogue = null;
+    META.load();
+    var r1 = META.dialogue && META.dialogue.met && META.dialogue.met.hanuman === 1;
+    META.wipe();
+    var r2 = JSON.stringify(META.dialogue) === '{}' || (DIALOGUE.mem(META).met && Object.keys(DIALOGUE.mem(META).met).length === 0);
+    return JSON.stringify([r1, r2]);
+  })()`);
+  check('META.dialogue survives save/load and is reset by wipe',
+    __persistResult === JSON.stringify([true, true]));
+
+  // --- buildContext(): justDefeated, lastDeathBoss (fresh only), holds counts both duo gods ---
+  const __ctxResult = R(`(() => {
+    var stubMeta = { runs: 5, deaths: 3, wins: 1, lastWeapon: 'gandiva', dialogue: null, save() {} };
+    var m = DIALOGUE.mem(stubMeta);
+    m.lastRun = { result: 'death', run: 4, biome: 'ranabhoomi', boss: 'kumbhakarna' };
+    var stubPlayer = { hp: 50, maxhp: 100, weapon: { id: 'khanda' },
+      allBoons() { return [ { def: { id: 'duo_pavanaputra', god: 'hanuman', gods: ['hanuman', 'vayu'], duo: true }, rarity: 1 } ]; } };
+    var stubGame = { player: stubPlayer, biome: { id: 'patala' }, biomeIdx: 2, roomIdx: 1 };
+
+    var ctx1 = DIALOGUE.buildContext('hanuman', { game: stubGame, meta: stubMeta });
+    var r1 = ctx1.justDefeated === 'ahiravana';
+    var r2 = ctx1.lastDeathBoss === 'kumbhakarna';
+    var r3 = ctx1.holds.hanuman === 1 && ctx1.holds.vayu === 1;
+
+    DIALOGUE.record({ id: 'stub_line', god: 'hanuman' }, 'hanuman', m, stubMeta);
+    var ctx2 = DIALOGUE.buildContext('hanuman', { game: stubGame, meta: stubMeta });
+    var r4 = ctx2.lastDeathBoss === null;
+
+    return JSON.stringify([r1, r2, r3, r4]);
+  })()`);
+  check('DIALOGUE.buildContext(): justDefeated from biome/room, lastDeathBoss fresh-only, holds counts both duo gods',
+    __ctxResult === JSON.stringify([true, true, true, true]));
+
+  // restore clean state for later blocks
+  R(`META.dialogue = ${__snapDialogue}; META.runs = ${__snapRuns}; META.save();`);
+}
+
+// ---------------- god dialogue content (Phase 05.5) ----------------
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+  const __snapDialogue2 = R('JSON.stringify(META.dialogue)');
+  const __snapRuns2 = R('META.runs');
+
+  const __valErrs = R('DIALOGUE.validate()');
+  check('DIALOGUE content validate() returns []' + (__valErrs.length ? ' — first 3: ' + JSON.stringify(__valErrs.slice(0, 3)) : ''),
+    __valErrs.length === 0);
+
+  const __covErrs = R('DIALOGUE.coverage()');
+  check('DIALOGUE content coverage() returns []' + (__covErrs.length ? ' — first 3: ' + JSON.stringify(__covErrs.slice(0, 3)) : ''),
+    __covErrs.length === 0);
+
+  const __perGodCounts = R("Object.keys(DATA.GODS).map(g => DIALOGUE.LINES.filter(l => l.god === g && !l.duo).length)");
+  check('every god has >= 10 lines (' + JSON.stringify(__perGodCounts) + ')', __perGodCounts.every(n => n >= 10));
+
+  // fresh-memory first ctx always selects that god's once/first line
+  const __firstOk = R(`(() => {
+    var ok = true;
+    for (const god of Object.keys(DATA.GODS)) {
+      var mem = { met: {}, seen: {}, last: {}, lastId: null, runMet: { run: 0, gods: [] }, lastRun: null };
+      var ctx = { god, first: true, meetings: 0, firstThisRun: true, hpFrac: 1, biome: null,
+        justDefeated: null, holds: {}, duo: null, lastDeathBiome: null, lastDeathBoss: null,
+        lastRunWon: false, deaths: 0, wins: 0, weapon: 'khanda' };
+      var line = DIALOGUE.select(god, ctx, mem, Math.random);
+      if (!line || !line.once || !line.when || !line.when.first || line.god !== god) { ok = false; break; }
+    }
+    return ok;
+  })()`);
+  check("every god's fresh-memory first ctx selects its once/first line", __firstOk === true);
+
+  // duo ctx (meetings 1, not-first) selects a co-voiced line of that duo for each of its gods;
+  // a first (pri 100) meeting still outranks a duo (pri 90) offer
+  const __duoOk = R(`(() => {
+    var ok = true;
+    for (const duo of DATA.DUO_BOONS) {
+      for (const god of duo.gods) {
+        var mem = { met: {}, seen: {}, last: {}, lastId: null, runMet: { run: 0, gods: [] }, lastRun: null };
+        var ctx = { god, first: false, meetings: 1, firstThisRun: false, hpFrac: 1, biome: null,
+          justDefeated: null, holds: {}, duo: duo.id, lastDeathBiome: null, lastDeathBoss: null,
+          lastRunWon: false, deaths: 0, wins: 0, weapon: 'khanda' };
+        var line = DIALOGUE.select(god, ctx, mem, Math.random);
+        if (!line || line.duo !== duo.id) { ok = false; break; }
+      }
+    }
+    return ok;
+  })()`);
+  check('every duo: a duo ctx (first:false) selects a co-voiced line of that duo for both of its gods', __duoOk === true);
+
+  // 60-meeting simulation per god via real buildContext/select/record: no back-to-back repeats,
+  // and >= 60% of that god's non-once lines get chosen
+  const __simRaw = R(`(() => {
+    var s = 777;
+    var rand = () => ((s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+    var weapons = ['khanda', 'gandiva', 'gada'];
+    var biomeIds = DATA.BIOMES.map(b => b.id);
+    var bossIds = Object.keys(DATA.BOSSES);
+    var godIds = Object.keys(DATA.GODS);
+    var noBackToBack = true;
+    var coverageDetail = [];
+
+    for (const god of godIds) {
+      var meta = { runs: 1, deaths: 5, wins: 1, lastWeapon: 'khanda', dialogue: null, save() {} };
+      DIALOGUE.mem(meta);
+      var player = { hp: 100, maxhp: 100, weapon: { id: 'khanda' }, _boons: [],
+        allBoons() { return this._boons; } };
+      var game = { player, biome: DATA.BIOMES[0], biomeIdx: 0, roomIdx: 1 };
+      var prev = null;
+
+      for (var i = 0; i < 60 && noBackToBack; i++) {
+        if (i > 0 && i % 3 === 0) {
+          var prevRun = meta.runs;
+          var died = rand() < 0.6;
+          meta.dialogue.lastRun = died
+            ? { result: 'death', run: prevRun, biome: biomeIds[Math.floor(rand() * biomeIds.length)],
+                boss: bossIds[Math.floor(rand() * bossIds.length)] }
+            : { result: 'victory', run: prevRun, biome: null, boss: null };
+          meta.runs++;
+        }
+        player.hp = rand() < 0.5 ? 20 : 90;
+        var biomeIdx = Math.floor(rand() * DATA.BIOMES.length);
+        game.biome = DATA.BIOMES[biomeIdx];
+        game.biomeIdx = biomeIdx;
+        game.roomIdx = rand() < 0.5 ? 1 : 3;
+        player.weapon = { id: weapons[i % weapons.length] };
+        var others = godIds.filter(gg => gg !== god);
+        player._boons = others.filter(() => rand() < 0.4).map(gg => ({ def: { id: gg + '_x', god: gg } }));
+
+        var ctx = DIALOGUE.buildContext(god, { game, meta });
+        var line = DIALOGUE.select(god, ctx, meta.dialogue, rand);
+        if (!line) { noBackToBack = false; break; }
+        if (prev !== null && line.id === prev) { noBackToBack = false; break; }
+        DIALOGUE.record(line, god, meta.dialogue, meta);
+        prev = line.id;
+      }
+
+      var nonOnce = DIALOGUE.LINES.filter(l => l.god === god && !l.duo && !l.once).map(l => l.id);
+      var seenCount = nonOnce.filter(id => meta.dialogue.seen[id]).length;
+      var ratio = nonOnce.length ? seenCount / nonOnce.length : 1;
+      coverageDetail.push([god, Math.round(ratio * 100) / 100]);
+    }
+
+    return JSON.stringify({ noBackToBack, coverageDetail });
+  })()`);
+  const __sim = JSON.parse(__simRaw);
+  const __coverageOk = __sim.coverageDetail.every(([, ratio]) => ratio >= 0.6);
+  check('content sim: 60 meetings/god via real buildContext/select/record, no back-to-back repeats', __sim.noBackToBack === true);
+  check('content sim: >= 60% of each god\'s non-once lines get chosen over 60 meetings' + (!__coverageOk ? ' — ' + JSON.stringify(__sim.coverageDetail) : ''),
+    __coverageOk === true);
+
+  // reverence lint (plain Node regex over the JSON-serialized content; avoids nested-escape pitfalls)
+  const __allLines = JSON.parse(R('JSON.stringify(DIALOGUE.LINES)'));
+  const forbidden = /\b(kill you|destroy you|foolish boy|pathetic|worthless|hate you|demon god)\b/i;
+  const yamaMention = /\b(Yama|Dharmaraja)\b/;
+  const yamaBad = /Yama[^.]*\b(monster|demon|evil)\b/i;
+  const lintBad = [];
+  for (const l of __allLines) {
+    const texts = l.beats ? l.beats.map(b => b.t) : [l.text, l.reply].filter(Boolean);
+    for (const t of texts) {
+      if (forbidden.test(t)) lintBad.push(l.id + ': forbidden phrase');
+      if (yamaMention.test(t) && yamaBad.test(t)) lintBad.push(l.id + ': disrespects Yama');
+    }
+  }
+  check('reverence lint: no forbidden phrases, no contemptuous Yama framing' + (lintBad.length ? ' — ' + lintBad.join(', ') : ''),
+    lintBad.length === 0);
+
+  // restore clean state
+  R(`META.dialogue = ${__snapDialogue2}; META.runs = ${__snapRuns2}; META.save();`);
+}
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

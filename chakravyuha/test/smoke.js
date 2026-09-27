@@ -4839,5 +4839,72 @@ globalThis.__ctestResults = {};
   check('UI.closeControllerTest() hides #ctest', cr.hidden);
 }
 
+// ---------------- Phase 05.2 end-to-end (05.2-04) ----------------
+console.log('\n— Phase 05.2 end-to-end (05.2-04) —');
+vm.runInContext(`
+globalThis.__e2eResults = {};
+(function() {
+  const R = __e2eResults;
+  const savedDevice = INPUT.device;
+  const savedState = GAME.state, savedPrePause = GAME.prePause;
+
+  try {
+    UI.hub();
+
+    const gp = {
+      id: 'DualSense Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 0ce6)',
+      mapping: 'standard', connected: true, axes: [0, 0, 0, 0],
+      buttons: Array.from({ length: 18 }, () => ({ pressed: false, value: 0 })),
+    };
+    globalThis.navigator = { getGamepads: () => [gp] };
+
+    // idle poll to establish the pad as active
+    PAD.poll();
+
+    // (a) family + glyph tokens
+    R.familyPs = PAD.state.family === 'ps';
+    const attackLabels = GLYPHS.tokensFor('attack', 'pad', 'ps').map(t => t.label);
+    R.attackGlyphs = JSON.stringify(attackLabels) === JSON.stringify(['R2', '✕']);
+
+    // (b) astra cast: Y (index 3) fires PAD.player.tryCast() with no menu panel visible
+    GAME.startRun();
+    GAME.state = 'combat';
+    GAME.player.castCharges = GAME.player.castMax;
+    const castBefore = GAME.player.castCharges;
+    gp.buttons[PAD.CFG.BTN.Y] = { pressed: true, value: 1 };
+    PAD.poll();
+    R.castFired = GAME.player.castCharges === castBefore - 1;
+    gp.buttons[PAD.CFG.BTN.Y] = { pressed: false, value: 0 };
+    PAD.poll();   // release, clear the edge
+
+    // (c) Options (Start, index 9) resumes from pause via the combat/pause dispatch path
+    UI.pause();
+    R.wasPaused = GAME.state === 'paused';
+    gp.buttons[PAD.CFG.BTN.START] = { pressed: true, value: 1 };
+    PAD.poll();
+    R.resumedByOptions = GAME.state === 'combat';
+    gp.buttons[PAD.CFG.BTN.START] = { pressed: false, value: 0 };
+    PAD.poll();
+
+    // (d) unplug: getGamepads() -> [] (not undefined) must fall back to kbm
+    globalThis.navigator = { getGamepads: () => [] };
+    PAD.poll();
+    R.deviceBackToKbm = INPUT.device === 'kbm';
+    R.padDisconnected = PAD.state.connected === false;
+  } finally {
+    delete globalThis.navigator;
+    INPUT.device = 'kbm';
+    GAME.state = savedState; GAME.prePause = savedPrePause;
+  }
+})();
+`, sandbox);
+{
+  const er = vm.runInContext('__e2eResults', sandbox);
+  check('DualSense simulation: PAD.state.family === "ps" and GLYPHS.tokensFor("attack") -> ["R2","✕"]', er.familyPs && er.attackGlyphs);
+  check('△ (Y) press casts an astra with no menu panel visible (FOCUS does not swallow combat input)', er.castFired);
+  check('Options (Start) while paused resumes back to the pre-pause state via the combat/pause dispatch path', er.wasPaused && er.resumedByOptions);
+  check('unplugging the pad (getGamepads() -> []) sets INPUT.device back to "kbm" and PAD.state.connected to false', er.deviceBackToKbm && er.padDisconnected);
+}
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

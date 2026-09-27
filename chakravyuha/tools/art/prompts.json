@@ -197,5 +197,103 @@
   "max_retries_god": 6,
   "god_style_positive": "Hades-inspired illustrated character portrait, half-body bust from head to waist, three-quarter view turned slightly to the right, facing the viewer, painterly digital illustration with bold confident ink linework, richly detailed rendering, luminous warm rim lighting, divine serene presence, ornate traditional Indian gold jewelry and silk textiles, inspired by the Mahabharata and Ramayana and classical Indian temple murals and Pahari miniature painting, single figure, centered, head fully in frame with space above, plain flat solid pale grey background, high detail, concept art",
   "god_style_negative": "pixel art, 3d render, photorealistic, photo, blurry, lowres, jpeg artifacts, deformed, bad anatomy, fused fingers, extra fingers, mutated hands, watermark, text, letters, signature, logo, caption, cropped head, out of frame, full body, legs, multiple characters, crowd, collage, character sheet, turnaround, busy background, scenery, landscape, frame, border, halo disc, circular background, sun disc, mandala background, western medieval armor, roman armor, greek toga, samurai armor",
-  "god_negative_extra": "sexualized, seductive, cleavage, revealing clothing, nudity, pin-up, demonic, demon, evil, menacing, snarl, fangs, horns, claws, glowing red eyes, skull, skulls, blood, gore, severed head, horror, creepy, zombie, grotesque, cartoon, chibi, caricature, meme, mocking, swastika symbol"
+  "god_negative_extra": "sexualized, seductive, cleavage, revealing clothing, nudity, pin-up, demonic, demon, evil, menacing, snarl, fangs, horns, claws, glowing red eyes, skull, skulls, blood, gore, severed head, horror, creepy, zombie, grotesque, cartoon, chibi, caricature, meme, mocking, swastika symbol",
+  "checkpoints": {
+    "sdxl_base": {
+      "file": "sd_xl_base_1.0.safetensors",
+      "label": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "license": "CreativeML OpenRAIL++-M"
+    },
+    "dreamshaper_xl_alpha2": {
+      "file": "dreamshaperXL_alpha2Xl10.safetensors",
+      "label": "dreamshaperXL_alpha2Xl10.safetensors (DreamShaper XL alpha2 (xl1.0) by Lykon, CreativeML OpenRAIL++-M)",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "license": "CreativeML OpenRAIL++-M",
+      "source_url": "https://civitai.com/models/112902?modelVersionId=126688",
+      "download_url": "https://civitai.com/api/download/models/126688?fileId=91562",
+      "sha256": "0F1B80CFE81B9C3BDE7FDCBF6898897B2811B27BE1DF684583C3D85CBC9B1FA4"
+    }
+  },
+  "env_checkpoint": "sdxl_base",
+  "env_templates": {
+    "tile": "top-down orthographic view looking straight down at {subject}, seamless repeating texture, evenly scattered detail edge to edge, painted game arena floor texture, low contrast, no focal point, Hades-adjacent painterly illustration, {palette}, no characters, no text",
+    "wallface": "{subject}, straight-on elevation of a long continuous horizontal wall section seen from a high three-quarter top-down game camera, architecture repeating across the full width edge to edge, wall base along the lower third, Hades-adjacent painterly illustration, rich carved detail, {palette}, no characters, no text, no sky",
+    "wallcap": "top-down orthographic view straight down onto the flat top of a thick {subject}, seamless repeating texture, even detail, Hades-adjacent painterly illustration, {palette}, no characters, no text",
+    "prop": "{subject}, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, {palette}, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+    "decal": "top-down orthographic view looking straight down at {subject} on flat plain mid grey ground, isolated, flat on the ground, soft irregular edges, painterly texture, {palette}, no objects, no characters, no text"
+  },
+  "env_negative": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres",
+  "env_negative_ground": "walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra",
+  "env_sizes": {
+    "tile": [
+      1024,
+      1024
+    ],
+    "wallcap": [
+      1024,
+      1024
+    ],
+    "wallface": [
+      1344,
+      768
+    ],
+    "prop": [
+      1024,
+      1024
+    ],
+    "tall": [
+      832,
+      1216
+    ],
+    "decal": [
+      1024,
+      1024
+    ]
+  },
+  "env_grade": {
+    "prop": {
+      "sat": 0.85,
+      "val": 0.88
+    },
+    "architecture": {
+      "sat": 0.8,
+      "val": 0.82
+    },
+    "decal": {
+      "sat": 0.7,
+      "val": 0.8
+    },
+    "tile_limits": {
+      "luma_mean": 0.45,
+      "luma_std": 0.15,
+      "sat_mean": 0.32
+    }
+  },
+  "env_subjects": {
+    "ab": {
+      "floor": {
+        "template": "tile",
+        "subject": "cracked dark iron-grey basalt flagstones of an infernal iron city, thin glowing ember seams in the cracks, soot and ash",
+        "palette": "deep maroon and charcoal with ember red-orange accents",
+        "base_seed": 60000,
+        "role": "floor",
+        "ground_safe": true
+      },
+      "wheel": {
+        "template": "prop",
+        "subject": "a broken wooden war-chariot wheel with snapped spokes and a bronze rim, lying tilted on dusty ground, roughly waist-height to a man",
+        "palette": "muted desaturated tan, umber and bronze",
+        "base_seed": 60100,
+        "role": "prop",
+        "ground_safe": false
+      }
+    }
+  }
 }

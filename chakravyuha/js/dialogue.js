@@ -21,8 +21,8 @@ const DIALOGUE = {
 
   LOW_HP: 0.35,
 
-  // Content: filled in by _greetLines() below (placeholder) and replaced
-  // wholesale with the full authored set in Phase 05.5 Plan 02 Task 2.
+  // Content: authored below (Phase 05.5 Plan 02 Task 2). See the Lore Check
+  // in 05.5-02-SUMMARY.md for the source of every factual reference.
   LINES: [],
 
   // Codex lore paragraphs: DIALOGUE.LORE[godId] = { s: source, d: paragraph }
@@ -298,13 +298,227 @@ const DIALOGUE = {
   },
 };
 
-// Placeholder content (Task 1): each god's existing greet line, quote marks stripped.
-// Task 2 replaces DIALOGUE.LINES wholesale with the full authored set.
-DIALOGUE._greetLines = function () {
-  return Object.keys(DATA.GODS).map(id => {
-    const raw = DATA.GODS[id].greet;
-    const text = raw.replace(/^"|"$/g, '');
-    return { id: id + '_greet', god: id, text };
-  });
-};
-DIALOGUE.LINES = DIALOGUE._greetLines();
+// ============================================================
+// Content: 6 gods x 10-13 lines, 6 duos x 2 co-voiced lines, codex lore.
+// Reverent, epic-accurate. Every factual reference is in the Lore Check
+// table in 05.5-02-SUMMARY.md. Deliberately avoided: the agni-pariksha,
+// Kali/severed-head imagery, and any version where Krishna causes
+// Abhimanyu's death. The gods never threaten Abhimanyu or speak of Yama
+// with contempt; the Yama fight is framed as a trial of dharma.
+// ============================================================
+(function () {
+  // Reuse each god's pre-phase greet line (data.js) as its generic fallback,
+  // quote marks stripped, so the original text keeps being used (D-12).
+  const g = id => DATA.GODS[id].greet.replace(/^"|"$/g, '');
+
+  DIALOGUE.LINES = [
+    // ---------------- HANUMAN ----------------
+    { id: 'han_first', god: 'hanuman', when: { first: true }, once: true,
+      text: "So you are Arjuna's boy. I rode on your father's banner through all of Kurukshetra. I will not watch his son fall alone again. Take my strength, little prince.",
+      reply: 'Jai Shri Ram, Hanuman-ji.' },
+    { id: 'han_greet', god: 'hanuman', text: g('hanuman') },
+    { id: 'han_gen_rama', god: 'hanuman', text: "Whatever strength I have is Rama's. I only carry it. Today I carry it to you." },
+    { id: 'han_gen_mountain', god: 'hanuman', when: { minMeetings: 2 },
+      text: 'When I could not tell which herb would save Lakshmana, I brought the whole mountain. Never fear doing too much, child.' },
+    { id: 'han_lowhp', god: 'hanuman', when: { lowHp: true },
+      text: 'You are hurt. Breathe. I once leapt an ocean with a heavier heart than yours. Rise, and we go on together.',
+      reply: 'I am standing, Hanuman-ji.' },
+    { id: 'han_def_tataka', god: 'hanuman', when: { justDefeated: 'tataka' },
+      text: 'Tataka has fallen again. Young Rama was hardly older than you when he first faced her. He hesitated too, and then he did his duty.' },
+    { id: 'han_def_ahiravana', god: 'hanuman', when: { justDefeated: 'ahiravana' },
+      text: 'Ahiravana! I needed five faces and one breath to put out his five lamps. You managed with one face. I am proud of you.' },
+    { id: 'han_def_kumbhakarna', god: 'hanuman', when: { justDefeated: 'kumbhakarna' },
+      text: 'Kumbhakarna told his brother the war was wrong, then fought for him anyway. Honor him, child, even as you walk past him.' },
+    { id: 'han_holds_vayu', god: 'hanuman', when: { holds: 'vayu' },
+      text: "My father's wind already lives in your step. Good. Now let his son's strength live in your arms." },
+    { id: 'han_holds_krishna', god: 'hanuman', when: { holds: 'krishna' },
+      text: 'Keshava has blessed you already? Then he holds the reins and I ride the banner, just as it was at Kurukshetra.' },
+    { id: 'han_patala', god: 'hanuman', when: { biome: 'patala' },
+      text: 'Patala. I came down here once to bring Rama and Lakshmana home. The serpents remember me. Let them learn to remember you.' },
+    { id: 'han_lastdeath', god: 'hanuman', when: { lastDeathBiome: '*' },
+      text: 'Chitragupta says you fell again. As a child I leapt for the sun and was struck from the sky. I got up. So will you.' },
+    { id: 'han_won', god: 'hanuman', when: { minWins: 1 },
+      text: 'They say you walked out of this place once. I never doubted it. Walk out again.' },
+
+    // ---------------- AGNI ----------------
+    { id: 'agni_first', god: 'agni', when: { first: true }, once: true,
+      text: 'I am the mouth of the gods, Abhimanyu. Every offering reaches heaven through me. Today, the offering is the asura host before you.',
+      reply: 'Then let them burn, Agnideva.' },
+    { id: 'agni_greet', god: 'agni', text: g('agni') },
+    { id: 'agni_gen_rigveda', god: 'agni',
+      text: 'The very first hymn of the Rig Veda is sung to me. I have heard every prayer since. Yours are loud. I like that.' },
+    { id: 'agni_gen_oath', god: 'agni', when: { minMeetings: 2 },
+      text: 'I stood witness when you and Uttara walked the seven steps. I keep every vow I witness, and I mean to keep you.' },
+    { id: 'agni_lowhp', god: 'agni', when: { lowHp: true },
+      text: 'Your flame is guttering. Feed it. A small fire, well tended, outlasts any forest blaze.' },
+    { id: 'agni_weapon_gandiva', god: 'agni', when: { weapon: 'gandiva' },
+      text: "You carry the Gandiva. At Khandava I asked Varuna for that bow and put it in your father's hands. Draw it well." },
+    { id: 'agni_holds_krishna', god: 'agni', when: { holds: 'krishna' },
+      text: 'Your uncle favors you already? At Khandava I gave him the Sudarshana. It seems I have been arming your family for a long time.' },
+    { id: 'agni_holds_indra', god: 'agni', when: { holds: 'indra' },
+      text: "Indra's lightning is on you. At Khandava he poured rain on my fire for days. Now we share a champion." },
+    { id: 'agni_def_tataka', god: 'agni', when: { justDefeated: 'tataka' },
+      text: 'Tataka devoured whole forests without leave. I have consumed a forest too, but only one that was offered. She is ash now.' },
+    { id: 'agni_naraka', god: 'agni', when: { biome: 'naraka' },
+      text: 'The fires of Naraka are not mine. They correct; they do not consecrate. Mine burn for you.',
+      reply: 'Then I will walk through theirs.' },
+    { id: 'agni_lastdeath', god: 'agni', when: { lastDeathBoss: '*' },
+      text: 'Every pyre is mine, child. I have carried many warriors across. Not you. Not yet.' },
+
+    // ---------------- INDRA ----------------
+    { id: 'indra_first', god: 'indra', when: { first: true }, once: true,
+      text: 'Grandson! Your father came to me in Amaravati to learn the astras. You have his jaw, and his recklessness.',
+      reply: 'Grandfather. Devaraja.' },
+    { id: 'indra_greet', god: 'indra', text: g('indra') },
+    { id: 'indra_gen_dadhichi', god: 'indra',
+      text: "My Vajra was shaped from the bones of the sage Dadhichi, freely given. Remember, grandson: all strength is someone's sacrifice." },
+    { id: 'indra_gen_vritra', god: 'indra', when: { minMeetings: 2 },
+      text: 'I slew Vritra and set the seven rivers free. A few rings of asuras hardly compare, but go on. Impress me.' },
+    { id: 'indra_lowhp', god: 'indra', when: { lowHp: true },
+      text: 'Up, grandson. The king of the devas does not bless kneeling men. Very well, I do. But get up anyway.' },
+    { id: 'indra_holds_krishna', god: 'indra', when: { holds: 'krishna' },
+      text: "Your uncle's blessing already? He once lifted a mountain to shelter Gokul from my rains. I learned humility that day. Mostly." },
+    { id: 'indra_holds_vayu', god: 'indra', when: { holds: 'vayu' },
+      text: "Vayu rides with you. We have an old matter between us concerning his son's jaw. Let the storm and the wind share you in peace." },
+    { id: 'indra_def_kumbhakarna', god: 'indra', when: { justDefeated: 'kumbhakarna' },
+      text: 'Kumbhakarna meant to ask for my throne and asked for sleep instead. I have blessed Saraswati for that slip of the tongue ever since.' },
+    { id: 'indra_ranabhoomi', god: 'indra', when: { biome: 'ranabhoomi' },
+      text: 'A field of the fallen. I watched Kurukshetra from above, grandson. When you stood alone in the formation, every deva in heaven rose to his feet.' },
+    { id: 'indra_lastdeath_yama', god: 'indra', when: { lastDeathBoss: 'yama' },
+      text: "Yama bested you. Do not sulk. He is Dharma's own judge, not your enemy. Earn his verdict.",
+      reply: 'I will, Grandfather.' },
+    { id: 'indra_won', god: 'indra', when: { lastRunWon: true },
+      text: 'You broke the wheel and came back to break it again. Your father would call that foolish. I call it royal.' },
+
+    // ---------------- VAYU ----------------
+    { id: 'vayu_first', god: 'vayu', when: { first: true }, once: true,
+      text: 'Hush. Feel that? That is me, the breath in your chest. I have been with you since your first cry. Let me run with you now.',
+      reply: 'Vayudeva. I feel it.' },
+    { id: 'vayu_greet', god: 'vayu', text: g('vayu') },
+    { id: 'vayu_gen_bhima', god: 'vayu',
+      text: 'Your uncle Bhima is my son. He would tell you to hit harder. I will tell you to be somewhere else when they swing.' },
+    { id: 'vayu_gen_breath', god: 'vayu', when: { minMeetings: 2 },
+      text: 'When my son Hanuman was struck from the sky, I withdrew my breath and the three worlds gasped. I do not let my favorites fall lightly.' },
+    { id: 'vayu_lowhp', god: 'vayu', when: { lowHp: true },
+      text: 'Slow your breath. In, and out. Now move, before they do.' },
+    { id: 'vayu_holds_hanuman', god: 'vayu', when: { holds: 'hanuman' },
+      text: "My son's strength is already in your arms. Good. Now take his father's lightness for your feet." },
+    { id: 'vayu_holds_indra', god: 'vayu', when: { holds: 'indra' },
+      text: 'The storm-king\'s lightning, and now my wind. Even the Maruts would envy you.' },
+    { id: 'vayu_def_ahiravana', god: 'vayu', when: { justDefeated: 'ahiravana' },
+      text: 'Ahiravana hid his life in five flames, and my son put them out in a single breath. Breath is a weapon, child. Use yours.' },
+    { id: 'vayu_vaitarani', god: 'vayu', when: { biome: 'vaitarani' },
+      text: 'The Vaitarani lies so still. I dislike stillness. Let us stir it.' },
+    { id: 'vayu_lastdeath', god: 'vayu', when: { lastDeathBiome: '*' },
+      text: 'Your last breath was not your last after all. I keep giving them back. Spend this one well.',
+      reply: 'I will not waste it.' },
+
+    // ---------------- KRISHNA ----------------
+    { id: 'kri_first', god: 'krishna', when: { first: true }, once: true,
+      text: "Abhimanyu. My sister's son. I promised Subhadra I would watch over you. I never promised to make it easy.",
+      reply: "Uncle. You knew all along, didn't you?" },
+    { id: 'kri_greet', god: 'krishna', text: g('krishna') },
+    { id: 'kri_gen_soul', god: 'krishna',
+      text: 'The soul is not born and does not die. Weapons do not cut it, fire does not burn it. I told your father as much. You seem determined to prove it.' },
+    { id: 'kri_gen_womb', god: 'krishna',
+      text: 'They say your mother fell asleep before your father could describe the way out of the Chakravyuha. Stories are like that. This time, find the way out yourself.' },
+    { id: 'kri_gen_parikshit', god: 'krishna', when: { minMeetings: 3 },
+      text: "Uttara's child will live, Abhimanyu. I have promised it. Your line will rule after all of us.",
+      reply: 'Thank you, Uncle.' },
+    { id: 'kri_lowhp', god: 'krishna', when: { lowHp: true },
+      text: 'Tired? Your father once sat down in his chariot and let his bow fall. I spoke for eighteen chapters. Do not make me speak for eighteen chapters.' },
+    { id: 'kri_holds_durga', god: 'krishna', when: { holds: 'durga' },
+      text: 'The Mother already shelters you. She lay in a cradle in my place the night I was born. Our family owes her more than we can say.' },
+    { id: 'kri_holds_indra', god: 'krishna', when: { holds: 'indra' },
+      text: "Your grandfather's lightning. Be gracious to him. He and I once disagreed about a mountain, and he has been most gracious since." },
+    { id: 'kri_holds_hanuman', god: 'krishna', when: { holds: 'hanuman' },
+      text: "Hanuman rode on your father's banner. Now he rides with you. Some loyalties are older than any war." },
+    { id: 'kri_def_kumbhakarna', god: 'krishna', when: { justDefeated: 'kumbhakarna' },
+      text: 'I knew Kumbhakarna in another age, when I wore another name. A good heart, asleep in the wrong army. Remember the difference between loyalty and dharma.' },
+    { id: 'kri_ranabhoomi', god: 'krishna', when: { biome: 'ranabhoomi' },
+      text: 'I know this field. I drove a chariot across it. Every warrior here fell for something he believed. Walk gently, and strike hard.' },
+    { id: 'kri_lastdeath', god: 'krishna', when: { lastDeathBoss: '*' },
+      text: 'You fell again. I saw you fall once before, fighting on with nothing but a chariot wheel. The world still sings of it.' },
+    { id: 'kri_won', god: 'krishna', when: { lastRunWon: true },
+      text: 'You escaped, and then you came back. That is dharma, nephew. Not the leaving; the returning.' },
+
+    // ---------------- DURGA ----------------
+    { id: 'dur_first', god: 'durga', when: { first: true }, once: true,
+      text: "Come here, child. Every god who blesses you first placed a weapon in my hands: Indra his thunderbolt, Agni his spear, Vayu his bow. I carry them all for you.",
+      reply: 'Ma. I am not afraid.' },
+    { id: 'dur_greet', god: 'durga', text: g('durga') },
+    { id: 'dur_gen_arjuna', god: 'durga',
+      text: "Before the great war, your father sang my praises on Krishna's counsel, and I blessed him with victory. I keep my blessings for his children too." },
+    { id: 'dur_gen_mahisha', god: 'durga', when: { minMeetings: 2 },
+      text: 'Mahishasura changed his shape again and again: buffalo, lion, elephant, man. It did not matter. Neither will theirs.' },
+    { id: 'dur_lowhp', god: 'durga', when: { lowHp: true },
+      text: "Who dares wound my child? Stand in my lion's shadow a moment. Now, again." },
+    { id: 'dur_holds_krishna', god: 'durga', when: { holds: 'krishna' },
+      text: "Krishna's favor is on you. I shielded him in his cradle. I will shield his nephew in this wheel." },
+    { id: 'dur_holds_agni', god: 'durga', when: { holds: 'agni' },
+      text: 'Agni gave me his spear long ago. See how his fire guards you now.' },
+    { id: 'dur_def_tataka', god: 'durga', when: { justDefeated: 'tataka' },
+      text: "Tataka was a yaksha's daughter, cursed into hunger. Pity her, then step past her. Pity must never slow your feet." },
+    { id: 'dur_naraka', god: 'durga', when: { biome: 'naraka' },
+      text: 'The Iron City. Yama keeps order here, and I honor his order. But I am your mother in this place too.' },
+    { id: 'dur_lastdeath_yama', god: 'durga', when: { lastDeathBoss: 'yama' },
+      text: 'Dharmaraja weighed you and sent you back. That is no disgrace. Savitri won a soul back from him with patience and wit. Bring both.' },
+    { id: 'dur_lastdeath', god: 'durga', when: { lastDeathBiome: '*' },
+      text: "They struck at your back, didn't they? Cowards always do. This time, I stand behind you.",
+      reply: 'Then I will not look back, Ma.' },
+
+    // ---------------- DUOS (co-voiced) ----------------
+    { id: 'duo_pavanaputra_a', duo: 'duo_pavanaputra', beats: [
+      { s: 'hanuman', t: 'Father! You are here too?' },
+      { s: 'vayu', t: 'Where else would the wind be, son? Let us lift this one together.' } ] },
+    { id: 'duo_pavanaputra_b', duo: 'duo_pavanaputra', beats: [
+      { s: 'vayu', t: 'My son strikes, and I carry him. It has always been our way.' },
+      { s: 'hanuman', t: 'Jai Shri Ram. Hold on tight, Abhimanyu.' } ] },
+    { id: 'duo_khandava_a', duo: 'duo_khandava', beats: [
+      { s: 'agni', t: 'At Khandava you rained on my fire for days, Devaraja.' },
+      { s: 'indra', t: 'And your fire won. Let us see what we do on the same side.' } ] },
+    { id: 'duo_khandava_b', duo: 'duo_khandava', beats: [
+      { s: 'indra', t: 'Fire and storm, then.' },
+      { s: 'agni', t: 'The forest never stood a chance. Neither will they.' },
+      { s: 'abhimanyu', t: 'I am glad you are both on my side.' } ] },
+    { id: 'duo_yogamaya_a', duo: 'duo_yogamaya', beats: [
+      { s: 'durga', t: 'He was a newborn in a basket when I first took his place.' },
+      { s: 'krishna', t: 'And she has never let me forget it. Take her veil, nephew. It has saved me before.' } ] },
+    { id: 'duo_yogamaya_b', duo: 'duo_yogamaya', beats: [
+      { s: 'krishna', t: 'Maya, sister. Show them nothing.' },
+      { s: 'durga', t: 'Let them strike at a shadow, child.' } ] },
+    { id: 'duo_marut_a', duo: 'duo_marut', beats: [
+      { s: 'indra', t: 'The Maruts ride at my side, Vayu, and they run on your wind.' },
+      { s: 'vayu', t: 'Then let the whole storm-host run for him.' } ] },
+    { id: 'duo_marut_b', duo: 'duo_marut', beats: [
+      { s: 'vayu', t: "I have not forgotten the matter of my son's jaw." },
+      { s: 'indra', t: 'Nor have I. Consider this a further apology.' } ] },
+    { id: 'duo_jwalamukhi_a', duo: 'duo_jwalamukhi', beats: [
+      { s: 'durga', t: 'Agni, lend me your flame.' },
+      { s: 'agni', t: 'Mother, it has always been yours.' } ] },
+    { id: 'duo_jwalamukhi_b', duo: 'duo_jwalamukhi', beats: [
+      { s: 'agni', t: 'Strike her child and learn what burns.' },
+      { s: 'durga', t: 'Let them learn it quickly.' } ] },
+    { id: 'duo_kapidhvaja_a', duo: 'duo_kapidhvaja', beats: [
+      { s: 'krishna', t: 'Up on the banner again, Hanuman?' },
+      { s: 'hanuman', t: "Always, Keshava. You drive and I roar. For Arjuna's son, I roar twice." } ] },
+    { id: 'duo_kapidhvaja_b', duo: 'duo_kapidhvaja', beats: [
+      { s: 'hanuman', t: "I held your father's chariot together at Kurukshetra." },
+      { s: 'krishna', t: 'He did. When he left it at the end, the chariot burned to ash. Take the banner, Abhimanyu.' } ] },
+  ];
+
+  DIALOGUE.LORE = {
+    hanuman: { s: 'Ramayana; Mahabharata, Vana Parva',
+      d: "Son of Vayu and Anjana, devotee of Rama. He leapt the ocean to find Sita and carried the mountain of healing herbs for Lakshmana. In the Mahabharata he met his brother Bhima and promised to sit on Arjuna's banner. He is one of the Chiranjivi, the deathless ones." },
+    agni: { s: 'Rig Veda; Mahabharata, Adi Parva',
+      d: 'The sacrificial fire and messenger between mortals and gods, invoked in the very first hymn of the Rig Veda. He is witness to every sacred vow. At the burning of the Khandava forest he gave Arjuna the Gandiva and Krishna the Sudarshana.' },
+    indra: { s: 'Rig Veda; Mahabharata',
+      d: "King of the devas, wielder of the Vajra shaped from the sage Dadhichi's bones, slayer of the serpent Vritra. He rides the white elephant Airavata. He is the father of Arjuna, who studied the astras in his city of Amaravati — which makes him Abhimanyu's grandfather." },
+    vayu: { s: 'Rig Veda; Ramayana; Mahabharata',
+      d: 'The wind and the vital breath (prana) of all beings. Father of Hanuman, and — through Kunti — father of Bhima. When Hanuman was struck down as a child, Vayu withdrew his breath from the worlds until the gods restored and blessed his son.' },
+    krishna: { s: 'Mahabharata; Bhagavad Gita; Bhagavata Purana',
+      d: "The eighth avatar of Vishnu, and brother of Subhadra — Abhimanyu's uncle. He was Arjuna's charioteer at Kurukshetra, where he spoke the Bhagavad Gita. After the war he restored Abhimanyu's unborn son Parikshit to life." },
+    durga: { s: 'Devi Mahatmya; Mahabharata, Bhishma Parva',
+      d: 'The invincible Mother, born from the combined radiance of the gods, each of whom gave her a weapon. Riding her lion, she slew the shape-shifting buffalo-asura Mahishasura. On Krishna\'s counsel, Arjuna hymned her before the war, and she blessed him with victory.' },
+  };
+})();

@@ -285,6 +285,7 @@ const UI = {
     this.el('god-portrait-2').classList.add('hidden');
     this.el('boonpick').classList.remove('has-portrait');
     this.el('boon-cards').classList.remove('awaiting');
+    this.el('god-dialogue-hint').classList.add('hidden');
   },
 
   typeGodDialogue(beats) {
@@ -313,6 +314,14 @@ const UI = {
       spans.push(text);
     }
     this._talk = { token, beats, spans, bi: 0, ci: 0, done: false };
+
+    const hintEl = this.el('god-dialogue-hint');
+    if (typeof GLYPHS !== 'undefined') {
+      hintEl.innerHTML = GLYPHS.html('confirm') + ' to continue';
+      hintEl.classList.remove('hidden');
+    } else {
+      hintEl.classList.add('hidden');
+    }
 
     this.el('boonpick').onclick = () => { if (this.godDialogueBusy()) this.skipGodDialogue(); };
     this.el('god-dialogue-skip').onclick = () => this.skipGodDialogue();
@@ -350,6 +359,7 @@ const UI = {
   _finishTalk() {
     this._talk.done = true;
     this.el('boon-cards').classList.remove('awaiting');
+    this.el('god-dialogue-hint').classList.add('hidden');
   },
 
   godDialogueBusy() {

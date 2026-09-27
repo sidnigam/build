@@ -230,6 +230,18 @@
     width: 360px; margin: 8px 0; gap: 16px; color: var(--ash); font-size: 14px; letter-spacing: 0.06em; }
   #settings-rebind-list .settings-row { font-size: 13px; }
 </style>
+<style id="controller-css">
+  .glyph { display: inline-flex; align-items: center; justify-content: center; min-width: 1.5em; height: 1.5em;
+    padding: 0 .35em; border: 1px solid var(--gold-soft); border-radius: 4px; background: rgba(10, 6, 16, .85);
+    font-family: 'Segoe UI Symbol', 'Apple Symbols', 'Noto Sans Symbols 2', Georgia; font-size: .85em;
+    color: var(--ash); vertical-align: middle; }
+  .glyph.g-face { border-radius: 50%; font-weight: bold; }
+  .glyph.g-cross { color: #7ea6ff; }
+  .glyph.g-circle { color: #ff6b6b; }
+  .glyph.g-square { color: #ff8fd0; }
+  .glyph.g-triangle { color: #3fd6a0; }
+  .glyph-sep { opacity: .5; margin: 0 .2em; }
+</style>
 </head>
 <body>
 <div id="wrap"><div id="stage">
@@ -256,7 +268,7 @@
     <div class="narada" id="hub-narada"></div>
     <div class="hub-stats" id="hub-stats"></div>
     <div class="controls-hint">
-      WASD move · mouse aim · LMB attack · E / RMB special · Q astra · SPACE dash · ESC pause · M mute
+      <span id="hub-controls-text" data-glyph-hint="hub">WASD move · mouse aim · LMB attack · E / RMB special · Q astra · SPACE dash · ESC pause · M mute</span>
       <br><button id="btn-wipe" class="danger">erase save</button>
     </div>
   </div>
@@ -374,5 +386,6 @@
 <script src="js/game.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/gamepad.js"></script>
+<script src="js/glyphs.js"></script>
 </body>
 </html>

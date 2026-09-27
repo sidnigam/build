@@ -80,7 +80,7 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 
 // ---------------- load game scripts ----------------
-const files = ['utils.js', 'settings.js', 'renderer.js', 'sprites.js', 'vfx.js', 'audio.js', 'data.js', 'meta.js', 'entities.js', 'rooms.js', 'ui.js', 'game.js', 'storage.js', 'gamepad.js'];
+const files = ['utils.js', 'settings.js', 'renderer.js', 'sprites.js', 'vfx.js', 'audio.js', 'data.js', 'meta.js', 'entities.js', 'rooms.js', 'ui.js', 'game.js', 'storage.js', 'gamepad.js', 'glyphs.js'];
 for (const f of files) {
   const src = fs.readFileSync(path.join(__dirname, '..', 'js', f), 'utf8');
   vm.runInContext(src, sandbox, { filename: f });
@@ -4176,6 +4176,114 @@ globalThis.__padIntResults = {};
   check('PAD.poll() + tryDash(): dash button fires; dash direction follows the held left stick (PAD.chooseDashDir), not hardcoded WASD', pi.dashFired && pi.dashDirOk);
   check('PAD.captureNext(): fires exactly once with the next button pressed after release; dash/attack are suppressed while capturing', pi.captureFiredOnce && pi.noDashOrAttackDuringCapture);
   check('PAD.poll() does not throw once navigator is removed again', pi.noThrowHeadless);
+}
+
+// ---------------- GLYPHS (05.2-02) ----------------
+console.log('\n— GLYPHS (05.2-02) —');
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+
+  check('padToken: PS face buttons -> cross/circle/square/triangle glyphs',
+    R(`(() => {
+      const a = GLYPHS.padToken('A','ps'), b = GLYPHS.padToken('B','ps'), x = GLYPHS.padToken('X','ps'), y = GLYPHS.padToken('Y','ps');
+      return a.label === '✕' && a.shape === 'cross' && a.kind === 'face'
+        && b.label === '○' && b.shape === 'circle'
+        && x.label === '□' && x.shape === 'square'
+        && y.label === '△' && y.shape === 'triangle';
+    })()`) === true);
+
+  check('padToken: PS shoulder/system/stick labels (L1/R1/L2/R2/Options/Create/Touchpad/L3)',
+    R(`(() => {
+      const g = (b) => GLYPHS.padToken(b, 'ps').label;
+      return g('LB') === 'L1' && g('RB') === 'R1' && g('LT') === 'L2' && g('RT') === 'R2'
+        && g('Start') === 'Options' && g('Back') === 'Create' && g('Touchpad') === 'Touchpad' && g('LS') === 'L3';
+    })()`) === true);
+
+  check('padToken: xbox A has no shape; xbox Start/Back -> Menu/View; generic mirrors xbox',
+    R(`(() => {
+      const xa = GLYPHS.padToken('A','xbox'), ga = GLYPHS.padToken('A','generic');
+      const xs = GLYPHS.padToken('Start','xbox').label, xb = GLYPHS.padToken('Back','xbox').label;
+      return xa.label === 'A' && xa.shape === null && xs === 'Menu' && xb === 'View'
+        && JSON.stringify(ga) === JSON.stringify(xa);
+    })()`) === true);
+
+  check('keyLabel: space/esc/arrow/letter',
+    R(`JSON.stringify([GLYPHS.keyLabel(' '), GLYPHS.keyLabel('escape'), GLYPHS.keyLabel('arrowup'), GLYPHS.keyLabel('q')])`)
+      === JSON.stringify(['Space', 'Esc', '↑', 'Q']));
+
+  check('tokensFor: pad/ps attack -> R2,cross(✕); dash -> circle(○),R1 (from PAD.DEFAULT_BINDINGS order)',
+    R(`(() => {
+      const attack = GLYPHS.tokensFor('attack','pad','ps').map(t => t.label);
+      const dash = GLYPHS.tokensFor('dash','pad','ps').map(t => t.label);
+      return JSON.stringify(attack) === JSON.stringify(['R2','✕']) && JSON.stringify(dash) === JSON.stringify(['○','R1']);
+    })()`) === true);
+
+  check('tokensFor: kbm attack/special/dash; dash follows a live INPUT.bindings.dash rebind',
+    R(`(() => {
+      const attack = GLYPHS.tokensFor('attack','kbm').map(t => t.label);
+      const special = GLYPHS.tokensFor('special','kbm').map(t => t.label);
+      const dashBefore = GLYPHS.tokensFor('dash','kbm').map(t => t.label);
+      const savedDash = INPUT.bindings.dash;
+      INPUT.bindings.dash = ['shift'];
+      const dashAfter = GLYPHS.tokensFor('dash','kbm').map(t => t.label);
+      INPUT.bindings.dash = savedDash;
+      return JSON.stringify(attack) === JSON.stringify(['LMB'])
+        && JSON.stringify(special) === JSON.stringify(['E','RMB'])
+        && JSON.stringify(dashBefore) === JSON.stringify(['Space'])
+        && JSON.stringify(dashAfter) === JSON.stringify(['Shift']);
+    })()`) === true);
+
+  check('tokensFor: pad/ps confirm/back/move/aim -> cross/circle/L-stick/R-stick',
+    R(`(() => {
+      const c = GLYPHS.tokensFor('confirm','pad','ps').map(t => t.label);
+      const b = GLYPHS.tokensFor('back','pad','ps').map(t => t.label);
+      const m = GLYPHS.tokensFor('move','pad','ps').map(t => t.label);
+      const a = GLYPHS.tokensFor('aim','pad','ps').map(t => t.label);
+      return JSON.stringify(c) === JSON.stringify(['✕']) && JSON.stringify(b) === JSON.stringify(['○'])
+        && JSON.stringify(m) === JSON.stringify(['L-stick']) && JSON.stringify(a) === JSON.stringify(['R-stick']);
+    })()`) === true);
+
+  check('html()/hint(): pad+ps attack html contains g-cross and R2; kbm hub hint contains the move keys and Space',
+    R(`(() => {
+      const savedDevice = INPUT.device, savedFamily = PAD.state.family;
+      INPUT.device = 'pad'; PAD.state.family = 'ps';
+      const h1 = GLYPHS.html('attack');
+      const okPad = h1.indexOf('g-cross') >= 0 && h1.indexOf('R2') >= 0;
+      INPUT.device = 'kbm';
+      const hub = GLYPHS.hint('hub');
+      const okKbm = (hub.indexOf('WASD') >= 0 || ['W','A','S','D'].every(c => hub.indexOf(c) >= 0)) && hub.indexOf('Space') >= 0;
+      INPUT.device = savedDevice; PAD.state.family = savedFamily;
+      return okPad && okKbm;
+    })()`) === true);
+
+  check('signature(): changes when INPUT.device changes or PAD.bindings changes',
+    R(`(() => {
+      const savedDevice = INPUT.device, savedBindings = PAD.bindings;
+      INPUT.device = 'kbm';
+      const s1 = GLYPHS.signature();
+      INPUT.device = 'pad';
+      const s2 = GLYPHS.signature();
+      PAD.bindings = Object.assign({}, PAD.DEFAULT_BINDINGS, { cast: ['LB'] });
+      const s3 = GLYPHS.signature();
+      PAD.bindings = savedBindings; INPUT.device = savedDevice;
+      return s1 !== s2 && s2 !== s3;
+    })()`) === true);
+
+  check('refresh(): headless-safe (no document.body / querySelectorAll returns []); true on first call, false when unchanged',
+    R(`(() => {
+      GLYPHS._lastSig = undefined;
+      const r1 = GLYPHS.refresh();
+      const r2 = GLYPHS.refresh();
+      return r1 === true && r2 === false;
+    })()`) === true);
+
+  check('drawTokens: draws pad/ps attack tokens without throwing, returns width > 0',
+    R(`(() => {
+      let threw = false, w = 0;
+      try { w = GLYPHS.drawTokens(__ctxStub, 0, 0, GLYPHS.tokensFor('attack','pad','ps')); }
+      catch (e) { threw = true; }
+      return !threw && typeof w === 'number' && w > 0;
+    })()`) === true);
 }
 
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);

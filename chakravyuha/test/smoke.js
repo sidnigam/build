@@ -2455,6 +2455,10 @@ console.log('\n— character readability: ground marker spec (quick 260926-djs) 
   }
   const R = (src) => vm.runInContext(src, sandbox);
 
+  console.log('BISECT top-level typeof DIALOGUE:', R('typeof DIALOGUE'));
+  vm.runInContext('GAME.player = new Player("khanda"); META.dialogue = {}; UI.offerBoon("krishna");', sandbox);
+  console.log('BISECT lastGodLine:', R('UI._lastGodLine && UI._lastGodLine.id'));
+
   // snapshot so later blocks (and the content block) see a clean state
   const __snapDialogue = R('JSON.stringify(META.dialogue)');
   const __snapRuns = R('META.runs');
@@ -6705,6 +6709,154 @@ if (!process.env.SMOKE_FAST) {   // ~90s music soak; skip with SMOKE_FAST=1 for 
     stressErr = e;
   }
   check('stress/budget sequence never threw' + (stressErr ? ' — ' + stressErr.stack : ''), stressErr === null);
+}
+
+// ---------------- god presence on boon panel (Phase 05.5) ----------------
+console.log('\n— god presence on boon panel (Phase 05.5) —');
+{
+  if (vm.runInContext("typeof DIALOGUE", sandbox) === 'undefined') {
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js', 'dialogue.js'), 'utf8'), sandbox, { filename: 'dialogue.js' });
+  }
+  const R = (src) => vm.runInContext(src, sandbox);
+  vm.runInContext(`
+globalThis.__godPresenceErrors = [];
+(function() {
+  var E = __godPresenceErrors;
+  var savedState = GAME.state, savedBiome = GAME.biome, savedBossRef = GAME.bossRef, savedPlayer = GAME.player;
+  var savedDialogue = META.dialogue;
+  try {
+    GAME.player = new Player('khanda');
+    META.dialogue = {};
+
+    // 1. basic presentGod via offerBoon
+    UI.offerBoon('krishna');
+    if (GAME.state !== 'choosing') E.push('1: state not choosing after offerBoon');
+    if (document.getElementById('god-dialogue').classList.contains('hidden')) E.push('1: god-dialogue hidden after offerBoon');
+    if (!document.getElementById('boon-cards').classList.contains('awaiting')) E.push('1: boon-cards missing awaiting');
+    if ((DIALOGUE.mem().met.krishna | 0) !== 1) E.push('1: krishna meeting not recorded');
+    if (!(UI._lastGodLine && UI._lastGodLine.id === 'kri_first')) E.push('1: expected kri_first, got ' + (UI._lastGodLine && UI._lastGodLine.id));
+    if (!UI.godDialogueBusy()) E.push('1: godDialogueBusy() should be true while typing');
+
+    // 2. skip completes text; second skip is a no-op
+    var line1 = UI._lastGodLine;
+    var beats1 = DIALOGUE.beats(line1);
+    UI.skipGodDialogue();
+    if (UI.godDialogueBusy()) E.push('2: busy after skip');
+    if (document.getElementById('boon-cards').classList.contains('awaiting')) E.push('2: awaiting not removed after skip');
+    var linesEl = document.getElementById('god-dialogue-lines');
+    var joined = linesEl.children.map(function (d) { return d.children[1].textContent; }).join('|');
+    var expected = beats1.map(function (b) { return b.t; }).join('|');
+    if (joined !== expected) E.push('2: skip text mismatch: [' + joined + '] vs [' + expected + ']');
+    var threwOnSecondSkip = false;
+    try { UI.skipGodDialogue(); } catch (e) { threwOnSecondSkip = true; }
+    if (threwOnSecondSkip) E.push('2: second skip threw');
+    if (UI.godDialogueBusy()) E.push('2: busy after second (no-op) skip');
+
+    // 3. drain __timeouts repeatedly after a fresh offer; stale ticks after re-open are no-ops
+    UI.offerBoon('agni');
+    var guard = 0;
+    while (__timeouts.length && guard++ < 2000) { var fn = __timeouts.shift(); fn(); }
+    if (UI.godDialogueBusy()) E.push('3: agni still busy after draining timeouts');
+    if (document.getElementById('boon-cards').classList.contains('awaiting')) E.push('3: agni awaiting still set after drain');
+
+    UI.offerBoon('vayu');
+    var staleFns = __timeouts.splice(0);
+    UI.offerBoon('indra');
+    var staleThrew = false;
+    try { for (var i = 0; i < staleFns.length; i++) staleFns[i](); } catch (e) { staleThrew = true; }
+    if (staleThrew) E.push('3: stale tick threw after re-open');
+    UI.skipGodDialogue();
+
+    // 4. click-to-skip, then card pick still works
+    UI.offerBoon('durga');
+    if (!UI.godDialogueBusy()) E.push('4: expected busy right after offerBoon(durga)');
+    document.getElementById('boonpick').onclick();
+    if (UI.godDialogueBusy()) E.push('4: still busy after panel click');
+    var cards4 = document.getElementById('boon-cards').children;
+    if (!cards4.length) E.push('4: no cards to pick for durga');
+    else { cards4[0].onclick(); if (GAME.state !== 'cleared') E.push('4: state not cleared after card pick'); }
+
+    // 5. portrait fallback
+    if (document.getElementById('boonpick').classList.contains('has-portrait')) E.push('5: has-portrait set before any onload');
+    UI._portraitImgs.hanuman.onload();
+    UI.offerBoon('hanuman');
+    if (!document.getElementById('boonpick').classList.contains('has-portrait')) E.push('5: has-portrait missing after onload+offer');
+    var src = document.getElementById('god-portrait').src || '';
+    if (!src.endsWith('hanuman-portrait.png')) E.push('5: god-portrait src wrong: ' + src);
+    UI.skipGodDialogue();
+    UI._portraitImgs.hanuman.onerror();
+    UI.offerBoon('hanuman');
+    if (document.getElementById('boonpick').classList.contains('has-portrait')) E.push('5: has-portrait still set after onerror+offer');
+    UI.skipGodDialogue();
+
+    // 6. duo co-voiced offer
+    var duoP = new Player('khanda');
+    var savedPlayer2 = GAME.player;
+    GAME.player = duoP;
+    duoP.addBoon(DATA.findBoon('han_special'), 0);
+    duoP.addBoon(DATA.findBoon('kri_attack'), 0);
+    var hanGeneric = DIALOGUE.LINES.filter(function (l) { return l.god === 'hanuman' && !l.duo && !l.once; })[0];
+    DIALOGUE.record(hanGeneric, 'hanuman');
+    UI.offerBoon('hanuman');
+    var duoLine = UI._lastGodLine;
+    if (!duoLine || duoLine.duo !== 'duo_kapidhvaja') E.push('6: expected duo_kapidhvaja line, got ' + (duoLine && (duoLine.id || duoLine.duo)));
+    else {
+      var duoSpeakers = DIALOGUE.beats(duoLine).map(function (b) { return b.s; });
+      if (duoSpeakers.indexOf('hanuman') === -1 || duoSpeakers.indexOf('krishna') === -1) E.push('6: duo beats missing hanuman/krishna speakers: ' + duoSpeakers.join(','));
+    }
+    var p2Hidden = document.getElementById('god-portrait-2').classList.contains('hidden');
+    if (UI._portraitOk.krishna === true) { if (p2Hidden) E.push('6: portrait-2 hidden though krishna portrait ok'); }
+    else { if (!p2Hidden) E.push('6: portrait-2 shown though krishna portrait not ok'); }
+    UI.skipGodDialogue();
+    GAME.player = savedPlayer2;
+
+    // 7. offerAmrit clears presence
+    UI.offerAmrit();
+    if (!document.getElementById('god-portrait-wrap').classList.contains('hidden')) E.push('7: god-portrait-wrap not hidden after offerAmrit');
+    if (!document.getElementById('god-dialogue').classList.contains('hidden')) E.push('7: god-dialogue not hidden after offerAmrit');
+    if (document.getElementById('boonpick').classList.contains('has-portrait')) E.push('7: has-portrait still set after offerAmrit');
+    if (UI.godDialogueBusy()) E.push('7: busy after offerAmrit');
+
+    // 8. death/victory memory
+    GAME.biome = DATA.BIOMES[1];
+    GAME.bossRef = { type: 'ahiravana', dead: false };
+    var runsAtDeath = META.runs;
+    UI.death();
+    var lastRunD = DIALOGUE.mem().lastRun;
+    if (!(lastRunD && lastRunD.result === 'death' && lastRunD.biome === 'patala' && lastRunD.boss === 'ahiravana' && lastRunD.run === runsAtDeath))
+      E.push('8: death lastRun mismatch: ' + JSON.stringify(lastRunD));
+    var runsAtVictory = META.runs;
+    UI.victory();
+    var lastRunV = DIALOGUE.mem().lastRun;
+    if (!(lastRunV && lastRunV.result === 'victory' && lastRunV.run === runsAtVictory))
+      E.push('8: victory lastRun mismatch: ' + JSON.stringify(lastRunV));
+
+    // 9. no-line fallback (DIALOGUE.select returns null) shows the god's greet as one beat
+    var savedSelect = DIALOGUE.select;
+    DIALOGUE.select = function () { return null; };
+    var threwNoLine = false;
+    try { UI.offerBoon('vayu'); } catch (e) { threwNoLine = true; }
+    DIALOGUE.select = savedSelect;
+    if (threwNoLine) E.push('9: offerBoon threw when DIALOGUE.select returns null');
+    UI.skipGodDialogue();
+    var gVayu = DATA.GODS.vayu;
+    var expectedGreet = String(gVayu.greet || '').replace(/^"|"$/g, '');
+    var linesEl2 = document.getElementById('god-dialogue-lines');
+    if (linesEl2.children.length !== 1) E.push('9: expected 1 fallback beat, got ' + linesEl2.children.length);
+    else {
+      var gotText = linesEl2.children[0].children[1].textContent;
+      if (gotText !== expectedGreet) E.push('9: fallback greet mismatch: [' + gotText + '] vs [' + expectedGreet + ']');
+    }
+  } catch (e) {
+    E.push('exception: ' + e.stack);
+  }
+  GAME.state = savedState; GAME.biome = savedBiome; GAME.bossRef = savedBossRef; GAME.player = savedPlayer;
+  META.dialogue = savedDialogue;
+})();
+`, sandbox);
+  const godPresenceErrors = R('__godPresenceErrors');
+  check('god presence on boon panel: all behavior assertions pass' + (godPresenceErrors.length ? ' — ' + godPresenceErrors.join(' | ') : ''),
+    godPresenceErrors.length === 0);
 }
 
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);

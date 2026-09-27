@@ -131,7 +131,7 @@ const UI = {
     this.el('boon-god').innerHTML =
       `<span class="god-sym">${g.sym}</span><div><div class="god-name" style="color:${g.color}">${g.name}</div>
        <div class="god-dev">${this.DEVANAGARI.gods[g.id] || ''}</div>
-       <div class="god-title">${g.title}</div><div class="god-greet">${g.greet}</div></div>`;
+       <div class="god-title">${g.title}</div>${this._dlg() ? '' : `<div class="god-greet">${g.greet}</div>`}</div>`;
     const cards = this.el('boon-cards');
     cards.innerHTML = '';
     for (const def of pool) {
@@ -162,6 +162,7 @@ const UI = {
       };
       cards.appendChild(card);
     }
+    this.presentGod(god, duo);
     this.show('boonpick');
   },
 
@@ -173,6 +174,7 @@ const UI = {
       return;
     }
     GAME.state = 'choosing';
+    this.clearGodPresence();
     this.el('boon-god').style.cssText = '--god:#5cb8ff';
     this.el('boon-god').innerHTML =
       `<span class="god-sym">◈</span><div><div class="god-name" style="color:#5cb8ff">Amrit</div>
@@ -201,6 +203,181 @@ const UI = {
       cards.appendChild(card);
     }
     this.show('boonpick');
+  },
+
+  // ---------- god presence (Phase 05.5) ----------
+  _portraitOk: {},
+  _portraitImgs: {},
+  _talk: null,
+  _talkToken: 0,
+
+  // Resolved via the shared `window` object (present from boot) rather than a
+  // bare `typeof DIALOGUE` check: once these methods are compiled and called a
+  // number of times before dialogue.js has loaded (as happens in test/smoke.js,
+  // which — per D-12 — deliberately exercises the earlier full-run sims without
+  // it), V8's free-variable resolution for a *later*-declared top-level `const`
+  // can stay permanently stale even after that `const` exists. A plain property
+  // read on the always-present `window` object does not have this problem.
+  // dialogue.js exports `window.DIALOGUE` for exactly this reason (see D-12).
+  _dlg() {
+    return (typeof window !== 'undefined' && window.DIALOGUE) ? window.DIALOGUE : undefined;
+  },
+
+  preloadGodPortraits() {
+    const D = this._dlg();
+    if (!D || this._portraitsPreloaded) return;
+    this._portraitsPreloaded = true;
+    for (const id of Object.keys(DATA.GODS)) {
+      const img = document.createElement('img');
+      img.onload = () => { this._portraitOk[id] = true; };
+      img.onerror = () => { this._portraitOk[id] = false; };
+      img.src = D.portraitPath(id);
+      this._portraitImgs[id] = img;
+    }
+  },
+
+  presentGod(godId, duo) {
+    this.preloadGodPortraits();
+    this.bindGodDialogueKeys();
+    const D = this._dlg();
+    const g = DATA.GODS[godId];
+    const pick = this.el('boonpick');
+    const wrap = this.el('god-portrait-wrap');
+    const partnerId = duo ? duo.gods.find(x => x !== godId) : null;
+    wrap.style.cssText = '--god:' + g.color + (duo ? ';--god2:' + DATA.GODS[partnerId].color : '');
+
+    if (this._portraitOk[godId] === true) {
+      pick.classList.add('has-portrait');
+      this.el('god-portrait').src = D.portraitPath(godId);
+      this.el('god-portrait').alt = g.name;
+      wrap.classList.remove('hidden');
+      wrap.classList.remove('enter'); void wrap.offsetWidth; wrap.classList.add('enter');
+    } else {
+      pick.classList.remove('has-portrait');
+      wrap.classList.add('hidden');
+    }
+
+    if (duo && this._portraitOk[partnerId] === true) {
+      this.el('god-portrait-2').src = D.portraitPath(partnerId);
+      this.el('god-portrait-2').classList.remove('hidden');
+    } else {
+      this.el('god-portrait-2').classList.add('hidden');
+    }
+
+    let line = null;
+    if (D) {
+      const ctx = D.buildContext(godId, { duo });
+      line = D.select(godId, ctx, D.mem());
+      if (line) D.record(line, godId);
+    }
+    const beats = line
+      ? D.beats(line)
+      : [{ s: godId, t: String(g.greet || '').replace(/^"|"$/g, '') }];
+    this._lastGodLine = line;
+    this.typeGodDialogue(beats);
+  },
+
+  clearGodPresence() {
+    this._talkToken++;
+    this._talk = null;
+    this.el('god-portrait-wrap').classList.add('hidden');
+    this.el('god-dialogue').classList.add('hidden');
+    this.el('god-portrait-2').classList.add('hidden');
+    this.el('boonpick').classList.remove('has-portrait');
+    this.el('boon-cards').classList.remove('awaiting');
+  },
+
+  typeGodDialogue(beats) {
+    const token = ++this._talkToken;
+    this.show('god-dialogue');
+    const lines = this.el('god-dialogue-lines');
+    lines.innerHTML = '';
+    this.el('boon-cards').classList.add('awaiting');
+    const spans = [];
+    for (const b of beats) {
+      const div = document.createElement('div');
+      div.className = 'dlg-beat ' + b.s;
+      if (b.s !== 'abhimanyu' && DATA.GODS[b.s]) div.style.cssText = '--god:' + DATA.GODS[b.s].color;
+      const D = this._dlg();
+      const speaker = document.createElement('span');
+      speaker.className = 'dlg-speaker';
+      speaker.textContent = D
+        ? D.speakerName(b.s)
+        : (b.s === 'abhimanyu' ? 'Abhimanyu' : (DATA.GODS[b.s] ? DATA.GODS[b.s].name : b.s));
+      const text = document.createElement('span');
+      text.className = 'dlg-text';
+      text.textContent = '';
+      div.appendChild(speaker);
+      div.appendChild(text);
+      lines.appendChild(div);
+      spans.push(text);
+    }
+    this._talk = { token, beats, spans, bi: 0, ci: 0, done: false };
+
+    this.el('boonpick').onclick = () => { if (this.godDialogueBusy()) this.skipGodDialogue(); };
+    this.el('god-dialogue-skip').onclick = () => this.skipGodDialogue();
+
+    if (typeof window !== 'undefined' && typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return this.skipGodDialogue();
+    }
+
+    const tick = () => {
+      const t = this._talk;
+      if (!t || t.token !== token || t.done) return;
+      t.ci += 3;
+      const beat = t.beats[t.bi];
+      t.spans[t.bi].textContent = beat.t.slice(0, t.ci);
+      let delay = 33;
+      if (t.ci >= beat.t.length) {
+        t.bi++;
+        t.ci = 0;
+        delay = 350;
+        if (t.bi >= t.beats.length) { this._finishTalk(); return; }
+      }
+      setTimeout(tick, delay);
+    };
+    setTimeout(tick, 200);
+  },
+
+  skipGodDialogue() {
+    if (!this._talk || this._talk.done) return;
+    const t = this._talk;
+    for (let i = 0; i < t.beats.length; i++) t.spans[i].textContent = t.beats[i].t;
+    this._finishTalk();
+  },
+
+  _finishTalk() {
+    this._talk.done = true;
+    this.el('boon-cards').classList.remove('awaiting');
+  },
+
+  godDialogueBusy() {
+    return !!(this._talk && !this._talk.done);
+  },
+
+  bindGodDialogueKeys() {
+    if (this._godKeysBound) return;
+    this._godKeysBound = true;
+    window.addEventListener('keydown', e => {
+      const k = (e.key || '').toLowerCase();
+      if ((k === 'enter' || k === ' ' || k === 'escape') && this.godDialogueBusy() &&
+          !this.el('boonpick').classList.contains('hidden')) {
+        if (e.preventDefault) e.preventDefault();
+        this.skipGodDialogue();
+      }
+    });
+  },
+
+  noteGodRunEnd(result) {
+    const D = this._dlg();
+    if (!D) return;
+    D.noteRunEnd({
+      result,
+      biome: GAME.biome ? GAME.biome.id : null,
+      boss: (GAME.bossRef && !GAME.bossRef.dead) ? GAME.bossRef.type : (result === 'victory' ? 'yama' : null),
+      run: META.runs,
+    });
   },
 
   // ---------- Kubera's shop ----------
@@ -341,6 +518,7 @@ const UI = {
 
   // ---------- death & victory ----------
   death() {
+    this.noteGodRunEnd('death');
     this.hideAll();
     const line = U.choice(DATA.DEATH_LINES).replace('%n', META.deaths);
     this.el('death-line').textContent = line;
@@ -350,6 +528,7 @@ const UI = {
   },
 
   victory() {
+    this.noteGodRunEnd('victory');
     this.hideAll();
     this.el('victory-line').textContent = U.choice(DATA.VICTORY_LINES);
     this.el('victory-stats').innerHTML = this.runStatsHtml('BROKE THE CHAKRAVYUHA');

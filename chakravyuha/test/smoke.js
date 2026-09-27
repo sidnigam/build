@@ -3900,19 +3900,21 @@ function makeMusicSandbox() {
   let mock = null;
   try {
     const { R } = makeMusicSandbox();
+    // AUDIO.init() (05.3-03 task 2) now auto-attaches + starts MUSIC itself,
+    // so by the time we get control back MUSIC is already attached/running —
+    // an explicit re-attach here must therefore report "already attached".
     R('AUDIO.init();');
-    const attach1 = R('MUSIC.attach(AUDIO)');
-    check('attach returns true the first time', attach1 === true);
+    check('AUDIO.init() already attached MUSIC (MUSIC.ctx === AUDIO.ctx)', R('MUSIC.ctx === AUDIO.ctx') === true);
+    check('AUDIO.init() already started MUSIC (MUSIC.running)', R('MUSIC.running') === true);
     const attach2 = R('MUSIC.attach(AUDIO)');
-    check('attach returns false the second time', attach2 === false);
-    check('MUSIC.ctx === AUDIO.ctx', R('MUSIC.ctx === AUDIO.ctx') === true);
+    check('re-attach after AUDIO.init()\'s auto-attach returns false', attach2 === false);
     mock = R('AUDIO.ctx');
 
     // ---- bus graph ----
     check("trim node's recorded destinations include AUDIO.musicGain",
       R('MUSIC.nodes.trim._dsts.indexOf(AUDIO.musicGain) !== -1') === true);
     const nodeCount = Object.values(mock.count).reduce((a, b) => a + b, 0);
-    check(`persistent node count after attach < 70 (counted ${nodeCount})`, nodeCount < 70);
+    check(`persistent node count after attach+autostart < 120 (counted ${nodeCount})`, nodeCount < 120);
     check("stems exist for every STEM_NAMES entry + 'fx'",
       R("MUSIC.theory.STEM_NAMES.concat(['fx']).every(s => !!MUSIC.nodes.stems[s])") === true);
 
@@ -4035,9 +4037,14 @@ function makeMusicSandbox() {
   try {
     const { sb, R } = makeMusicSandbox();
     const timers = sb.__timers;
+    // A minimal fake "audio" object (not the real AUDIO singleton) so this
+    // task's tests can drive MUSIC.attach()/start()/stop() directly without
+    // AUDIO.init()'s own auto-attach+start (05.3-03 task 2) racing ahead of
+    // the test's own explicit start() call.
     R(`
-      AUDIO.init();
-      MUSIC.attach(AUDIO);
+      var FAKE_AUDIO = { ctx: new AudioContext(), muted: false };
+      FAKE_AUDIO.musicGain = FAKE_AUDIO.ctx.createGain();
+      MUSIC.attach(FAKE_AUDIO);
       var GAME = { state: 'hub', prePause: null, biome: { id: 'hub', droneHz: 138.59 }, bossRef: null,
         enemies: [], player: { hp: 100, maxhp: 100, boonRanks: {}, defiance: 1 } };
       MUSIC._testCounts = {};
@@ -4050,7 +4057,7 @@ function makeMusicSandbox() {
       MUSIC._origLeadNote = MUSIC.leadNote;
       MUSIC.leadNote = function () { MUSIC._leadCount++; return MUSIC._origLeadNote.apply(this, arguments); };
     `);
-    mock = R('AUDIO.ctx');
+    mock = R('FAKE_AUDIO.ctx');
 
     function run(sec) {
       const steps = Math.max(1, Math.round(sec / 0.025));
@@ -4069,7 +4076,7 @@ function makeMusicSandbox() {
 
     // ---- start() / stop() basics ----
     const preTimers = timers.length;
-    check('mock: MUSIC.start() === true with a real ctx', R('MUSIC.start()') === true);
+    check('mock: MUSIC.start() === true with a real ctx', R('MUSIC.start(424242)') === true);
     check('mock: start() registered exactly one timer', timers.length === preTimers + 1);
     check('mock: second start() === false (already running)', R('MUSIC.start()') === false);
 
@@ -4150,11 +4157,11 @@ function makeMusicSandbox() {
     // ---- mute: no new one-shots while muted; scheduling position still advances; unmute resumes ----
     resetCounts();
     const absBeforeMute = R('MUSIC.absStep');
-    R('AUDIO.muted = true;');
+    R('FAKE_AUDIO.muted = true;');
     run(3);
     check('muted: no new one-shots created over 3s', sumCounts() === 0);
     check('muted: absStep keeps advancing while muted', R('MUSIC.absStep') > absBeforeMute);
-    R('AUDIO.muted = false;');
+    R('FAKE_AUDIO.muted = false;');
     run(2);
     check('unmute: one-shots resume', sumCounts() > 0);
 
@@ -4174,6 +4181,221 @@ function makeMusicSandbox() {
     schedErr = e;
   }
   check('scheduler sequence never threw' + (schedErr ? ' — ' + schedErr.stack : ''), schedErr === null);
+}
+
+// ---------------- MUSIC stingers + AUDIO integration (05.3-03) ----------------
+{
+  console.log('\n— MUSIC stingers + AUDIO integration (05.3-03) —');
+
+  // ---- main sandbox stays inert even with the new AUDIO/debug plumbing ----
+  {
+    const preLen = vm.runInContext('__timeouts.length', sandbox);
+    let mainErr = null;
+    try {
+      vm.runInContext("AUDIO.sfx('death');", sandbox);
+      check('main sandbox: MUSIC.start() === false', vm.runInContext('MUSIC.start()', sandbox) === false);
+      vm.runInContext('MUSIC.debug();', sandbox);
+    } catch (e) { mainErr = e; }
+    check('main sandbox: sfx/start/debug() did not throw' + (mainErr ? ' — ' + mainErr.message : ''), mainErr === null);
+    check('main sandbox: no __timeouts added', vm.runInContext('__timeouts.length', sandbox) === preLen);
+  }
+
+  let intErr = null;
+  try {
+    const { sb, R } = makeMusicSandbox();
+    const timers = sb.__timers;
+    R(`
+      AUDIO.init();
+      // AUDIO.init() starts MUSIC with its own live Date.now()-derived seed
+      // (by design, D-09); pin it to a fixed seed right after so the rest
+      // of this integration test is deterministic (only the one already-
+      // scheduled hub/level-0 tick above used the live seed).
+      MUSIC.rand = MUSIC.gen.rng(777777);
+      var GAME = { state: 'combat', prePause: null, biome: { id: 'naraka', droneHz: 110 }, bossRef: null,
+        enemies: [{}, {}, {}], player: { hp: 100, maxhp: 100, boonRanks: {}, defiance: 1 } };
+      MUSIC._testCounts = {};
+      MUSIC._origPlayOneShot = MUSIC.playOneShot;
+      MUSIC.playOneShot = function (stem, key, t, vel, opts) {
+        MUSIC._testCounts[stem] = (MUSIC._testCounts[stem] || 0) + 1;
+        return MUSIC._origPlayOneShot.call(this, stem, key, t, vel, opts);
+      };
+      MUSIC._leadLog = [];
+      MUSIC._origLeadNote = MUSIC.leadNote;
+      MUSIC.leadNote = function (t, deg, dur, vel, opts) {
+        MUSIC._leadLog.push(deg);
+        return MUSIC._origLeadNote.apply(this, arguments);
+      };
+    `);
+    const mock = R('AUDIO.ctx');
+    check('AUDIO.init() alone attaches and starts MUSIC', R('MUSIC.ctx === AUDIO.ctx && MUSIC.running === true') === true);
+
+    function run(sec) {
+      const steps = Math.max(1, Math.round(sec / 0.025));
+      for (let i = 0; i < steps; i++) {
+        mock.advance(0.025);
+        let guard = 0;
+        while (timers.length && guard++ < 1000) timers.shift().fn();
+      }
+    }
+    function counts(stem) { return R(`MUSIC._testCounts[${JSON.stringify(stem)}] || 0`); }
+    function resetCounts() { R('MUSIC._testCounts = {};'); }
+    function untilLevel(lvl, capSec) {
+      let guard = 0;
+      const capSteps = Math.round((capSec || 10) / 0.1);
+      while (R('MUSIC.applied.level') !== lvl && guard++ < capSteps) run(0.1);
+      return R('MUSIC.applied.level') === lvl;
+    }
+
+    // ---- crossfade into naraka/bhairav, settle at combat level 2 ----
+    check('crossfade lands on bhairav', (function () { let g = 0; while (R('MUSIC.raga') !== 'bhairav' && g++ < 100) run(0.1); return R('MUSIC.raga') === 'bhairav'; })());
+    check('settles at level 2 (3 enemies, no boss)', untilLevel(2));
+
+    // ---- bossIntro ----
+    resetCounts();
+    R('GAME.bossRef = { dead: false, phase: 1 };');
+    run(0.2);
+    check('bossIntro: immediate big + fx one-shots (nagara/sub/riser)', counts('big') >= 1 && counts('fx') >= 1);
+    check('bossIntro escalates to level 4 within the intro window', untilLevel(4, 8));
+    check('bossIntro: stab+nagara land at the level-4 apply step', counts('big') >= 2 && counts('fx') >= 1);
+
+    // ---- bossPhase (1 -> 2) ----
+    resetCounts();
+    R('GAME.bossRef.phase = 2;');
+    run(0.1);
+    check('bossPhase: immediate stab/nagara/swell', counts('fx') >= 1 && counts('big') >= 1);
+    check('bossPhase escalates to level 5 at the next sam', untilLevel(5, 8));
+
+    // ---- bossDefeated (boss vanishes, still in combat) ----
+    resetCounts();
+    R('GAME.bossRef = null;');
+    run(0.1);
+    check('bossDefeated: immediate nagara + chak', counts('big') >= 1 && counts('metal') >= 1);
+    check('bossDefeated eventually settles back to level 2 (tihai landing)', untilLevel(2, 30) || R('MUSIC.applied.level') <= 2);
+
+    // ---- roomClear (combat -> cleared, no boss) ----
+    R("GAME.state = 'combat'; GAME.enemies = [{}];");
+    run(0.5); // let prevSnap record state === 'combat' before the transition
+    resetCounts();
+    R("GAME.state = 'cleared'; GAME.enemies = [];");
+    run(0.1);
+    check('roomClear: immediate nagara + chak', counts('big') >= 1 && counts('metal') >= 1);
+    check('roomClear settles to level 1 at the tihai landing', untilLevel(1, 30));
+
+    // ---- reward (boon claimed) ----
+    R("GAME.state = 'combat'; GAME.enemies = [{}, {}, {}];");
+    run(0.5);
+    resetCounts();
+    R("GAME.player.boonRanks = { test: 1 };");
+    run(0.3);
+    check('reward: bell + gliss pluck notes', counts('fx') >= 1 && counts('pluck') >= 5);
+
+    // AUDIO.sfx('boon') is suppressed in-key while MUSIC is audible, and
+    // plays again once music volume is effectively silenced.
+    {
+      const oscBefore = mock.count.osc || 0;
+      R("AUDIO.sfx('boon');");
+      check("AUDIO.sfx('boon') suppressed while MUSIC is audible", (mock.count.osc || 0) === oscBefore);
+      R("SETTINGS.set('musicVolume', 0);");
+      const oscBefore2 = mock.count.osc || 0;
+      R("AUDIO.sfx('boon');");
+      check("AUDIO.sfx('boon') plays again with music volume 0", (mock.count.osc || 0) > oscBefore2);
+      R("SETTINGS.set('musicVolume', 1);");
+    }
+
+    // ---- revive ----
+    resetCounts();
+    R('GAME.player.defiance = 0;');
+    run(0.1);
+    check('revive: swell + stab', counts('fx') >= 1);
+
+    // ---- death ----
+    resetCounts();
+    R('MUSIC._leadLog = [];');
+    R("GAME.state = 'dead';");
+    run(0.1);
+    check('death: percussion/pluck/sub stems ramp to (near) 0 within 0.3s',
+      R(`(function () {
+        const stems = ['tabla', 'big', 'metal', 'pluck', 'sub'];
+        return stems.every(s => {
+          const evs = MUSIC.nodes.stems[s].gain._events;
+          const last = evs[evs.length - 1];
+          return last && last.type === 'target' && Math.abs(last.v) < 1e-6;
+        });
+      })()`) === true);
+    run(3);
+    check('death: descending lead phrase played (>= 6 notes, non-increasing, ends on Sa)',
+      R(`(function () {
+        const log = MUSIC._leadLog;
+        if (log.length < 6) return false;
+        for (let i = 1; i < log.length; i++) if (log[i] > log[i - 1]) return false;
+        return log[log.length - 1] === 0;
+      })()`) === true);
+    resetCounts();
+    run(10);
+    check('death: zero tabla one-shots over 10s (elegy — tanpura only)', counts('tabla') === 0);
+
+    // ---- victory ----
+    R("GAME.state = 'victory';");
+    run(0.1);
+    check('victory: stab + nagara hits', counts('big') >= 1);
+    check('victory eventually settles to level 1', untilLevel(1, 15));
+
+    // ---- hub return ----
+    R("GAME.state = 'hub'; GAME.biome = { id: 'hub', droneHz: 138.59 };");
+    { let g = 0; while (R('MUSIC.raga') !== 'yaman' && g++ < 150) run(0.1); }
+    check('hub return crossfades back to yaman', R('MUSIC.raga') === 'yaman');
+
+    // ---- pause ducks, unpause undoes it ----
+    R("GAME.state = 'paused'; GAME.prePause = 'hub';");
+    run(0.1);
+    check('pause: duck on (lowpass -> 1100)', R('MUSIC.nodes.duckLP.frequency.value') === 1100);
+    R("GAME.state = 'hub'; GAME.prePause = null;");
+    run(0.1);
+    check('unpause: duck off (lowpass -> 18000)', R('MUSIC.nodes.duckLP.frequency.value') === 18000);
+
+    // ---- AUDIO volume / drone shims ----
+    R("AUDIO.setVolume('music', 0.5);");
+    check("AUDIO.setVolume('music', .5) -> musicGain.gain.value === 0.08",
+      Math.abs(R('AUDIO.musicGain.gain.value') - 0.08) < 1e-9);
+    R("SETTINGS.set('musicVolume', 1); AUDIO._applyVolumes();");
+    {
+      const oscBeforeDrone = mock.count.osc || 0;
+      let droneErr = null;
+      try { R('AUDIO.startDrone(110); AUDIO.stopDrone();'); } catch (e) { droneErr = e; }
+      check('AUDIO.startDrone/stopDrone do not throw', droneErr === null);
+      check('AUDIO.startDrone/stopDrone create no oscillators', (mock.count.osc || 0) === oscBeforeDrone);
+      check('AUDIO.currentDrone reflects the last startDrone arg, then null',
+        R("(function(){ AUDIO.startDrone(220); const v = AUDIO.currentDrone; AUDIO.stopDrone(); return v === 220 && AUDIO.currentDrone === null; })()") === true);
+    }
+
+    // ---- musicDynamics caps the level even for a fresh boss ----
+    R("SETTINGS.set('musicDynamics', 0);");
+    check('SETTINGS.DEFAULTS.musicDynamics === 1', R('SETTINGS.DEFAULTS.musicDynamics') === 1);
+    R("GAME.state = 'combat'; GAME.enemies = [{}, {}, {}]; GAME.bossRef = { dead: false, phase: 2 };");
+    { let g = 0; while (g++ < 100) run(0.1); }
+    check('musicDynamics=0 caps a fresh boss (phase 2) at level <= 1', R('MUSIC.applied.level') <= 1);
+    R("SETTINGS.set('musicDynamics', 1); GAME.bossRef = null; GAME.state = 'hub';");
+
+    // ---- debug / audition hook ----
+    { let g = 0; while (R('MUSIC.raga') !== 'yaman' && g++ < 150) run(0.1); }
+    R("MUSIC.debug(5, 'patala');");
+    { let g = 0; while (R('MUSIC.raga') !== 'malkauns' && g++ < 150) run(0.1); }
+    check("MUSIC.debug(5,'patala') crossfades to malkauns", R('MUSIC.raga') === 'malkauns');
+    check('MUSIC.debug(5,...) eventually applies level 5', untilLevel(5, 15));
+    R('MUSIC.debug(null);');
+    { let g = 0; while (R('MUSIC.raga') !== 'yaman' && g++ < 150) run(0.1); }
+    check('MUSIC.debug(null) returns to the natural (hub/yaman) target', R('MUSIC.raga') === 'yaman');
+    resetCounts();
+    R("MUSIC.debugStinger('bossIntro');");
+    run(0.1);
+    check('MUSIC.debugStinger fires the named stinger (riser)', counts('fx') >= 1);
+    const state = R('MUSIC.debug()');
+    check('MUSIC.debug() returns {ragaId, level, bpm, section, stats}',
+      typeof state.ragaId === 'string' && typeof state.level === 'number' && typeof state.bpm === 'number' && typeof state.stats === 'object');
+  } catch (e) {
+    intErr = e;
+  }
+  check('stinger/integration sequence never threw' + (intErr ? ' — ' + intErr.stack : ''), intErr === null);
 }
 
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);

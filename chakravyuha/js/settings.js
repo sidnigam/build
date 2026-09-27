@@ -19,6 +19,7 @@ const SETTINGS = {
     masterVolume: 1,
     musicVolume: 1,
     sfxVolume: 1,
+    musicDynamics: 1,
     resolutionMode: 'auto',
   },
   RESOLUTION_MODES: ['auto', '1280x720', '1600x900', '1920x1080'],

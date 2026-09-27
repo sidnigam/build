@@ -1723,6 +1723,7 @@ MUSIC.theory.LEAD_PRESETS = {
     this._initLead();
     this._initPads();
     this.setRaga('yaman');
+    if (typeof location !== 'undefined' && location.search && /musicdebug/.test(location.search)) this._installDebugChords();
     return true;
   };
 
@@ -1962,7 +1963,20 @@ MUSIC.theory.LEAD_PRESETS = {
     const hz = T.semiToHz(this.sa * leadMul, deg);
     const prevHz = this.lead.prevHz;
 
-    if (opts.kan) {
+    // murki (quick turn) owns the pitch envelope for this note's onset when
+    // present — mutually exclusive with kan/glide's own onset-time write,
+    // so two automation events are never scheduled at the identical time t
+    // (05.3-03: a note can legitimately carry both glide and orn:'murki'
+    // from genPhraseNotes, so this can't just be an if/else-if on the caller
+    // side; a fast turn stands in fine for a meend/kan on the same note).
+    if (opts.murki) {
+      const upperHz = T.semiToHz(this.sa * leadMul, deg + 1);
+      const lowerHz = T.semiToHz(this.sa * leadMul, deg - 1);
+      this.lead.osc.frequency.setValueAtTime(upperHz, t);
+      this.lead.osc.frequency.setValueAtTime(hz, t + 0.045);
+      this.lead.osc.frequency.setValueAtTime(lowerHz, t + 0.09);
+      this.lead.osc.frequency.setValueAtTime(hz, t + 0.135);
+    } else if (opts.kan) {
       const graceHz = T.semiToHz(this.sa * leadMul, deg + 1);
       this.lead.osc.frequency.setValueAtTime(graceHz, t);
       this.lead.osc.frequency.setValueAtTime(hz, t + 0.035);
@@ -1974,14 +1988,6 @@ MUSIC.theory.LEAD_PRESETS = {
       this.lead.osc.frequency.setValueAtTime(hz, t);
       this.lead.amp.gain.setTargetAtTime(Math.max(0.0001, vel * 0.6), t, 0.005);
       this.lead.amp.gain.setTargetAtTime(Math.max(0.0001, vel), t + 0.02, 0.005);
-    }
-    if (opts.murki) {
-      const upperHz = T.semiToHz(this.sa * leadMul, deg + 1);
-      const lowerHz = T.semiToHz(this.sa * leadMul, deg - 1);
-      this.lead.osc.frequency.setValueAtTime(upperHz, t);
-      this.lead.osc.frequency.setValueAtTime(hz, t + 0.045);
-      this.lead.osc.frequency.setValueAtTime(lowerHz, t + 0.09);
-      this.lead.osc.frequency.setValueAtTime(hz, t + 0.135);
     }
     this.lead.prevHz = hz;
 
@@ -2115,15 +2121,246 @@ MUSIC.theory.LEAD_PRESETS = {
     this._lastHint = { kind, hz, t: this.ctx ? this.ctx.currentTime : 0 };
   };
 
-  // no-op until task 2 replaces it with the real stinger dispatcher.
-  MUSIC._stinger = function (name) { /* implemented in 05.3-03 task 2 */ };
-
   function stepSecFor(bpm) { return 60 / bpm / MUSIC.theory.STEPS_PER_MATRA; }
 
-  MUSIC.start = function () {
+  // abs step, quantized forward to the next sam/vibhag boundary at-or-after
+  // it (never behind it) — used to land stinger events on a tala boundary.
+  function alignForward(tala, abs, kind) {
+    const T = MUSIC.theory;
+    const cs = T.talaSteps(tala);
+    const s = ((abs % cs) + cs) % cs;
+    if (kind === 'sam') return s === 0 ? abs : abs + (cs - s);
+    const starts = T.vibhagStartSteps(tala);
+    if (starts.indexOf(s) !== -1) return abs;
+    for (let i = 0; i < starts.length; i++) if (starts[i] > s) return abs + (starts[i] - s);
+    return abs + (cs - s);
+  }
+
+  MUSIC._dyn = function () {
+    const d = (typeof SETTINGS !== 'undefined') ? SETTINGS.get('musicDynamics') : 1;
+    return d === undefined ? 1 : d;
+  };
+
+  // abs step at least `sec` seconds ahead at the current tempo (approximate
+  // — bpm may glide between now and then, which is fine for stinger timing).
+  MUSIC._absAtLeast = function (sec) {
+    return this.absStep + Math.ceil(sec / stepSecFor(this.bpm));
+  };
+
+  // ================================================================
+  // Stingers (05.3-03 task 2, D-07): event -> music. Free-time hits go
+  // through freeQueue (arbitrary ctx time); events that must land exactly
+  // on a step (tihai landings, boss-phase pickups) go through stepQueue,
+  // keyed by abs step, so _scheduleStep plays them at that step's actual
+  // scheduled time under whatever tempo is current when it arrives.
+  // ================================================================
+  MUSIC._stinger = function (name) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    const T = MUSIC.theory;
+    const raga = T.RAGAS[this.raga];
+    const self = this;
+
+    function queueFree(dt, fn) { self.freeQueue.push({ t: t + dt, fn }); }
+    function hit(dt, voice, key, vel) { queueFree(dt, function (tt) { self.playOneShot(voice, key, tt, vel); }); }
+    function queueStep(abs, ev) {
+      if (!self.stepQueue.has(abs)) self.stepQueue.set(abs, []);
+      self.stepQueue.get(abs).push(ev);
+    }
+    function forcePending(level, atAbs) {
+      self.pending = { level, atAbs };
+      self.governor.force(level);
+    }
+
+    switch (name) {
+      case 'bossIntro': {
+        hit(0.02, 'big', 'b:nagara', 1.0);
+        hit(0.02, 'big', 'b:sub', 0.9);
+        hit(0.05, 'fx', 'f:riser', 0.8);
+        const atAbs = alignForward(this.tala, this._absAtLeast(2.2), 'vibhag');
+        queueStep(atAbs, { voice: 'fx', key: 'stab', vel: 1.0 });
+        queueStep(atAbs, { voice: 'big', key: 'nagara', vel: 1.0 });
+        forcePending(T.INTENSITY.length > 4 ? MUSIC.logic.capLevel(4, this._dyn()) : 4, atAbs);
+        this.leadLockUntil = atAbs;
+        break;
+      }
+      case 'bossPhase': {
+        hit(0, 'fx', 'f:stab', 0.9);
+        hit(0, 'big', 'b:nagara', 1.0);
+        hit(0, 'fx', 'f:swell', 0.8);
+        const samAbs = alignForward(this.tala, this._absAtLeast(1.5), 'sam');
+        const stepSec = stepSecFor(this.bpm);
+        const matraSec = 60 / this.bpm;
+        const secUntilSam = (samAbs - this.absStep) * stepSec;
+        [0, 1.33, 2.67].forEach(function (f) { hit(Math.max(0, secUntilSam - matraSec + f * stepSec), 'big', 'b:nagara', 0.85); });
+        forcePending(MUSIC.logic.capLevel(5, this._dyn()), samAbs);
+        this.leadLockUntil = samAbs;
+        break;
+      }
+      case 'roomClear':
+      case 'bossDefeated': {
+        hit(0, 'big', 'b:nagara', 0.8);
+        hit(0, 'metal', 'm:chak', 0.6);
+        const cs = T.talaSteps(this.tala);
+        let rem = T.nextBoundary(this.tala, this.absStep, 'sam');
+        if (name === 'bossDefeated' && rem < 24) rem += cs;
+        const plan = MUSIC.gen.fitTihai(rem, cs);
+        const absNext = this.absStep;
+        const tihaiEvs = MUSIC.gen.tihaiEvents(plan, raga);
+        for (let i = 0; i < tihaiEvs.length; i++) {
+          const ev = tihaiEvs[i];
+          const abs = absNext + ev.at;
+          if (ev.voice === 'lead') queueStep(abs, { voice: 'lead', deg: ev.deg, vel: ev.vel, durSteps: 2 });
+          else queueStep(abs, { voice: ev.voice, key: ev.key, vel: ev.vel });
+        }
+        const landing = absNext + plan.landing;
+        if (name === 'bossDefeated') {
+          queueStep(landing, { voice: 'fx', key: 'stab', vel: 1.0 });
+          queueStep(landing, { voice: 'fx', key: 'bell', vel: 0.8 });
+        }
+        this.tihaiWindow = [absNext + plan.start, landing + 1];
+        this.leadLockUntil = landing + 1;
+        forcePending(MUSIC.logic.capLevel(1, this._dyn()), landing);
+        break;
+      }
+      case 'reward': {
+        hit(0, 'fx', 'f:bell', 0.6);
+        const degs = T.scaleDegrees(raga, 'up', 0, 24).slice(0, 8);
+        const n = Math.max(1, degs.length - 1);
+        degs.forEach(function (d, i) { hit(0.06 * i, 'pluck', 'p:' + d, 0.3 + (i / n) * 0.2); });
+        break;
+      }
+      case 'revive': {
+        hit(0, 'fx', 'f:swell', 0.8);
+        hit(1.6, 'fx', 'f:stab', 0.6);
+        break;
+      }
+      case 'death': {
+        this.stepQueue = new Map();
+        this.freeQueue = [];
+        this.pending = null;
+        this.tihaiWindow = null;
+        this.leadLockUntil = Infinity; // the descending phrase below owns the lead until elegy takes over
+        this.setStemLevels(this.applied.level, t, 0.3, { tabla: 0, big: 0, metal: 0, pluck: 0, sub: 0, lead: 0.8, drone: 0.8 });
+        this.leadCancel(t);
+        const seq = T.scaleDegrees(raga, 'down', 0, 12).slice().reverse();
+        const n = Math.max(1, seq.length - 1);
+        let curT = t;
+        seq.forEach(function (d, i) {
+          const isLast = i === seq.length - 1;
+          const dur = isLast ? 2.5 : 0.55;
+          const vel = isLast ? 0.45 : 0.7 - (i / n) * 0.25;
+          self.leadNote(curT, d, dur, vel, { glide: i > 0 });
+          if (isLast) self.freeQueue.push({ t: curT + dur, fn: function (tt) { self.leadRelease(tt); } });
+          curT += dur;
+        });
+        hit(seq.length > 1 ? (seq.length - 1) * 0.55 : 0, 'big', 'b:nagara', 0.5);
+        this.elegy = true;
+        break;
+      }
+      case 'victory': {
+        // release a still-pending death lock (dead -> victory is a same-raga
+        // transition), but re-lock for the duration of this fanfare so the
+        // regular per-step lead stream doesn't also schedule a note on top
+        // of the hand-scheduled aroha run + sustain below.
+        this.leadLockUntil = -Infinity;
+        hit(0, 'fx', 'f:stab', 1.0);
+        [0, 0.35, 0.7].forEach(function (dt) { hit(dt, 'big', 'b:nagara', 0.85); });
+        const upDegs = T.scaleDegrees(raga, 'up', 0, 12);
+        const stepDur = 0.15;
+        let curT = t;
+        upDegs.forEach(function (d, i) { self.leadNote(curT, d, stepDur, 0.6 + i * 0.02, {}); curT += stepDur; });
+        self.leadNote(curT, 12, 3.0, 0.85, {});
+        const sustainEnd = curT + 3.0;
+        this.freeQueue.push({ t: sustainEnd, fn: function (tt) { self.leadRelease(tt); } });
+        hit(0.7, 'fx', 'f:bell', 0.6);
+        hit(1.5, 'fx', 'f:bell', 0.6);
+        this.leadLockUntil = this.absStep + Math.ceil((sustainEnd - t) / stepSecFor(this.bpm));
+        break;
+      }
+      case 'biomeChange':
+      case 'toHub':
+        break; // the raga crossfade in _tick already handles these
+      default:
+        break;
+    }
+  };
+
+  // ================================================================
+  // Debug / audition hook (D-14): MUSIC.debug(level, ragaOrBiomeId) forces
+  // an override (bypassing the governor); MUSIC.debug(null) clears it;
+  // MUSIC.debug() returns the current state + stats. MUSIC.debugStinger
+  // fires one stinger. Backquote-held key chords are installed lazily
+  // by the first debug() call, or eagerly in attach() when
+  // location.search contains 'musicdebug'.
+  // ================================================================
+  MUSIC.debug = function (level, id) {
+    if (level === undefined && id === undefined) {
+      return {
+        ragaId: this.raga,
+        level: this.applied ? this.applied.level : 0,
+        bpm: this.bpm,
+        section: this.leadStream ? this.leadStream.section() : null,
+        stats: Object.assign({}, MUSIC.stats),
+      };
+    }
+    if (level === null) {
+      this.override = null;
+      this._installDebugChords();
+      return;
+    }
+    const T = MUSIC.theory;
+    const raga = id ? T.ragaFor(id) : (this.raga ? T.RAGAS[this.raga] : T.RAGAS.yaman);
+    this.override = { level: Math.max(0, Math.min(5, level)), raga: raga.id };
+    this._installDebugChords();
+  };
+
+  MUSIC.debugStinger = function (name) {
+    if (!this.ctx) return;
+    this._stinger(name);
+  };
+
+  MUSIC._installDebugChords = function () {
+    if (this._chordsInstalled) return;
+    this._chordsInstalled = true;
+    if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') return;
+    const stingerNames = ['bossIntro', 'bossPhase', 'roomClear', 'bossDefeated', 'reward', 'revive', 'death', 'victory'];
+    const ragaIds = ['yaman', 'bhairav', 'malkauns', 'adana', 'bhairavi'];
+    let backtickHeld = false, ragaIdx = 0, stingerIdx = 0;
+    window.addEventListener('keydown', function (e) {
+      if (!e || !e.code) return;
+      if (e.code === 'Backquote') { backtickHeld = true; return; }
+      if (!backtickHeld) return;
+      if (/^Digit[0-5]$/.test(e.code)) {
+        const n = Number(e.code.slice(5));
+        MUSIC.debug(n, MUSIC.raga);
+        console.log('[MUSIC] debug level ' + n);
+      } else if (e.code === 'KeyB') {
+        ragaIdx = (ragaIdx + 1) % ragaIds.length;
+        MUSIC.debug(MUSIC.override ? MUSIC.override.level : (MUSIC.applied ? MUSIC.applied.level : 0), ragaIds[ragaIdx]);
+        console.log('[MUSIC] debug raga ' + ragaIds[ragaIdx]);
+      } else if (e.code === 'KeyS') {
+        const stingerName = stingerNames[stingerIdx % stingerNames.length];
+        stingerIdx++;
+        MUSIC.debugStinger(stingerName);
+        console.log('[MUSIC] debug stinger ' + stingerName);
+      } else if (e.code === 'KeyX') {
+        MUSIC.debug(null);
+        console.log('[MUSIC] debug cleared');
+      } else if (e.code === 'KeyP') {
+        console.log('[MUSIC] stats', MUSIC.stats);
+      }
+    });
+    window.addEventListener('keyup', function (e) { if (e && e.code === 'Backquote') backtickHeld = false; });
+  };
+
+  // seed: optional explicit RNG seed (tests only — production/AUDIO.init()
+  // always calls start() with no args, so every real run gets a fresh
+  // Date.now()-derived seed and therefore sounds different, per D-09).
+  MUSIC.start = function (seed) {
     if (!this.ctx || this.running) return false;
     this.running = true;
-    this._seed = (Date.now() >>> 0);
+    this._seed = (seed !== undefined ? seed : Date.now()) >>> 0;
     this._changeCount = 0;
     this.rand = MUSIC.gen.rng(this._seed);
     this.governor = MUSIC.logic.createGovernor();
@@ -2146,7 +2383,7 @@ MUSIC.theory.LEAD_PRESETS = {
     this.leadLockUntil = -Infinity;
     this.tihaiWindow = null;
     this.elegy = false;
-    this._lastTickWall = null;
+    this._lastTickCtxTime = null;
     this._lastDuck = false;
     this._lastLowHp = false;
     this.lastApply = { abs: 0, t: t0, level: 0 };
@@ -2230,10 +2467,15 @@ MUSIC.theory.LEAD_PRESETS = {
 
     for (let i = 0; i < events.length; i++) this._stinger(events[i]);
 
-    const dt = this._lastTickWall === null ? 0.025 : Math.max(0, (t0 - this._lastTickWall) / 1000);
-    this._lastTickWall = t0;
-
+    // dt for the governor's down-hold hysteresis is measured on the ctx
+    // (audio) clock, not wall-clock performance.now() — the two track
+    // together in a real setTimeout(...,25) loop, but a test harness that
+    // pumps ticks back-to-back while manually advancing the mock ctx clock
+    // would otherwise see near-zero wall-clock dt and the hold timer would
+    // never accumulate.
     const nowCtx = this.ctx.currentTime;
+    const dt = this._lastTickCtxTime === null ? 0.025 : Math.max(0, nowCtx - this._lastTickCtxTime);
+    this._lastTickCtxTime = nowCtx;
     const changing = !!this.pendingRagaTarget;
 
     if (!changing) {

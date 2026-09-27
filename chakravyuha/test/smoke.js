@@ -2240,6 +2240,12 @@ try {
   if (!river) __riverErrors.push('no riverCurrent hazard spawned');
   else {
     const A = GAME.arena;
+    // Isolate the push-math check from the room's obstacle layout: vaitarani's "vait_fords"
+    // template runs a full-height column of pits straight through the arena's horizontal center
+    // (the exact x this fixture places the player at), so clampToArena's obstacle-push-out could
+    // pin the player against a pit edge and mask the river's own push — a test-fixture bug, not a
+    // river/obstacle interaction this check cares about (Phase 05.1-03 root-cause fix).
+    GAME.pillars = [];
     P.x = A.x + A.w / 2; P.y = river.y + river.h / 2;
     const x0 = P.x;
     for (let f = 0; f < 60; f++) {

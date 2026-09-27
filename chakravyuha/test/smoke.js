@@ -4751,5 +4751,93 @@ check('UI.startPadRebind registers a PAD.captureNext capture; firing it with "LB
 check('UI.resetPadBindings() restores PAD.DEFAULT_BINDINGS and persists', csr.resetRestoresDefaults && csr.resetPersisted);
 check('btn-settings-ctest gets an onclick handler wired during renderControllerSettings (headless boot unaffected)', csr.ctestBtnWired);
 
+// ---------------- Controller test screen (05.2-04) ----------------
+console.log('\n— Controller test screen (05.2-04) —');
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+
+  check('ctestModel(disconnected default PAD.state shape): connected false, showHelp true, 18 buttons, all unpressed',
+    R(`(() => {
+      // A fresh disconnected PAD.state snapshot (mirrors PAD.state's own defaults) rather than the
+      // live PAD.state, which earlier sections may have left connected from a fake-navigator poll.
+      const disconnected = { connected: false, index: -1, id: '', family: 'generic', model: 'unknown',
+        label: 'Controller', mapping: '', pads: [], buttons: {}, triggers: { LT: 0, RT: 0 }, axes: [],
+        left: { x: 0, y: 0, mag: 0 }, right: { x: 0, y: 0, mag: 0 }, rumble: 'unknown' };
+      const m = UI.ctestModel(disconnected);
+      return m.connected === false && m.showHelp === true && m.buttons.length === 18 && m.buttons.every(b => b.pressed === false);
+    })()`) === true);
+
+  check('ctestModel(fake DualSense): connected true/showHelp false/status has DualSense+standard; left {75,0}; lt/rt formatted; A=cross pressed, Home=PS pressed, B unpressed',
+    R(`(() => {
+      const s = {
+        connected: true, index: 0, id: 'DualSense Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 0ce6)',
+        family: 'ps', label: 'DualSense', mapping: 'standard', pads: [{}],
+        axes: [0.5, -1, 0, 0], buttons: { A: true, Home: true }, triggers: { LT: 0.25, RT: 1 },
+      };
+      const m = UI.ctestModel(s);
+      const a = m.buttons.find(b => b.name === 'A'), home = m.buttons.find(b => b.name === 'Home'), b = m.buttons.find(b => b.name === 'B');
+      return m.connected === true && m.showHelp === false
+        && m.status.indexOf('DualSense') >= 0 && m.status.indexOf('standard') >= 0
+        && m.left.x === 75 && m.left.y === 0 && m.lt === '0.25' && m.rt === '1.00'
+        && a.label === '✕' && a.shape === 'cross' && a.pressed === true
+        && home.label === 'PS' && home.pressed === true && b.pressed === false;
+    })()`) === true);
+
+  check('ctestModel: non-standard mapping warns; family "xbox" gives plain "A" label',
+    R(`(() => {
+      const s1 = { connected: true, index: 0, id: 'x', family: 'ps', label: 'Pad', mapping: '', pads: [{}], axes: [], buttons: {}, triggers: {} };
+      const m1 = UI.ctestModel(s1);
+      const s2 = { connected: true, index: 0, id: 'x', family: 'xbox', label: 'Pad', mapping: 'standard', pads: [{}], axes: [], buttons: {}, triggers: {} };
+      const m2 = UI.ctestModel(s2);
+      return m1.warning.toLowerCase().indexOf('non-standard') >= 0 && m2.buttons.find(b => b.name === 'A').label === 'A';
+    })()`) === true);
+
+  check('ctestHold: 0.5s -> null/hold.B=0.5; +0.6s -> "back" once, then null while still held; release resets; Y 1s -> "rumble"; Start 1s -> "back"',
+    R(`(() => {
+      let r = UI.ctestHold({}, { B: true }, 0.5);
+      const step1 = r.action === null && r.hold.B === 0.5;
+      r = UI.ctestHold(r.hold, { B: true }, 0.6);
+      const step2 = r.action === 'back';
+      r = UI.ctestHold(r.hold, { B: true }, 0.1);
+      const step3 = r.action === null;
+      r = UI.ctestHold(r.hold, {}, 0.1);
+      const released = r.hold.B === 0;
+      const y = UI.ctestHold({}, { Y: true }, 1);
+      const start = UI.ctestHold({}, { Start: true }, 1);
+      return step1 && step2 && step3 && released && y.action === 'rumble' && start.action === 'back';
+    })()`) === true);
+
+  vm.runInContext(`
+globalThis.__ctestResults = {};
+(function() {
+  const R = __ctestResults;
+  const savedRumble = PAD.rumble;
+  let rumbleArgs = null;
+
+  try {
+    UI.hub();
+    UI.controllerTest();
+    R.shown = document.getElementById('ctest').classList.contains('hidden') === false;
+
+    PAD.rumble = function (name, opts) { rumbleArgs = [name, opts]; return true; };
+    PAD.state.rumble = 'supported';
+    UI.ctestRumble();
+    R.rumbleCalled = rumbleArgs && rumbleArgs[0] === 'test' && rumbleArgs[1] && rumbleArgs[1].force === true;
+    R.rumbleStatusSet = document.getElementById('ctest-rumble-status').textContent.indexOf('Rumble:') === 0;
+
+    UI.closeControllerTest();
+    R.hidden = document.getElementById('ctest').classList.contains('hidden') === true;
+  } finally {
+    PAD.rumble = savedRumble;
+    UI.hub();
+  }
+})();
+  `, sandbox);
+  const cr = vm.runInContext('__ctestResults', sandbox);
+  check('UI.controllerTest() shows #ctest (hidden class removed)', cr.shown);
+  check("ctest rumble action calls PAD.rumble('test', {force:true}) and sets #ctest-rumble-status text", cr.rumbleCalled && cr.rumbleStatusSet);
+  check('UI.closeControllerTest() hides #ctest', cr.hidden);
+}
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

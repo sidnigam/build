@@ -23,6 +23,7 @@ const UI = {
   PAD_HINTS: {
     hub: null, boonpick: 'boon', shop: 'shop', shrine: 'menu', armory: 'menu',
     codex: 'codex', death: 'continue', victory: 'continue', pause: 'pause', settings: 'settings',
+    ctest: 'ctest',
   },
   ensurePadHints() {
     if (this._padHintsDone) return;
@@ -506,6 +507,134 @@ const UI = {
     PAD.resetBindings();
     this.renderControllerSettings();
     if (typeof GLYPHS !== 'undefined') GLYPHS.refresh(true);
+  },
+
+  // ---------- controller test screen (Phase 05.2 Plan 04, D-15/PAD-09) ----------
+  // Pure: view-model of a PAD.state-shaped snapshot. Never touches the DOM.
+  ctestModel(s) {
+    const state = s || {};
+    const family = state.family || 'generic';
+    const buttons = state.buttons || {};
+    const btns = PAD.BUTTON_NAMES.map(n => {
+      const tok = GLYPHS.padToken(n, family);
+      return { name: n, label: tok.label, shape: tok.shape, kind: tok.kind, pressed: !!buttons[n] };
+    });
+    const axes = state.axes || [];
+    const pct = (i) => Math.round((50 + (axes[i] || 0) * 50) * 10) / 10;
+    const triggers = state.triggers || {};
+    const connected = !!state.connected;
+    const pads = state.pads || [];
+    const idx = typeof state.index === 'number' ? state.index : -1;
+    const status = connected
+      ? `${state.label || 'Controller'} · ${family.toUpperCase()} · mapping: ${state.mapping || 'none'} · pad ${idx + 1} of ${pads.length || 1}`
+      : 'No controller detected — press any button on it';
+    const warning = connected && state.mapping !== 'standard'
+      ? 'Non-standard mapping: buttons may be mislabeled. Try USB, or update the browser/OS.'
+      : '';
+    return {
+      connected, showHelp: !connected, status, id: state.id || '', warning,
+      buttons: btns,
+      left: { x: pct(0), y: pct(1) }, right: { x: pct(2), y: pct(3) },
+      lt: (triggers.LT || 0).toFixed(2), rt: (triggers.RT || 0).toFixed(2),
+      rumble: state.rumble || 'unknown',
+    };
+  },
+
+  // Pure: hold-to-act timers for B/Start (-> 'back') and Y (-> 'rumble'). `hold` is the previous
+  // { B, Start, Y } timer map (-1 = already fired this hold, reset to 0 on release).
+  ctestHold(hold, buttons, dt, need = 1) {
+    const h = { B: (hold && hold.B) || 0, Start: (hold && hold.Start) || 0, Y: (hold && hold.Y) || 0 };
+    let action = null;
+    const track = (name, act) => {
+      if (!(buttons && buttons[name])) { h[name] = 0; return; }
+      if (h[name] === -1) return; // already fired, still held
+      h[name] = (h[name] || 0) + (dt || 0);
+      if (h[name] >= need) { h[name] = -1; if (action === null) action = act; }
+    };
+    track('B', 'back');
+    track('Start', 'back');
+    track('Y', 'rumble');
+    const val = v => (v === -1 ? need : Math.max(0, v));
+    const progress = Math.min(1, Math.max(val(h.B), val(h.Start), val(h.Y)) / need);
+    return { hold: h, action, progress };
+  },
+
+  _buildCtestButtons() {
+    const family = PAD.family;
+    if (this._ctestBtnEls && this._ctestFamily === family) return;
+    this._ctestFamily = family;
+    const wrap = this.el('ctest-buttons');
+    wrap.innerHTML = '';
+    this._ctestBtnEls = {};
+    for (const name of PAD.BUTTON_NAMES) {
+      const tok = GLYPHS.padToken(name, family);
+      const div = document.createElement('div');
+      div.className = 'ctest-btn';
+      div.innerHTML = GLYPHS.tokenHtml(tok) + `<span>${name}</span>`;
+      wrap.appendChild(div);
+      this._ctestBtnEls[name] = div;
+    }
+  },
+
+  controllerTest() {
+    this.show('ctest');
+    this._buildCtestButtons();
+    this.el('btn-ctest-back').onclick = () => this.closeControllerTest();
+    this.el('btn-ctest-rumble').onclick = () => this.ctestRumble();
+    this._ctestHoldState = { B: 0, Start: 0, Y: 0 };
+    this._ctestRumbleMsgUntil = 0;
+    if (typeof GLYPHS !== 'undefined') GLYPHS.refresh(true);
+    this._ctestLoop();
+  },
+
+  closeControllerTest() {
+    this.hide('ctest');
+    this._ctestHoldState = null;
+  },
+
+  ctestRumble() {
+    const ok = PAD.rumble('test', { force: true });
+    const status = this.el('ctest-rumble-status');
+    if (PAD.state.rumble === 'unsupported') {
+      status.textContent = 'Rumble: not supported for this controller in this browser/OS';
+    } else if (ok) {
+      status.textContent = 'Rumble: sent — feel it? If not, DualSense rumble is not supported on this OS/browser version';
+    } else {
+      status.textContent = 'Rumble: blocked (rumble off in settings or intensity 0)';
+    }
+    this._ctestRumbleMsgUntil = ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) + 2000;
+  },
+
+  _ctestLoop() {
+    const panel = this.el('ctest');
+    if (panel.classList.contains('hidden')) return;
+    const m = this.ctestModel(PAD.state);
+    this.el('ctest-status').textContent = m.status;
+    this.el('ctest-id').textContent = m.id;
+    this.el('ctest-warn').textContent = m.warning;
+    const ldot = this.el('ctest-ldot'); ldot.style.left = m.left.x + '%'; ldot.style.top = m.left.y + '%';
+    const rdot = this.el('ctest-rdot'); rdot.style.left = m.right.x + '%'; rdot.style.top = m.right.y + '%';
+    this.el('ctest-lt-fill').style.width = (Number(m.lt) * 100) + '%';
+    this.el('ctest-rt-fill').style.width = (Number(m.rt) * 100) + '%';
+    this.el('ctest-lt-val').textContent = m.lt;
+    this.el('ctest-rt-val').textContent = m.rt;
+    this.el('ctest-help').style.display = m.showHelp ? '' : 'none';
+    if (this._ctestFamily !== PAD.family) this._buildCtestButtons();
+    for (const b of m.buttons) {
+      const el = this._ctestBtnEls && this._ctestBtnEls[b.name];
+      if (el && el.classList) { if (b.pressed) el.classList.add('on'); else el.classList.remove('on'); }
+    }
+    const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+    if (now > (this._ctestRumbleMsgUntil || 0)) {
+      this.el('ctest-rumble-status').textContent = 'Rumble: ' +
+        (m.rumble === 'supported' ? 'supported' : m.rumble === 'unsupported' ? 'not supported' : 'unknown');
+    }
+    const h = this.ctestHold(this._ctestHoldState || {}, PAD.state.buttons || {}, PAD.state.dt || 0.016);
+    this._ctestHoldState = h.hold;
+    this.el('ctest-hold-fill').style.width = Math.round(h.progress * 100) + '%';
+    if (h.action === 'back') this.closeControllerTest();
+    else if (h.action === 'rumble') this.ctestRumble();
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => this._ctestLoop());
   },
 
   toggleFullscreen() {

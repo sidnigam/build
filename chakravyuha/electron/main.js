@@ -40,15 +40,24 @@ function createWindow() {
     minWidth: 1280,
     minHeight: 720,
     resizable: true,
+    show: false,
+    backgroundColor: '#050308',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      // Phase 05.2 Plan 04 (D-16): a pad-only player needs the game window focused (Chromium only
+      // delivers gamepad data to the focused, visible page), never throttled in the background, and
+      // audio unlocked without requiring a prior click gesture.
+      backgroundThrottling: false,
+      autoplayPolicy: 'no-user-gesture-required',
     },
   });
 
   win.loadFile(path.join(__dirname, '..', 'index.html'));
+
+  win.once('ready-to-show', () => { win.show(); win.focus(); });
 
   win.webContents.on('before-input-event', (event, input) => {
     if (input.type === 'keyDown' && input.key === 'F11') {

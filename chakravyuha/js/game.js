@@ -615,6 +615,7 @@ const GAME = {
     if (inRun) {
       this.renderEntities(ctx);
       this.renderEffects(ctx);
+      this.renderAimIndicator(ctx);
     } else VFX.render(ctx);
     // Sweep sprites whose entities were not drawn this frame (G.enemies = [] on room change, hub state).
     SPRITES.endEntities();
@@ -1029,6 +1030,62 @@ const GAME = {
     ctx.globalAlpha = 1;
   },
 
+  // Pure geometry for the pad world-space aim indicator (D-11): a gold arc + chevron centered on
+  // the player, pointing along `aim`. P(d) walks distance d along the aim ray from (px, py).
+  aimIndicatorGeom(px, py, aim, r) {
+    const P = (d, ang) => ({ x: px + Math.cos(ang) * d, y: py + Math.sin(ang) * d });
+    return {
+      arcR: r + 30,
+      arcStart: aim - 0.35,
+      arcEnd: aim + 0.35,
+      tip: P(r + 44 + 8, aim),
+      left: P(r + 44 - 4, aim - 0.22),
+      right: P(r + 44 - 4, aim + 0.22),
+    };
+  },
+
+  // World-space pad aim indicator (D-11): replaces the mouse crosshair while INPUT.device === 'pad'.
+  // Drawn in the world pass (after renderEffects, before CAMERA.resetCtx) so the camera transform
+  // applies automatically — no manual world<->screen conversion here.
+  renderAimIndicator(ctx) {
+    if (INPUT.device !== 'pad') return;
+    const P = this.player;
+    if (!P || P.hp <= 0) return;
+    if (!(this.playing() || this.state === 'paused')) return;
+    const g = this.aimIndicatorGeom(P.x, P.y, P.aim, P.r);
+    ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = 'rgba(255,211,77,0.55)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(P.x, P.y, g.arcR, g.arcStart, g.arcEnd);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#ffd34d';
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(g.left.x, g.left.y);
+    ctx.lineTo(g.tip.x, g.tip.y);
+    ctx.lineTo(g.right.x, g.right.y);
+    ctx.stroke();
+
+    const t = (typeof PAD !== 'undefined' && PAD.state) ? PAD.state.assistTarget : null;
+    if (t && !t.dead) {
+      const hs = 7, tx = t.x, ty = t.y - (t.r || 0) - 12;
+      ctx.strokeStyle = '#ffd34d';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(tx, ty - hs);
+      ctx.lineTo(tx + hs, ty);
+      ctx.lineTo(tx, ty + hs);
+      ctx.lineTo(tx - hs, ty);
+      ctx.closePath();
+      ctx.stroke();
+    }
+    ctx.restore();
+  },
+
   // ---- Phase 4: obstacles (pillar/wall/pit) — renderObstacles ----
   renderObstacles(ctx) {
     const biome = this.biome;
@@ -1186,7 +1243,17 @@ const GAME = {
     ctx.strokeRect(sx, by + 30, sw, 10);
     ctx.fillStyle = 'rgba(255,255,255,0.7)';
     ctx.font = '10px Georgia';
-    ctx.fillText(INPUT.device === 'pad' ? 'SPECIAL [LT / X]' : 'SPECIAL [E / RMB]', sx, by + 58);
+    if (typeof GLYPHS !== 'undefined') {
+      const legend = (label, x, action) => {
+        ctx.fillText(label, x, by + 58);
+        GLYPHS.drawTokens(ctx, x, by + 52, GLYPHS.tokensFor(action), 12);
+      };
+      legend('DASH', bx + 8, 'dash');
+      legend('ASTRA', bx + 8 + P.dashMax * 22 + 20, 'cast');
+      legend('SPECIAL', sx, 'special');
+    } else {
+      ctx.fillText(INPUT.device === 'pad' ? 'SPECIAL [LT / X]' : 'SPECIAL [E / RMB]', sx, by + 58);
+    }
 
     // currencies — dark backing plate with gold hairline, positions unchanged
     ctx.textAlign = 'right';
@@ -1275,18 +1342,20 @@ const GAME = {
     if (this.state !== 'hub') this.renderIndicators(ctx);
 
     // crosshair (D-11/D-15: screen-space, outside camera transform)
-    // kbm aims at the literal cursor position; pad has no cursor, so project its world-space
-    // aim target back to screen space through the current camera transform.
-    const cross = INPUT.device === 'pad' ? CAMERA.worldToScreen(INPUT.wx, INPUT.wy) : { x: INPUT.mx, y: INPUT.my };
-    ctx.strokeStyle = 'rgba(255,255,255,0.8)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.arc(cross.x, cross.y, 8, 0, U.TAU); ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(cross.x - 12, cross.y); ctx.lineTo(cross.x - 4, cross.y);
-    ctx.moveTo(cross.x + 4, cross.y); ctx.lineTo(cross.x + 12, cross.y);
-    ctx.moveTo(cross.x, cross.y - 12); ctx.lineTo(cross.x, cross.y - 4);
-    ctx.moveTo(cross.x, cross.y + 4); ctx.lineTo(cross.x, cross.y + 12);
-    ctx.stroke();
+    // kbm aims at the literal cursor position; pad has no cursor at all (D-11/D-06: it gets the
+    // world-space aim arc/chevron drawn by renderAimIndicator in the world pass instead).
+    if (INPUT.device !== 'pad') {
+      const cross = { x: INPUT.mx, y: INPUT.my };
+      ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(cross.x, cross.y, 8, 0, U.TAU); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cross.x - 12, cross.y); ctx.lineTo(cross.x - 4, cross.y);
+      ctx.moveTo(cross.x + 4, cross.y); ctx.lineTo(cross.x + 12, cross.y);
+      ctx.moveTo(cross.x, cross.y - 12); ctx.lineTo(cross.x, cross.y - 4);
+      ctx.moveTo(cross.x, cross.y + 4); ctx.lineTo(cross.x, cross.y + 12);
+      ctx.stroke();
+    }
   },
 
   // ---- CAM-06: off-screen indicators (edge arrows for alive enemies + cleared-room doors) ----

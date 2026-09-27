@@ -230,6 +230,54 @@
     width: 360px; margin: 8px 0; gap: 16px; color: var(--ash); font-size: 14px; letter-spacing: 0.06em; }
   #settings-rebind-list .settings-row { font-size: 13px; }
 </style>
+<style id="controller-css">
+  .glyph { display: inline-flex; align-items: center; justify-content: center; min-width: 1.5em; height: 1.5em;
+    padding: 0 .35em; border: 1px solid var(--gold-soft); border-radius: 4px; background: rgba(10, 6, 16, .85);
+    font-family: 'Segoe UI Symbol', 'Apple Symbols', 'Noto Sans Symbols 2', Georgia; font-size: .85em;
+    color: var(--ash); vertical-align: middle; }
+  .glyph.g-face { border-radius: 50%; font-weight: bold; }
+  .glyph.g-cross { color: #7ea6ff; }
+  .glyph.g-circle { color: #ff6b6b; }
+  .glyph.g-square { color: #ff8fd0; }
+  .glyph.g-triangle { color: #3fd6a0; }
+  .glyph-sep { opacity: .5; margin: 0 .2em; }
+
+  body.pad-mode .pad-focus { outline: 2px solid var(--gold); outline-offset: 3px;
+    box-shadow: 0 0 0 4px rgba(255, 211, 77, .18), 0 0 18px rgba(255, 211, 77, .45); }
+  body.pad-mode .card.pad-focus { transform: translateY(-4px); }
+  body.pad-mode button.pad-focus { background: rgba(255, 211, 77, .12); color: var(--gold); border-color: var(--gold); }
+  body.pad-mode .pad-focus::before, body.pad-mode .pad-focus::after { background: var(--gold); opacity: 1; }
+
+  #settings { justify-content: flex-start; overflow-y: auto; padding: 36px 0; }
+
+  .pad-hint { display: none; margin-top: 18px; font-size: 13px; opacity: .8; letter-spacing: .06em; }
+  body.pad-mode .pad-hint { display: block; }
+
+  .settings-h { margin: 18px 0 6px; color: var(--gold); font-size: 13px; letter-spacing: .2em; }
+  #settings-pad-rebind-list .settings-row button { min-width: 140px; }
+
+  #ctest { justify-content: flex-start; overflow-y: auto; padding: 32px 0; }
+  .ctest-row { display: flex; gap: 40px; align-items: center; margin-top: 18px; }
+  .ctest-stick { position: relative; width: 120px; height: 120px; border: 1px solid var(--gold-soft); border-radius: 50%; }
+  .ctest-dz { position: absolute; left: 50%; top: 50%; width: 20%; height: 20%; margin: -10% 0 0 -10%;
+    border: 1px dashed var(--gold-soft); border-radius: 50%; }
+  .ctest-dot { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%;
+    background: var(--gold); left: 50%; top: 50%; }
+  .ctest-trigs { display: flex; flex-direction: column; gap: 14px; }
+  .ctest-trig { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .ctest-bar { width: 160px; height: 10px; border: 1px solid var(--gold-soft); }
+  .ctest-fill { height: 100%; width: 0; background: var(--gold); }
+  .ctest-buttons { display: grid; grid-template-columns: repeat(6, auto); gap: 10px 16px; margin-top: 18px; }
+  .ctest-btn { opacity: .35; font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .ctest-btn.on { opacity: 1; }
+  .ctest-btn.on .glyph { box-shadow: 0 0 10px rgba(255,211,77,.7); }
+  .ctest-hold { width: 240px; height: 4px; margin-top: 8px; background: rgba(255,255,255,.08); }
+  .ctest-help { max-width: 640px; margin-top: 16px; text-align: left; font-size: 13.5px; line-height: 1.6; color: #d8cfe8; }
+  .ctest-help ol { padding-left: 20px; }
+  .ctest-help li { margin-bottom: 8px; }
+  .ctest-warn { color: #ff8c42; font-size: 13px; }
+  .ctest-id { font-size: 12px; opacity: .6; margin-top: 4px; }
+</style>
 </head>
 <body>
 <div id="wrap"><div id="stage">
@@ -256,7 +304,7 @@
     <div class="narada" id="hub-narada"></div>
     <div class="hub-stats" id="hub-stats"></div>
     <div class="controls-hint">
-      WASD move · mouse aim · LMB attack · E / RMB special · Q astra · SPACE dash · ESC pause · M mute
+      <span id="hub-controls-text" data-glyph-hint="hub">WASD move · mouse aim · LMB attack · E / RMB special · Q astra · SPACE dash · ESC pause · M mute</span>
       <br><button id="btn-wipe" class="danger">erase save</button>
     </div>
   </div>
@@ -351,8 +399,47 @@
     </div>
     <div class="settings-row"><label>Screen Shake</label><input type="checkbox" id="settings-shake"></div>
     <div class="settings-row"><label>Screen Flash</label><input type="checkbox" id="settings-flash"></div>
+    <div class="settings-h">CONTROLLER</div>
+    <div class="settings-row"><label>Rumble</label><input type="checkbox" id="settings-rumble"></div>
+    <div class="settings-row"><label>Rumble Intensity</label><input type="range" id="settings-rumble-intensity" min="0" max="100"></div>
+    <div class="settings-row"><label>Aim Assist (controller)</label><input type="checkbox" id="settings-aimassist"></div>
+    <div id="settings-pad-rebind-list"></div>
+    <div class="settings-row"><button id="settings-pad-reset">RESET CONTROLLER BUTTONS</button><button id="btn-settings-ctest">CONTROLLER TEST</button></div>
+    <div class="settings-h">KEYBOARD</div>
     <div id="settings-rebind-list"></div>
     <div class="back-row"><button id="btn-settings-back">BACK</button></div>
+  </div>
+
+  <!-- CONTROLLER TEST (Phase 05.2 Plan 04, D-15) -->
+  <div id="ctest" class="panel solid hidden">
+    <div class="panel-h">CONTROLLER TEST</div>
+    <div class="panel-sub" id="ctest-status">No controller detected</div>
+    <div class="ctest-id" id="ctest-id"></div>
+    <div class="ctest-warn" id="ctest-warn"></div>
+    <div class="ctest-row">
+      <div class="ctest-stick" id="ctest-lstick"><div class="ctest-dz"></div><div class="ctest-dot" id="ctest-ldot"></div><span>L</span></div>
+      <div class="ctest-trigs">
+        <div class="ctest-trig"><span>L2</span><div class="ctest-bar"><div class="ctest-fill" id="ctest-lt-fill"></div></div><span id="ctest-lt-val">0.00</span></div>
+        <div class="ctest-trig"><span>R2</span><div class="ctest-bar"><div class="ctest-fill" id="ctest-rt-fill"></div></div><span id="ctest-rt-val">0.00</span></div>
+      </div>
+      <div class="ctest-stick" id="ctest-rstick"><div class="ctest-dz"></div><div class="ctest-dot" id="ctest-rdot"></div><span>R</span></div>
+    </div>
+    <div class="ctest-buttons" id="ctest-buttons"></div>
+    <div class="settings-row"><label id="ctest-rumble-status">Rumble: unknown</label><button id="btn-ctest-rumble">TEST RUMBLE</button></div>
+    <div class="ctest-hold"><div class="ctest-fill" id="ctest-hold-fill"></div></div>
+    <div class="ctest-help" id="ctest-help">
+      <ol>
+        <li><b>USB:</b> connect with a data-capable USB-C cable, then press the <b>PS</b> button.</li>
+        <li><b>Bluetooth pairing:</b> with the controller off, hold <b>Create + PS</b> for ~3–5 s until the light bar flashes rapidly.
+          macOS: System Settings &rarr; Bluetooth &rarr; "DualSense Wireless Controller" &rarr; Connect.
+          Windows: Settings &rarr; Bluetooth &amp; devices &rarr; Add device &rarr; Bluetooth &rarr; "Wireless Controller".</li>
+        <li>Focus the game window and <b>press any button</b> — browsers only expose a controller after a button press.</li>
+        <li>If Steam is running with PlayStation Configuration Support, Steam Input may present the pad as an Xbox controller (Xbox glyphs appear) — expected; quit Steam or disable it for the browser test.</li>
+        <li>macOS: the PS button opens the system game overlay/Launchpad by default (System Settings &rarr; Game Controllers). The game never uses the PS button.</li>
+        <li>Rumble may be unavailable for DualSense depending on OS/browser version — this screen reports it.</li>
+      </ol>
+    </div>
+    <div class="back-row"><button id="btn-ctest-back">BACK</button></div>
   </div>
 
   <div class="foot">open source · built with canvas &amp; vanilla js</div>
@@ -374,5 +461,7 @@
 <script src="js/game.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/gamepad.js"></script>
+<script src="js/glyphs.js"></script>
+<script src="js/focus.js"></script>
 </body>
 </html>

@@ -4571,5 +4571,105 @@ globalThis.__rumbleResults = {};
   check('installRumbleHooks() called twice wraps VFX.emit only once', rr.hooksIdempotent);
 }
 
+// ---------------- aim indicator + HUD glyphs (05.2-03) ----------------
+console.log('\n— aim indicator + HUD glyphs (05.2-03) —');
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+
+  check('aimIndicatorGeom(100,200,0,14): arcR=44 (r+30), arc spans aim ±0.35, tip at r+44+8 along aim, chevron symmetric about the aim ray',
+    R(`(() => {
+      const g = GAME.aimIndicatorGeom(100, 200, 0, 14);
+      const tipOk = Math.abs(g.tip.x - 166) < 1e-6 && Math.abs(g.tip.y - 200) < 1e-6;
+      const arcOk = g.arcR === 44 && Math.abs(g.arcStart + 0.35) < 1e-9 && Math.abs(g.arcEnd - 0.35) < 1e-9;
+      const symOk = Math.abs(g.left.x - g.right.x) < 1e-9 && Math.abs((g.left.y - 200) + (g.right.y - 200)) < 1e-9;
+      return tipOk && arcOk && symOk;
+    })()`) === true);
+
+  check('aimIndicatorGeom with aim = PI/2: tip.x ~= px, tip.y > py',
+    R(`(() => {
+      const g = GAME.aimIndicatorGeom(50, 60, Math.PI / 2, 14);
+      return Math.abs(g.tip.x - 50) < 1e-6 && g.tip.y > 60;
+    })()`) === true);
+
+  vm.runInContext(`
+globalThis.__aimHudResults = {};
+(function() {
+  const R = __aimHudResults;
+  const noop = () => {};
+  const mkRecCtx = () => {
+    const calls = [];
+    return new Proxy({ _calls: calls }, {
+      get(t, prop) {
+        if (prop === '_calls') return calls;
+        if (prop === 'createRadialGradient' || prop === 'createLinearGradient') return () => ({ addColorStop: noop });
+        if (prop === 'measureText') return () => ({ width: 0 });
+        if (prop === 'arc') return (...args) => { calls.push(['arc', ...args]); };
+        if (prop in t) return t[prop];
+        return noop;
+      },
+      set(t, prop, v) { t[prop] = v; return true; },
+    });
+  };
+
+  const savedDevice = INPUT.device;
+  const savedDrawTokens = GLYPHS.drawTokens;
+
+  try {
+    GAME.startRun();
+    GAME.state = 'combat';
+    const P = GAME.player;
+    P.aim = 0;
+
+    // 1. pad: renderAimIndicator draws the world-space arc; renderHUD draws NO crosshair arc at (mx,my,8)
+    INPUT.device = 'pad';
+    INPUT.mx = 12345; INPUT.my = 6789;   // sentinel — must never appear as an arc center on pad
+    const ctx1 = mkRecCtx();
+    GAME.renderAimIndicator(ctx1);
+    R.padIndicatorDrew = ctx1._calls.some(c => c[0] === 'arc');
+    const ctx2 = mkRecCtx();
+    GAME.renderHUD(ctx2);
+    R.padHudNoCrosshair = !ctx2._calls.some(c => c[0] === 'arc' && c[1] === INPUT.mx && c[2] === INPUT.my && c[3] === 8);
+
+    // 1b. with an aim-assist target set, renderAimIndicator still does not throw (draws the diamond)
+    PAD.state.assistTarget = { x: P.x + 100, y: P.y, r: 14, dead: false };
+    let threwWithTarget = false;
+    try { GAME.renderAimIndicator(mkRecCtx()); } catch (e) { threwWithTarget = true; }
+    R.noThrowWithAssistTarget = threwWithTarget === false;
+    PAD.state.assistTarget = null;
+
+    // 2. kbm: renderHUD DOES draw the crosshair arc at (mx,my,8); renderAimIndicator draws nothing
+    INPUT.device = 'kbm';
+    const ctx3 = mkRecCtx();
+    GAME.renderHUD(ctx3);
+    R.kbmHudDrawsCrosshair = ctx3._calls.some(c => c[0] === 'arc' && c[1] === INPUT.mx && c[2] === INPUT.my && c[3] === 8);
+    const ctx4 = mkRecCtx();
+    GAME.renderAimIndicator(ctx4);
+    R.kbmIndicatorDrawsNothing = ctx4._calls.length === 0;
+
+    // 3. GLYPHS.drawTokens spy — renderHUD calls it (dash/cast/special) on both devices, never throws
+    let drawCalls = [];
+    GLYPHS.drawTokens = function (...args) { drawCalls.push(args); return savedDrawTokens.apply(this, args); };
+    let threwPad = false, threwKbm = false;
+    INPUT.device = 'pad';
+    try { GAME.renderHUD(mkRecCtx()); } catch (e) { threwPad = true; }
+    const padCalls = drawCalls.length;
+    drawCalls = [];
+    INPUT.device = 'kbm';
+    try { GAME.renderHUD(mkRecCtx()); } catch (e) { threwKbm = true; }
+    R.glyphLegendBothDevices = !threwPad && !threwKbm && padCalls >= 3 && drawCalls.length >= 3;
+  } finally {
+    GLYPHS.drawTokens = savedDrawTokens;
+    INPUT.device = savedDevice;
+    PAD.state.assistTarget = null;
+  }
+})();
+  `, sandbox);
+  const ah = vm.runInContext('__aimHudResults', sandbox);
+  check('pad: renderAimIndicator draws the world-space arc/chevron; renderHUD draws no crosshair arc at the mouse position', ah.padIndicatorDrew && ah.padHudNoCrosshair);
+  check('pad + aim-assist target set: renderAimIndicator does not throw (draws the assist diamond)', ah.noThrowWithAssistTarget);
+  check('kbm: renderHUD draws the crosshair arc at (INPUT.mx, INPUT.my, 8); renderAimIndicator draws nothing', ah.kbmHudDrawsCrosshair && ah.kbmIndicatorDrawsNothing);
+  check('renderHUD calls GLYPHS.drawTokens for dash/cast/special on both devices and never throws (existing HUD check stays green)', ah.glyphLegendBothDevices);
+}
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

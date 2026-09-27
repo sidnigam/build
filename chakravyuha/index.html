@@ -252,6 +252,9 @@
 
   .pad-hint { display: none; margin-top: 18px; font-size: 13px; opacity: .8; letter-spacing: .06em; }
   body.pad-mode .pad-hint { display: block; }
+
+  .settings-h { margin: 18px 0 6px; color: var(--gold); font-size: 13px; letter-spacing: .2em; }
+  #settings-pad-rebind-list .settings-row button { min-width: 140px; }
 </style>
 </head>
 <body>
@@ -374,6 +377,13 @@
     </div>
     <div class="settings-row"><label>Screen Shake</label><input type="checkbox" id="settings-shake"></div>
     <div class="settings-row"><label>Screen Flash</label><input type="checkbox" id="settings-flash"></div>
+    <div class="settings-h">CONTROLLER</div>
+    <div class="settings-row"><label>Rumble</label><input type="checkbox" id="settings-rumble"></div>
+    <div class="settings-row"><label>Rumble Intensity</label><input type="range" id="settings-rumble-intensity" min="0" max="100"></div>
+    <div class="settings-row"><label>Aim Assist (controller)</label><input type="checkbox" id="settings-aimassist"></div>
+    <div id="settings-pad-rebind-list"></div>
+    <div class="settings-row"><button id="settings-pad-reset">RESET CONTROLLER BUTTONS</button><button id="btn-settings-ctest">CONTROLLER TEST</button></div>
+    <div class="settings-h">KEYBOARD</div>
     <div id="settings-rebind-list"></div>
     <div class="back-row"><button id="btn-settings-back">BACK</button></div>
   </div>

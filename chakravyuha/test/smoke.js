@@ -4671,5 +4671,85 @@ globalThis.__aimHudResults = {};
   check('renderHUD calls GLYPHS.drawTokens for dash/cast/special on both devices and never throws (existing HUD check stays green)', ah.glyphLegendBothDevices);
 }
 
+// ---------------- Settings: controller section (05.2-04) ----------------
+console.log('\n— Settings: controller section (05.2-04) —');
+vm.runInContext(`
+globalThis.__ctrlSettingsResults = {};
+(function() {
+  const R = __ctrlSettingsResults;
+  const savedRumble = SETTINGS.get('rumble'), savedIntensity = SETTINGS.get('rumbleIntensity'), savedAssist = SETTINGS.get('aimAssist');
+  const savedBindings = JSON.parse(JSON.stringify(PAD.bindings || PAD.DEFAULT_BINDINGS));
+
+  try {
+    SETTINGS.set('rumble', true);
+    SETTINGS.set('rumbleIntensity', 0.8);
+    SETTINGS.set('aimAssist', true);
+    PAD.resetBindings();
+
+    UI.hub();
+    UI.settings('hub');
+
+    R.rumbleMirrors = document.getElementById('settings-rumble').checked === true;
+    R.intensityMirrors = Number(document.getElementById('settings-rumble-intensity').value) === 80;
+    R.assistMirrors = document.getElementById('settings-aimassist').checked === true;
+
+    // onchange/oninput handlers write through to SETTINGS
+    document.getElementById('settings-rumble').onchange({ target: { checked: false } });
+    R.rumbleOnchange = SETTINGS.get('rumble') === false;
+
+    document.getElementById('settings-rumble-intensity').oninput({ target: { value: 40 } });
+    R.intensityOninput = SETTINGS.get('rumbleIntensity') === 0.4;
+
+    document.getElementById('settings-aimassist').onchange({ target: { checked: false } });
+    R.assistOnchange = SETTINGS.get('aimAssist') === false;
+
+    // restore then re-render so the rebind rows below use default bindings
+    SETTINGS.set('rumble', true);
+    SETTINGS.set('rumbleIntensity', 0.8);
+    SETTINGS.set('aimAssist', true);
+    UI.renderControllerSettings();
+
+    R.rebindRowCount = document.getElementById('settings-pad-rebind-list').children.length === PAD.ACTIONS.length;
+
+    // startPadRebind + capture simulation
+    UI.startPadRebind('cast');
+    const cap = PAD._capture;
+    R.captureRegistered = !!(cap && typeof cap.cb === 'function');
+    if (cap) cap.cb('LB');
+    R.captureBoundCast = JSON.stringify(PAD.bindings.cast) === JSON.stringify(['LB']);
+    R.captureCleared = UI._padRebindAction === null;
+    R.capturePersisted = JSON.stringify(STORE.get('chakravyuha_padbindings_v1', {}).cast) === JSON.stringify(['LB']);
+    R.actionDownWorks = PAD.actionDown({ LB: true }, 'cast', PAD.bindings) === true;
+    PAD._capture = null;
+
+    // reset
+    UI.resetPadBindings();
+    R.resetRestoresDefaults = JSON.stringify(PAD.bindings) === JSON.stringify(PAD.DEFAULT_BINDINGS);
+    R.resetPersisted = JSON.stringify(STORE.get('chakravyuha_padbindings_v1', {})) === JSON.stringify(PAD.DEFAULT_BINDINGS);
+
+    // btn-settings-ctest gets wired (not invoked — controllerTest() lands in the next plan)
+    R.ctestBtnWired = typeof document.getElementById('btn-settings-ctest').onclick === 'function';
+
+    UI.closeSettings();
+  } finally {
+    SETTINGS.set('rumble', savedRumble);
+    SETTINGS.set('rumbleIntensity', savedIntensity);
+    SETTINGS.set('aimAssist', savedAssist);
+    PAD.bindings = savedBindings;
+    PAD.saveBindings();
+    PAD._capture = null;
+    UI._padRebindAction = null;
+    UI.hub();
+  }
+})();
+`, sandbox);
+const csr = vm.runInContext('__ctrlSettingsResults', sandbox);
+check("UI.settings('hub') mirrors SETTINGS.rumble/rumbleIntensity/aimAssist into #settings-rumble/#settings-rumble-intensity/#settings-aimassist", csr.rumbleMirrors && csr.intensityMirrors && csr.assistMirrors);
+check('#settings-rumble onchange(false) / #settings-rumble-intensity oninput(40) / #settings-aimassist onchange(false) write through to SETTINGS', csr.rumbleOnchange && csr.intensityOninput && csr.assistOnchange);
+check('#settings-pad-rebind-list has one row per PAD.ACTIONS after render', csr.rebindRowCount);
+check('UI.startPadRebind registers a PAD.captureNext capture; firing it with "LB" rebinds cast, persists to STORE, and PAD.actionDown sees it', csr.captureRegistered && csr.captureBoundCast && csr.captureCleared && csr.capturePersisted && csr.actionDownWorks);
+check('UI.resetPadBindings() restores PAD.DEFAULT_BINDINGS and persists', csr.resetRestoresDefaults && csr.resetPersisted);
+check('btn-settings-ctest gets an onclick handler wired during renderControllerSettings (headless boot unaffected)', csr.ctestBtnWired);
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

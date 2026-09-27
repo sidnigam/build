@@ -434,6 +434,78 @@ const UI = {
       row.appendChild(btn);
       list.appendChild(row);
     }
+
+    this.renderControllerSettings();
+  },
+
+  // ---------- controller settings: rumble/intensity/aim-assist/pad rebinding (Phase 05.2 Plan 04, D-14) ----------
+  PAD_ACTION_LABELS: { attack: 'Attack', special: 'Special', dash: 'Dash', cast: 'Astra (cast)', pause: 'Pause' },
+
+  renderControllerSettings() {
+    const rumble = this.el('settings-rumble');
+    rumble.checked = !!SETTINGS.get('rumble');
+    rumble.onchange = e => SETTINGS.set('rumble', !!e.target.checked);
+
+    const intensity = this.el('settings-rumble-intensity');
+    intensity.value = Math.round(SETTINGS.get('rumbleIntensity') * 100);
+    intensity.oninput = e => SETTINGS.set('rumbleIntensity', e.target.value / 100);
+
+    const aimAssist = this.el('settings-aimassist');
+    aimAssist.checked = !!SETTINGS.get('aimAssist');
+    aimAssist.onchange = e => SETTINGS.set('aimAssist', !!e.target.checked);
+
+    if (typeof PAD !== 'undefined') {
+      if (!PAD.bindings) PAD.loadBindings();
+      const padList = this.el('settings-pad-rebind-list');
+      padList.innerHTML = '';
+      const fam = PAD.family;
+      for (const action of PAD.ACTIONS) {
+        const row = document.createElement('div');
+        row.className = 'settings-row';
+        const label = document.createElement('label');
+        label.textContent = this.PAD_ACTION_LABELS[action] || action;
+        const btn = document.createElement('button');
+        if (this._padRebindAction === action) {
+          btn.textContent = 'Press a button…';
+        } else if (typeof GLYPHS !== 'undefined') {
+          btn.innerHTML = (PAD.bindings[action] || []).map(b => GLYPHS.tokenHtml(GLYPHS.padToken(b, fam))).join('');
+        }
+        btn.onclick = () => this.startPadRebind(action);
+        row.appendChild(label);
+        row.appendChild(btn);
+        padList.appendChild(row);
+      }
+    }
+
+    const reset = this.el('settings-pad-reset');
+    reset.onclick = () => this.resetPadBindings();
+
+    const ctestBtn = this.el('btn-settings-ctest');
+    ctestBtn.onclick = () => { AUDIO.sfx('click'); this.controllerTest(); };
+  },
+
+  startPadRebind(action) {
+    this._padRebindAction = action;
+    this.renderControllerSettings();
+    PAD.captureNext(btn => {
+      PAD.bindings = PAD.applyPadRebind(PAD.bindings, action, btn);
+      PAD.saveBindings();
+      this._padRebindAction = null;
+      this.renderControllerSettings();
+      if (typeof GLYPHS !== 'undefined') GLYPHS.refresh(true);
+    }, 5);
+    setTimeout(() => {
+      if (this._padRebindAction === action) {
+        this._padRebindAction = null;
+        this.renderControllerSettings();
+      }
+    }, 5200);
+  },
+
+  resetPadBindings() {
+    PAD.resetBindings();
+    this.renderControllerSettings();
+    if (typeof GLYPHS !== 'undefined') GLYPHS.refresh(true);
   },
 
   toggleFullscreen() {

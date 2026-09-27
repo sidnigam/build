@@ -6707,5 +6707,262 @@ if (!process.env.SMOKE_FAST) {   // ~90s music soak; skip with SMOKE_FAST=1 for 
   check('stress/budget sequence never threw' + (stressErr ? ' — ' + stressErr.stack : ''), stressErr === null);
 }
 
+// ---------------- environment (05.4) ----------------
+console.log('\n— environment (05.4) —');
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js', 'environment.js'), 'utf8'), sandbox, { filename: 'environment.js' });
+
+  const rectsOverlap = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+  const CFG = JSON.parse(R('JSON.stringify(ENV.CFG)'));
+
+  // ---- validateManifest ----
+  const FIXTURE = {
+    schema: 1, biome: 'fixturebiome',
+    tiles: {
+      floor_a: { path: 'a.png', size: [1024, 1024], role: 'floor', ground_safe: true },
+      floor_b: { path: 'b.png', size: [1024, 1024], role: 'floor', ground_safe: true },
+      wallface: { path: 'wf.png', size: [1024, 320], role: 'wallface', ground_safe: false },
+      wallcap: { path: 'wc.png', size: [512, 512], role: 'wallcap', ground_safe: false },
+    },
+    frames: {
+      column: { frame: 'col_0.png', size: [200, 512], role: 'column', worldH: 150, footW: 150, anchor: [0.5, 0.96] },
+      gate: { frame: 'gate_0.png', size: [420, 480], role: 'gate', worldH: 210, anchor: [0.5, 1.0] },
+      prop_brazier: { frame: 'brazier_0.png', size: [220, 300], role: 'prop', worldH: 64, zones: ['north', 'west', 'east', 'corner'], weight: 2, low: false, light: { color: '#ff7a2a', r: 150, alpha: 0.35 } },
+      prop_lectern: { frame: 'lectern_0.png', size: [180, 260], role: 'prop', worldH: 60, zones: ['north', 'corner'], weight: 1, low: false },
+      prop_scroll: { frame: 'scroll_0.png', size: [140, 120], role: 'prop', worldH: 40, zones: ['south', 'corner'], weight: 1, low: true },
+      prop_cauldron: { frame: 'cauldron_0.png', size: [200, 220], role: 'prop', worldH: 55, zones: ['west', 'east'], weight: 1, low: false },
+      prop_chain: { frame: 'chain_0.png', size: [160, 300], role: 'prop', worldH: 70, zones: ['north', 'corner'], weight: 1, low: false },
+      chariot_wreck: { frame: 'chariot_0.png', size: [420, 260], role: 'prop', worldH: 90, zones: ['corner'], weight: 1, low: false },
+      ember_seam: { frame: 'ember_0.png', size: [384, 200], role: 'decal', worldW: 190, alpha: 0.45, ground_safe: true },
+      scorch: { frame: 'scorch_0.png', size: [300, 200], role: 'decal', worldW: 150, alpha: 0.4, ground_safe: true },
+      moss: { frame: 'moss_0.png', size: [260, 180], role: 'decal', worldW: 130, alpha: 0.35, ground_safe: true },
+      vent_grate: { frame: 'vent_0.png', size: [300, 300], role: 'hazard-skin', hazard: 'fireVent', ground_safe: true },
+    },
+    floor: { tileScale: 0.6, macroScale: 1.7, macroAlpha: 0.35 },
+    walls: { faceH: 170, capT: 48, lipT: 36, columnSpacing: [260, 380] },
+    skins: { pillar: 'column', wall: '@cap', pit: '@abyss', byTemplate: { naraka_chains: { pillar: 'prop_chain' }, rana_chariots: { wall: 'chariot_wreck' } } },
+    hazards: { fireVent: 'vent_grate' },
+    lights: { pools: { color: '#ff5533', count: [2, 4], r: [160, 260], alpha: 0.08 } },
+    grade: { floorTint: 0.55, floorDarken: 0.25, outerDim: 0.6, vignette: 0.4, propTint: '#d8d0cc' },
+  };
+  sandbox.__ENV_FIXTURE = FIXTURE;
+
+  const vr1 = R('ENV.validateManifest(__ENV_FIXTURE, {strict:true})');
+  check('validateManifest: fixture passes strict', vr1.ok === true && vr1.errors.length === 0);
+
+  const noGroundSafe = JSON.parse(JSON.stringify(FIXTURE));
+  delete noGroundSafe.frames.ember_seam.ground_safe;
+  sandbox.__ENV_BAD1 = noGroundSafe;
+  const vr2 = R('ENV.validateManifest(__ENV_BAD1, {strict:false})');
+  check('validateManifest: decal without ground_safe:true -> error', vr2.ok === false && vr2.errors.some(e => /ground_safe/.test(e)));
+
+  const badRole = JSON.parse(JSON.stringify(FIXTURE));
+  badRole.frames.column.role = 'not-a-role';
+  sandbox.__ENV_BAD2 = badRole;
+  const vr3 = R('ENV.validateManifest(__ENV_BAD2, {strict:false})');
+  check('validateManifest: unknown role -> error', vr3.ok === false && vr3.errors.some(e => /unknown role/.test(e)));
+
+  const badSkin = JSON.parse(JSON.stringify(FIXTURE));
+  badSkin.skins.wall = 'nonexistent_frame';
+  sandbox.__ENV_BAD3 = badSkin;
+  const vr4 = R('ENV.validateManifest(__ENV_BAD3, {strict:false})');
+  check('validateManifest: skin referencing missing frame -> error', vr4.ok === false && vr4.errors.some(e => /skins\.wall/.test(e)));
+
+  const tooFewProps = JSON.parse(JSON.stringify(FIXTURE));
+  ['prop_lectern', 'prop_scroll', 'prop_cauldron', 'prop_chain', 'chariot_wreck'].forEach(k => delete tooFewProps.frames[k]);
+  sandbox.__ENV_BAD4 = tooFewProps;
+  const vr5 = R('ENV.validateManifest(__ENV_BAD4, {strict:true})');
+  check('validateManifest: strict mode requires >=6 props/>=3 decals/etc', vr5.ok === false);
+
+  // ---- layout() determinism ----
+  const arenaCombat = { x: 50, y: 84, w: 2240, h: 1300 };
+  const layoutArgsBase = { biomeId: 'naraka', arena: arenaCombat, obstacles: [], hazards: [], isBoss: false, manifest: FIXTURE, pad: CFG.PAD };
+  sandbox.__ENV_LAYOUT_ARGS = Object.assign({}, layoutArgsBase, { seed: 777 });
+  const j1 = R('JSON.stringify(ENV.layout(__ENV_LAYOUT_ARGS))');
+  const j2 = R('JSON.stringify(ENV.layout(__ENV_LAYOUT_ARGS))');
+  check('layout(): same seed -> identical JSON', j1 === j2);
+  sandbox.__ENV_LAYOUT_ARGS2 = Object.assign({}, layoutArgsBase, { seed: 778 });
+  const j3 = R('JSON.stringify(ENV.layout(__ENV_LAYOUT_ARGS2))');
+  check('layout(): different seed -> different placement', j1 !== j3);
+
+  // ---- full invariant sweep: fixture manifest x every biome x every template x {combat,boss} x 5 seeds ----
+  const savedArena = R('({x:GAME.arena.x, y:GAME.arena.y, w:GAME.arena.w, h:GAME.arena.h})');
+  const savedArenaPad = R('GAME.arenaPad ? Object.assign({}, GAME.arenaPad) : null');
+  const savedBiome = R('GAME.biome');
+  const savedPillars = R('GAME.pillars');
+  const savedHazards = R('GAME.hazards');
+  const savedLastLayoutId = R('ROOMS.lastLayoutId');
+
+  const sizes = R('JSON.stringify(DATA.ARENA.sizes)');
+  const arenaSizes = JSON.parse(sizes);
+  const biomeIds = R('DATA.BIOMES.map(b => b.id)');
+
+  const ARCH_KINDS = new Set(['prop', 'column', 'wall-face', 'wall-cap-strip', 'wall-lip', 'plinth', 'water-strip']);
+  const sweepErrors = [];
+  let sweepCount = 0;
+
+  function checkPlan(plan, arena, obstacles, hazards, label) {
+    const sp = { x: arena.x + 90, y: arena.y + arena.h / 2 };
+    const doorLimitX = arena.x + arena.w - CFG.DOOR_BAND;
+    const circleHazards = (hazards || []).filter(h => h.type === 'fireVent' || h.type === 'venomPool');
+
+    for (const it of plan.items) {
+      if (ARCH_KINDS.has(it.kind) && it.obstacleIndex == null && it.hazardIndex == null) {
+        if (rectsOverlap(it.aabb, arena)) sweepErrors.push(`${label}: ${it.kind} ${it.id} intersects arena`);
+      }
+      if (it.kind === 'column' && rectsOverlap(it.aabb, arena)) sweepErrors.push(`${label}: column ${it.id} intersects arena`);
+      if (it.kind === 'gate' && rectsOverlap(it.aabb, arena)) sweepErrors.push(`${label}: gate ${it.id} intersects arena`);
+      if (it.kind === 'prop' && rectsOverlap(it.aabb, arena)) sweepErrors.push(`${label}: prop ${it.id} intersects arena`);
+      if (it.kind === 'decal' && it.id.startsWith('decal-')) {
+        if (it.alpha > CFG.DECAL_MAX_ALPHA + 1e-9) sweepErrors.push(`${label}: decal ${it.id} alpha ${it.alpha} > ${CFG.DECAL_MAX_ALPHA}`);
+        if (Math.hypot(it.x - sp.x, it.y - sp.y) < CFG.DECAL_CLEAR - 1e-6) sweepErrors.push(`${label}: decal ${it.id} too close to spawn`);
+        if (it.x > doorLimitX) sweepErrors.push(`${label}: decal ${it.id} in door column (x=${it.x} > ${doorLimitX})`);
+        for (const o of obstacles) {
+          const orect = o.shape === 'rect' ? { x: o.x, y: o.y, w: o.w, h: o.h } : { x: o.x - o.r, y: o.y - o.r, w: 2 * o.r, h: 2 * o.r };
+          if (rectsOverlap(orect, it.aabb)) sweepErrors.push(`${label}: decal ${it.id} overlaps obstacle`);
+        }
+        for (const h of circleHazards) {
+          if (Math.hypot(it.x - h.x, it.y - h.y) < h.r) sweepErrors.push(`${label}: decal ${it.id} overlaps hazard`);
+        }
+      }
+      if ((it.layer === 'light' || it.layer === 'atmos') && rectsOverlap(it.aabb, arena) && it.alpha > CFG.LIGHT_MAX_IN_ARENA + 1e-9) {
+        sweepErrors.push(`${label}: ${it.kind} ${it.id} in-arena alpha ${it.alpha} > ${CFG.LIGHT_MAX_IN_ARENA}`);
+      }
+    }
+    const skinCounts = {};
+    for (const it of plan.items) if (it.obstacleIndex != null) skinCounts[it.obstacleIndex] = (skinCounts[it.obstacleIndex] || 0) + 1;
+    for (let idx = 0; idx < obstacles.length; idx++) {
+      const o = obstacles[idx];
+      const kind = o.kind === 'pit' ? 'pit' : (o.shape === 'rect' ? 'wall' : 'pillar');
+      const c = skinCounts[idx] || 0;
+      if (c !== 1) sweepErrors.push(`${label}: obstacle ${idx} (${kind}) has ${c} skin item(s), expected exactly 1`);
+      if (kind === 'pillar' && c === 1) {
+        const pit = plan.items.find(x => x.obstacleIndex === idx);
+        const expectFoot = 2 * o.r * CFG.PILLAR_FOOT_FIT;
+        if (Math.abs(pit.footW - expectFoot) > 1e-6) sweepErrors.push(`${label}: pillar ${idx} footW ${pit.footW} != ${expectFoot}`);
+      }
+      if (kind === 'wall' && c === 1) {
+        const wit = plan.items.find(x => x.obstacleIndex === idx && x.kind === 'wall-cap');
+        if (wit && (wit.aabb.x !== o.x || wit.aabb.y !== o.y || wit.aabb.w !== o.w || wit.aabb.h !== o.h)) {
+          sweepErrors.push(`${label}: @cap skin rect != obstacle rect for obstacle ${idx}`);
+        }
+      }
+    }
+    if (plan.items.length > CFG.MAX_OBJECTS) sweepErrors.push(`${label}: item count ${plan.items.length} > MAX_OBJECTS (${CFG.MAX_OBJECTS})`);
+  }
+
+  for (const biomeId of biomeIds) {
+    const templates = R(`ROOMS.layoutsFor(${JSON.stringify(biomeId)}).map(t => t.id)`);
+    for (const tplId of templates) {
+      for (const sizeKind of ['combat', 'boss']) {
+        const size = arenaSizes[sizeKind];
+        const arena = { x: 50, y: 84, w: size.w, h: size.h };
+        R(`Object.assign(GAME.arena, ${JSON.stringify(arena)}); GAME.arenaPad = DATA.ARENA.padBySize.${sizeKind};`);
+        const obstacles = R(`ROOMS.materializeLayout(ROOMS.layoutsFor(${JSON.stringify(biomeId)}).find(t => t.id === ${JSON.stringify(tplId)}))`);
+        R(`GAME.biome = DATA.BIOMES.find(b => b.id === ${JSON.stringify(biomeId)}); ROOMS.spawnHazards();`);
+        const hazards = R('GAME.hazards');
+        for (let seed = 1; seed <= 5; seed++) {
+          sandbox.__ENV_SWEEP_ARGS = { biomeId, arena, obstacles, hazards, isBoss: sizeKind === 'boss', seed, manifest: FIXTURE, pad: CFG.PAD };
+          const plan = R('ENV.layout(__ENV_SWEEP_ARGS)');
+          checkPlan(plan, arena, obstacles, hazards, `${biomeId}/${tplId}/${sizeKind}/seed${seed}`);
+          sweepCount++;
+        }
+      }
+    }
+  }
+  check(`layout(): fixture invariants hold across ${sweepCount} (biome x template x size x seed) combinations`,
+    sweepErrors.length === 0);
+  if (sweepErrors.length) console.error('  ' + sweepErrors.slice(0, 10).join('\n  '));
+
+  // ---- real manifests on disk, if any (05.4-02/03 land art independently) ----
+  const envGlobRoot = path.join(__dirname, '..', 'assets', 'sprites', 'env');
+  let realManifestCount = 0;
+  const realErrors = [];
+  if (fs.existsSync(envGlobRoot)) {
+    for (const biomeDir of fs.readdirSync(envGlobRoot)) {
+      const manifestPath = path.join(envGlobRoot, biomeDir, `${biomeDir}-env.json`);
+      if (!fs.existsSync(manifestPath)) continue;
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+      sandbox.__ENV_REAL_MANIFEST = manifest;
+      const rv = R('ENV.validateManifest(__ENV_REAL_MANIFEST, {strict:true})');
+      if (!rv.ok) realErrors.push(`${biomeDir}: ${rv.errors.join('; ')}`);
+      realManifestCount++;
+      const templates = R(`ROOMS.layoutsFor(${JSON.stringify(biomeDir)}).map(t => t.id)`);
+      for (const tplId of templates) {
+        for (const sizeKind of ['combat', 'boss']) {
+          const size = arenaSizes[sizeKind];
+          const arena = { x: 50, y: 84, w: size.w, h: size.h };
+          R(`Object.assign(GAME.arena, ${JSON.stringify(arena)}); GAME.arenaPad = DATA.ARENA.padBySize.${sizeKind};`);
+          const obstacles = R(`ROOMS.materializeLayout(ROOMS.layoutsFor(${JSON.stringify(biomeDir)}).find(t => t.id === ${JSON.stringify(tplId)}))`);
+          R(`GAME.biome = DATA.BIOMES.find(b => b.id === ${JSON.stringify(biomeDir)}); ROOMS.spawnHazards();`);
+          const hazards = R('GAME.hazards');
+          for (let seed = 1; seed <= 5; seed++) {
+            sandbox.__ENV_REAL_SWEEP_ARGS = { biomeId: biomeDir, arena, obstacles, hazards, isBoss: sizeKind === 'boss', seed, manifest, pad: CFG.PAD };
+            const plan = R('ENV.layout(__ENV_REAL_SWEEP_ARGS)');
+            checkPlan(plan, arena, obstacles, hazards, `real:${biomeDir}/${tplId}/${sizeKind}/seed${seed}`);
+          }
+        }
+      }
+    }
+  }
+  check(`validateManifest: all real assets/sprites/env/*/*-env.json pass strict (found ${realManifestCount})`, realErrors.length === 0);
+  if (realErrors.length) console.error('  ' + realErrors.join('\n  '));
+
+  // restore mutated GAME state
+  R(`Object.assign(GAME.arena, ${JSON.stringify(savedArena)});`);
+  sandbox.__ENV_SAVED_PAD = savedArenaPad;
+  R('GAME.arenaPad = __ENV_SAVED_PAD;');
+  sandbox.__ENV_SAVED_BIOME = savedBiome;
+  R('GAME.biome = __ENV_SAVED_BIOME;');
+  sandbox.__ENV_SAVED_PILLARS = savedPillars;
+  R('GAME.pillars = __ENV_SAVED_PILLARS;');
+  sandbox.__ENV_SAVED_HAZARDS = savedHazards;
+  R('GAME.hazards = __ENV_SAVED_HAZARDS;');
+  sandbox.__ENV_SAVED_LASTTPL = savedLastLayoutId;
+  R('ROOMS.lastLayoutId = __ENV_SAVED_LASTTPL;');
+
+  // ---- gateItems() ----
+  const gArena = { x: 50, y: 84, w: 2240, h: 1300 };
+  const gDoors = [{ x: gArena.x + gArena.w - 36, y: gArena.y + gArena.h * 0.5, r: 30 }, { x: gArena.x + gArena.w - 36, y: gArena.y + gArena.h * 0.75, r: 30 }];
+  sandbox.__ENV_GATE_ARGS = { doors: gDoors, arena: gArena, manifest: FIXTURE, pad: CFG.PAD };
+  const gateRes = R('ENV.gateItems(__ENV_GATE_ARGS.doors, __ENV_GATE_ARGS.arena, __ENV_GATE_ARGS.manifest, __ENV_GATE_ARGS.pad)');
+  check('gateItems(): one east gate per door + one west gate', gateRes.length === gDoors.length + 1);
+  check('gateItems(): all gates sit outside the arena rect', gateRes.every(g => !rectsOverlap(g.aabb, gArena)));
+  check('gateItems(): east gates line up with door y', gDoors.every(d => gateRes.some(g => Math.abs(g.y - d.y) < 1e-6)));
+
+  // ---- visibleIndices / occluded ----
+  const view = { x: 100, y: 100, w: 400, h: 300 };
+  const boxes = [
+    { x: 120, y: 120, w: 20, h: 20 },   // inside view -> visible
+    { x: -500, y: -500, w: 10, h: 10 }, // far outside -> culled
+    { x: 100 - CFG.CULL_PAD / 2, y: 120, w: 10, h: 10 }, // outside raw view but inside view+pad -> visible
+  ];
+  sandbox.__ENV_VIS_ARGS = { boxes, view };
+  const visIdx = R('ENV.visibleIndices(__ENV_VIS_ARGS.boxes, __ENV_VIS_ARGS.view)');
+  check('visibleIndices(): keeps in-view box', visIdx.includes(0));
+  check('visibleIndices(): culls far off-view box', !visIdx.includes(1));
+  check('visibleIndices(): keeps box overlapping view+pad', visIdx.includes(2));
+
+  const pillarItem = { x: 500, y: 500, z: 500, aabb: { x: 470, y: 460, w: 60, h: 60 } };
+  const actorNorth = { x: 500, y: 480, r: 10 };   // between footprint top (460) and base (500): occluded
+  const actorSouth = { x: 500, y: 520, r: 10 };   // below base: not occluded
+  sandbox.__ENV_OCC_ARGS = { pillarItem, actorNorth, actorSouth };
+  check('occluded(): true for an actor just north of the pillar base within its span',
+    R('ENV.occluded(__ENV_OCC_ARGS.pillarItem, [__ENV_OCC_ARGS.actorNorth])') === true);
+  check('occluded(): false for an actor south of the pillar base',
+    R('ENV.occluded(__ENV_OCC_ARGS.pillarItem, [__ENV_OCC_ARGS.actorSouth])') === false);
+
+  // ---- headless guards (D-13a) ----
+  check('ENV.sync(GAME) === false headless (no PIXI)', R('ENV.sync(GAME)') === false);
+  check('ENV.isActive() === false headless', R('ENV.isActive()') === false);
+  const anyObstacle = R('GAME.pillars && GAME.pillars[0]') || null;
+  check('ENV.hasSkin(obstacle) === false headless', R('ENV.hasSkin(GAME.pillars ? GAME.pillars[0] : null)') === false);
+  let renderErr = null;
+  try { R('GAME.render();'); } catch (e) { renderErr = e; }
+  check('GAME.render() (incl. renderBackground) does not throw with environment.js loaded headless' + (renderErr ? ' — ' + renderErr.stack : ''),
+    renderErr === null);
+}
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

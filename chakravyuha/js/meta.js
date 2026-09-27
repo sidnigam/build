@@ -17,6 +17,7 @@ const META = {
   bestBiome: 0,           // furthest biome index reached (0-based, +1 displayed)
   bestTime: 0,            // fastest winning run, seconds
   codexSeen: false,
+  dialogue: {},           // god dialogue memory (Phase 05.5, managed by DIALOGUE.mem)
 
   load() {
     try {
@@ -33,6 +34,7 @@ const META = {
           bestBiome: s.bestBiome | 0,
           bestTime: s.bestTime || 0,
           codexSeen: !!s.codexSeen,
+          dialogue: (s.dialogue && typeof s.dialogue === 'object' && !Array.isArray(s.dialogue)) ? s.dialogue : {},
         });
       }
     } catch (e) { /* corrupted save: start fresh */ }
@@ -45,7 +47,7 @@ const META = {
         punya: this.punya, upgrades: this.upgrades, weapons: this.weapons,
         lastWeapon: this.lastWeapon, deaths: this.deaths, wins: this.wins,
         runs: this.runs, bestBiome: this.bestBiome, bestTime: this.bestTime,
-        codexSeen: this.codexSeen,
+        codexSeen: this.codexSeen, dialogue: this.dialogue,
       });
     } catch (e) { /* storage unavailable; play session-only */ }
   },
@@ -90,6 +92,7 @@ const META = {
     Object.assign(this, {
       punya: 0, upgrades: {}, weapons: ['khanda'], lastWeapon: 'khanda',
       deaths: 0, wins: 0, runs: 0, bestBiome: 0, bestTime: 0, codexSeen: false,
+      dialogue: {},
     });
   },
 };

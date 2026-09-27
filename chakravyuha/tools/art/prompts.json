@@ -160,9 +160,9 @@
     },
     "vayu": {
       "kind": "god",
-      "subject": "Vayu, the Vedic god of wind and breath, graceful serene face, windswept flowing hair, long flowing silk scarves and a white pennant banner on a staff streaming in the wind, pale fair skin with a cool sea-green tint in the light, light silver jewelry, two arms, airy motion",
+      "subject": "Vayu, the Vedic god of wind and breath, masculine, graceful serene bearded face, windswept flowing hair streaming sideways as if blown by a strong wind, long flowing silk scarves draped around his shoulders and arms rippling and streaming sideways in the wind, in his lowered hand near his waist he also grips a short staff bearing a small white triangular pennant flag that streams sideways in the same wind as the scarves, pale fair skin with a cool sea-green tint, light silver jewelry, exactly two arms, solid and physically present, not transparent, not a ghost",
       "palette": "pale sea-green, silver-white and soft gold",
-      "negative_extra": "ghost, spectral, translucent body, skeleton, air elemental, cloud monster, bag of winds, blue skin, four arms, Vishnu, deer",
+      "negative_extra": "ghost, spectral, translucent body, skeleton, air elemental, cloud monster, bag of winds, blue skin, four arms, Vishnu, deer, still hair, static cloth, no wind, mirror, fan-shaped ornament, teardrop ornament, solid disc on a stick, translucent, see-through, textured background, patterned background, border pattern, no staff, no pennant, no flag, staff far from body, floating detached staff, still hair, static cloth, no wind, translucent, see-through, greek toga, roman philosopher, roman bust, marble statue, profile view, side view of face, decorative border, floral border, vignette, halo, circular disc behind head, no staff, no pennant, no flag, glasses, spectacles, modern clothing, shirt, kurta, photorealistic photo, ordinary human, mundane, contemporary",
       "base_seed": 71300,
       "out_w": 600,
       "out_h": 768

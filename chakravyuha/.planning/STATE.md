@@ -91,6 +91,8 @@ None yet.
 
 [Issues that affect future work]
 
+- [Polish backlog, 2026-09-27 screenshot review]: (a) HUD glyph legend overlaps its labels ("Q"/"ASTRA" -> "QTRA", "E RMB" over SPECIAL) in renderHUD (05.2-03). (b) Fallback env north wall is a flat maroon band (resolved when 05.4 wall art lands). (c) Legacy biome bg shows tiling seams under TilingSprite (resolved by 05.4 seamless tiles). (d) Vaitarani rooms plan ~53 enemies from room 1 — tune after playtest.
+
 - [Cultural review]: yama-atlas.png (blue skin + golden crown) reads as Vishnu/Krishna iconography rather than Yama; kumbhakarna carries a trident-like staff (Shiva association). Both provisional — review before any public screenshots. Tataka regenerated to remove deity iconography.
 
 - [Verification]: No browser/Electron GUI run has happened yet for any of the 2026-09-25/26 work (Pixi sprite path, VFX feel, settings panel, Electron launch, gamepad). All smoke tests are headless. A human play session is the next gate.

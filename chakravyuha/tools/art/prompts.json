@@ -151,9 +151,9 @@
     },
     "indra": {
       "kind": "god",
-      "subject": "Indra, king of the devas, regal proud youthful face with fine moustache, tall golden jeweled kirita crown, fair golden skin, gleaming golden armor and jewels, holding the Vajra (a double-ended diamond thunderbolt mace, symmetrical, pronged at both ends), crackling light around the Vajra, storm clouds suggested only by rim light",
+      "subject": "half-body bust portrait cropped at the waist of Indra, king of the devas, wide shot so that both of his hands are visible at the bottom of the frame, regal proud youthful face with a fine moustache, alert open eyes, tall golden jeweled kirita crown, fair golden skin, gleaming golden armor and jewels, one hand at chest height holding a short chunky golden Vajra thunderbolt club shaped like an hourglass with a bulging pronged head at both ends, the other hand resting open at his waist, exactly two arms both visible down to the hands, plain flat solid pale grey background only, empty background, no other objects, no halo, no arch, no textured pattern, no border, no frame, no watermark",
       "palette": "royal gold, storm indigo and white",
-      "negative_extra": "Zeus, Thor, hammer, zigzag lightning bolt, greek god, roman emperor, western king, toga, many eyes, blue skin, four arms, Vishnu, elephant",
+      "negative_extra": "Zeus, Thor, hammer, zigzag lightning bolt, greek god, roman emperor, western king, toga, many eyes, blue skin, four arms, Vishnu, elephant, thin rod, thin wand, cane, walking stick, single-ended scepter, extended arm holding object away from body, floating detached object, second scepter, symmetrical decorative pair, border pattern, ornate frame, textured background, dark background, cropped at the shoulders, cropped at the chest, hands out of frame, no hands visible, closed eyes, statue, idol, bronze statue, halo, arch, fan-shaped backdrop, textured marbled background, patterned robe texture",
       "base_seed": 71200,
       "out_w": 600,
       "out_h": 768

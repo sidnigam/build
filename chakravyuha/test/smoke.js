@@ -7185,5 +7185,98 @@ globalThis.__codexGodsErrors = [];
     + (codexGodsErrors.length ? ' — ' + codexGodsErrors.join(' | ') : ''), codexGodsErrors.length === 0);
 }
 
+// ---------------- Quick 260927-qze: HUD glyph legend overlap fix ----------------
+console.log('\n— HUD glyph legend overlap fix (quick 260927-qze) —');
+vm.runInContext(`
+globalThis.__legendResults = {};
+(function() {
+  const R = __legendResults;
+  const savedDrawTokens = GLYPHS.drawTokens;
+  const savedDevice = INPUT.device;
+  const savedFamily = PAD.state.family;
+  const savedConnected = PAD.state.connected;
+  const noop = () => {};
+  const measure = (text) => (text || '').length * 6.5; // mirrors renderHUD's guarded chars*6.5 fallback
+
+  function renderLegend() {
+    const drawCalls = [];   // one entry per GLYPHS.drawTokens call: { x, y, w }
+    const textCalls = [];   // one entry per ctx.fillText call: { text, x, y }
+    GLYPHS.drawTokens = function (ctx, x, y, tokens, size) {
+      const w = savedDrawTokens.apply(this, arguments);
+      drawCalls.push({ x, y, w });
+      return w;
+    };
+    const ctx = new Proxy({}, {
+      get(t, prop) {
+        // no measureText on this stub ctx at all -> renderHUD/GLYPHS fall back to the guarded
+        // chars*6.5 estimate, same path a real headless/smoke ctx without text metrics takes.
+        if (prop === 'measureText') return undefined;
+        if (prop === 'createRadialGradient' || prop === 'createLinearGradient') return () => ({ addColorStop: noop });
+        if (prop === 'fillText') return (text, x, y) => { textCalls.push({ text, x, y }); };
+        if (prop in t) return t[prop];
+        return noop;
+      },
+      set(t, prop, v) { t[prop] = v; return true; },
+    });
+    GAME.renderHUD(ctx);
+    return { drawCalls, textCalls };
+  }
+
+  function checkNoOverlap(res) {
+    const labels = ['DASH', 'ASTRA', 'SPECIAL'];
+    const items = labels.map(l => {
+      const t = res.textCalls.find(c => c.text === l);
+      return t ? { start: t.x, end: t.x + measure(l), y: t.y } : null;
+    });
+    if (items.some(it => !it)) return { ok: false, reason: 'missing one or more legend labels (DASH/ASTRA/SPECIAL)' };
+    if (res.drawCalls.length !== 3) return { ok: false, reason: 'expected 3 GLYPHS.drawTokens calls (one per legend item), got ' + res.drawCalls.length };
+    const badges = res.drawCalls.map(d => ({ start: d.x, end: d.x + d.w, y: d.y }));
+    const all = badges.concat(items);
+    // Bucket by row (row1 badge y / row1 label y / row2 badge y / row2 label y are always <90 / >=90
+    // respectively per renderHUD's fixed row1Y=by+52=78, row2Y=94 constants) so a wrapped SPECIAL
+    // row is checked independently instead of being falsely flagged against row 1's x-range.
+    const rows = {};
+    for (const iv of all) {
+      const key = iv.y < 90 ? 'row1' : 'row2';
+      (rows[key] = rows[key] || []).push(iv);
+    }
+    for (const key in rows) {
+      const sorted = rows[key].slice().sort((a, b) => a.start - b.start);
+      for (let i = 1; i < sorted.length; i++) {
+        if (sorted[i].start < sorted[i - 1].end) return { ok: false, reason: key + ' overlap: ' + JSON.stringify(sorted) };
+      }
+    }
+    return { ok: true };
+  }
+
+  try {
+    GAME.startRun();
+    GAME.state = 'combat';
+
+    INPUT.device = 'kbm';
+    const kbmCheck = checkNoOverlap(renderLegend());
+    R.kbmOk = kbmCheck.ok;
+    R.kbmReason = kbmCheck.reason || '';
+
+    PAD.state.connected = true;
+    PAD.state.family = 'ps';
+    INPUT.device = 'pad';
+    const padCheck = checkNoOverlap(renderLegend());
+    R.padOk = padCheck.ok;
+    R.padReason = padCheck.reason || '';
+  } finally {
+    GLYPHS.drawTokens = savedDrawTokens;
+    INPUT.device = savedDevice;
+    PAD.state.family = savedFamily;
+    PAD.state.connected = savedConnected;
+  }
+})();
+`, sandbox);
+const legendResults = vm.runInContext('__legendResults', sandbox);
+check('HUD legend (kbm): DASH/ASTRA/SPECIAL badge+label horizontal extents never overlap'
+  + (legendResults.kbmReason ? ' — ' + legendResults.kbmReason : ''), legendResults.kbmOk === true);
+check('HUD legend (pad, ps family): DASH/ASTRA/SPECIAL badge+label horizontal extents never overlap'
+  + (legendResults.padReason ? ' — ' + legendResults.padReason : ''), legendResults.padOk === true);
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

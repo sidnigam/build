@@ -25,6 +25,7 @@ Never mirror Krishna or Durga (D-08): flute/mudra handedness is iconographic. Pa
 Prints "bbox=... fill_ratio=... out=..." on success. Exits 1 with "ERROR:" on failure.
 """
 import argparse
+import os
 import sys
 
 import numpy as np
@@ -136,6 +137,13 @@ def main():
         sys.exit(2)
 
     try:
+        out_dir = os.path.dirname(args.out_path)
+        if out_dir:
+            os.makedirs(out_dir, exist_ok=True)
+        if args.silhouette_path:
+            sil_dir = os.path.dirname(args.silhouette_path)
+            if sil_dir:
+                os.makedirs(sil_dir, exist_ok=True)
         cut = load_and_cutout(args.in_path)
         cut = clean_alpha(cut)
         cut = despeckle(cut)

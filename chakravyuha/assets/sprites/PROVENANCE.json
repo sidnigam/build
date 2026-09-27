@@ -14,7 +14,7 @@
       "animations": {
         "idle": 4
       },
-      "status": "idle 4f (AI img2img from the approved reference); run/attack/dash are procedural code animation + code-drawn weapon per 02-CONTEXT-AMENDMENT D-07a — no further AI frames planned",
+      "status": "idle 4f (AI img2img from the approved reference); run/attack/dash are procedural code animation + code-drawn weapon per 02-CONTEXT-AMENDMENT D-07a \u2014 no further AI frames planned",
       "tool": "ComfyUI (local)",
       "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
       "method": "img2img",
@@ -64,7 +64,7 @@
       "generated_date": "2026-09-25",
       "recorded_date": "2026-09-25",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Accepted on attempt 0: cracked iron-grey basalt flagstones with ember seams, even top-down detail, no figures/text/horizon, reads clearly as infernal ground."
     },
     {
@@ -98,7 +98,7 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Regenerated per orchestrator art-direction feedback: seed 41100 was too saturated/high-contrast (bright green circuit-maze pattern) and would compete with sprites/telegraphs. Accepted seed 41101 with prompt pushed toward dark, muted, low-contrast deep teal-black underground stone with faint dim bioluminescent moss; calmer and reads clearly as dim underground floor."
     },
     {
@@ -134,7 +134,7 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Attempts 0-2 composed the battlefield elements into circular/radial arrangements (a wheel-and-spear emblem, an arc of arrows) or a corner wall fragment, which reads as a scene with a strong focal point rather than an even ground texture. Prompt was tightened toward seamless repeating texture with evenly scattered debris. Accepted seed 41203: cracked pebbled dry earth, even detail throughout, no focal object, no walls/characters/text. Muted desaturated tan-umber; reads as dry battlefield ground."
     },
     {
@@ -166,7 +166,7 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Accepted on attempt 0: dark slate-grey river stones, even top-down detail, no figures/text/horizon/focal object, muted and low-contrast per art-direction guidance to favor dark/subtle floors."
     },
     {
@@ -209,7 +209,7 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "REGENERATED per orchestrator cultural-review: the original accepted seed 52003 (from an earlier prompt revision) was a multi-armed, crowned figure holding a weapon in each hand, reading as deity iconography (Durga/Kali-coded), which violates the hard rule that gods are never enemies. Prompt rewritten to force exactly two arms, no crown/halo/diadem/lotus/trident, no multiple weapons, with negatives for the same. Retry log: seed 52000 was a two-view character turnaround sheet (rejected, not single-pose); 52001 read as a bearded male lion-faced figure, not the female demoness Tataka is written as; 52002 repeated the male-read issue and added a sun-disc halo plus busy tree/bird scenery; 52004 added visible horns (acceptable) but had busy forest scenery and cropped legs/feet (fails full-body-in-frame). FLAGGED: accepted seed 52003 (this prompt revision) resolves the cultural/gender issues -- clearly two-armed, female-presenting, no crown/halo, single weapon, plain background, full body head-to-feet -- but tusks/fangs/claws did not render clearly within the retry budget; she reads as an ethereal/feral forest demoness rather than overtly monstrous. Candidate for a future regeneration pass if a more overtly fanged look is wanted."
     },
     {
@@ -247,7 +247,7 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Accepted on attempt 0: full body head-to-feet, jade-teal sorcerer-king with a topknot (in place of the prompted crown), swirling green sorcerous smoke, a bowl of green flame in one hand. A faint sketchy background doodle in the corner of the raw image was cleanly removed by rembg (not present in the finished frame). Silhouette reads clearly, no halo."
     },
     {
@@ -287,7 +287,7 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Attempt 0 (seed 52200) had a large sun-disc glow directly behind the figure that reads as a halo/divine aura, a cultural-guard violation for an asura boss. Accepted attempt 1 (seed 52201): two arms only, no crown/halo/lotus, huge round belly, fanged lion-maned face, golden-yellow/bronze palette, holding a single mace-staff. Clean cutout, chunky readable silhouette."
     },
     {
@@ -330,7 +330,7 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "FLAGGED: Yama needed all 5 attempts. Seed 52300 (seated, floating scepters) lost both arms during rembg cutout -- a segmentation failure, not a cultural issue. Seed 52301 and seed 52302 both rendered a decorative picture-frame border around the whole image, which violates the no-frame/no-border constraint (52301 also had 4 arms). Seed 52303 correctly avoided a border and read as dignified and serene, but its background halo/aureole disc was so large it dominated the 256x256 canvas and made the cutout silhouette read as a solid circle rather than a person -- fails gameplay readability. Accepted seed 52304 as least-bad: standing, two arms, crown, dignified serene closed-mouth-smile expression, no fangs/horns/grotesque features, no border, plain background, readable humanoid silhouette. The staff (danda) prop held in one hand was a thin disconnected shape that did not survive rembg's alpha-despeckle step and is missing from the finished frame; he is shown holding only the round disc/shield prop. Dignity check passed: no demonic, monstrous or menacing features at any point across all 5 attempts."
     },
     {
@@ -366,7 +366,7 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Accepted on attempt 0: gaunt spectral figure, pale sea-green ghostly glow, tattered pale funeral shroud, holding a ghostly flame staff. Thin/wispy silhouette is appropriate for an emaciated hungry-ghost design; reads as a robed humanoid at 128px. Clean cutout, no halo, no text."
     },
     {
@@ -404,7 +404,7 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Attempt 0 (seed 63100) had a plain white circular disc directly behind the figure risking a halo/divine misread; rejected out of caution given the same motif was a cultural-guard issue on multiple bosses. Accepted attempt 1 (seed 63101): two arms, single curved sword, fanged horned demon face, dark red-orange skin, bronze armor, no halo, clean cutout, distinct readable silhouette."
     },
     {
@@ -440,7 +440,7 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Accepted on attempt 0: horned demon bowman in dark bronze/ochre-gold armor, drawing a recurve bow, two arms, no halo, plain background. A decorative floating wing/bow-shaped flourish behind the shoulder was mostly removed by alpha despeckling; a small sliver remains near the head reading as a feather/horn accent. Silhouette reads clearly."
     },
     {
@@ -481,7 +481,7 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Naga needed all 5 attempts to get the D-15a body plan right (human torso with a serpent tail instead of legs, not a divine multi-hooded Naga). Seed 63300 had an ornate corner border/frame and a full dragon head (not a humanoid face). 63301 and 63302 both grew a separate reptilian/dragon head plus legs AND a tail (a lizardman, not 'tail instead of legs'). 63303 again kept legs+sandaled feet with an ambiguous double-fin hood shape. Reworded the prompt around a merman analogy (human torso, single continuous tail, no legs) and accepted seed 63304: fully human face and muscular torso, no legs, one continuous green serpent tail, holding a single spear with a serpent-head ornament on the haft (not a second head on the character), no cobra-hood iconography that reads as multi-headed/divine. A soft white circular glow behind the figure in the raw generation was cleanly removed by rembg (not a solid halo shape) and does not appear in the finished frame. Clean readable silhouette."
     },
     {
@@ -517,7 +517,7 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Accepted on attempt 0: gaunt vampiric corpse-spirit, wide ragged cloth/bat wings, long claws, violet ghostly palette, skull-like face with red eyes. The wide wingspan gives a distinct, highly readable silhouette that stands apart from the other enemy archetypes. No halo, no text, clean cutout."
     },
     {
@@ -553,7 +553,7 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Accepted on attempt 0: hulking lumbering ghost golem, massive chunky slate blue-grey body, tattered loincloth. Chunky, highly readable silhouette, distinct from all other enemy archetypes. No halo, no text, clean cutout."
     },
     {
@@ -589,7 +589,7 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Accepted on attempt 0: massive horned asura brute, amber-orange skin, bronze bracers, broad shoulders, dual-wielding a heavy club and a blade (slightly more armed than the single-club prompt, but reads clearly and distinctly as a brute). No halo, no text, clean cutout, chunky readable silhouette."
     },
     {
@@ -625,8 +625,52 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Accepted on attempt 0: rakshasa sorcerer conjurer, magenta-pink robes, wide-brimmed hat, bead necklace, bone staff topped with a glowing pink orb. Distinct silhouette (hat + robe + staff-orb), no halo, no text, clean cutout."
+    },
+    {
+      "filename": "krishna-portrait.png",
+      "path": "assets/sprites/gods/krishna-portrait.png",
+      "actor": "krishna",
+      "kind": "god",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 896,
+      "height": 1152,
+      "seed": 71403,
+      "prompt": "Krishna, a young Hindu god with dark blue skin, gentle smile, wavy black hair, a single peacock feather tucked into a simple thin gold headband, bare chest with one yellow silk cloth draped over one shoulder, playing a wooden bansuri flute held sideways to his lips with both hands raised, elbows bent, exactly two arms and two hands total, both hands busy holding the flute, no other hands, standing upright, half-body portrait cropped at the chest, head shoulders and chest only, no legs, no lower body, plain flat solid pale grey background, painterly illustration, deep blue skin, peacock teal and pitambara yellow, Hades-inspired illustrated character portrait, half-body bust from head to waist, three-quarter view turned slightly to the right, facing the viewer, painterly digital illustration with bold confident ink linework, richly detailed rendering, luminous warm rim lighting, divine serene presence, ornate traditional Indian gold jewelry and silk textiles, inspired by the Mahabharata and Ramayana and classical Indian temple murals and Pahari miniature painting, single figure, centered, head fully in frame with space above, plain flat solid pale grey background, high detail, concept art",
+      "negative_prompt": "pixel art, 3d render, photorealistic, photo, blurry, lowres, jpeg artifacts, deformed, bad anatomy, fused fingers, extra fingers, mutated hands, watermark, text, letters, signature, logo, caption, cropped head, out of frame, full body, legs, multiple characters, crowd, collage, character sheet, turnaround, busy background, scenery, landscape, frame, border, halo disc, circular background, sun disc, mandala background, western medieval armor, roman armor, greek toga, samurai armor, sexualized, seductive, cleavage, revealing clothing, nudity, pin-up, demonic, demon, evil, menacing, snarl, fangs, horns, claws, glowing red eyes, skull, skulls, blood, gore, severed head, horror, creepy, zombie, grotesque, cartoon, chibi, caricature, meme, mocking, swastika symbol, namaste, folded hands, prayer hands, blessing mudra, four hands, six hands, multiple pairs of hands, extra hand, third arm, fourth arm, third hand, fourth hand, seated, sitting cross-legged, padmasana, lotus position, throne, pedestal, architectural arch, arched doorway, pillars, decorative gold frame, picture frame border, vignette frame, teal background, painted scenery background, flowers, grass, ground, floor, calendar art, religious poster, devotional print, child, baby, infant, feminine, woman, trident, snake around neck, third eye, ash, Shiva, crescent moon, conch, discus",
+      "rejected_seeds": [
+        71400,
+        71401,
+        71402,
+        71404,
+        71405,
+        71406
+      ],
+      "rejected_count": 6,
+      "post_processing": [
+        "rembg u2net cutout",
+        "alpha clean <16",
+        "despeckle 2%",
+        "trim",
+        "fit 600x768 bottom-aligned",
+        "bottom alpha feather 12%"
+      ],
+      "raw_image": "assets/sprites/_raw/gods/krishna/",
+      "gen_sidecar": "assets/sprites/_raw/gods/krishna/krishna-portrait.gen.json",
+      "generated_date": "2026-09-27",
+      "recorded_date": "2026-09-26",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "FLAGGED: H1-H7 pass (correct deity, serene expression, no sexualization/gore, no conflated iconography, no text/watermark, one figure) and Krishna H-god pass (two arms, adult, peacock feather, flute, yellow silk, not Shiva, dignified, unmirrored); S1 fails \u2014 full standing figure shipped instead of a tight half-body bust crop (composition happened to fit the 600x768 canvas well; not regenerated further, 7/7 attempts exhausted). S3/S4/S5 pass (clean cutout, matches painterly house style, reads at 64px thumbnail).",
+      "cultural_review": "pending \u2014 human cultural reviewer (QA-03)",
+      "iconography_notes": "two arms confirmed (both hands on the flute); peacock feather tuft in hair; bansuri flute held to lips; yellow silk dhoti/pitambara; gold jewelry; no conch/discus/trident/third eye (not Shiva/Vishnu-coded); no text or watermark on the finished cutout"
     }
   ],
   "review_sheet": "assets/sprites/_review/contact-sheet.png"

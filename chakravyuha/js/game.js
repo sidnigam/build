@@ -1262,13 +1262,50 @@ const GAME = {
     ctx.fillStyle = 'rgba(255,255,255,0.7)';
     ctx.font = '10px Georgia';
     if (typeof GLYPHS !== 'undefined') {
-      const legend = (label, x, action) => {
-        ctx.fillText(label, x, by + 58);
-        GLYPHS.drawTokens(ctx, x, by + 52, GLYPHS.tokensFor(action), 12);
+      // Lay out [badge(s)] LABEL left-to-right per item, measuring widths first so
+      // badges never overlap their own label, and items never overlap each other.
+      const badgeSize = 12;
+      const measure = (text) => (ctx.measureText ? ctx.measureText(text).width : (text || '').length * 6.5);
+      const estimateTokensWidth = (tokens) => {
+        let w = 0;
+        for (const t of tokens) w += (t.shape ? badgeSize : (measure(t.label || '') + 8)) + 4;
+        return w > 0 ? w - 4 : 0;
       };
-      legend('DASH', bx + 8, 'dash');
-      legend('ASTRA', bx + 8 + P.dashMax * 22 + 20, 'cast');
-      legend('SPECIAL', sx, 'special');
+      const legendItems = [
+        { label: 'DASH', action: 'dash' },
+        { label: 'ASTRA', action: 'cast' },
+        { label: 'SPECIAL', action: 'special' },
+      ].map(it => {
+        const tokens = GLYPHS.tokensFor(it.action);
+        ctx.font = `bold ${badgeSize - 3}px Georgia`;
+        const badgeW = estimateTokensWidth(tokens);
+        ctx.font = '10px Georgia';
+        const labelGap = badgeW > 0 ? 8 : 0;
+        const labelW = measure(it.label);
+        return { ...it, tokens, badgeW, labelGap, totalW: badgeW + labelGap + labelW };
+      });
+      const rowStartX = bx + 8;
+      const rowMaxRight = rowStartX + 300;
+      const itemGap = 12;
+      const row1Y = by + 52;
+      const row2Y = row1Y + 16;
+      const positions = [];
+      let cx = rowStartX;
+      for (const it of legendItems) {
+        if (it.action === 'special' && cx + it.totalW > rowMaxRight) {
+          positions.push({ ...it, x: rowStartX, y: row2Y });
+        } else {
+          positions.push({ ...it, x: cx, y: row1Y });
+          cx += it.totalW + itemGap;
+        }
+      }
+      for (const p of positions) {
+        ctx.font = `bold ${badgeSize - 3}px Georgia`;
+        const bw = GLYPHS.drawTokens(ctx, p.x, p.y, p.tokens, badgeSize);
+        ctx.font = '10px Georgia';
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.fillText(p.label, p.x + bw + (bw > 0 ? 8 : 0), p.y + badgeSize - 1);
+      }
     } else {
       ctx.fillText(INPUT.device === 'pad' ? 'SPECIAL [LT / X]' : 'SPECIAL [E / RMB]', sx, by + 58);
     }

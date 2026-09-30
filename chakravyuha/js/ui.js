@@ -119,6 +119,7 @@ const UI = {
     const god = forceGod || this.pickGod();
     if (!god) { // everything owned: amrit fallback
       if (GAME.player.allBoons().some(b => b.rarity < 2)) return this.offerAmrit();
+      this.clearGodPresence();
       GAME.player.mudra += 60; this.banner('+60 MUDRA (the gods have given all they can)', '#ffcf5c');
       return;
     }
@@ -168,13 +169,13 @@ const UI = {
 
   offerAmrit() {
     const P = GAME.player;
+    this.clearGodPresence();
     const upgradable = P.allBoons().filter(b => b.rarity < 2);
     if (!upgradable.length) {
       P.mudra += 50; this.banner('+50 MUDRA (nothing left to refine)', '#ffcf5c');
       return;
     }
     GAME.state = 'choosing';
-    this.clearGodPresence();
     this.el('boon-god').style.cssText = '--god:#5cb8ff';
     this.el('boon-god').innerHTML =
       `<span class="god-sym">◈</span><div><div class="god-name" style="color:#5cb8ff">Amrit</div>

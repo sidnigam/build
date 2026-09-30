@@ -630,5 +630,37 @@
     }
   ],
   "review_sheet": "assets/sprites/_review/contact-sheet.png",
-  "review_sheet_gods": "assets/sprites/_review/gods-contact-sheet.png"
+  "review_sheet_gods": "assets/sprites/_review/gods-contact-sheet.png",
+  "checkpoint_licenses": [
+    {
+      "checkpoint": "SDXL 1.0 base",
+      "file": "sd_xl_base_1.0.safetensors",
+      "license": "CreativeML OpenRAIL++-M",
+      "commercial_use": true,
+      "confirmed_date": "2026-06-20"
+    },
+    {
+      "checkpoint": "DreamShaper XL alpha2 (xl1.0)",
+      "file": "dreamshaperXL_alpha2Xl10.safetensors",
+      "version_id": 126688,
+      "source_url": "https://civitai.com/models/112902?modelVersionId=126688",
+      "sha256": "0F1B80CFE81B9C3BDE7FDCBF6898897B2811B27BE1DF684583C3D85CBC9B1FA4",
+      "license": "CreativeML OpenRAIL++-M",
+      "license_text": "tools/art/licenses/openrail++-m.LICENSE.md",
+      "license_text_sha256": "19b6998b569b53ac1fc2158a8a3202c8699a9a4605b47075715d9c96be7fb6d0",
+      "civitai_flags": {
+        "allowCommercialUse": [
+          "Image",
+          "RentCivit",
+          "Rent"
+        ],
+        "allowNoCredit": true,
+        "allowDerivatives": true
+      },
+      "civitai_api_response": "tools/art/licenses/dreamshaper-xl-civitai-126688.json",
+      "confirmed_date": "2026-09-29",
+      "adopted": false,
+      "ab_summary": "A/B'd against sdxl_base on 2 subjects x 2 seeds (naraka floor tile, chariot wheel prop). Won 2/3 criteria on the floor tile but lost 2/3 on the wheel prop with a composition regression (shadow-blob artifact + stray appendage) on 2/2 wheel images after cutout. D-01c requires no regression to adopt; rejected. env_checkpoint stays sdxl_base. See tools/art/prompts.json env_subjects.ab.checkpoint_decision for full scoring."
+    }
+  ]
 }

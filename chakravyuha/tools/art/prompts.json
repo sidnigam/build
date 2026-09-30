@@ -293,6 +293,53 @@
         "base_seed": 60100,
         "role": "prop",
         "ground_safe": false
+      },
+      "checkpoint_decision": {
+        "date": "2026-09-29",
+        "outcome": "rejected \u2014 kept sdxl_base",
+        "subjects_tested": [
+          "ab:floor (naraka cracked-basalt tile)",
+          "ab:wheel (broken chariot wheel prop)"
+        ],
+        "seeds_per_checkpoint": [
+          60000,
+          60001,
+          60100,
+          60101
+        ],
+        "scores": {
+          "floor": {
+            "painterly_detail_polish": "dreamshaper \u2014 richer, more visible glowing ember seams against desaturated stone (closer to the Hades-adjacent warm-accent look); sdxl's ember glow is nearly invisible/washed out",
+            "framing_prompt_adherence": "dreamshaper \u2014 regular paving-slab grid reads more literally as \"flagstones\"; sdxl's very irregular dried-mud-style cracks read more like cracked earth than paving. Both are even/top-down with no single focal point",
+            "artifacts_cultural_guard": "tie \u2014 both clean, no text/figures/sacred symbols; both pass env_grade.tile_limits ungraded (luma_mean 0.31-0.35, well under 0.45)",
+            "verdict": "dreamshaper wins 2/3"
+          },
+          "wheel": {
+            "painterly_detail_polish": "tie \u2014 comparable wood-grain/metal detail on both checkpoints",
+            "framing_prompt_adherence": "sdxl \u2014 both sdxl seeds are a single clean isolated wheel silhouette; dreamshaper s60100 has an attached dark shadow-blob artifact and s60101 has a stray protruding axle appendage that breaks the clean single-object read",
+            "artifacts_cultural_guard": "sdxl \u2014 the dreamshaper shadow blob (s60100) and busy stray appendage (s60101) are composition regressions after rembg cutout; sdxl cutouts are clean on both seeds",
+            "verdict": "sdxl wins 2/3, with 2/2 dreamshaper images showing a composition regression"
+          }
+        },
+        "secs_per_image": {
+          "sdxl_base": "~192s avg (3 timed calls, excludes one 3.0s ComfyUI node-cache hit on a re-queued identical graph)",
+          "dreamshaper_xl_alpha2": "~319s avg (4 calls; includes checkpoint-swap load time on the first call after sdxl_base was loaded)"
+        },
+        "reasons": "DreamShaper wins 2/3 criteria on the floor tile subject but loses 2/3 on the wheel prop subject, with an actual composition regression (a retained shadow-blob artifact and a stray axle appendage) on 2/2 of its wheel images after the rembg cutout step. D-01c requires a win on >=2/3 criteria WITH NO composition regression before adopting; the wheel subject's regression disqualifies adoption even though the floor subject alone would have passed. Kept env_checkpoint=sdxl_base. DreamShaper is also ~65% slower per image on this machine (checkpoint-swap + generation), a secondary cost of adopting it. The downloaded+verified dreamshaperXL_alpha2Xl10.safetensors is left in place for a future per-subject override (env_subjects entries may still set checkpoint_profile later) or a revisit once its prop-cutout behavior is investigated further.",
+        "god_subjects_supplementary": {
+          "note": "Orchestrator amendment: 2 god-portrait subjects (existing `god` kind) generated raw-only on both checkpoints, not scored against the 3 env criteria above \u2014 see 05.4-01-SUMMARY.md 'Implications for 05.5 portrait retry'.",
+          "subjects": [
+            "vayu (seed 71301, the 05.5-01 near-miss recipe)",
+            "hanuman (seed 71000, base recipe)"
+          ],
+          "verdict": "no checkpoint win \u2014 both vayu attempts read as feminine-presenting (fails 'masculine bearded' hard check) on both checkpoints, and both hanuman attempts read as a fully human face with no muzzle/monkey features on both checkpoints. Not shipped; not intended to be."
+        },
+        "grids": {
+          "floor_raw": "/tmp/ab_review/grid_floor_raw.png (scratchpad, not committed)",
+          "floor_finished_2x2": "/tmp/ab_review/grid_floor_finished_2x2.png (scratchpad, not committed)",
+          "wheel_finished": "/tmp/ab_review/grid_wheel_finished.png (scratchpad, not committed)",
+          "gods_raw": "/tmp/ab_review/grid_gods_raw.png (scratchpad, not committed)"
+        }
       }
     }
   }

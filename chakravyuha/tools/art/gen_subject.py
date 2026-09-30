@@ -124,9 +124,11 @@ def resolve_checkpoint(prompts, key, entry, kind, ckpt_profile_override):
     """Resolve (ckpt_file, ckpt_label, sampler, scheduler, steps, cfg, profile_name).
 
     Env keys use the checkpoints[env_checkpoint] catalog profile (or --ckpt-profile to
-    override, for the A/B). Legacy keys keep the exact pre-05.4 lookup, byte-identical.
+    override, for the A/B). Legacy keys keep the exact pre-05.4 lookup, byte-identical,
+    UNLESS --ckpt-profile is explicitly given (used to A/B an existing god/boss/enemy subject
+    against a catalog checkpoint without touching its normal checkpoint config).
     """
-    if kind == "env":
+    if kind == "env" or ckpt_profile_override:
         profile_name = ckpt_profile_override or prompts["env_checkpoint"]
         profile = prompts["checkpoints"][profile_name]
         return (profile["file"], profile["label"], profile.get("sampler", "dpmpp_2m"),
@@ -153,7 +155,8 @@ def output_path_for(prompts, key, attempt=0, ckpt_profile=None):
         return kind, seed, os.path.join(out_dir, f"{env_key}_s{seed}{suffix}.png")
     kind_dir = KIND_DIR[kind]
     out_dir = os.path.join(ROOT, "assets", "sprites", "_gen", kind_dir, key)
-    return kind, seed, os.path.join(out_dir, f"{key}_s{seed}.png")
+    suffix = f"_{ckpt_profile}" if ckpt_profile else ""
+    return kind, seed, os.path.join(out_dir, f"{key}_s{seed}{suffix}.png")
 
 
 def run_one(prompts, key, attempt=0, ckpt_profile=None, timeout=540, busy_wait=600, wait_only=None):
@@ -181,7 +184,8 @@ def run_one(prompts, key, attempt=0, ckpt_profile=None, timeout=540, busy_wait=6
         kind_dir = KIND_DIR[kind]
         out_dir = os.path.join(ROOT, "assets", "sprites", "_gen", kind_dir, key)
         os.makedirs(out_dir, exist_ok=True)
-        out_path = os.path.join(out_dir, f"{key}_s{seed}.png")
+        suffix = f"_{ckpt_profile}" if ckpt_profile else ""
+        out_path = os.path.join(out_dir, f"{key}_s{seed}{suffix}.png")
 
     stats = cc.system_stats()
     comfyui_version = stats.get("system", {}).get("comfyui_version")

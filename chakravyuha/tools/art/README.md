@@ -99,6 +99,8 @@ assets/sprites/_review/contact-sheet.png               human review contact shee
 - (g) clean background removal with no halo (sprites)
 - (h) cultural guard respected (see below)
 - (i) biomes: reads as ground seen from above, even detail, no strong focal point or horizon
+- (j) env art (Phase 05.4, D-09a): ground-plane asset (floor/water/decal/hazard-skin): no
+  face/idol/yantra/sacred symbol; vertical asset (column/gate/wall/prop): no deity figure
 
 ## God portraits (Phase 05.5)
 
@@ -166,6 +168,76 @@ recorded in `checkpoint_label`.
 **Never run this pipeline concurrently with Phase 05.4's environment-art generation.**
 ComfyUI is single-tenant; `gen_subject.py`'s busy-wait guard reduces but does not replace
 the orchestrator serializing the two phases' art executors.
+
+## Environment art (Phase 05.4)
+
+Each of the 4 combat biomes gets a Hades-style layered arena (floor tiles, an architectural
+border, epic-inspired props, obstacle/hazard skins, cheap lighting) via the same ComfyUI/
+SDXL pipeline extended with env generation kinds
+(`.planning/phases/05.4-epic-inspired-environment-art-upgrade/05.4-CONTEXT.md`, D-01 to D-16).
+
+**Checkpoint as a catalog.** `prompts.json` has a `checkpoints` catalog (`sdxl_base`,
+`dreamshaper_xl_alpha2`, each with file/label/sampler/scheduler/steps/cfg/license) and a top-
+level `env_checkpoint` selecting the active profile for env subjects only — the legacy
+`checkpoint`/`checkpoint_label` keys (character/biome generation) are untouched. Swapping the
+env checkpoint is a `prompts.json` edit, no code change.
+
+Per-biome workflow:
+
+1. **Write subjects** — add entries under `prompts.json env_subjects.{biome}` (template,
+   subject, palette, base_seed, role, ground_safe, plus optional negative_extra/size/crop/
+   worldH/zones/light/low/hazard/skinFor). Env keys are addressed as `{biome}:{key}`
+   (e.g. `naraka:brazier`) everywhere below.
+2. **Generate in the background**:
+   ```
+   ~/ComfyUI/venv/bin/python tools/art/gen_batch.py --next-pending naraka \
+       --log assets/sprites/_gen/gen_batch.log &
+   ```
+   launched with Bash `run_in_background`; poll the log for `OK/SKIP/FAIL` lines and the
+   final `BATCH DONE n_ok n_fail`. `gen_batch.py KEY[,KEY...] --attempt N` drives specific
+   keys/attempts directly (used for the ENV-01 A/B). Before every queue it waits for
+   ComfyUI's `/queue` to be idle (D-14 serialization with 05.5).
+3. **Self-review (raw pass)** — one `review_grid.py` grid per batch instead of N individual
+   Reads:
+   ```
+   ~/ComfyUI/venv/bin/python tools/art/review_grid.py --out /tmp/review.png --cell 256 \
+       assets/sprites/_gen/env/naraka/brazier/brazier_s61000.png=s61000 ...
+   ```
+   Read the grid once against the D-09a cultural checklist item (j) below plus the D-14a
+   checklist. Record `accepted_attempt` / `rejected: {seed: reason}` / `self_review` /
+   `cultural_check` (and `crop` for wallface subjects) directly on the subject in
+   `prompts.json`.
+4. **Check readiness**: `~/ComfyUI/venv/bin/python tools/art/env_build.py naraka --check`
+   lists every subject's accepted state, attempts present on disk, and missing review fields
+   — builds nothing.
+5. **Build**: `~/ComfyUI/venv/bin/python tools/art/env_build.py naraka`. For every accepted
+   subject: finishes it by role via `finish_env.py` (tile/strip/prop/decal — seamless tiling,
+   deterministic HSV grading per `env_grade`, rembg cutout for props/columns/gates, ΔE alpha
+   key for decals), packs `assets/sprites/_raw/env/naraka/frames` into `naraka-env-atlas` via
+   `tools/pack-atlas.js`, writes/merges `assets/sprites/env/naraka/naraka-env.json` (tuning-
+   preserving — re-runs keep existing `worldH`/`floor.tileScale`/`grade.*` etc. and only
+   refresh structural fields: path/frame/size/role/ground_safe), and upserts PROVENANCE.json
+   (`env-tile` per tile, `env-prop` per frame, `env-atlas` with `components` = the atlas
+   JSON's frame names).
+6. **Self-review (finished pass)** — another `review_grid.py` pass: `--repeat 2x2` for floor
+   tiles/wallcaps (seam check), `--repeat 3x1` for wallface strips, `--bg checker` for cutout
+   props/decals (confirms clean alpha, no halo).
+7. Run `node tools/check-provenance.js` and `node test/smoke.js` — both must stay green.
+
+**Manifest schema** (one per biome, `assets/sprites/env/{biome}/{biome}-env.json`, read by
+`js/environment.js`): see CONTEXT D-11 for the authoritative schema and field meanings
+(tiles/frames/floor/walls/skins/hazards/lights/grade blocks; `@`-prefixed tokens are
+procedural/tile skins, not atlas frames). `ENV.validateManifest(m, {strict})` enforces role/
+size/frame presence, the ground_safe gate, and skin-reference resolution.
+
+**Self-test**: `~/ComfyUI/venv/bin/python tools/art/finish_env.py --self-test` exercises
+`make_seamless`, tile stats + deterministic grading, prop-mode cutout trimming, decal-mode
+alpha estimation, and manifest tuning-preserving merge against synthetic images — no ComfyUI
+or real generations required.
+
+**Never run env generation concurrently with Phase 05.5's god-portrait generation** — see
+the queue-idle rule below (D-14). `gen_subject.py`/`gen_batch.py`'s busy-wait guard reduces
+but does not replace the orchestrator serializing the two phases' art executors.
 
 ## Cultural guards (CLAUDE.md, D-15a — hard constraints)
 

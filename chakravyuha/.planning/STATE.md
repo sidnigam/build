@@ -91,7 +91,7 @@ None yet.
 
 [Issues that affect future work]
 
-- [Polish backlog, 2026-09-27 screenshot review]: (a) RESOLVED by quick 260927-qze. (b) Fallback env north wall is a flat maroon band (resolved when 05.4 wall art lands). (c) Legacy biome bg shows tiling seams under TilingSprite (resolved by 05.4 seamless tiles). (d) Vaitarani rooms plan ~53 enemies from room 1 — tune after playtest. (e) Intermittent smoke flake seen once: 'god presence on boon panel … god-dialogue not hidden after offerAmrit' (05.5-03 typewriter timing) — make deterministic.
+- [Polish backlog, 2026-09-27 screenshot review]: (a) RESOLVED by quick 260927-qze. (b) Fallback env north wall is a flat maroon band (resolved when 05.4 wall art lands). (c) Legacy biome bg shows tiling seams under TilingSprite (resolved by 05.4 seamless tiles). (d) Vaitarani rooms plan ~53 enemies from room 1 — tune after playtest. (e) RESOLVED by quick 260929-s6t (production bug in UI.offerAmrit/offerBoon fallbacks).
 
 - [Cultural review]: yama-atlas.png (blue skin + golden crown) reads as Vishnu/Krishna iconography rather than Yama; kumbhakarna carries a trident-like staff (Shiva association). Both provisional — review before any public screenshots. Tataka regenerated to remove deity iconography.
 
@@ -112,6 +112,7 @@ None yet.
 | 260926-dcz | Arena readability polish: floor dimming, stone obstacles, HUD label fixes | 2026-09-26 | a5f516a | Verified (headless Chrome screenshot) | [260926-dcz-arena-readability-polish-floor-dimming-s](./quick/260926-dcz-arena-readability-polish-floor-dimming-s/) |
 | 260926-djs | Character readability: ground rings and rim lift for sprites | 2026-09-26 | efc15f7 | Verified for player (headless Chrome); enemy/boss pending 02-11 art | [260926-djs-character-readability-ground-rings-and-r](./quick/260926-djs-character-readability-ground-rings-and-r/) |
 | 260927-qze | Fix HUD glyph legend overlap | 2026-09-29 | 9b603f9 | Verified (headless Chrome, kbm/PS/Xbox) | [260927-qze-fix-hud-glyph-legend-overlap](./quick/260927-qze-fix-hud-glyph-legend-overlap/) |
+| 260929-s6t | Make god-dialogue smoke test deterministic (real bug: god dialogue left visible on amrit/all-owned fallback) | 2026-09-29 | 5195467 | Verified (30/30 runs) | [260929-s6t-make-god-dialogue-smoke-test-determinist](./quick/260929-s6t-make-god-dialogue-smoke-test-determinist/) |
 
 ## Session Continuity
 

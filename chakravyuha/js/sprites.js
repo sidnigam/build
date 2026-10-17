@@ -91,9 +91,31 @@ const SPRITES = {
       this.hudBridgeSprite  = new PIXI.Sprite(this.hudBridgeTexture);
       this.hudContainer.addChild(this.hudBridgeSprite);
 
+      // Phase 05.6 D-02: GFX reads this app/containers at call time — last statement in init().
+      if (typeof GFX !== 'undefined') GFX.onPixiReady();
+
     } catch (e) {
       console.warn('SPRITES disabled — fallback to primitives', e);
       this.ready = false;
+    }
+  },
+
+  /**
+   * setResolution(res) — Phase 05.6 D-08. Changes only the Pixi backing-store resolution; the
+   * canvas's displayed CSS size is preserved exactly (remembered/restored around the resize
+   * call), so input, bridge and HUD math (all logical 1280x720) are unaffected.
+   */
+  setResolution(res) {
+    if (!this.app || !this.app.renderer || !this.app.canvas) return;
+    try {
+      const canvas = this.app.canvas;
+      const prevW = canvas.style.width;
+      const prevH = canvas.style.height;
+      this.app.renderer.resize(1280, 720, res);
+      canvas.style.width = prevW;
+      canvas.style.height = prevH;
+    } catch (e) {
+      console.warn('[SPRITES] setResolution failed', e);
     }
   },
 
@@ -132,6 +154,9 @@ const SPRITES = {
    * Re-upload the bridge canvas contents to the Pixi texture after all primitives are drawn.
    */
   uploadBridge() {
+    // Phase 05.6 D-02: runs exactly once per rendered frame, after CAMERA.begin() has set
+    // tx/ty/tz; no-op headless (GFX.frame() itself guards on window.PIXI).
+    if (typeof GFX !== 'undefined') GFX.frame();
     if (this.bridgeTexture) this.bridgeTexture.source.update();
     if (this.hudBridgeTexture) this.hudBridgeTexture.source.update();
   },

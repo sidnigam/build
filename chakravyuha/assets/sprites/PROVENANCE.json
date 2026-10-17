@@ -818,6 +818,46 @@
       "self_review": "H1 correct deity (bearded wind god, windswept hair, staff with pennant) PASS. H2 calm dignified expression, no menace PASS. H3 no sexualization, modest attire PASS. H4 no horror/gore PASS. H5 no conflated deity iconography PASS. H6 no text/watermark/swastika PASS. H7 one primary figure PASS. H-god: solid dignified figure, not a ghost or translucent spectral body PASS; banner/pennant streaming at the staff top and wind-swept scarves/hair read clearly PASS; two arms PASS. HX1 skin colour consistent across face/neck/arms/hands, cool sea-green rim light PASS. HX2 living figure, painted skin, open alert eyes, not a statue/idol PASS. HX3 two arms attached at the shoulders, both gripping the staff, no extra/fused limbs PASS. HX4 staff and pennant intact and identifiable at 240px PASS. HX5 no halo/frame/border/text remnants PASS. S1 bust composition, head fully in frame PASS. S2 hands acceptable at 240px, gripping the staff PASS. S3 clean cutout PASS. S4 matches house painterly/luminous style PASS. S5 reads clearly at 64px thumbnail PASS. Rejected seed 71350 (round 0): a clear anachronistic wristwatch (circular dial with a metallic bezel) rendered on the right wrist, layered with bangles -- hard fail, era-breaking anachronism; fixed in round 1 by replacing the vague 'light silver jewellery' phrase with an explicit single plain silver armband worn high on the upper arm and wrists/hands described as bare and unadorned (the round-1 result shows a traditional beaded bracelet, not a watch -- verified by a zoomed crop, no clock face or dial present). Shipped round 1 (seed 71351, attempt 1). 05.5-01 SDXL history: this god previously read as feminine-presenting on both 05.4-01 A/B checkpoints (see 05.4-01-SUMMARY); the round-1 Flux result reads clearly as a bearded mature man.",
       "cultural_review": "pending \u2014 human cultural reviewer (QA-03)",
       "iconography_notes": "bearded mature man with windswept dark hair, calm dignified face; plain silver armband high on the upper arm, bare unadorned wrists; white dhoti sash at the waist; long sea-green silk scarves streaming in the wind; wooden staff gripped diagonally across the chest with a white triangular pennant streaming above the left shoulder; two arms"
+    },
+    {
+      "filename": "durga-portrait.png",
+      "path": "assets/sprites/gods/durga-portrait.png",
+      "actor": "durga",
+      "kind": "god",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "flux1-schnell-Q4_K_S.gguf (FLUX.1 [schnell] by Black Forest Labs, GGUF Q4_K_S by city96, Apache-2.0) + t5-v1_1-xxl Q5_K_M GGUF (Apache-2.0) + CLIP-L (MIT) + FLUX ae VAE (Apache-2.0)",
+      "method": "txt2img",
+      "sampler": "euler",
+      "scheduler": "simple",
+      "steps": 4,
+      "cfg": 1.0,
+      "width": 896,
+      "height": 1152,
+      "seed": 71552,
+      "prompt": "A half-body bust portrait cropped tight at the waist, of Goddess Durga, a serene mother goddess, compassionate face, golden skin, a slender pointed gold tiara, with nothing but her own dark hair behind her. Four arms rise from each shoulder, eight arms total, fanned symmetrically like a wheel; seven hands hold a trident, discus, sword, bow, conch, lotus and mace, her front right hand raised palm-out in blessing. She wears a red blouse and the top of a red sari with a gold border, with gold jewellery. At the frame's lower edge, her lion's head and mane peek into view. Crimson red, gold and lion tawny. Bold hand-painted game-art character portrait with confident dark ink outlines, rich painterly detail, luminous warm rim light and ornate Indian gold jewellery, in the spirit of classical Indian temple murals and Pahari miniatures. A living figure with naturally shaded skin and open, alert eyes. Half-body portrait cropped at the waist, three-quarter view turned slightly right, head fully in frame. Alone before a flat, even, medium-grey backdrop filling the whole image.",
+      "negative_prompt": "",
+      "rejected_seeds": [
+        71550,
+        71551
+      ],
+      "rejected_count": 2,
+      "post_processing": [
+        "rembg birefnet-general",
+        "alpha clean <16",
+        "despeckle >=0.02",
+        "trim",
+        "fit 600x768 top 12",
+        "bottom feather 0.12"
+      ],
+      "raw_image": "assets/sprites/_raw/gods/durga/",
+      "gen_sidecar": "assets/sprites/_raw/gods/durga/durga-portrait.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-17",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "H1 correct deity (eight-armed Durga, trident/sword/mace among her weapons, lion beside her) PASS. H2 serene compassionate expression PASS. H3 no sexualization, fully clothed in a red blouse and sari, modest PASS. H4 no horror/gore/skulls/blood, not Kali-coded, no tongue-out PASS. H5 no conflated deity iconography PASS. H6 no text/watermark/swastika PASS. H7 one primary figure (the lion is the explicitly allowed exception) PASS. H-god: eight arms present (three fanned each side plus two front arms), symmetric, no fused or broken limbs PASS; red sari with gold border PASS; crown present PASS; lion's head and mane visible beside her PASS. HX1 skin colour consistent (golden) across face/neck/arms/hands PASS. HX2 living figure, painted skin, open eyes, not a statue/idol/murti PASS. HX3 eight arms, each attached at or near the shoulder in a fanned arc, no extra/fused/floating limbs PASS. HX4 held weapons (trident, small sword, mace) intact and identifiable at 240px PASS. HX5 no halo disc or separate radiant aureole survives in the finished cutout -- the gold spiked arc is read as part of the crown/headdress silhouette itself (same gold tone, textured like metalwork, directly attached to and behind the crown, not a separately colored circular backdrop) PASS. S1 bust composition, head fully in frame PASS. S2 hands acceptable at 240px PASS. S3 clean cutout, no background remnants PASS. S4 matches house painterly/luminous style PASS. S5 reads clearly at 64px thumbnail PASS. Rejected seed 71550 (round 0): full-body framing (not a waist-cropped bust) and only 6 of 8 required arms rendered -- composition and H-god arm-count fails. Rejected seed 71551 (round 1): composition and arm count were fixed, but the 'tall golden crown' phrase generated a large red-and-gold radiant arch/aureole behind her head, visually indistinguishable from the banned halo disc (the Yama lesson from Phase 2) -- rewrote the headwear as a slender pointed gold tiara with nothing but her own hair behind her head. Shipped round 2 (seed 71552, attempt 2). Never mirrored. 05.5-01 SDXL history: 7/7 rejected (see 05.5-01-SUMMARY).",
+      "cultural_review": "pending \u2014 human cultural reviewer (QA-03)",
+      "iconography_notes": "serene compassionate face, golden skin, slender pointed gold tiara with an integrated gold spiked crown-arch (not a separate halo disc); eight arms fanned symmetrically from the shoulders (three each side plus two crossed in front), holding a trident, a small sword, a mace and other implements with the remaining hands in open/blessing gestures; red silk blouse and the top of a red sari with a gold border; the head and mane of her lion visible at the lower edge of the frame beside her shoulder; never mirrored (abhaya-mudra handedness is iconographic)"
     }
   ],
   "review_sheet": "assets/sprites/_review/contact-sheet.png",

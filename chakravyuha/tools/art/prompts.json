@@ -138,7 +138,9 @@
       "negative_extra": "human man, human face, bearded man, old man, human features, generic human deity, elderly man, moustache, beard, pale skin, white skin, smooth hairless face, no fur, four arms, extra arms, architectural arch, temple arch, pillars, halo disc, circular halo, aureole, picture frame border, ornate border, realistic ape photo, chimpanzee, gorilla, cartoon monkey, aggressive, open chest, heart imagery, five faces, blue skin, Vishnu, feminine breasts, flat human face, human nose, no muzzle, no snout, decorative frame, picture frame, border pattern, ornamental border, vignette, grey skin, silver skin, white fur, incense lamp, oil lamp, small hand object, no mace, no gada, watermark, signature, stamp, seal, small text mark, halo, circular halo, radiating disc, glowing circle behind head, sunburst, aureole, grass, ground, floor, scenery, landscape, floating object, disconnected shape, stray prop, full body, standing, legs, feet, scepter with a figure on top, staff topped with a deity figure, photorealistic, photo, realistic fur, whiskers, individual hairs, wildlife photography, nature documentary, real animal",
       "base_seed": 71000,
       "out_w": 600,
-      "out_h": 768
+      "out_h": 768,
+      "flux_subject": "Lord Hanuman, the divine vanara, a noble monkey-faced hero: a monkey face with a short rounded muzzle, a wide flat monkey nose, round monkey ears and short saffron-orange fur on his face and arms, kind devoted eyes and a gentle smile. A tall golden mukuta crown, a red vermilion tilak, gold armlets, a pearl necklace and a saffron silk dhoti. His right hand grips the handle of a large golden gada mace held close, its heavy round head resting on his right shoulder beside his crown. His left palm rests on his heart. Two arms. Saffron orange, vermilion and gold.",
+      "flux_base_seed": 71050
     },
     "agni": {
       "kind": "god",
@@ -147,7 +149,9 @@
       "negative_extra": "demon, fire demon, ifrit, balrog, burning man, charred skin, horns, ram horns, skeleton, blue skin, four arms, Vishnu, two heads, jeweled crown, gold headdress without flames, ornate crown jewelry, halo, circular halo, radiating disc, aureole, arch, architectural arch, textured background, patterned background, throne, seated, feminine, woman, watermark, signature, stamp, text, logo, dark cone hat, conical headdress, turban, jeweled crown, gold headdress without flames, two torches, second torch, halo, circular halo, radiating disc, aureole, throne, seated, tile pattern, colorful steps, pedestal, crown, headdress, hat, turban, head jewelry, tiara, diadem, vignette, smoke swirl border, decorative border pattern, mace, scepter, staff, trident",
       "base_seed": 71100,
       "out_w": 600,
-      "out_h": 768
+      "out_h": 768,
+      "flux_subject": "Agni, the Vedic god of fire, a mature man with one calm, wise, bearded face and warm red-gold skin. His hair and crown are made of golden flames rising upward from his head. A gold crown band, a white sacred thread across his chest, gold necklaces and a deep red silk dhoti. His right hand is raised close beside his face, palm up, cupping a small bright flame in the palm. His left hand rests on his chest. Two arms, a kind and benevolent expression. Flame red, ember orange and gold.",
+      "flux_base_seed": 71150
     },
     "indra": {
       "kind": "god",
@@ -156,7 +160,9 @@
       "negative_extra": "Zeus, Thor, hammer, zigzag lightning bolt, greek god, roman emperor, western king, toga, many eyes, blue skin, four arms, Vishnu, elephant, thin rod, thin wand, cane, walking stick, single-ended scepter, extended arm holding object away from body, floating detached object, second scepter, symmetrical decorative pair, border pattern, ornate frame, textured background, dark background, cropped at the shoulders, cropped at the chest, hands out of frame, no hands visible, closed eyes, statue, idol, bronze statue, halo, arch, fan-shaped backdrop, textured marbled background, patterned robe texture",
       "base_seed": 71200,
       "out_w": 600,
-      "out_h": 768
+      "out_h": 768,
+      "flux_subject": "Indra, king of the devas, a youthful regal man with a proud, kind face, a fine black moustache, warm fair skin and open alert eyes. A tall jewelled golden kirita crown, gold earrings, a broad jewelled collar, and indigo and white silk garments with gold trim. With both hands he clasps the Vajra upright against the centre of his chest: a golden double-ended thunderbolt sceptre, perfectly symmetrical, with three curved prongs at the top and three at the bottom around a central grip, glowing with soft white light. Two arms. Royal gold, storm indigo and white.",
+      "flux_base_seed": 71250
     },
     "vayu": {
       "kind": "god",
@@ -165,7 +171,9 @@
       "negative_extra": "ghost, spectral, translucent body, skeleton, air elemental, cloud monster, bag of winds, blue skin, four arms, Vishnu, deer, still hair, static cloth, no wind, mirror, fan-shaped ornament, teardrop ornament, solid disc on a stick, translucent, see-through, textured background, patterned background, border pattern, no staff, no pennant, no flag, staff far from body, floating detached staff, still hair, static cloth, no wind, translucent, see-through, greek toga, roman philosopher, roman bust, marble statue, profile view, side view of face, decorative border, floral border, vignette, halo, circular disc behind head, no staff, no pennant, no flag, glasses, spectacles, modern clothing, shirt, kurta, photorealistic photo, ordinary human, mundane, contemporary",
       "base_seed": 71300,
       "out_w": 600,
-      "out_h": 768
+      "out_h": 768,
+      "flux_subject": "Vayu, the Vedic god of wind, a strong bearded mature man with a calm, dignified masculine face, a full dark beard and long dark hair blown sideways by a strong wind. Fair skin lit by cool sea-green light, light silver jewellery, a white silk dhoti and long pale sea-green silk scarves streaming sideways in the wind. His right fist grips a wooden staff held diagonally across the front of his chest; at its top, just above his left shoulder, a white triangular pennant flag streams in the same wind. Two arms. Pale sea-green, silver-white and soft gold.",
+      "flux_base_seed": 71350
     },
     "krishna": {
       "kind": "god",
@@ -175,7 +183,9 @@
       "base_seed": 71400,
       "out_w": 600,
       "out_h": 768,
-      "no_mirror": true
+      "no_mirror": true,
+      "flux_subject": "Lord Krishna as Parthasarathi, an adult man with a gentle, knowing smile. His skin is deep blue everywhere, the same even blue on his face, neck, chest, arms and hands, painted as natural living skin. One peacock feather stands upright in the front of his golden crown. Both of his hands hold a bamboo bansuri flute horizontally at his lips. A yellow silk pitambara shawl over his shoulders, a garland of forest flowers, a kaustubha jewel on his chest, gold jewellery and a U-shaped tilak on his forehead. Two arms. Deep blue, peacock teal and pitambara yellow.",
+      "flux_base_seed": 71450
     },
     "durga": {
       "kind": "god",
@@ -185,7 +195,9 @@
       "base_seed": 71500,
       "out_w": 600,
       "out_h": 768,
-      "no_mirror": true
+      "no_mirror": true,
+      "flux_subject": "Goddess Durga, a serene mother goddess with a compassionate face, warm golden skin and a tall golden crown. She has eight arms fanned symmetrically behind her shoulders like a wheel, four on each side; seven hands hold a trident, a discus, a sword, a bow, a conch, a lotus and a mace, and her front right hand is raised palm-out in blessing. She wears a red silk sari with a gold border and a matching red blouse, modestly draped, with gold jewellery. At the lower left edge of the frame, beside her waist, rise the head and golden mane of her lion. Crimson red, gold and lion tawny.",
+      "flux_base_seed": 71550
     }
   },
   "checkpoint": "sd_xl_base_1.0.safetensors",
@@ -219,6 +231,29 @@
       "source_url": "https://civitai.com/models/112902?modelVersionId=126688",
       "download_url": "https://civitai.com/api/download/models/126688?fileId=91562",
       "sha256": "0F1B80CFE81B9C3BDE7FDCBF6898897B2811B27BE1DF684583C3D85CBC9B1FA4"
+    },
+    "flux1_schnell_q4ks": {
+      "graph": "flux_gguf",
+      "file": "flux1-schnell-Q4_K_S.gguf",
+      "t5": "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+      "clip_l": "clip_l.safetensors",
+      "vae": "ae.safetensors",
+      "clip_type": "flux",
+      "sampler": "euler",
+      "scheduler": "simple",
+      "steps": 4,
+      "cfg": 1.0,
+      "license": "Apache-2.0 (FLUX.1-schnell weights, T5 v1.1, VAE); MIT (CLIP-L)",
+      "label": "flux1-schnell-Q4_K_S.gguf (FLUX.1 [schnell] by Black Forest Labs, GGUF Q4_K_S by city96, Apache-2.0) + t5-v1_1-xxl Q5_K_M GGUF (Apache-2.0) + CLIP-L (MIT) + FLUX ae VAE (Apache-2.0)",
+      "sha256": {
+        "flux1-schnell-Q4_K_S.gguf": "4fd16477b3a5296d0cf722c4b92a9fd7f30d09ac7495826e4465d8de9c9fd973",
+        "t5-v1_1-xxl-encoder-Q5_K_M.gguf": "b51cbb10b1a7aac6dd1c3b62f0ed908bfd06e0b42d2f3577d43e061361f51dae",
+        "clip_l.safetensors": "660c6f5b1abae9dc498ac2d21e1347d2abdb0cf6c0c0c8576cd796491d9a6cdd",
+        "ae.safetensors": "afc8e28272cd15db3919bacdb6918ce9c1ed22e96cb12c4d5ed0fba823529e38"
+      },
+      "custom_node": {
+        "ComfyUI-GGUF": "6ea2651e7df66d7585f6ffee804b20e92fb38b8a"
+      }
     }
   },
   "env_checkpoint": "sdxl_base",
@@ -342,5 +377,8 @@
         }
       }
     }
-  }
+  },
+  "god_checkpoint": "flux1_schnell_q4ks",
+  "max_attempts_god_flux": 6,
+  "god_style_positive_flux": "Bold hand-painted game-art character portrait with confident dark ink outlines, rich painterly detail, luminous warm rim light and ornate Indian gold jewellery, in the spirit of classical Indian temple murals and Pahari miniatures. A living figure with naturally shaded skin and open, alert eyes. Half-body portrait cropped at the waist, three-quarter view turned slightly right, head fully in frame. Alone before a flat, even, medium-grey backdrop filling the whole image."
 }

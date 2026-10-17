@@ -169,6 +169,71 @@ recorded in `checkpoint_label`.
 ComfyUI is single-tenant; `gen_subject.py`'s busy-wait guard reduces but does not replace
 the orchestrator serializing the two phases' art executors.
 
+### God portraits — FLUX.1-schnell retry (05.5-04)
+
+SDXL 1.0 base (05.5-01, 42 attempts) and DreamShaper XL (05.4-01 A/B) both shipped 0/6 god
+portraits — statue/idol renders, halos, wrong arm counts, and held props destroyed by the
+rembg cutout. 05.5-04 retries on **FLUX.1-schnell** (Apache-2.0), a GGUF Q4_K_S quant run
+locally via the `ComfyUI-GGUF` custom node (city96, pinned to commit
+`6ea2651e7df66d7585f6ffee804b20e92fb38b8a`), with natural-language positive-only prompts (no
+negative — cfg 1.0), a medium-grey backdrop, and props pressed against the body.
+
+- **The `god_checkpoint` switch.** `prompts.json` top-level `god_checkpoint:
+  "flux1_schnell_q4ks"` selects the `checkpoints.flux1_schnell_q4ks` catalog profile
+  (`graph: "flux_gguf"`) for every god subject; a per-subject `checkpoint_profile` can
+  override it, and `--ckpt-profile sdxl_base` forces the legacy SDXL path for an A/B.
+  `gen_subject.py`'s `resolve_profile()`/`seed_for()` implement the shared precedence
+  (`--ckpt-profile` > `env_checkpoint` (env keys) > `entry.checkpoint_profile` or
+  `god_checkpoint` (god keys) > legacy). `build_prompt()` routes to the Flux positive-only
+  template (`flux_subject` + `god_style_positive_flux`, `neg=""`) only when the resolved
+  profile's `graph == "flux_gguf"` — every legacy SDXL subject's `--dry-run` output stays
+  byte-identical.
+- **Flux prompt rules**: positive phrasing only (schnell has no negative prompt — cfg 1.0,
+  `ConditioningZeroOut` only satisfies the KSampler signature), the **subject goes first** in
+  the assembled prompt (CLIP-L only sees ~77 tokens; T5 sees ~256), and the total stays at or
+  under **~180 words**. `gen_subject.py <god> --dry-run` prints `graph=flux_gguf seed=...
+  negative='' words=N` and `LINT:` warnings for a negation (`\bno\b|\bnot\b|without|never`) or
+  an over-180-word prompt (`lint_prompt()`).
+- **`--flux-smoke`**: generates the fixed neutral chariot-wheel prompt at seed `71599` (no
+  `key` argument needed) to `assets/sprites/_gen/gods/_smoke/smoke_s71599.png` + sidecar,
+  with a 1800s default timeout for the first model load. Gate-held for Task 4 (GPU-gated) —
+  do not run before the ComfyUI restart.
+- **`--validate`**: builds the resolved Flux graph and checks it against the live
+  `/object_info`. Before a ComfyUI restart, `UnetLoaderGGUF`/`DualCLIPLoaderGGUF` aren't
+  loaded yet, so they're statically checked instead (grep `ComfyUI-GGUF/nodes.py` for the
+  class + `unet_name`/`clip_name1`/`clip_name2`/`type` input keys, and the `type` value
+  against the core `DualCLIPLoader` combo list) and reported as `VALIDATE SKIP ... --
+  static check OK` rather than an error.
+- **The matte decision and flags** (`finish_portrait.py`, D-31). New flags: `--matte
+  {u2net,isnet-general-use,birefnet-general}` (default `u2net`; `bria-rmbg` is never offered
+  — its license is non-commercial), `--alpha-matting`, `--keyfill --key-de 18
+  --key-max-growth 0.15` (a colour-distance key against the sampled backdrop, guarded against
+  runaway growth — `keyfill_core()`), `--despeckle-min 0.02`. A 6-config CPU bake-off against
+  the 05.5-01 prop-loss raws (`tools/art/prompts.json` → `god_finish`) adopted
+  **`matte=birefnet-general`, `keyfill=false`**: birefnet-general alone recovered every lost
+  prop/cropped limb with no new artifacts, while `u2net+keyfill` tripped the growth guard on
+  every real image (SDXL's "flat grey" backdrop isn't flat enough for a naive colour key) and
+  `birefnet+keyfill` added a minor new artifact over plain birefnet. The CLI prints
+  `matte=... keyfill_added=...% skipped=...` for Task 4 to record into provenance
+  `post_processing`. `--self-test` exercises `keyfill_core`/`despeckle` against synthetic
+  images only (no rembg) — default CLI behaviour (`u2net`, no keyfill, despeckle 0.02) is
+  unchanged.
+- **`god_panel_shots.mjs`** (new; follows the `env_shots.mjs`/`browser-check.mjs` CDP
+  pattern): `node tools/art/god_panel_shots.mjs OUT_DIR --gods hanuman,agni,... [--expect
+  portrait|fallback]`. Uses its own ports — http **8095**, CDP **9335** — so it never
+  collides with 05.4's `env_shots.mjs` (8091/9333). Starts its own `python3 -m http.server
+  8095` if nothing already answers there, drives `GAME.startRun()` +
+  `UI.preloadGodPortraits()`, then per god: `UI.offerBoon(id)` → wait 2.5s →
+  `UI.skipGodDialogue()` → wait 300ms → screenshot `<out>/<id>-panel.png`, recording
+  `hasPortrait` (`#boonpick.has-portrait`) and any page exceptions to `<out>/report.json`.
+  `--expect portrait|fallback` sets the exit code (1 on any mismatch or exception). Kills
+  Chrome and the server on exit.
+- **The GPU gate (D-33)**: Tasks 1-3 (downloads, node install, licenses, graph/prompt
+  tooling, the CPU matte bake-off, the fallback-path panel check) need no GPU and never touch
+  ComfyUI's queue. Only Task 4 — the ComfyUI **restart** (to load `ComfyUI-GGUF`) and all
+  generation — waits for the orchestrator's explicit "GPU gate open", with `/queue` idle on
+  two polls 60s apart and no other `gen_subject.py`/`gen_batch.py` process running.
+
 ## Environment art (Phase 05.4)
 
 Each of the 4 combat biomes gets a Hades-style layered arena (floor tiles, an architectural

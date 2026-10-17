@@ -41,6 +41,217 @@ def build_txt2img_graph(pos, neg, seed, width, height, steps=32, cfg=7.0,
     }
 
 
+# --- FLUX.1-schnell GGUF graph (05.5-04, D-26/D-28) ----------------------------------------
+#
+# schnell is not guidance-distilled the way dev is -- no FluxGuidance / ModelSamplingFlux node
+# is added (per the plan). cfg stays 1.0 so the KSampler's "negative" conditioning is never
+# actually used for guidance; ConditioningZeroOut only exists to satisfy the KSampler's
+# required "negative" input signature. Flux uses a 16-channel SD3-style latent, so
+# EmptySD3LatentImage is required instead of EmptyLatentImage.
+FLUX_DEFAULT_UNET = "flux1-schnell-Q4_K_S.gguf"
+FLUX_DEFAULT_T5 = "t5-v1_1-xxl-encoder-Q5_K_M.gguf"
+FLUX_DEFAULT_CLIP_L = "clip_l.safetensors"
+FLUX_DEFAULT_VAE = "ae.safetensors"
+
+
+def build_flux_gguf_graph(pos, seed, width, height, steps=4, cfg=1.0,
+                           sampler="euler", scheduler="simple",
+                           unet=FLUX_DEFAULT_UNET, t5=FLUX_DEFAULT_T5, clip_l=FLUX_DEFAULT_CLIP_L,
+                           vae=FLUX_DEFAULT_VAE, clip_type="flux", prefix="chakravyuha"):
+    """Build the FLUX.1-schnell GGUF API graph (positive-only; no negative text prompt).
+
+    Nodes: UnetLoaderGGUF, DualCLIPLoaderGGUF, CLIPTextEncode, ConditioningZeroOut,
+    EmptySD3LatentImage, KSampler, VAELoader, VAEDecode, SaveImage.
+    """
+    if width % 16 != 0 or height % 16 != 0:
+        raise ValueError(f"Flux width/height must be multiples of 16, got {width}x{height}")
+    return {
+        "1": {"class_type": "UnetLoaderGGUF", "inputs": {"unet_name": unet}},
+        "2": {"class_type": "DualCLIPLoaderGGUF", "inputs": {
+            "clip_name1": t5, "clip_name2": clip_l, "type": clip_type,
+        }},
+        "3": {"class_type": "CLIPTextEncode", "inputs": {"text": pos, "clip": ["2", 0]}},
+        "4": {"class_type": "ConditioningZeroOut", "inputs": {"conditioning": ["3", 0]}},
+        "5": {"class_type": "EmptySD3LatentImage", "inputs": {
+            "width": width, "height": height, "batch_size": 1,
+        }},
+        "6": {"class_type": "KSampler", "inputs": {
+            "seed": seed, "steps": steps, "cfg": cfg,
+            "sampler_name": sampler, "scheduler": scheduler, "denoise": 1.0,
+            "model": ["1", 0], "positive": ["3", 0], "negative": ["4", 0], "latent_image": ["5", 0],
+        }},
+        "7": {"class_type": "VAELoader", "inputs": {"vae_name": vae}},
+        "8": {"class_type": "VAEDecode", "inputs": {"samples": ["6", 0], "vae": ["7", 0]}},
+        "9": {"class_type": "SaveImage", "inputs": {"filename_prefix": prefix, "images": ["8", 0]}},
+    }
+
+
+# Keys whose combo value should be checked against the core/combo allow-list in /object_info,
+# per the plan ("sampler_name, scheduler, type, unet_name, clip_name*, vae_name").
+_COMBO_CHECK_KEYS = {"sampler_name", "scheduler", "type", "unet_name", "clip_name1", "clip_name2", "vae_name"}
+
+
+def _is_link(value, node_ids):
+    """A link is [node_id, output_index] where node_id is a key present in the graph."""
+    return (isinstance(value, list) and len(value) == 2
+            and isinstance(value[0], str) and isinstance(value[1], int)
+            and value[0] in node_ids)
+
+
+def validate_graph(graph, object_info, skip_classes=()):
+    """Return a list of human-readable error strings; [] means the graph is valid against
+    object_info (as returned by GET /object_info).
+
+    Checks: unknown class_type, unknown input name, a combo value (sampler_name/scheduler/
+    type/unet_name/clip_name*/vae_name) not in its allowed list, and every link referencing
+    an existing node id. Classes in skip_classes are not checked against object_info at all
+    (used for GGUF node classes before ComfyUI has loaded them -- see gen_subject.py
+    --validate's static fallback).
+    """
+    errors = []
+    node_ids = set(graph.keys())
+    for node_id, node in graph.items():
+        class_type = node.get("class_type")
+        inputs = node.get("inputs", {})
+
+        # Links always need a valid target, even for classes we otherwise skip.
+        for key, value in inputs.items():
+            if isinstance(value, list) and len(value) == 2 and isinstance(value[0], str) \
+                    and isinstance(value[1], int) and value[0] not in node_ids:
+                errors.append(f"node {node_id} ({class_type}): input {key!r} links to "
+                              f"unknown node id {value[0]!r}")
+
+        if class_type in skip_classes:
+            continue
+
+        info = object_info.get(class_type)
+        if info is None:
+            errors.append(f"node {node_id}: unknown class_type {class_type!r}")
+            continue
+
+        required = info.get("input", {}).get("required", {})
+        optional = info.get("input", {}).get("optional", {})
+        all_inputs = {}
+        all_inputs.update(required)
+        all_inputs.update(optional)
+
+        for key, value in inputs.items():
+            if key not in all_inputs:
+                errors.append(f"node {node_id} ({class_type}): unknown input name {key!r}")
+                continue
+            if _is_link(value, node_ids):
+                continue
+            if key not in _COMBO_CHECK_KEYS:
+                continue
+            spec = all_inputs[key]
+            combo = spec[0] if isinstance(spec, (list, tuple)) and len(spec) > 0 else None
+            if isinstance(combo, list) and value not in combo:
+                errors.append(f"node {node_id} ({class_type}): {key}={value!r} not in "
+                              f"allowed combo values {combo!r}")
+    return errors
+
+
+def _self_test():
+    """Synthetic, network-free assertions for build_flux_gguf_graph()/validate_graph()."""
+    graph = build_flux_gguf_graph("a test prompt", seed=71599, width=896, height=1152)
+
+    expected_classes = {
+        "UnetLoaderGGUF", "DualCLIPLoaderGGUF", "VAELoader", "CLIPTextEncode",
+        "ConditioningZeroOut", "EmptySD3LatentImage", "KSampler", "VAEDecode", "SaveImage",
+    }
+    actual_classes = {n["class_type"] for n in graph.values()}
+    assert actual_classes == expected_classes, f"node set mismatch: {actual_classes}"
+    assert len(graph) == 9, f"expected exactly 9 nodes, got {len(graph)}"
+
+    ksampler = next(n for n in graph.values() if n["class_type"] == "KSampler")
+    ki = ksampler["inputs"]
+    assert ki["steps"] == 4 and ki["cfg"] == 1.0 and ki["sampler_name"] == "euler" \
+        and ki["scheduler"] == "simple" and ki["denoise"] == 1.0, f"KSampler params wrong: {ki}"
+
+    neg_node_id = ki["negative"][0]
+    assert graph[neg_node_id]["class_type"] == "ConditioningZeroOut", \
+        "KSampler negative must be a ConditioningZeroOut of the positive"
+    zero_out_src = graph[neg_node_id]["inputs"]["conditioning"][0]
+    pos_node_id = ki["positive"][0]
+    assert zero_out_src == pos_node_id, "ConditioningZeroOut must wrap the positive conditioning"
+    assert graph[pos_node_id]["class_type"] == "CLIPTextEncode"
+    # Only one CLIPTextEncode node (positive-only; no negative text).
+    text_encode_nodes = [n for n in graph.values() if n["class_type"] == "CLIPTextEncode"]
+    assert len(text_encode_nodes) == 1, "Flux graph must have no negative text prompt"
+
+    # width/height not multiples of 16 -> ValueError
+    try:
+        build_flux_gguf_graph("x", seed=1, width=900, height=1152)
+        raise AssertionError("expected ValueError for non-multiple-of-16 width")
+    except ValueError:
+        pass
+    try:
+        build_flux_gguf_graph("x", seed=1, width=896, height=1150)
+        raise AssertionError("expected ValueError for non-multiple-of-16 height")
+    except ValueError:
+        pass
+
+    # Every link references an existing node id.
+    node_ids = set(graph.keys())
+    for nid, node in graph.items():
+        for key, value in node["inputs"].items():
+            if isinstance(value, list) and len(value) == 2 and isinstance(value[0], str) \
+                    and isinstance(value[1], int):
+                assert value[0] in node_ids, f"node {nid} input {key} links to missing node {value[0]}"
+
+    # validate_graph(): a valid graph against a synthetic object_info -> [].
+    object_info = {
+        "UnetLoaderGGUF": {"input": {"required": {
+            "unet_name": [[FLUX_DEFAULT_UNET], {}],
+        }}},
+        "DualCLIPLoaderGGUF": {"input": {"required": {
+            "clip_name1": [[FLUX_DEFAULT_T5], {}],
+            "clip_name2": [[FLUX_DEFAULT_CLIP_L], {}],
+            "type": [["sdxl", "sd3", "flux"], {}],
+        }}},
+        "VAELoader": {"input": {"required": {"vae_name": [[FLUX_DEFAULT_VAE], {}]}}},
+        "CLIPTextEncode": {"input": {"required": {"text": ["STRING", {}], "clip": ["CLIP", {}]}}},
+        "ConditioningZeroOut": {"input": {"required": {"conditioning": ["CONDITIONING", {}]}}},
+        "EmptySD3LatentImage": {"input": {"required": {
+            "width": ["INT", {}], "height": ["INT", {}], "batch_size": ["INT", {}],
+        }}},
+        "KSampler": {"input": {"required": {
+            "model": ["MODEL", {}], "seed": ["INT", {}], "steps": ["INT", {}], "cfg": ["FLOAT", {}],
+            "sampler_name": [["euler", "dpmpp_2m"], {}], "scheduler": [["simple", "karras"], {}],
+            "positive": ["CONDITIONING", {}], "negative": ["CONDITIONING", {}],
+            "latent_image": ["LATENT", {}], "denoise": ["FLOAT", {}],
+        }}},
+        "VAEDecode": {"input": {"required": {"samples": ["LATENT", {}], "vae": ["VAE", {}]}}},
+        "SaveImage": {"input": {"required": {"images": ["IMAGE", {}], "filename_prefix": ["STRING", {}]}}},
+    }
+    errs = validate_graph(graph, object_info)
+    assert errs == [], f"expected no errors on a valid graph, got: {errs}"
+
+    # unknown class_type
+    bad_graph = dict(graph)
+    bad_graph["99"] = {"class_type": "TotallyMadeUpNode", "inputs": {}}
+    errs = validate_graph(bad_graph, object_info)
+    assert any("unknown class_type" in e for e in errs), errs
+
+    # unknown input name
+    bad_graph2 = json.loads(json.dumps(graph))
+    bad_graph2["1"]["inputs"]["not_a_real_input"] = "x"
+    errs = validate_graph(bad_graph2, object_info)
+    assert any("unknown input name" in e for e in errs), errs
+
+    # combo value not in allowed list
+    bad_graph3 = json.loads(json.dumps(graph))
+    bad_graph3["2"]["inputs"]["type"] = "not_a_real_clip_type"
+    errs = validate_graph(bad_graph3, object_info)
+    assert any("not in allowed combo values" in e for e in errs), errs
+
+    # skip_classes: a class absent from object_info is not reported as unknown
+    errs = validate_graph(graph, {}, skip_classes=("UnetLoaderGGUF", "DualCLIPLoaderGGUF"))
+    assert not any("UnetLoaderGGUF" in e or "DualCLIPLoaderGGUF" in e for e in errs), errs
+
+    print("comfy_client.py --self-test: ALL PASSED")
+
+
 def _http_json(url, data=None, timeout=30):
     req = urllib.request.Request(url, data=data,
                                   headers={"Content-Type": "application/json"} if data else {})
@@ -128,6 +339,10 @@ def write_sidecar(out_path, graph, params, prompt_id, comfyui_version=None):
 
 def main():
     ap = argparse.ArgumentParser(description="ComfyUI stdlib API client (queue/poll/download/sidecar).")
+    ap.add_argument("--self-test", dest="self_test", action="store_true",
+                     help="Run offline, network-free assertions for build_flux_gguf_graph/validate_graph.")
+    ap.add_argument("--object-info-dump", dest="object_info_dump", default=None, metavar="PATH",
+                     help="GET /object_info and save it to PATH (read-only).")
     ap.add_argument("--positive")
     ap.add_argument("--negative")
     ap.add_argument("--seed", type=int)
@@ -139,11 +354,27 @@ def main():
     ap.add_argument("--scheduler", default="karras")
     ap.add_argument("--ckpt", default="sd_xl_base_1.0.safetensors")
     ap.add_argument("--prefix", default="chakravyuha")
-    ap.add_argument("--out", required=True)
+    ap.add_argument("--out", required=False)
     ap.add_argument("--wait-only", dest="wait_only", default=None,
                      help="Resume waiting on an already-queued prompt_id instead of queuing a new one.")
     ap.add_argument("--timeout", type=int, default=540)
     args = ap.parse_args()
+
+    if args.self_test:
+        _self_test()
+        return
+
+    if args.object_info_dump:
+        info = _http_json(f"{COMFY_HOST}/object_info", timeout=30)
+        with open(args.object_info_dump, "w") as f:
+            json.dump(info, f, indent=2)
+        print(f"Wrote {args.object_info_dump}")
+        return
+
+    if not args.out:
+        print("ERROR: --out is required unless --self-test or --object-info-dump is used",
+              file=sys.stderr)
+        sys.exit(1)
 
     try:
         stats = system_stats()

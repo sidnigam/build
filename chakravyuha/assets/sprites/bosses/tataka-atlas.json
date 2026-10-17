@@ -2,22 +2,22 @@
   "frames": {
     "tataka_phase2_0.png": {
       "frame": {
-        "x": 2,
-        "y": 2,
-        "w": 204,
-        "h": 256
+        "x": 8,
+        "y": 8,
+        "w": 425,
+        "h": 512
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 25,
+        "x": 42,
         "y": 0,
-        "w": 204,
-        "h": 256
+        "w": 425,
+        "h": 512
       },
       "sourceSize": {
-        "w": 256,
-        "h": 256
+        "w": 512,
+        "h": 512
       },
       "pivot": {
         "x": 0.5,
@@ -26,22 +26,22 @@
     },
     "tataka_idle_0.png": {
       "frame": {
-        "x": 2,
-        "y": 262,
-        "w": 168,
-        "h": 248
+        "x": 8,
+        "y": 536,
+        "w": 352,
+        "h": 506
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 43,
-        "y": 4,
-        "w": 168,
-        "h": 248
+        "x": 79,
+        "y": 3,
+        "w": 352,
+        "h": 506
       },
       "sourceSize": {
-        "w": 256,
-        "h": 256
+        "w": 512,
+        "h": 512
       },
       "pivot": {
         "x": 0.5,
@@ -55,8 +55,8 @@
     "image": "tataka-atlas.png",
     "format": "RGBA8888",
     "size": {
-      "w": 208,
-      "h": 512
+      "w": 441,
+      "h": 1050
     },
     "scale": 1
   },

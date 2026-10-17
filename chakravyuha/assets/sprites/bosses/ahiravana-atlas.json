@@ -2,22 +2,22 @@
   "frames": {
     "ahiravana_phase2_0.png": {
       "frame": {
-        "x": 2,
-        "y": 2,
-        "w": 213,
-        "h": 256
+        "x": 8,
+        "y": 8,
+        "w": 503,
+        "h": 512
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 21,
+        "x": 4,
         "y": 0,
-        "w": 213,
-        "h": 256
+        "w": 503,
+        "h": 512
       },
       "sourceSize": {
-        "w": 256,
-        "h": 256
+        "w": 512,
+        "h": 512
       },
       "pivot": {
         "x": 0.5,
@@ -26,22 +26,22 @@
     },
     "ahiravana_idle_0.png": {
       "frame": {
-        "x": 2,
-        "y": 262,
-        "w": 177,
-        "h": 248
+        "x": 8,
+        "y": 536,
+        "w": 431,
+        "h": 506
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 39,
-        "y": 4,
-        "w": 177,
-        "h": 248
+        "x": 40,
+        "y": 3,
+        "w": 431,
+        "h": 506
       },
       "sourceSize": {
-        "w": 256,
-        "h": 256
+        "w": 512,
+        "h": 512
       },
       "pivot": {
         "x": 0.5,
@@ -55,8 +55,8 @@
     "image": "ahiravana-atlas.png",
     "format": "RGBA8888",
     "size": {
-      "w": 217,
-      "h": 512
+      "w": 519,
+      "h": 1050
     },
     "scale": 1
   },

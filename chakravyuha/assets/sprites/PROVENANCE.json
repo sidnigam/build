@@ -26,14 +26,26 @@
       "steps": 32,
       "cfg": 7,
       "prompt_source": "assets/sprites/comfyui-workflow.json positive/negative prompt",
-      "seeds": "not recorded per-frame",
+      "seeds": [
+        40011,
+        40012,
+        40013,
+        40014
+      ],
       "post_processing": [
-        "rembg u2net background removal",
-        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+        "rembg birefnet-general background removal",
+        "alpha despeckle + trim",
+        "bottom-aligned LANCZOS fit to 256x256 (margin 10)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 6 px, #140b08 a=235, 0.6px feather, under sprite",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
       "raw_frames": "assets/sprites/_raw/player/player_idle_{0..3}.png",
       "generated_date": "2026-09-13",
-      "packed_date": "2026-09-24"
+      "packed_date": "2026-09-24",
+      "repacked_phase": "05.6",
+      "repacked_date": "2026-10-17",
+      "source_recovered_from": "player_idle_frame_00001_.png, player_idle_frame_00002_.png, player_idle_frame_00003_.png, player_idle_frame_00004_.png \u2014 PNG-embedded ComfyUI prompt metadata matched by filename prefix + denoise + seed order; no regeneration"
     },
     {
       "filename": "naraka-bg.png",
@@ -198,11 +210,13 @@
       ],
       "rejected_count": 4,
       "post_processing": [
-        "rembg u2net background removal",
+        "rembg birefnet-general background removal",
         "alpha despeckle + trim",
-        "bottom-aligned LANCZOS fit to 256x256",
-        "phase2: tools/art/phase2_variant.py --mode ember (deterministic post-process, no generation)",
-        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+        "bottom-aligned LANCZOS fit to 512x512 (margin 9)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 5 px, #140b08 a=235, 0.6px feather, under sprite",
+        "phase2: tools/art/phase2_variant.py --mode ember --scale 2",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
       "raw_image": "assets/sprites/_raw/bosses/tataka/",
       "gen_sidecar": "assets/sprites/_raw/bosses/tataka/tataka.gen.json",
@@ -210,7 +224,10 @@
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "REGENERATED per orchestrator cultural-review: the original accepted seed 52003 (from an earlier prompt revision) was a multi-armed, crowned figure holding a weapon in each hand, reading as deity iconography (Durga/Kali-coded), which violates the hard rule that gods are never enemies. Prompt rewritten to force exactly two arms, no crown/halo/diadem/lotus/trident, no multiple weapons, with negatives for the same. Retry log: seed 52000 was a two-view character turnaround sheet (rejected, not single-pose); 52001 read as a bearded male lion-faced figure, not the female demoness Tataka is written as; 52002 repeated the male-read issue and added a sun-disc halo plus busy tree/bird scenery; 52004 added visible horns (acceptable) but had busy forest scenery and cropped legs/feet (fails full-body-in-frame). FLAGGED: accepted seed 52003 (this prompt revision) resolves the cultural/gender issues -- clearly two-armed, female-presenting, no crown/halo, single weapon, plain background, full body head-to-feet -- but tusks/fangs/claws did not render clearly within the retry budget; she reads as an ethereal/feral forest demoness rather than overtly monstrous. Candidate for a future regeneration pass if a more overtly fanged look is wanted."
+      "self_review": "REGENERATED per orchestrator cultural-review: the original accepted seed 52003 (from an earlier prompt revision) was a multi-armed, crowned figure holding a weapon in each hand, reading as deity iconography (Durga/Kali-coded), which violates the hard rule that gods are never enemies. Prompt rewritten to force exactly two arms, no crown/halo/diadem/lotus/trident, no multiple weapons, with negatives for the same. Retry log: seed 52000 was a two-view character turnaround sheet (rejected, not single-pose); 52001 read as a bearded male lion-faced figure, not the female demoness Tataka is written as; 52002 repeated the male-read issue and added a sun-disc halo plus busy tree/bird scenery; 52004 added visible horns (acceptable) but had busy forest scenery and cropped legs/feet (fails full-body-in-frame). FLAGGED: accepted seed 52003 (this prompt revision) resolves the cultural/gender issues -- clearly two-armed, female-presenting, no crown/halo, single weapon, plain background, full body head-to-feet -- but tusks/fangs/claws did not render clearly within the retry budget; she reads as an ethereal/feral forest demoness rather than overtly monstrous. Candidate for a future regeneration pass if a more overtly fanged look is wanted.",
+      "repacked_phase": "05.6",
+      "repacked_date": "2026-10-17",
+      "source_recovered_from": "chakravyuha_00024_.png \u2014 PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "ahiravana-atlas.png",
@@ -236,11 +253,13 @@
       "rejected_seeds": [],
       "rejected_count": 0,
       "post_processing": [
-        "rembg u2net background removal",
+        "rembg birefnet-general background removal",
         "alpha despeckle + trim",
-        "bottom-aligned LANCZOS fit to 256x256",
-        "phase2: tools/art/phase2_variant.py --mode ember (deterministic post-process, no generation)",
-        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+        "bottom-aligned LANCZOS fit to 512x512 (margin 9)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 5 px, #140b08 a=235, 0.6px feather, under sprite",
+        "phase2: tools/art/phase2_variant.py --mode ember --scale 2",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
       "raw_image": "assets/sprites/_raw/bosses/ahiravana/",
       "gen_sidecar": "assets/sprites/_raw/bosses/ahiravana/ahiravana.gen.json",
@@ -248,7 +267,10 @@
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "Accepted on attempt 0: full body head-to-feet, jade-teal sorcerer-king with a topknot (in place of the prompted crown), swirling green sorcerous smoke, a bowl of green flame in one hand. A faint sketchy background doodle in the corner of the raw image was cleanly removed by rembg (not present in the finished frame). Silhouette reads clearly, no halo."
+      "self_review": "Accepted on attempt 0: full body head-to-feet, jade-teal sorcerer-king with a topknot (in place of the prompted crown), swirling green sorcerous smoke, a bowl of green flame in one hand. A faint sketchy background doodle in the corner of the raw image was cleanly removed by rembg (not present in the finished frame). Silhouette reads clearly, no halo.",
+      "repacked_phase": "05.6",
+      "repacked_date": "2026-10-17",
+      "source_recovered_from": "chakravyuha_00018_.png \u2014 PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "kumbhakarna-atlas.png",
@@ -276,11 +298,13 @@
       ],
       "rejected_count": 1,
       "post_processing": [
-        "rembg u2net background removal",
+        "rembg birefnet-general background removal",
         "alpha despeckle + trim",
-        "bottom-aligned LANCZOS fit to 256x256",
-        "phase2: tools/art/phase2_variant.py --mode ember (deterministic post-process, no generation)",
-        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+        "bottom-aligned LANCZOS fit to 512x512 (margin 8)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 4 px, #140b08 a=235, 0.6px feather, under sprite",
+        "phase2: tools/art/phase2_variant.py --mode ember --scale 2",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
       "raw_image": "assets/sprites/_raw/bosses/kumbhakarna/",
       "gen_sidecar": "assets/sprites/_raw/bosses/kumbhakarna/kumbhakarna.gen.json",
@@ -288,7 +312,10 @@
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "Attempt 0 (seed 52200) had a large sun-disc glow directly behind the figure that reads as a halo/divine aura, a cultural-guard violation for an asura boss. Accepted attempt 1 (seed 52201): two arms only, no crown/halo/lotus, huge round belly, fanged lion-maned face, golden-yellow/bronze palette, holding a single mace-staff. Clean cutout, chunky readable silhouette."
+      "self_review": "Attempt 0 (seed 52200) had a large sun-disc glow directly behind the figure that reads as a halo/divine aura, a cultural-guard violation for an asura boss. Accepted attempt 1 (seed 52201): two arms only, no crown/halo/lotus, huge round belly, fanged lion-maned face, golden-yellow/bronze palette, holding a single mace-staff. Clean cutout, chunky readable silhouette.",
+      "repacked_phase": "05.6",
+      "repacked_date": "2026-10-17",
+      "source_recovered_from": "chakravyuha_00020_.png \u2014 PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "yama-atlas.png",
@@ -319,11 +346,13 @@
       ],
       "rejected_count": 4,
       "post_processing": [
-        "rembg u2net background removal",
+        "rembg birefnet-general background removal",
         "alpha despeckle + trim",
-        "bottom-aligned LANCZOS fit to 256x256",
-        "phase2: tools/art/phase2_variant.py --mode divine (deterministic post-process, no generation)",
-        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+        "bottom-aligned LANCZOS fit to 512x512 (margin 9)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 5 px, #140b08 a=235, 0.6px feather, under sprite",
+        "phase2: tools/art/phase2_variant.py --mode divine --scale 2",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
       "raw_image": "assets/sprites/_raw/bosses/yama/",
       "gen_sidecar": "assets/sprites/_raw/bosses/yama/yama.gen.json",
@@ -331,7 +360,10 @@
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "FLAGGED: Yama needed all 5 attempts. Seed 52300 (seated, floating scepters) lost both arms during rembg cutout -- a segmentation failure, not a cultural issue. Seed 52301 and seed 52302 both rendered a decorative picture-frame border around the whole image, which violates the no-frame/no-border constraint (52301 also had 4 arms). Seed 52303 correctly avoided a border and read as dignified and serene, but its background halo/aureole disc was so large it dominated the 256x256 canvas and made the cutout silhouette read as a solid circle rather than a person -- fails gameplay readability. Accepted seed 52304 as least-bad: standing, two arms, crown, dignified serene closed-mouth-smile expression, no fangs/horns/grotesque features, no border, plain background, readable humanoid silhouette. The staff (danda) prop held in one hand was a thin disconnected shape that did not survive rembg's alpha-despeckle step and is missing from the finished frame; he is shown holding only the round disc/shield prop. Dignity check passed: no demonic, monstrous or menacing features at any point across all 5 attempts."
+      "self_review": "FLAGGED: Yama needed all 5 attempts. Seed 52300 (seated, floating scepters) lost both arms during rembg cutout -- a segmentation failure, not a cultural issue. Seed 52301 and seed 52302 both rendered a decorative picture-frame border around the whole image, which violates the no-frame/no-border constraint (52301 also had 4 arms). Seed 52303 correctly avoided a border and read as dignified and serene, but its background halo/aureole disc was so large it dominated the 256x256 canvas and made the cutout silhouette read as a solid circle rather than a person -- fails gameplay readability. Accepted seed 52304 as least-bad: standing, two arms, crown, dignified serene closed-mouth-smile expression, no fangs/horns/grotesque features, no border, plain background, readable humanoid silhouette. The staff (danda) prop held in one hand was a thin disconnected shape that did not survive rembg's alpha-despeckle step and is missing from the finished frame; he is shown holding only the round disc/shield prop. Dignity check passed: no demonic, monstrous or menacing features at any point across all 5 attempts.",
+      "repacked_phase": "05.6",
+      "repacked_date": "2026-10-17",
+      "source_recovered_from": "chakravyuha_00030_.png \u2014 PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "preta-atlas.png",
@@ -356,10 +388,12 @@
       "rejected_seeds": [],
       "rejected_count": 0,
       "post_processing": [
-        "rembg u2net background removal",
+        "rembg birefnet-general background removal",
         "alpha despeckle + trim",
-        "bottom-aligned LANCZOS fit to 128x128",
-        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+        "bottom-aligned LANCZOS fit to 256x256 (margin 11)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 7 px, #140b08 a=235, 0.6px feather, under sprite",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
       "raw_image": "assets/sprites/_raw/enemies/preta/",
       "gen_sidecar": "assets/sprites/_raw/enemies/preta/preta.gen.json",
@@ -367,7 +401,10 @@
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "Accepted on attempt 0: gaunt spectral figure, pale sea-green ghostly glow, tattered pale funeral shroud, holding a ghostly flame staff. Thin/wispy silhouette is appropriate for an emaciated hungry-ghost design; reads as a robed humanoid at 128px. Clean cutout, no halo, no text."
+      "self_review": "Accepted on attempt 0: gaunt spectral figure, pale sea-green ghostly glow, tattered pale funeral shroud, holding a ghostly flame staff. Thin/wispy silhouette is appropriate for an emaciated hungry-ghost design; reads as a robed humanoid at 128px. Clean cutout, no halo, no text.",
+      "repacked_phase": "05.6",
+      "repacked_date": "2026-10-17",
+      "source_recovered_from": "chakravyuha_00031_.png \u2014 PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "rakshasa-atlas.png",
@@ -394,10 +431,12 @@
       ],
       "rejected_count": 1,
       "post_processing": [
-        "rembg u2net background removal",
+        "rembg birefnet-general background removal",
         "alpha despeckle + trim",
-        "bottom-aligned LANCZOS fit to 128x128",
-        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+        "bottom-aligned LANCZOS fit to 256x256 (margin 9)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 5 px, #140b08 a=235, 0.6px feather, under sprite",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
       "raw_image": "assets/sprites/_raw/enemies/rakshasa/",
       "gen_sidecar": "assets/sprites/_raw/enemies/rakshasa/rakshasa.gen.json",
@@ -405,7 +444,10 @@
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "Attempt 0 (seed 63100) had a plain white circular disc directly behind the figure risking a halo/divine misread; rejected out of caution given the same motif was a cultural-guard issue on multiple bosses. Accepted attempt 1 (seed 63101): two arms, single curved sword, fanged horned demon face, dark red-orange skin, bronze armor, no halo, clean cutout, distinct readable silhouette."
+      "self_review": "Attempt 0 (seed 63100) had a plain white circular disc directly behind the figure risking a halo/divine misread; rejected out of caution given the same motif was a cultural-guard issue on multiple bosses. Accepted attempt 1 (seed 63101): two arms, single curved sword, fanged horned demon face, dark red-orange skin, bronze armor, no halo, clean cutout, distinct readable silhouette.",
+      "repacked_phase": "05.6",
+      "repacked_date": "2026-10-17",
+      "source_recovered_from": "chakravyuha_00033_.png \u2014 PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "archer-atlas.png",
@@ -430,10 +472,12 @@
       "rejected_seeds": [],
       "rejected_count": 0,
       "post_processing": [
-        "rembg u2net background removal",
+        "rembg birefnet-general background removal",
         "alpha despeckle + trim",
-        "bottom-aligned LANCZOS fit to 128x128",
-        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+        "bottom-aligned LANCZOS fit to 256x256 (margin 10)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 6 px, #140b08 a=235, 0.6px feather, under sprite",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
       "raw_image": "assets/sprites/_raw/enemies/archer/",
       "gen_sidecar": "assets/sprites/_raw/enemies/archer/archer.gen.json",
@@ -441,7 +485,10 @@
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "Accepted on attempt 0: horned demon bowman in dark bronze/ochre-gold armor, drawing a recurve bow, two arms, no halo, plain background. A decorative floating wing/bow-shaped flourish behind the shoulder was mostly removed by alpha despeckling; a small sliver remains near the head reading as a feather/horn accent. Silhouette reads clearly."
+      "self_review": "Accepted on attempt 0: horned demon bowman in dark bronze/ochre-gold armor, drawing a recurve bow, two arms, no halo, plain background. A decorative floating wing/bow-shaped flourish behind the shoulder was mostly removed by alpha despeckling; a small sliver remains near the head reading as a feather/horn accent. Silhouette reads clearly.",
+      "repacked_phase": "05.6",
+      "repacked_date": "2026-10-17",
+      "source_recovered_from": "chakravyuha_00034_.png \u2014 PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "naga-atlas.png",
@@ -471,10 +518,12 @@
       ],
       "rejected_count": 4,
       "post_processing": [
-        "rembg u2net background removal",
+        "rembg birefnet-general background removal",
         "alpha despeckle + trim",
-        "bottom-aligned LANCZOS fit to 128x128",
-        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+        "bottom-aligned LANCZOS fit to 256x256 (margin 9)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 5 px, #140b08 a=235, 0.6px feather, under sprite",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
       "raw_image": "assets/sprites/_raw/enemies/naga/",
       "gen_sidecar": "assets/sprites/_raw/enemies/naga/naga.gen.json",
@@ -482,7 +531,10 @@
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "Naga needed all 5 attempts to get the D-15a body plan right (human torso with a serpent tail instead of legs, not a divine multi-hooded Naga). Seed 63300 had an ornate corner border/frame and a full dragon head (not a humanoid face). 63301 and 63302 both grew a separate reptilian/dragon head plus legs AND a tail (a lizardman, not 'tail instead of legs'). 63303 again kept legs+sandaled feet with an ambiguous double-fin hood shape. Reworded the prompt around a merman analogy (human torso, single continuous tail, no legs) and accepted seed 63304: fully human face and muscular torso, no legs, one continuous green serpent tail, holding a single spear with a serpent-head ornament on the haft (not a second head on the character), no cobra-hood iconography that reads as multi-headed/divine. A soft white circular glow behind the figure in the raw generation was cleanly removed by rembg (not a solid halo shape) and does not appear in the finished frame. Clean readable silhouette."
+      "self_review": "Naga needed all 5 attempts to get the D-15a body plan right (human torso with a serpent tail instead of legs, not a divine multi-hooded Naga). Seed 63300 had an ornate corner border/frame and a full dragon head (not a humanoid face). 63301 and 63302 both grew a separate reptilian/dragon head plus legs AND a tail (a lizardman, not 'tail instead of legs'). 63303 again kept legs+sandaled feet with an ambiguous double-fin hood shape. Reworded the prompt around a merman analogy (human torso, single continuous tail, no legs) and accepted seed 63304: fully human face and muscular torso, no legs, one continuous green serpent tail, holding a single spear with a serpent-head ornament on the haft (not a second head on the character), no cobra-hood iconography that reads as multi-headed/divine. A soft white circular glow behind the figure in the raw generation was cleanly removed by rembg (not a solid halo shape) and does not appear in the finished frame. Clean readable silhouette.",
+      "repacked_phase": "05.6",
+      "repacked_date": "2026-10-17",
+      "source_recovered_from": "chakravyuha_00039_.png \u2014 PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "vetala-atlas.png",
@@ -507,10 +559,12 @@
       "rejected_seeds": [],
       "rejected_count": 0,
       "post_processing": [
-        "rembg u2net background removal",
+        "rembg birefnet-general background removal",
         "alpha despeckle + trim",
-        "bottom-aligned LANCZOS fit to 128x128",
-        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+        "bottom-aligned LANCZOS fit to 256x256 (margin 10)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 6 px, #140b08 a=235, 0.6px feather, under sprite",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
       "raw_image": "assets/sprites/_raw/enemies/vetala/",
       "gen_sidecar": "assets/sprites/_raw/enemies/vetala/vetala.gen.json",
@@ -518,7 +572,10 @@
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "Accepted on attempt 0: gaunt vampiric corpse-spirit, wide ragged cloth/bat wings, long claws, violet ghostly palette, skull-like face with red eyes. The wide wingspan gives a distinct, highly readable silhouette that stands apart from the other enemy archetypes. No halo, no text, clean cutout."
+      "self_review": "Accepted on attempt 0: gaunt vampiric corpse-spirit, wide ragged cloth/bat wings, long claws, violet ghostly palette, skull-like face with red eyes. The wide wingspan gives a distinct, highly readable silhouette that stands apart from the other enemy archetypes. No halo, no text, clean cutout.",
+      "repacked_phase": "05.6",
+      "repacked_date": "2026-10-17",
+      "source_recovered_from": "chakravyuha_00040_.png \u2014 PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "bhuta-atlas.png",
@@ -543,10 +600,12 @@
       "rejected_seeds": [],
       "rejected_count": 0,
       "post_processing": [
-        "rembg u2net background removal",
+        "rembg birefnet-general background removal",
         "alpha despeckle + trim",
-        "bottom-aligned LANCZOS fit to 128x128",
-        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+        "bottom-aligned LANCZOS fit to 256x256 (margin 8)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 4 px, #140b08 a=235, 0.6px feather, under sprite",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
       "raw_image": "assets/sprites/_raw/enemies/bhuta/",
       "gen_sidecar": "assets/sprites/_raw/enemies/bhuta/bhuta.gen.json",
@@ -554,7 +613,10 @@
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "Accepted on attempt 0: hulking lumbering ghost golem, massive chunky slate blue-grey body, tattered loincloth. Chunky, highly readable silhouette, distinct from all other enemy archetypes. No halo, no text, clean cutout."
+      "self_review": "Accepted on attempt 0: hulking lumbering ghost golem, massive chunky slate blue-grey body, tattered loincloth. Chunky, highly readable silhouette, distinct from all other enemy archetypes. No halo, no text, clean cutout.",
+      "repacked_phase": "05.6",
+      "repacked_date": "2026-10-17",
+      "source_recovered_from": "chakravyuha_00041_.png \u2014 PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "daitya-atlas.png",
@@ -579,10 +641,12 @@
       "rejected_seeds": [],
       "rejected_count": 0,
       "post_processing": [
-        "rembg u2net background removal",
+        "rembg birefnet-general background removal",
         "alpha despeckle + trim",
-        "bottom-aligned LANCZOS fit to 128x128",
-        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+        "bottom-aligned LANCZOS fit to 256x256 (margin 8)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 4 px, #140b08 a=235, 0.6px feather, under sprite",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
       "raw_image": "assets/sprites/_raw/enemies/daitya/",
       "gen_sidecar": "assets/sprites/_raw/enemies/daitya/daitya.gen.json",
@@ -590,7 +654,10 @@
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "Accepted on attempt 0: massive horned asura brute, amber-orange skin, bronze bracers, broad shoulders, dual-wielding a heavy club and a blade (slightly more armed than the single-club prompt, but reads clearly and distinctly as a brute). No halo, no text, clean cutout, chunky readable silhouette."
+      "self_review": "Accepted on attempt 0: massive horned asura brute, amber-orange skin, bronze bracers, broad shoulders, dual-wielding a heavy club and a blade (slightly more armed than the single-club prompt, but reads clearly and distinctly as a brute). No halo, no text, clean cutout, chunky readable silhouette.",
+      "repacked_phase": "05.6",
+      "repacked_date": "2026-10-17",
+      "source_recovered_from": "chakravyuha_00042_.png \u2014 PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "yatudhana-atlas.png",
@@ -615,10 +682,12 @@
       "rejected_seeds": [],
       "rejected_count": 0,
       "post_processing": [
-        "rembg u2net background removal",
+        "rembg birefnet-general background removal",
         "alpha despeckle + trim",
-        "bottom-aligned LANCZOS fit to 128x128",
-        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+        "bottom-aligned LANCZOS fit to 256x256 (margin 9)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 5 px, #140b08 a=235, 0.6px feather, under sprite",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
       "raw_image": "assets/sprites/_raw/enemies/yatudhana/",
       "gen_sidecar": "assets/sprites/_raw/enemies/yatudhana/yatudhana.gen.json",
@@ -626,7 +695,10 @@
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "Accepted on attempt 0: rakshasa sorcerer conjurer, magenta-pink robes, wide-brimmed hat, bead necklace, bone staff topped with a glowing pink orb. Distinct silhouette (hat + robe + staff-orb), no halo, no text, clean cutout."
+      "self_review": "Accepted on attempt 0: rakshasa sorcerer conjurer, magenta-pink robes, wide-brimmed hat, bead necklace, bone staff topped with a glowing pink orb. Distinct silhouette (hat + robe + staff-orb), no halo, no text, clean cutout.",
+      "repacked_phase": "05.6",
+      "repacked_date": "2026-10-17",
+      "source_recovered_from": "chakravyuha_00043_.png \u2014 PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     }
   ],
   "review_sheet": "assets/sprites/_review/contact-sheet.png",

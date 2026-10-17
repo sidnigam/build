@@ -2,22 +2,22 @@
   "frames": {
     "bhuta_idle_0.png": {
       "frame": {
-        "x": 2,
-        "y": 2,
-        "w": 120,
-        "h": 117
+        "x": 8,
+        "y": 8,
+        "w": 250,
+        "h": 239
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 4,
-        "y": 7,
-        "w": 120,
-        "h": 117
+        "x": 3,
+        "y": 14,
+        "w": 250,
+        "h": 239
       },
       "sourceSize": {
-        "w": 128,
-        "h": 128
+        "w": 256,
+        "h": 256
       },
       "pivot": {
         "x": 0.5,
@@ -31,8 +31,8 @@
     "image": "bhuta-atlas.png",
     "format": "RGBA8888",
     "size": {
-      "w": 124,
-      "h": 121
+      "w": 266,
+      "h": 255
     },
     "scale": 1
   },

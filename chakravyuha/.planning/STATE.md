@@ -117,6 +117,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-09-25
-Last activity: 2026-09-26 - Phases 2, 3, 4, 5 complete and merged; 3 polish quick tasks; headless-Chrome verified
-Stopped at: Phases 1-5 complete. Next: human playtest + art/cultural review, then Phase 6 (Steam)
+Last activity: 2026-10-16 - Merged 05.1, 05.2, 05.3 (complete), 05.4-01/04, 05.5-01(partial)/02/03, 05.5-04 tasks 1-3 (Flux setup), 05.6-01. In progress: 05.4-02 env art (Naraka/Patala). Pending GPU: 05.5-04 task 4 (Flux portraits), 05.4-03
+Stopped at: Phase 5.x execution — see Last activity
 Resume file: None

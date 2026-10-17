@@ -17,9 +17,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: VFX + Combat Juice** - Pooled particles, hitstop, screen shake/flash, kill-zoom with accessibility toggles
 - [x] **Phase 4: Gameplay Depth** - 24 boons + Duo synergies, multi-phase telegraphed bosses, room/hazard variety
 - [x] **Phase 5: Desktop Wrapper + Gamepad + Settings** - Electron Win/macOS shell, input abstraction, full gamepad, save migration, settings menu
-- [ ] **Phase 5.1: Scrolling Camera + Larger Arenas + Denser Waves** (INSERTED)
-- [ ] **Phase 5.2: PS5 DualSense Controller Support** (INSERTED)
-- [ ] **Phase 5.3: Adaptive Indian Classical Score** (INSERTED)
+- [x] **Phase 5.1: Scrolling Camera + Larger Arenas + Denser Waves** (INSERTED)
+- [x] **Phase 5.2: PS5 DualSense Controller Support** (INSERTED)
+- [x] **Phase 5.3: Adaptive Indian Classical Score** (INSERTED)
 - [ ] **Phase 5.4: Epic-Inspired Environment Art Upgrade** (INSERTED)
 - [ ] **Phase 5.5: God Portraits + Boon Dialogue** (INSERTED)
 - [ ] **Phase 5.6: Graphics Polish (Lighting, Bloom, Sprite Quality)** (INSERTED)

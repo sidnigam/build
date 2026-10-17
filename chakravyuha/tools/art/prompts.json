@@ -196,7 +196,7 @@
       "out_w": 600,
       "out_h": 768,
       "no_mirror": true,
-      "flux_subject": "A half-body bust portrait cropped tight at the waist, of Goddess Durga, a serene mother goddess, compassionate face, golden skin, tall golden crown. Four arms rise from each shoulder, eight arms total, fanned symmetrically like a wheel; seven hands hold a trident, discus, sword, bow, conch, lotus and mace, her front right hand raised palm-out in blessing beside her face. She wears a red blouse and the top of a red sari with a gold border at her waist, with gold jewellery. At the frame's lower edge, beside her shoulder, her lion's head and mane peek into view. Crimson red, gold and lion tawny.",
+      "flux_subject": "A half-body bust portrait cropped tight at the waist, of Goddess Durga, a serene mother goddess, compassionate face, golden skin, a slender pointed gold tiara, with nothing but her own dark hair behind her. Four arms rise from each shoulder, eight arms total, fanned symmetrically like a wheel; seven hands hold a trident, discus, sword, bow, conch, lotus and mace, her front right hand raised palm-out in blessing. She wears a red blouse and the top of a red sari with a gold border, with gold jewellery. At the frame's lower edge, her lion's head and mane peek into view. Crimson red, gold and lion tawny.",
       "flux_base_seed": 71550
     }
   },

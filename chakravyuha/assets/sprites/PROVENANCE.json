@@ -1403,6 +1403,744 @@
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review"
+    },
+    {
+      "filename": "patala_column_0.png",
+      "path": "assets/sprites/_raw/env/patala/frames/patala_column_0.png",
+      "actor": "patala_column",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 832,
+      "height": 1216,
+      "seed": 62040,
+      "prompt": "stone column with a single carved serpent body coiling around it from base to capital, scales in relief, dim gems as eyes, dark jade stone, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, multiple heads, multi-hooded, hood canopy, five heads, seven heads, human face, deity, Shesha, Vasuki, crown",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "column"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/patala/column.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-17",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s62040: single isolated jade-stone column with an abstract swirling coil relief (reads as a stylized serpent-coil motif without a literal head/hood), plain grey background, clean cutout with no halo.",
+      "role": "column",
+      "biome": "patala",
+      "cultural_check": "pass: the negative-guard (multiple heads, hood canopy, Shesha/Vasuki, crown, human face) held -- the carving is abstract swirl/coil relief, not a literal multi-hooded divine Naga or any deity figure.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.8,
+        "val": 0.82
+      },
+      "finish": {
+        "mode": "column",
+        "crop": null
+      }
+    },
+    {
+      "filename": "patala_crystal_rocks_0.png",
+      "path": "assets/sprites/_raw/env/patala/frames/patala_crystal_rocks_0.png",
+      "actor": "patala_crystal_rocks",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 62110,
+      "prompt": "cave rock outcrop with dim teal crystals, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/patala/crystal_rocks.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-17",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s62110: cluster of teal crystal formations on a rock outcrop with a sandy path hint; rembg cleanly isolated it from the dark cave backdrop into a self-contained readable silhouette.",
+      "role": "prop",
+      "biome": "patala",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      }
+    },
+    {
+      "filename": "patala_fallen_pillar_0.png",
+      "path": "assets/sprites/_raw/env/patala/frames/patala_fallen_pillar_0.png",
+      "actor": "patala_fallen_pillar",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 62101,
+      "prompt": "a single toppled broken stone column lying on its side on the ground, one coherent object with scale relief carving visible, some rubble clustered at its base, isolated on a plain grey background, not scattered pieces, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres",
+      "rejected_seeds": [
+        62100
+      ],
+      "rejected_count": 1,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/patala/fallen_pillar.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-17",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s62101: single coherent toppled column section propped at an angle on a rubble base, scale-relief carving with gold crack inlay on one face, broken capital, one unified object, plain grey background (fixes attempt-0's scattered-fragments composition).",
+      "role": "prop",
+      "biome": "patala",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      },
+      "rejected_reasons": {
+        "62100": "generated as several scattered separate stone fragments across a plain background; rembg's cutout only kept 2 of the pieces (one faint near-transparent column sliver, one small dark chunk), not a single readable toppled-pillar silhouette"
+      }
+    },
+    {
+      "filename": "patala-floor-a-tile.png",
+      "path": "assets/sprites/env/patala/patala-floor-a-tile.png",
+      "actor": "patala_floor_a",
+      "kind": "env-tile",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "dreamshaperXL_alpha2Xl10.safetensors (DreamShaper XL alpha2 (xl1.0) by Lykon, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 62000,
+      "prompt": "top-down orthographic view looking straight down at dark, muted, low-contrast deep teal-black underground stone with faint dim bioluminescent moss, seamless repeating texture, evenly scattered detail edge to edge, painted game arena floor texture, low contrast, no focal point, Hades-adjacent painterly illustration, dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "tile"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/patala/floor_a.gen.json",
+      "generated_date": "2026-09-30",
+      "recorded_date": "2026-10-17",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s62000 (dreamshaper_xl_alpha2): dark teal-black bioluminescent cobblestone, even top-down detail, no focal point. Low-contrast per the 02-08 patala lesson (avoid over-saturation).",
+      "role": "floor",
+      "biome": "patala",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": true,
+      "grading": {
+        "graded": true,
+        "contrast_factor": 1.0,
+        "sat_factor": 0.7360146401252954,
+        "val_factor": 1.0,
+        "stats": {
+          "luma_mean": 0.3298714747844021,
+          "luma_std": 0.09299428685604856,
+          "sat_mean": 0.31668945740409854
+        }
+      },
+      "finish": {
+        "mode": "tile",
+        "crop": null
+      }
+    },
+    {
+      "filename": "patala-floor-b-tile.png",
+      "path": "assets/sprites/env/patala/patala-floor-b-tile.png",
+      "actor": "patala_floor_b",
+      "kind": "env-tile",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "dreamshaperXL_alpha2Xl10.safetensors (DreamShaper XL alpha2 (xl1.0) by Lykon, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 62010,
+      "prompt": "top-down orthographic view looking straight down at polished dark jade-black palace flagstones in a plain rectangular grid with thin worn antique-gold inlay lines, faint moss in the joints, seamless repeating texture, evenly scattered detail edge to edge, painted game arena floor texture, low contrast, no focal point, Hades-adjacent painterly illustration, dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra, mandala, yantra, circle pattern, emblem, serpent, face",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "tile"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/patala/floor_b.gen.json",
+      "generated_date": "2026-09-30",
+      "recorded_date": "2026-10-17",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s62010 (dreamshaper_xl_alpha2): jade-black flagstones in an irregular rectangular grid with worn antique-gold inlay seams, faint moss. No mandala/circular/radial pattern -- reads as plain paving, not a sacred geometric motif.",
+      "role": "floor",
+      "biome": "patala",
+      "cultural_check": "pass: no deity/idol/face/yantra/mandala/sacred symbol; gold lines are plain paving-joint inlay, not a geometric emblem.",
+      "ground_safe": true,
+      "grading": {
+        "graded": false,
+        "contrast_factor": 1.0,
+        "sat_factor": 1.0,
+        "val_factor": 1.0,
+        "stats": {
+          "luma_mean": 0.30543960829641303,
+          "luma_std": 0.08692716613026909,
+          "sat_mean": 0.22129753662780857
+        }
+      },
+      "finish": {
+        "mode": "tile",
+        "crop": null
+      }
+    },
+    {
+      "filename": "patala_gate_0.png",
+      "path": "assets/sprites/_raw/env/patala/frames/patala_gate_0.png",
+      "actor": "patala_gate",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 62050,
+      "prompt": "grand arch of dark carved stone studded with glowing gems, serpent-scale relief on the jambs, faint cyan glow in the doorway, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "gate"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/patala/gate.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-17",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s62050: single isolated teal/gold carved stone arch with a glowing cyan stairway beyond, gem-studded jambs. A faint soft grey halo/mist remains above the arch after rembg cutout (minor, reads as ambient fog, not a hard edge artifact) -- accepted rather than spending further generation budget on a first-attempt success.",
+      "role": "gate",
+      "biome": "patala",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; architecture only.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.8,
+        "val": 0.82
+      },
+      "finish": {
+        "mode": "gate",
+        "crop": null
+      }
+    },
+    {
+      "filename": "patala_gem_pile_0.png",
+      "path": "assets/sprites/_raw/env/patala/frames/patala_gem_pile_0.png",
+      "actor": "patala_gem_pile",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 62071,
+      "prompt": "a single contained mounded heap of cut gemstones and old gold coins, naga treasure, piled in the center of the frame with plain grey background clearly visible all around it, not filling the frame edge to edge, one unified pile shape, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres",
+      "rejected_seeds": [
+        62070
+      ],
+      "rejected_count": 1,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/patala/gem_pile.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-17",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s62071: single contained mounded heap of faceted gems and gold coins with clear grey background margin all around it; rembg cutout preserved the whole heap silhouette (fixes attempt-0 edge-to-edge tiling problem).",
+      "role": "prop",
+      "biome": "patala",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      },
+      "rejected_reasons": {
+        "62070": "generated as an edge-to-edge tiling pattern of gems/coins filling the whole frame with no background margin; rembg's cutout then isolated just a single large gem instead of the whole heap silhouette"
+      }
+    },
+    {
+      "filename": "patala_gem_scatter_0.png",
+      "path": "assets/sprites/_raw/env/patala/frames/patala_gem_scatter_0.png",
+      "actor": "patala_gem_scatter",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 62140,
+      "prompt": "top-down orthographic view looking straight down at a few small scattered gems and gold coins lying flat on flat plain mid grey ground, isolated, flat on the ground, soft irregular edges, painterly texture, dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation, no objects, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "decal"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/patala/gem_scatter.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-17",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s62140: scattered small gems/coins evenly distributed on flat grey ground, no focal point, reads as a ground decal.",
+      "role": "decal",
+      "biome": "patala",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": true,
+      "grading": {
+        "sat": 0.7,
+        "val": 0.8
+      },
+      "finish": {
+        "mode": "decal",
+        "crop": null
+      }
+    },
+    {
+      "filename": "patala_glow_fungus_0.png",
+      "path": "assets/sprites/_raw/env/patala/frames/patala_glow_fungus_0.png",
+      "actor": "patala_glow_fungus",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 62060,
+      "prompt": "cluster of bioluminescent cave mushrooms glowing cyan-teal, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/patala/glow_fungus.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-17",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s62060: single cohesive cluster of bioluminescent cyan-teal mushrooms, plain grey background, no figures/text.",
+      "role": "prop",
+      "biome": "patala",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      }
+    },
+    {
+      "filename": "patala_moss_patch_0.png",
+      "path": "assets/sprites/_raw/env/patala/frames/patala_moss_patch_0.png",
+      "actor": "patala_moss_patch",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 62130,
+      "prompt": "top-down orthographic view looking straight down at a patch of dim bioluminescent moss on flat plain mid grey ground, isolated, flat on the ground, soft irregular edges, painterly texture, dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation, no objects, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "decal"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/patala/moss_patch.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-17",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s62130: flat patches of bioluminescent teal/green moss on dark cracked ground, reads as a ground decal texture.",
+      "role": "decal",
+      "biome": "patala",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": true,
+      "grading": {
+        "sat": 0.7,
+        "val": 0.8
+      },
+      "finish": {
+        "mode": "decal",
+        "crop": null
+      }
+    },
+    {
+      "filename": "patala_pool_basin_0.png",
+      "path": "assets/sprites/_raw/env/patala/frames/patala_pool_basin_0.png",
+      "actor": "patala_pool_basin",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 62090,
+      "prompt": "low round stone basin of glowing bioluminescent water, carved scale rim, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/patala/pool_basin.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-17",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s62090: single round stone basin with glowing teal bioluminescent water, carved scale rim, plain grey background, clean isolated object.",
+      "role": "prop",
+      "biome": "patala",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      }
+    },
+    {
+      "filename": "patala_treasure_urn_0.png",
+      "path": "assets/sprites/_raw/env/patala/frames/patala_treasure_urn_0.png",
+      "actor": "patala_treasure_urn",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 62080,
+      "prompt": "tall ornate bronze urn with serpent-scale engraving, jewels spilling from its mouth, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/patala/treasure_urn.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-17",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s62080: single ornate bronze/teal urn with small decorative serpentine curl handles (abstract scrollwork, not a literal multi-hooded serpent figure), plain grey background, clean isolated object.",
+      "role": "prop",
+      "biome": "patala",
+      "cultural_check": "pass: no deity/idol/face; handle serpent motif is small/decorative, not a divine Naga figure.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      }
+    },
+    {
+      "filename": "patala_venom_rim_0.png",
+      "path": "assets/sprites/_raw/env/patala/frames/patala_venom_rim_0.png",
+      "actor": "patala_venom_rim",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 62160,
+      "prompt": "top-down orthographic view looking straight down at ring of mossy wet stones around an empty dark center on flat plain mid grey ground, isolated, flat on the ground, soft irregular edges, painterly texture, dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation, no objects, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "decal"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/patala/venom_rim.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-17",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s62160: cluster of wet mossy teal/dark/gold-rimmed stones, reads as a scattered stone ground texture (not a perfect ring shape, but serviceable as a venom-pool rim decal per D-05a's optional/droppable allowance).",
+      "role": "decal",
+      "biome": "patala",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": true,
+      "grading": {
+        "sat": 0.7,
+        "val": 0.8
+      },
+      "finish": {
+        "mode": "decal",
+        "crop": null
+      }
+    },
+    {
+      "filename": "patala-wallcap-tile.png",
+      "path": "assets/sprites/env/patala/patala-wallcap-tile.png",
+      "actor": "patala_wallcap",
+      "kind": "env-tile",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 62030,
+      "prompt": "top-down orthographic view straight down onto the flat top of a thick carved dark stone coping with a serpent-scale pattern and inset small gems, seamless repeating texture, even detail, Hades-adjacent painterly illustration, dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "tile"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/patala/wallcap.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-17",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s62030: top-down dark jade stone coping with cracked serpent-scale texture and two gem-studded gold inlay bands, even repeating detail, no focal point.",
+      "role": "wallcap",
+      "biome": "patala",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; gems+gold are decorative inlay, not an emblem.",
+      "ground_safe": false,
+      "grading": {
+        "graded": true,
+        "contrast_factor": 1.0,
+        "sat_factor": 0.6520561915989729,
+        "val_factor": 1.0,
+        "stats": {
+          "luma_mean": 0.2820557545590867,
+          "luma_std": 0.10831307967373091,
+          "sat_mean": 0.3168107535055912
+        }
+      },
+      "finish": {
+        "mode": "tile",
+        "crop": null
+      }
+    },
+    {
+      "filename": "patala-wallface-tile.png",
+      "path": "assets/sprites/env/patala/patala-wallface-tile.png",
+      "actor": "patala_wallface",
+      "kind": "env-tile",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "dreamshaperXL_alpha2Xl10.safetensors (DreamShaper XL alpha2 (xl1.0) by Lykon, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1344,
+      "height": 768,
+      "seed": 62022,
+      "prompt": "a long continuous underground naga palace wall section filling the entire frame edge to edge, dark carved stone with bands of serpent-scale relief, arched niches set with dim glowing gems, trailing bioluminescent moss, no figures, straight-on elevation of a long continuous horizontal wall section seen from a high three-quarter top-down game camera, architecture repeating across the full width edge to edge, wall base along the lower third, Hades-adjacent painterly illustration, rich carved detail, dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation, no characters, no text, no sky",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, horizon, sky, perspective vanishing point, colosseum, stadium, aerial view, concept art, matte painting, clouds, distant landscape, isolated object, product render, studio background, white background, grey background, floating object, cropped render, bounding box, vignette border",
+      "rejected_seeds": [
+        62020,
+        62021
+      ],
+      "rejected_count": 2,
+      "post_processing": [
+        "strip"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/patala/wallface.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-17",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s62022 (dreamshaper_xl_alpha2): continuous repeating arched naga-palace wall with dark stone, teal bioluminescent glow under the eaves and arch bases, gold-leaf abstract vine/scroll carving on pillars, roofline overhead. A grey studio backdrop remains outside the wall silhouette at the frame edges; crop [230,160,1240,730] stays inside the wall content so the finished strip is edge-to-edge with no visible background after strip_finish's resize + x-seamless blend.",
+      "role": "wallface",
+      "biome": "patala",
+      "cultural_check": "pass: pillar relief is abstract vine/leaf scrollwork, not a figure, face, deity or sacred symbol; no serpent carving on this wall (serpent motif is reserved for the column subject per D-09).",
+      "ground_safe": false,
+      "grading": null,
+      "finish": {
+        "mode": "strip",
+        "crop": [
+          230,
+          160,
+          1240,
+          730
+        ]
+      },
+      "rejected_reasons": {
+        "62020": "full 3-point perspective vista with sky/horizon and a vanishing point (reads as a concept-art scene, not a croppable flat wall elevation strip)",
+        "62021": "isolated 3D-render-style cornice/eave piece on a grey studio background with visible padding on all sides -- reads as a single floating prop render, not a continuous edge-to-edge wall texture"
+      }
+    },
+    {
+      "filename": "patala_water_puddle_0.png",
+      "path": "assets/sprites/_raw/env/patala/frames/patala_water_puddle_0.png",
+      "actor": "patala_water_puddle",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 62150,
+      "prompt": "top-down orthographic view looking straight down at a dark shallow water puddle with a faint teal reflection on flat plain mid grey ground, isolated, flat on the ground, soft irregular edges, painterly texture, dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation, no objects, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "decal"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/patala/water_puddle.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-17",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s62150: dark shallow puddle with a gold-rimmed edge and teal water reflection around it.",
+      "role": "decal",
+      "biome": "patala",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": true,
+      "grading": {
+        "sat": 0.7,
+        "val": 0.8
+      },
+      "finish": {
+        "mode": "decal",
+        "crop": null
+      }
+    },
+    {
+      "filename": "patala-env-atlas.png",
+      "path": "assets/sprites/env/patala/patala-env-atlas.png",
+      "actor": "patala",
+      "kind": "env-atlas",
+      "tool": "free-tex-packer-core 0.3.8 via tools/pack-atlas.js",
+      "method": "atlas-pack",
+      "components": [
+        "patala_column_0.png",
+        "patala_crystal_rocks_0.png",
+        "patala_fallen_pillar_0.png",
+        "patala_gate_0.png",
+        "patala_gem_pile_0.png",
+        "patala_gem_scatter_0.png",
+        "patala_glow_fungus_0.png",
+        "patala_moss_patch_0.png",
+        "patala_pool_basin_0.png",
+        "patala_treasure_urn_0.png",
+        "patala_venom_rim_0.png",
+        "patala_water_puddle_0.png"
+      ],
+      "biome": "patala",
+      "recorded_date": "2026-10-17",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review"
     }
   ],
   "review_sheet": "assets/sprites/_review/contact-sheet.png",

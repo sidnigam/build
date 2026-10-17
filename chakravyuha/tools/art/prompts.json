@@ -635,7 +635,10 @@
         "palette": "dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation",
         "base_seed": 62030,
         "role": "wallcap",
-        "ground_safe": false
+        "ground_safe": false,
+        "accepted_attempt": 0,
+        "self_review": "s62030: top-down dark jade stone coping with cracked serpent-scale texture and two gem-studded gold inlay bands, even repeating detail, no focal point.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; gems+gold are decorative inlay, not an emblem."
       },
       "column": {
         "template": "prop",
@@ -646,7 +649,10 @@
         "ground_safe": false,
         "size": "tall",
         "worldH": 150,
-        "negative_extra": "multiple heads, multi-hooded, hood canopy, five heads, seven heads, human face, deity, Shesha, Vasuki, crown"
+        "negative_extra": "multiple heads, multi-hooded, hood canopy, five heads, seven heads, human face, deity, Shesha, Vasuki, crown",
+        "accepted_attempt": 0,
+        "self_review": "s62040: single isolated jade-stone column with an abstract swirling coil relief (reads as a stylized serpent-coil motif without a literal head/hood), plain grey background, clean cutout with no halo.",
+        "cultural_check": "pass: the negative-guard (multiple heads, hood canopy, Shesha/Vasuki, crown, human face) held -- the carving is abstract swirl/coil relief, not a literal multi-hooded divine Naga or any deity figure."
       },
       "gate": {
         "template": "prop",
@@ -655,7 +661,10 @@
         "base_seed": 62050,
         "role": "gate",
         "ground_safe": false,
-        "worldH": 210
+        "worldH": 210,
+        "accepted_attempt": 0,
+        "self_review": "s62050: single isolated teal/gold carved stone arch with a glowing cyan stairway beyond, gem-studded jambs. A faint soft grey halo/mist remains above the arch after rembg cutout (minor, reads as ambient fog, not a hard edge artifact) -- accepted rather than spending further generation budget on a first-attempt success.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; architecture only."
       },
       "glow_fungus": {
         "template": "prop",
@@ -670,17 +679,26 @@
           "color": "#3fe0c0",
           "r": 130,
           "alpha": 0.3
-        }
+        },
+        "accepted_attempt": 0,
+        "self_review": "s62060: single cohesive cluster of bioluminescent cyan-teal mushrooms, plain grey background, no figures/text.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
       },
       "gem_pile": {
         "template": "prop",
-        "subject": "heap of cut gemstones and old gold coins, naga treasure, spilling over dark stone",
+        "subject": "a single contained mounded heap of cut gemstones and old gold coins, naga treasure, piled in the center of the frame with plain grey background clearly visible all around it, not filling the frame edge to edge, one unified pile shape",
         "palette": "dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation",
         "base_seed": 62070,
         "role": "prop",
         "ground_safe": false,
         "worldH": 40,
-        "low": true
+        "low": true,
+        "rejected": {
+          "0": "generated as an edge-to-edge tiling pattern of gems/coins filling the whole frame with no background margin; rembg's cutout then isolated just a single large gem instead of the whole heap silhouette"
+        },
+        "accepted_attempt": 1,
+        "self_review": "s62071: single contained mounded heap of faceted gems and gold coins with clear grey background margin all around it; rembg cutout preserved the whole heap silhouette (fixes attempt-0 edge-to-edge tiling problem).",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
       },
       "treasure_urn": {
         "template": "prop",
@@ -689,7 +707,10 @@
         "base_seed": 62080,
         "role": "prop",
         "ground_safe": false,
-        "worldH": 60
+        "worldH": 60,
+        "accepted_attempt": 0,
+        "self_review": "s62080: single ornate bronze/teal urn with small decorative serpentine curl handles (abstract scrollwork, not a literal multi-hooded serpent figure), plain grey background, clean isolated object.",
+        "cultural_check": "pass: no deity/idol/face; handle serpent motif is small/decorative, not a divine Naga figure."
       },
       "pool_basin": {
         "template": "prop",
@@ -704,16 +725,25 @@
           "color": "#40d8c8",
           "r": 170,
           "alpha": 0.34
-        }
+        },
+        "accepted_attempt": 0,
+        "self_review": "s62090: single round stone basin with glowing teal bioluminescent water, carved scale rim, plain grey background, clean isolated object.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
       },
       "fallen_pillar": {
         "template": "prop",
-        "subject": "toppled broken section of a carved stone column with scale relief, lying on its side, rubble",
+        "subject": "a single toppled broken stone column lying on its side on the ground, one coherent object with scale relief carving visible, some rubble clustered at its base, isolated on a plain grey background, not scattered pieces",
         "palette": "dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation",
         "base_seed": 62100,
         "role": "prop",
         "ground_safe": false,
-        "worldH": 50
+        "worldH": 50,
+        "rejected": {
+          "0": "generated as several scattered separate stone fragments across a plain background; rembg's cutout only kept 2 of the pieces (one faint near-transparent column sliver, one small dark chunk), not a single readable toppled-pillar silhouette"
+        },
+        "accepted_attempt": 1,
+        "self_review": "s62101: single coherent toppled column section propped at an angle on a rubble base, scale-relief carving with gold crack inlay on one face, broken capital, one unified object, plain grey background (fixes attempt-0's scattered-fragments composition).",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
       },
       "crystal_rocks": {
         "template": "prop",
@@ -722,11 +752,14 @@
         "base_seed": 62110,
         "role": "prop",
         "ground_safe": false,
-        "worldH": 58
+        "worldH": 58,
+        "accepted_attempt": 0,
+        "self_review": "s62110: cluster of teal crystal formations on a rock outcrop with a sandy path hint; rembg cleanly isolated it from the dark cave backdrop into a self-contained readable silhouette.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
       },
       "bronze_lamp": {
         "template": "prop",
-        "subject": "tall antique bronze standing oil lamp with several small flames",
+        "subject": "an ornate bronze standing oil lamp in the Indian deepastambha/deepalakshmi temple-lamp style: a tall decorative bronze stem rising to an open shallow bowl at the top holding several small lit open flames clearly visible above the rim, no lid, no cover, open top only, ornate carved bronze base",
         "palette": "dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation",
         "base_seed": 62120,
         "role": "prop",
@@ -736,7 +769,13 @@
           "color": "#ffc870",
           "r": 140,
           "alpha": 0.3
-        }
+        },
+        "rejected": {
+          "0": "reads as a modern decorative glass/bronze table lamp with a visible black electrical cord trailing from the base -- anachronistic, and no visible open flames",
+          "1": "fixed the electrical-cord issue but now reads as a closed lidded urn/trophy vessel with a lid and loop finial -- no open bowl, no visible flames/wicks at all",
+          "2": "produced a decorative picture-frame border around an open bronze bowl with no flames at all -- 3rd consecutive failure on this subject (cord artifact, then closed urn, then framed flameless bowl)"
+        },
+        "negative_extra": "electrical cord, wire, cable, modern lamp, lightbulb, glass shade, lamp shade, plug, socket, closed lid, covered vessel, urn, trophy, loop handle finial, cup handles"
       },
       "moss_patch": {
         "template": "decal",
@@ -744,7 +783,10 @@
         "palette": "dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation",
         "base_seed": 62130,
         "role": "decal",
-        "ground_safe": true
+        "ground_safe": true,
+        "accepted_attempt": 0,
+        "self_review": "s62130: flat patches of bioluminescent teal/green moss on dark cracked ground, reads as a ground decal texture.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
       },
       "gem_scatter": {
         "template": "decal",
@@ -752,7 +794,10 @@
         "palette": "dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation",
         "base_seed": 62140,
         "role": "decal",
-        "ground_safe": true
+        "ground_safe": true,
+        "accepted_attempt": 0,
+        "self_review": "s62140: scattered small gems/coins evenly distributed on flat grey ground, no focal point, reads as a ground decal.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
       },
       "water_puddle": {
         "template": "decal",
@@ -760,7 +805,10 @@
         "palette": "dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation",
         "base_seed": 62150,
         "role": "decal",
-        "ground_safe": true
+        "ground_safe": true,
+        "accepted_attempt": 0,
+        "self_review": "s62150: dark shallow puddle with a gold-rimmed edge and teal water reflection around it.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
       },
       "venom_rim": {
         "template": "decal",
@@ -768,7 +816,10 @@
         "palette": "dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation",
         "base_seed": 62160,
         "role": "decal",
-        "ground_safe": true
+        "ground_safe": true,
+        "accepted_attempt": 0,
+        "self_review": "s62160: cluster of wet mossy teal/dark/gold-rimmed stones, reads as a scattered stone ground texture (not a perfect ring shape, but serviceable as a venom-pool rim decal per D-05a's optional/droppable allowance).",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
       }
     }
   },

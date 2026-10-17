@@ -1,0 +1,282 @@
+{
+  "schema": 1,
+  "biome": "patala",
+  "atlas": "assets/sprites/env/patala/patala-env-atlas.json",
+  "tiles": {
+    "floor_a": {
+      "path": "assets/sprites/env/patala/patala-floor-a-tile.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "role": "floor",
+      "ground_safe": true
+    },
+    "floor_b": {
+      "path": "assets/sprites/env/patala/patala-floor-b-tile.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "role": "floor",
+      "ground_safe": true
+    },
+    "wallcap": {
+      "path": "assets/sprites/env/patala/patala-wallcap-tile.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "role": "wallcap",
+      "ground_safe": false
+    },
+    "wallface": {
+      "path": "assets/sprites/env/patala/patala-wallface-tile.png",
+      "size": [
+        1024,
+        578
+      ],
+      "role": "wallface",
+      "ground_safe": false
+    }
+  },
+  "frames": {
+    "column": {
+      "frame": "patala_column_0.png",
+      "size": [
+        281,
+        448
+      ],
+      "role": "column",
+      "ground_safe": false,
+      "worldH": 150,
+      "anchor": [
+        0.5,
+        0.96
+      ],
+      "footW": 225
+    },
+    "crystal_rocks": {
+      "frame": "patala_crystal_rocks_0.png",
+      "size": [
+        384,
+        307
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 58,
+      "zones": [
+        "north",
+        "west",
+        "east",
+        "corner"
+      ],
+      "weight": 1,
+      "low": false
+    },
+    "fallen_pillar": {
+      "frame": "patala_fallen_pillar_0.png",
+      "size": [
+        238,
+        384
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 50,
+      "zones": [
+        "north",
+        "west",
+        "east",
+        "corner"
+      ],
+      "weight": 1,
+      "low": false
+    },
+    "gate": {
+      "frame": "patala_gate_0.png",
+      "size": [
+        484,
+        512
+      ],
+      "role": "gate",
+      "ground_safe": false,
+      "worldH": 210,
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    "gem_pile": {
+      "frame": "patala_gem_pile_0.png",
+      "size": [
+        384,
+        371
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 40,
+      "zones": [
+        "north",
+        "west",
+        "east",
+        "corner"
+      ],
+      "weight": 1,
+      "low": true
+    },
+    "gem_scatter": {
+      "frame": "patala_gem_scatter_0.png",
+      "size": [
+        384,
+        384
+      ],
+      "role": "decal",
+      "ground_safe": true,
+      "worldW": 180,
+      "alpha": 0.45
+    },
+    "glow_fungus": {
+      "frame": "patala_glow_fungus_0.png",
+      "size": [
+        384,
+        373
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 46,
+      "zones": [
+        "north",
+        "west",
+        "east",
+        "corner"
+      ],
+      "weight": 1,
+      "low": true,
+      "light": {
+        "color": "#3fe0c0",
+        "r": 130,
+        "alpha": 0.3
+      }
+    },
+    "moss_patch": {
+      "frame": "patala_moss_patch_0.png",
+      "size": [
+        384,
+        384
+      ],
+      "role": "decal",
+      "ground_safe": true,
+      "worldW": 180,
+      "alpha": 0.45
+    },
+    "pool_basin": {
+      "frame": "patala_pool_basin_0.png",
+      "size": [
+        374,
+        384
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 48,
+      "zones": [
+        "north",
+        "west",
+        "east",
+        "corner"
+      ],
+      "weight": 1,
+      "low": true,
+      "light": {
+        "color": "#40d8c8",
+        "r": 170,
+        "alpha": 0.34
+      }
+    },
+    "treasure_urn": {
+      "frame": "patala_treasure_urn_0.png",
+      "size": [
+        227,
+        384
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 60,
+      "zones": [
+        "north",
+        "west",
+        "east",
+        "corner"
+      ],
+      "weight": 1,
+      "low": false
+    },
+    "venom_rim": {
+      "frame": "patala_venom_rim_0.png",
+      "size": [
+        384,
+        384
+      ],
+      "role": "decal",
+      "ground_safe": true,
+      "worldW": 180,
+      "alpha": 0.45
+    },
+    "water_puddle": {
+      "frame": "patala_water_puddle_0.png",
+      "size": [
+        384,
+        384
+      ],
+      "role": "decal",
+      "ground_safe": true,
+      "worldW": 180,
+      "alpha": 0.45
+    }
+  },
+  "floor": {
+    "tileScale": 0.6,
+    "macroScale": 1.7,
+    "macroAlpha": 0.35
+  },
+  "walls": {
+    "faceH": 170,
+    "capT": 48,
+    "lipT": 36,
+    "columnSpacing": [
+      260,
+      380
+    ]
+  },
+  "skins": {
+    "pillar": "column",
+    "wall": "@cap",
+    "pit": "@abyss",
+    "byTemplate": {}
+  },
+  "hazards": {
+    "venomPool": "@pool"
+  },
+  "lights": {
+    "pools": {
+      "color": "#ff5533",
+      "count": [
+        2,
+        4
+      ],
+      "r": [
+        160,
+        260
+      ],
+      "alpha": 0.08
+    },
+    "shafts": null,
+    "mist": null
+  },
+  "grade": {
+    "floorTint": 0.55,
+    "floorDarken": 0.25,
+    "outerDim": 0.6,
+    "vignette": 0.4,
+    "propTint": "#d8d0cc"
+  }
+}

@@ -233,6 +233,22 @@ negative — cfg 1.0), a medium-grey backdrop, and props pressed against the bod
   ComfyUI's queue. Only Task 4 — the ComfyUI **restart** (to load `ComfyUI-GGUF`) and all
   generation — waits for the orchestrator's explicit "GPU gate open", with `/queue` idle on
   two polls 60s apart and no other `gen_subject.py`/`gen_batch.py` process running.
+- **Task 4 result: 6/6 shipped.** After the gate opened, `--flux-smoke` passed on the first
+  try (seed 71599, 247.5s, `ram_free` 7.0GB before → 1.2GB mid-sample → 6.8GB after — no
+  `--lowvram` fallback needed). Per-god generation ran 250–770s/image (896x1152, 4 steps) on
+  the M1 Pro 16GB, noticeably slower under concurrent CPU memory pressure from an unrelated
+  parallel atlas-rebuild job (down to ~130MB unused RAM at points; the batch script's default
+  900s wait timeout was exceeded twice under that pressure — both recovered cleanly with
+  `gen_subject.py <god> --attempt N --wait-only <prompt_id>`, since the ComfyUI job itself had
+  already finished, only the script's poll had given up). Agni and Krishna shipped on attempt
+  0; Hanuman, Indra and Vayu shipped on attempt 1 after a round-0 rejection each (Hanuman:
+  full-body framing from an early `dhoti` mention pulling the composition past the waist;
+  Indra: the Vajra read as an upright trident/trishula — fixed by holding it horizontally
+  with mirrored prongs; Vayu: an anachronistic wristwatch — fixed by moving the jewellery
+  description to an upper-arm band with explicitly bare wrists). Durga shipped on attempt 2
+  after two rejections (round 0: full-body framing + only 6/8 arms; round 1: composition and
+  arm count fixed, but "tall golden crown" generated a halo-like radiant arch — fixed by
+  describing a slender tiara with nothing but her own hair behind her head).
 
 ## Environment art (Phase 05.4)
 

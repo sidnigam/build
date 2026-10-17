@@ -908,7 +908,7 @@
       "hf_api_response": "tools/art/licenses/hf-city96--FLUX.1-schnell-gguf.api.json",
       "commercial_use": true,
       "confirmed_date": "2026-09-29",
-      "adopted": false
+      "adopted": true
     },
     {
       "checkpoint": "t5-v1_1-xxl-encoder Q5_K_M (city96 GGUF quant)",
@@ -925,7 +925,7 @@
       "hf_api_response": "tools/art/licenses/hf-city96--t5-v1_1-xxl-encoder-gguf.api.json",
       "commercial_use": true,
       "confirmed_date": "2026-09-29",
-      "adopted": false
+      "adopted": true
     },
     {
       "checkpoint": "CLIP-L (comfyanonymous/flux_text_encoders)",
@@ -942,7 +942,7 @@
       "license_note": "comfyanonymous/flux_text_encoders tags this repackaging apache-2.0; the underlying OpenAI CLIP ViT-L/14 weights are MIT per https://raw.githubusercontent.com/openai/CLIP/main/LICENSE (the openai/clip-vit-large-patch14 HF card carries no license tag, so the GitHub LICENSE is the evidence of record).",
       "commercial_use": true,
       "confirmed_date": "2026-09-29",
-      "adopted": false
+      "adopted": true
     },
     {
       "checkpoint": "FLUX.1-schnell VAE (ae.safetensors)",
@@ -960,7 +960,7 @@
       "note": "D-27 resolved 2026-10-16: option B approved by the user. black-forest-labs/FLUX.1-schnell is HF-gated (auto-approve) and the executor's hf CLI was not logged in, so the ungated Comfy-Org repackaging was used; sha256 verified to equal the official BFL file's LFS oid before use.",
       "commercial_use": true,
       "confirmed_date": "2026-10-16",
-      "adopted": false
+      "adopted": true
     },
     {
       "checkpoint": "ComfyUI-GGUF custom node",
@@ -977,7 +977,7 @@
       ],
       "commercial_use": true,
       "confirmed_date": "2026-09-29",
-      "adopted": false
+      "adopted": true
     },
     {
       "checkpoint": "BiRefNet-general (rembg matte, adopted for god portraits)",
@@ -994,7 +994,7 @@
       "note": "Downloaded on first --matte birefnet-general use from rembg's own official GitHub releases (not a third-party mirror); md5 verified against rembg's own pinned checksum before use. Adopted via the Task 3 CPU bake-off (see prompts.json god_finish for the decision and evidence).",
       "commercial_use": true,
       "confirmed_date": "2026-10-16",
-      "adopted": false
+      "adopted": true
     }
   ]
 }

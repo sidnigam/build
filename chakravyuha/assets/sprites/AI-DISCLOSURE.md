@@ -92,20 +92,46 @@ Each entry in `PROVENANCE.json assets[]` contains (fields vary slightly by `kind
 
 ## God portraits (Phase 05.5)
 
-The six boon-granting gods (Hanuman, Agni, Indra, Vayu, Krishna, Durga) are intended to
-each get one illustrated half-body bust portrait, generated the same way as the character
-atlases above: **txt2img** with fixed, recorded seeds (reserved range 71000–71599, up to 7
-attempts per god), local ComfyUI, no ControlNet or IPAdapter, followed by rembg (`u2net`)
-background removal, alpha despeckling, trim, and a bottom-aligned fit into 600x768 with a
-bottom alpha feather (`tools/art/finish_portrait.py`). Unlike the earlier character atlases,
-**no god portrait has shipped as of this plan** — every attempt for all six gods was
-rejected against the Iconography Bible's hard checks (see
-`.planning/phases/05.5-god-portraits-and-boon-dialogue/05.5-01-SUMMARY.md` for the full
-per-god, per-seed record). Where a portrait is missing, the boon-pick screen and codex fall
-back to the existing CSS/SVG god symbol; no god portrait AI asset is currently shipped or
-consumed by players. `assets/sprites/_review/gods-contact-sheet.png` documents this
-NOT-SHIPPED state for every god. The divine aura shown behind a portrait (or symbol) on the
-boon-pick screen is CSS-drawn, not AI, per the existing UI-ornament exemption above. A
-retry pass with the DreamShaper XL checkpoint (see 05.4-01 checkpoint research) is planned;
-every god portrait, if and when shipped, will await human cultural review (QA-03) before
-the Steam AI Content Survey is finalized, exactly as the character atlases above do.
+The six boon-granting gods (Hanuman, Agni, Indra, Vayu, Krishna, Durga) each have one
+illustrated half-body bust portrait at `assets/sprites/gods/{id}-portrait.png`. Two earlier
+checkpoints shipped nothing: SDXL 1.0 base (05.5-01, 7 attempts per god, 0/6 shipped) and
+DreamShaper XL alpha2 (05.4-01 A/B, 2 god attempts, 0/2 shipped) — both collapsed into
+statue/idol renders, halos, wrong arm counts, or a human-faced Hanuman/feminine Vayu (full
+per-god, per-seed record in `05.5-01-SUMMARY.md`).
+
+**05.5-04 shipped all 6 portraits** on a retried pipeline using **FLUX.1-schnell**
+(Apache-2.0, Black Forest Labs), run locally as a **GGUF Q4_K_S quantization** (city96,
+Apache-2.0) via the `ComfyUI-GGUF` custom node (city96, Apache-2.0, pinned to commit
+`6ea2651e7df66d7585f6ffee804b20e92fb38b8a`), with a GGUF-quantized T5-XXL text encoder
+(city96, Apache-2.0), CLIP-L (OpenAI ViT-L/14, MIT), and the FLUX.1-schnell VAE
+(Apache-2.0). Generation is **txt2img, fixed and recorded seeds** (reserved range
+71000–71599), **4 sampling steps, cfg 1.0, euler/simple, no negative prompt** (schnell is
+not guidance-distilled; every constraint is expressed as positive, natural-language
+phrasing instead), local ComfyUI only, no ControlNet or IPAdapter. Up to **6 attempts per
+god** (`max_attempts_god_flux`); every rejected seed and its reason is recorded in
+`PROVENANCE.json`. Final tallies: Agni and Krishna shipped on the first attempt (0 rejected
+seeds each); Hanuman, Indra and Vayu each shipped on their second attempt (1 rejected seed
+each); Durga shipped on her third attempt (2 rejected seeds) after an intermediate round
+whose crown read as a halo-like aureole.
+
+Finishing uses `tools/art/finish_portrait.py` with the **`birefnet-general`** rembg matte
+(MIT, ZhengPeng7/BiRefNet; adopted via a CPU bake-off over Task 3 that found it alone, with
+no colour-key fill, best preserved thin held props like Hanuman's gada and Vayu's scarves
+compared to `u2net` and `isnet-general-use`), followed by alpha despeckling, trim, and a
+bottom-aligned fit into 600x768 RGBA with a bottom alpha feather so the bust fades into the
+boon panel. The divine aura shown behind each portrait on the boon-pick screen is CSS-drawn,
+not AI, per the existing UI-ornament exemption above.
+
+Observed performance on the M1 Pro 16 GB: about 250–480 seconds per 896x1152 image (slower
+under memory pressure from concurrent CPU work), roughly 3-5x the SDXL-base generation time,
+consistent with the Addendum's expectation. `assets/sprites/_review/gods-contact-sheet.png`
+documents the shipped state, seed, rejected-attempt count and review status for every god.
+
+Every shipped god portrait awaits **human cultural review (QA-03)** before the Steam AI
+Content Survey is finalized, exactly as the character atlases above do. One minor
+cross-deity note was flagged during review for the human reviewer's attention: Agni's
+forehead tilak renders as a U-shaped Vaishnava urdhva-pundra mark (traditionally
+Vishnu/Krishna iconography) rather than an Agni-specific mark; every other Agni attribute
+(flame crown, ladle/flame-palm pose, single bearded face, two arms) is correct and distinct
+from Vishnu, so this was not treated as a ship blocker — see the `agni-portrait.png`
+provenance entry.

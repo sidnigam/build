@@ -2,22 +2,22 @@
   "frames": {
     "naga_idle_0.png": {
       "frame": {
-        "x": 2,
-        "y": 2,
-        "w": 120,
-        "h": 115
+        "x": 8,
+        "y": 8,
+        "w": 246,
+        "h": 250
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 4,
-        "y": 9,
-        "w": 120,
-        "h": 115
+        "x": 5,
+        "y": 3,
+        "w": 246,
+        "h": 250
       },
       "sourceSize": {
-        "w": 128,
-        "h": 128
+        "w": 256,
+        "h": 256
       },
       "pivot": {
         "x": 0.5,
@@ -31,8 +31,8 @@
     "image": "naga-atlas.png",
     "format": "RGBA8888",
     "size": {
-      "w": 124,
-      "h": 119
+      "w": 262,
+      "h": 266
     },
     "scale": 1
   },

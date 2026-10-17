@@ -2,22 +2,22 @@
   "frames": {
     "yama_phase2_0.png": {
       "frame": {
-        "x": 2,
-        "y": 2,
-        "w": 173,
-        "h": 256
+        "x": 8,
+        "y": 8,
+        "w": 389,
+        "h": 512
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 42,
+        "x": 61,
         "y": 0,
-        "w": 173,
-        "h": 256
+        "w": 389,
+        "h": 512
       },
       "sourceSize": {
-        "w": 256,
-        "h": 256
+        "w": 512,
+        "h": 512
       },
       "pivot": {
         "x": 0.5,
@@ -26,22 +26,22 @@
     },
     "yama_idle_0.png": {
       "frame": {
-        "x": 2,
-        "y": 262,
-        "w": 112,
-        "h": 248
+        "x": 8,
+        "y": 536,
+        "w": 264,
+        "h": 506
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 72,
-        "y": 4,
-        "w": 112,
-        "h": 248
+        "x": 123,
+        "y": 3,
+        "w": 264,
+        "h": 506
       },
       "sourceSize": {
-        "w": 256,
-        "h": 256
+        "w": 512,
+        "h": 512
       },
       "pivot": {
         "x": 0.5,
@@ -55,8 +55,8 @@
     "image": "yama-atlas.png",
     "format": "RGBA8888",
     "size": {
-      "w": 177,
-      "h": 512
+      "w": 405,
+      "h": 1050
     },
     "scale": 1
   },

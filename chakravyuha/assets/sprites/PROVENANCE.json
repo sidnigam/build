@@ -14,7 +14,7 @@
       "animations": {
         "idle": 4
       },
-      "status": "idle 4f (AI img2img from the approved reference); run/attack/dash are procedural code animation + code-drawn weapon per 02-CONTEXT-AMENDMENT D-07a \u2014 no further AI frames planned",
+      "status": "idle 4f (AI img2img from the approved reference); run/attack/dash are procedural code animation + code-drawn weapon per 02-CONTEXT-AMENDMENT D-07a — no further AI frames planned",
       "tool": "ComfyUI (local)",
       "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
       "method": "img2img",
@@ -26,14 +26,26 @@
       "steps": 32,
       "cfg": 7,
       "prompt_source": "assets/sprites/comfyui-workflow.json positive/negative prompt",
-      "seeds": "not recorded per-frame",
+      "seeds": [
+        40011,
+        40012,
+        40013,
+        40014
+      ],
       "post_processing": [
-        "rembg u2net background removal",
-        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+        "rembg birefnet-general background removal",
+        "alpha despeckle + trim",
+        "bottom-aligned LANCZOS fit to 256x256 (margin 10)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 6 px, #140b08 a=235, 0.6px feather, under sprite",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
       "raw_frames": "assets/sprites/_raw/player/player_idle_{0..3}.png",
       "generated_date": "2026-09-13",
-      "packed_date": "2026-09-24"
+      "packed_date": "2026-09-24",
+      "repacked_phase": "05.6",
+      "repacked_date": "2026-10-17",
+      "source_recovered_from": "player_idle_frame_00001_.png, player_idle_frame_00002_.png, player_idle_frame_00003_.png, player_idle_frame_00004_.png — PNG-embedded ComfyUI prompt metadata matched by filename prefix + denoise + seed order; no regeneration"
     },
     {
       "filename": "naraka-bg.png",
@@ -64,7 +76,7 @@
       "generated_date": "2026-09-25",
       "recorded_date": "2026-09-25",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "Accepted on attempt 0: cracked iron-grey basalt flagstones with ember seams, even top-down detail, no figures/text/horizon, reads clearly as infernal ground."
     },
     {
@@ -98,7 +110,7 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "Regenerated per orchestrator art-direction feedback: seed 41100 was too saturated/high-contrast (bright green circuit-maze pattern) and would compete with sprites/telegraphs. Accepted seed 41101 with prompt pushed toward dark, muted, low-contrast deep teal-black underground stone with faint dim bioluminescent moss; calmer and reads clearly as dim underground floor."
     },
     {
@@ -134,7 +146,7 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "Attempts 0-2 composed the battlefield elements into circular/radial arrangements (a wheel-and-spear emblem, an arc of arrows) or a corner wall fragment, which reads as a scene with a strong focal point rather than an even ground texture. Prompt was tightened toward seamless repeating texture with evenly scattered debris. Accepted seed 41203: cracked pebbled dry earth, even detail throughout, no focal object, no walls/characters/text. Muted desaturated tan-umber; reads as dry battlefield ground."
     },
     {
@@ -166,7 +178,7 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "Accepted on attempt 0: dark slate-grey river stones, even top-down detail, no figures/text/horizon/focal object, muted and low-contrast per art-direction guidance to favor dark/subtle floors."
     },
     {
@@ -198,19 +210,24 @@
       ],
       "rejected_count": 4,
       "post_processing": [
-        "rembg u2net background removal",
+        "rembg birefnet-general background removal",
         "alpha despeckle + trim",
-        "bottom-aligned LANCZOS fit to 256x256",
-        "phase2: tools/art/phase2_variant.py --mode ember (deterministic post-process, no generation)",
-        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+        "bottom-aligned LANCZOS fit to 512x512 (margin 5)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 1 px, #140b08 a=235, 0.6px feather, under sprite",
+        "phase2: tools/art/phase2_variant.py --mode ember --scale 2",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
       "raw_image": "assets/sprites/_raw/bosses/tataka/",
       "gen_sidecar": "assets/sprites/_raw/bosses/tataka/tataka.gen.json",
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "REGENERATED per orchestrator cultural-review: the original accepted seed 52003 (from an earlier prompt revision) was a multi-armed, crowned figure holding a weapon in each hand, reading as deity iconography (Durga/Kali-coded), which violates the hard rule that gods are never enemies. Prompt rewritten to force exactly two arms, no crown/halo/diadem/lotus/trident, no multiple weapons, with negatives for the same. Retry log: seed 52000 was a two-view character turnaround sheet (rejected, not single-pose); 52001 read as a bearded male lion-faced figure, not the female demoness Tataka is written as; 52002 repeated the male-read issue and added a sun-disc halo plus busy tree/bird scenery; 52004 added visible horns (acceptable) but had busy forest scenery and cropped legs/feet (fails full-body-in-frame). FLAGGED: accepted seed 52003 (this prompt revision) resolves the cultural/gender issues -- clearly two-armed, female-presenting, no crown/halo, single weapon, plain background, full body head-to-feet -- but tusks/fangs/claws did not render clearly within the retry budget; she reads as an ethereal/feral forest demoness rather than overtly monstrous. Candidate for a future regeneration pass if a more overtly fanged look is wanted."
+      "review_note": "provisional — awaiting human art review",
+      "self_review": "REGENERATED per orchestrator cultural-review: the original accepted seed 52003 (from an earlier prompt revision) was a multi-armed, crowned figure holding a weapon in each hand, reading as deity iconography (Durga/Kali-coded), which violates the hard rule that gods are never enemies. Prompt rewritten to force exactly two arms, no crown/halo/diadem/lotus/trident, no multiple weapons, with negatives for the same. Retry log: seed 52000 was a two-view character turnaround sheet (rejected, not single-pose); 52001 read as a bearded male lion-faced figure, not the female demoness Tataka is written as; 52002 repeated the male-read issue and added a sun-disc halo plus busy tree/bird scenery; 52004 added visible horns (acceptable) but had busy forest scenery and cropped legs/feet (fails full-body-in-frame). FLAGGED: accepted seed 52003 (this prompt revision) resolves the cultural/gender issues -- clearly two-armed, female-presenting, no crown/halo, single weapon, plain background, full body head-to-feet -- but tusks/fangs/claws did not render clearly within the retry budget; she reads as an ethereal/feral forest demoness rather than overtly monstrous. Candidate for a future regeneration pass if a more overtly fanged look is wanted.",
+      "repacked_phase": "05.6",
+      "repacked_date": "2026-10-17",
+      "source_recovered_from": "chakravyuha_00024_.png — PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "ahiravana-atlas.png",
@@ -236,19 +253,24 @@
       "rejected_seeds": [],
       "rejected_count": 0,
       "post_processing": [
-        "rembg u2net background removal",
+        "rembg birefnet-general background removal",
         "alpha despeckle + trim",
-        "bottom-aligned LANCZOS fit to 256x256",
-        "phase2: tools/art/phase2_variant.py --mode ember (deterministic post-process, no generation)",
-        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+        "bottom-aligned LANCZOS fit to 512x512 (margin 9)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 5 px, #140b08 a=235, 0.6px feather, under sprite",
+        "phase2: tools/art/phase2_variant.py --mode ember --scale 2",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
       "raw_image": "assets/sprites/_raw/bosses/ahiravana/",
       "gen_sidecar": "assets/sprites/_raw/bosses/ahiravana/ahiravana.gen.json",
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "Accepted on attempt 0: full body head-to-feet, jade-teal sorcerer-king with a topknot (in place of the prompted crown), swirling green sorcerous smoke, a bowl of green flame in one hand. A faint sketchy background doodle in the corner of the raw image was cleanly removed by rembg (not present in the finished frame). Silhouette reads clearly, no halo."
+      "review_note": "provisional — awaiting human art review",
+      "self_review": "Accepted on attempt 0: full body head-to-feet, jade-teal sorcerer-king with a topknot (in place of the prompted crown), swirling green sorcerous smoke, a bowl of green flame in one hand. A faint sketchy background doodle in the corner of the raw image was cleanly removed by rembg (not present in the finished frame). Silhouette reads clearly, no halo.",
+      "repacked_phase": "05.6",
+      "repacked_date": "2026-10-17",
+      "source_recovered_from": "chakravyuha_00018_.png — PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "kumbhakarna-atlas.png",
@@ -276,19 +298,24 @@
       ],
       "rejected_count": 1,
       "post_processing": [
-        "rembg u2net background removal",
+        "rembg birefnet-general background removal",
         "alpha despeckle + trim",
-        "bottom-aligned LANCZOS fit to 256x256",
-        "phase2: tools/art/phase2_variant.py --mode ember (deterministic post-process, no generation)",
-        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+        "bottom-aligned LANCZOS fit to 512x512 (margin 8)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 4 px, #140b08 a=235, 0.6px feather, under sprite",
+        "phase2: tools/art/phase2_variant.py --mode ember --scale 2",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
       "raw_image": "assets/sprites/_raw/bosses/kumbhakarna/",
       "gen_sidecar": "assets/sprites/_raw/bosses/kumbhakarna/kumbhakarna.gen.json",
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "Attempt 0 (seed 52200) had a large sun-disc glow directly behind the figure that reads as a halo/divine aura, a cultural-guard violation for an asura boss. Accepted attempt 1 (seed 52201): two arms only, no crown/halo/lotus, huge round belly, fanged lion-maned face, golden-yellow/bronze palette, holding a single mace-staff. Clean cutout, chunky readable silhouette."
+      "review_note": "provisional — awaiting human art review",
+      "self_review": "Attempt 0 (seed 52200) had a large sun-disc glow directly behind the figure that reads as a halo/divine aura, a cultural-guard violation for an asura boss. Accepted attempt 1 (seed 52201): two arms only, no crown/halo/lotus, huge round belly, fanged lion-maned face, golden-yellow/bronze palette, holding a single mace-staff. Clean cutout, chunky readable silhouette.",
+      "repacked_phase": "05.6",
+      "repacked_date": "2026-10-17",
+      "source_recovered_from": "chakravyuha_00020_.png — PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "yama-atlas.png",
@@ -319,19 +346,24 @@
       ],
       "rejected_count": 4,
       "post_processing": [
-        "rembg u2net background removal",
+        "rembg birefnet-general background removal",
         "alpha despeckle + trim",
-        "bottom-aligned LANCZOS fit to 256x256",
-        "phase2: tools/art/phase2_variant.py --mode divine (deterministic post-process, no generation)",
-        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+        "bottom-aligned LANCZOS fit to 512x512 (margin 9)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 5 px, #140b08 a=235, 0.6px feather, under sprite",
+        "phase2: tools/art/phase2_variant.py --mode divine --scale 2",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
       "raw_image": "assets/sprites/_raw/bosses/yama/",
       "gen_sidecar": "assets/sprites/_raw/bosses/yama/yama.gen.json",
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "FLAGGED: Yama needed all 5 attempts. Seed 52300 (seated, floating scepters) lost both arms during rembg cutout -- a segmentation failure, not a cultural issue. Seed 52301 and seed 52302 both rendered a decorative picture-frame border around the whole image, which violates the no-frame/no-border constraint (52301 also had 4 arms). Seed 52303 correctly avoided a border and read as dignified and serene, but its background halo/aureole disc was so large it dominated the 256x256 canvas and made the cutout silhouette read as a solid circle rather than a person -- fails gameplay readability. Accepted seed 52304 as least-bad: standing, two arms, crown, dignified serene closed-mouth-smile expression, no fangs/horns/grotesque features, no border, plain background, readable humanoid silhouette. The staff (danda) prop held in one hand was a thin disconnected shape that did not survive rembg's alpha-despeckle step and is missing from the finished frame; he is shown holding only the round disc/shield prop. Dignity check passed: no demonic, monstrous or menacing features at any point across all 5 attempts."
+      "review_note": "provisional — awaiting human art review",
+      "self_review": "FLAGGED: Yama needed all 5 attempts. Seed 52300 (seated, floating scepters) lost both arms during rembg cutout -- a segmentation failure, not a cultural issue. Seed 52301 and seed 52302 both rendered a decorative picture-frame border around the whole image, which violates the no-frame/no-border constraint (52301 also had 4 arms). Seed 52303 correctly avoided a border and read as dignified and serene, but its background halo/aureole disc was so large it dominated the 256x256 canvas and made the cutout silhouette read as a solid circle rather than a person -- fails gameplay readability. Accepted seed 52304 as least-bad: standing, two arms, crown, dignified serene closed-mouth-smile expression, no fangs/horns/grotesque features, no border, plain background, readable humanoid silhouette. The staff (danda) prop held in one hand was a thin disconnected shape that did not survive rembg's alpha-despeckle step and is missing from the finished frame; he is shown holding only the round disc/shield prop. Dignity check passed: no demonic, monstrous or menacing features at any point across all 5 attempts.",
+      "repacked_phase": "05.6",
+      "repacked_date": "2026-10-17",
+      "source_recovered_from": "chakravyuha_00030_.png — PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "preta-atlas.png",
@@ -356,18 +388,23 @@
       "rejected_seeds": [],
       "rejected_count": 0,
       "post_processing": [
-        "rembg u2net background removal",
+        "rembg birefnet-general background removal",
         "alpha despeckle + trim",
-        "bottom-aligned LANCZOS fit to 128x128",
-        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+        "bottom-aligned LANCZOS fit to 256x256 (margin 11)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 7 px, #140b08 a=235, 0.6px feather, under sprite",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
       "raw_image": "assets/sprites/_raw/enemies/preta/",
       "gen_sidecar": "assets/sprites/_raw/enemies/preta/preta.gen.json",
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "Accepted on attempt 0: gaunt spectral figure, pale sea-green ghostly glow, tattered pale funeral shroud, holding a ghostly flame staff. Thin/wispy silhouette is appropriate for an emaciated hungry-ghost design; reads as a robed humanoid at 128px. Clean cutout, no halo, no text."
+      "review_note": "provisional — awaiting human art review",
+      "self_review": "Accepted on attempt 0: gaunt spectral figure, pale sea-green ghostly glow, tattered pale funeral shroud, holding a ghostly flame staff. Thin/wispy silhouette is appropriate for an emaciated hungry-ghost design; reads as a robed humanoid at 128px. Clean cutout, no halo, no text.",
+      "repacked_phase": "05.6",
+      "repacked_date": "2026-10-17",
+      "source_recovered_from": "chakravyuha_00031_.png — PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "rakshasa-atlas.png",
@@ -394,18 +431,23 @@
       ],
       "rejected_count": 1,
       "post_processing": [
-        "rembg u2net background removal",
+        "rembg birefnet-general background removal",
         "alpha despeckle + trim",
-        "bottom-aligned LANCZOS fit to 128x128",
-        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+        "bottom-aligned LANCZOS fit to 256x256 (margin 9)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 5 px, #140b08 a=235, 0.6px feather, under sprite",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
       "raw_image": "assets/sprites/_raw/enemies/rakshasa/",
       "gen_sidecar": "assets/sprites/_raw/enemies/rakshasa/rakshasa.gen.json",
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "Attempt 0 (seed 63100) had a plain white circular disc directly behind the figure risking a halo/divine misread; rejected out of caution given the same motif was a cultural-guard issue on multiple bosses. Accepted attempt 1 (seed 63101): two arms, single curved sword, fanged horned demon face, dark red-orange skin, bronze armor, no halo, clean cutout, distinct readable silhouette."
+      "review_note": "provisional — awaiting human art review",
+      "self_review": "Attempt 0 (seed 63100) had a plain white circular disc directly behind the figure risking a halo/divine misread; rejected out of caution given the same motif was a cultural-guard issue on multiple bosses. Accepted attempt 1 (seed 63101): two arms, single curved sword, fanged horned demon face, dark red-orange skin, bronze armor, no halo, clean cutout, distinct readable silhouette.",
+      "repacked_phase": "05.6",
+      "repacked_date": "2026-10-17",
+      "source_recovered_from": "chakravyuha_00033_.png — PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "archer-atlas.png",
@@ -430,18 +472,23 @@
       "rejected_seeds": [],
       "rejected_count": 0,
       "post_processing": [
-        "rembg u2net background removal",
+        "rembg birefnet-general background removal",
         "alpha despeckle + trim",
-        "bottom-aligned LANCZOS fit to 128x128",
-        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+        "bottom-aligned LANCZOS fit to 256x256 (margin 10)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 6 px, #140b08 a=235, 0.6px feather, under sprite",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
       "raw_image": "assets/sprites/_raw/enemies/archer/",
       "gen_sidecar": "assets/sprites/_raw/enemies/archer/archer.gen.json",
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "Accepted on attempt 0: horned demon bowman in dark bronze/ochre-gold armor, drawing a recurve bow, two arms, no halo, plain background. A decorative floating wing/bow-shaped flourish behind the shoulder was mostly removed by alpha despeckling; a small sliver remains near the head reading as a feather/horn accent. Silhouette reads clearly."
+      "review_note": "provisional — awaiting human art review",
+      "self_review": "Accepted on attempt 0: horned demon bowman in dark bronze/ochre-gold armor, drawing a recurve bow, two arms, no halo, plain background. A decorative floating wing/bow-shaped flourish behind the shoulder was mostly removed by alpha despeckling; a small sliver remains near the head reading as a feather/horn accent. Silhouette reads clearly.",
+      "repacked_phase": "05.6",
+      "repacked_date": "2026-10-17",
+      "source_recovered_from": "chakravyuha_00034_.png — PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "naga-atlas.png",
@@ -471,18 +518,23 @@
       ],
       "rejected_count": 4,
       "post_processing": [
-        "rembg u2net background removal",
+        "rembg birefnet-general background removal",
         "alpha despeckle + trim",
-        "bottom-aligned LANCZOS fit to 128x128",
-        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+        "bottom-aligned LANCZOS fit to 256x256 (margin 9)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 5 px, #140b08 a=235, 0.6px feather, under sprite",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
       "raw_image": "assets/sprites/_raw/enemies/naga/",
       "gen_sidecar": "assets/sprites/_raw/enemies/naga/naga.gen.json",
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "Naga needed all 5 attempts to get the D-15a body plan right (human torso with a serpent tail instead of legs, not a divine multi-hooded Naga). Seed 63300 had an ornate corner border/frame and a full dragon head (not a humanoid face). 63301 and 63302 both grew a separate reptilian/dragon head plus legs AND a tail (a lizardman, not 'tail instead of legs'). 63303 again kept legs+sandaled feet with an ambiguous double-fin hood shape. Reworded the prompt around a merman analogy (human torso, single continuous tail, no legs) and accepted seed 63304: fully human face and muscular torso, no legs, one continuous green serpent tail, holding a single spear with a serpent-head ornament on the haft (not a second head on the character), no cobra-hood iconography that reads as multi-headed/divine. A soft white circular glow behind the figure in the raw generation was cleanly removed by rembg (not a solid halo shape) and does not appear in the finished frame. Clean readable silhouette."
+      "review_note": "provisional — awaiting human art review",
+      "self_review": "Naga needed all 5 attempts to get the D-15a body plan right (human torso with a serpent tail instead of legs, not a divine multi-hooded Naga). Seed 63300 had an ornate corner border/frame and a full dragon head (not a humanoid face). 63301 and 63302 both grew a separate reptilian/dragon head plus legs AND a tail (a lizardman, not 'tail instead of legs'). 63303 again kept legs+sandaled feet with an ambiguous double-fin hood shape. Reworded the prompt around a merman analogy (human torso, single continuous tail, no legs) and accepted seed 63304: fully human face and muscular torso, no legs, one continuous green serpent tail, holding a single spear with a serpent-head ornament on the haft (not a second head on the character), no cobra-hood iconography that reads as multi-headed/divine. A soft white circular glow behind the figure in the raw generation was cleanly removed by rembg (not a solid halo shape) and does not appear in the finished frame. Clean readable silhouette.",
+      "repacked_phase": "05.6",
+      "repacked_date": "2026-10-17",
+      "source_recovered_from": "chakravyuha_00039_.png — PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "vetala-atlas.png",
@@ -507,18 +559,23 @@
       "rejected_seeds": [],
       "rejected_count": 0,
       "post_processing": [
-        "rembg u2net background removal",
+        "rembg birefnet-general background removal",
         "alpha despeckle + trim",
-        "bottom-aligned LANCZOS fit to 128x128",
-        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+        "bottom-aligned LANCZOS fit to 256x256 (margin 10)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 6 px, #140b08 a=235, 0.6px feather, under sprite",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
       "raw_image": "assets/sprites/_raw/enemies/vetala/",
       "gen_sidecar": "assets/sprites/_raw/enemies/vetala/vetala.gen.json",
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "Accepted on attempt 0: gaunt vampiric corpse-spirit, wide ragged cloth/bat wings, long claws, violet ghostly palette, skull-like face with red eyes. The wide wingspan gives a distinct, highly readable silhouette that stands apart from the other enemy archetypes. No halo, no text, clean cutout."
+      "review_note": "provisional — awaiting human art review",
+      "self_review": "Accepted on attempt 0: gaunt vampiric corpse-spirit, wide ragged cloth/bat wings, long claws, violet ghostly palette, skull-like face with red eyes. The wide wingspan gives a distinct, highly readable silhouette that stands apart from the other enemy archetypes. No halo, no text, clean cutout.",
+      "repacked_phase": "05.6",
+      "repacked_date": "2026-10-17",
+      "source_recovered_from": "chakravyuha_00040_.png — PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "bhuta-atlas.png",
@@ -543,18 +600,23 @@
       "rejected_seeds": [],
       "rejected_count": 0,
       "post_processing": [
-        "rembg u2net background removal",
+        "rembg birefnet-general background removal",
         "alpha despeckle + trim",
-        "bottom-aligned LANCZOS fit to 128x128",
-        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+        "bottom-aligned LANCZOS fit to 256x256 (margin 8)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 4 px, #140b08 a=235, 0.6px feather, under sprite",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
       "raw_image": "assets/sprites/_raw/enemies/bhuta/",
       "gen_sidecar": "assets/sprites/_raw/enemies/bhuta/bhuta.gen.json",
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "Accepted on attempt 0: hulking lumbering ghost golem, massive chunky slate blue-grey body, tattered loincloth. Chunky, highly readable silhouette, distinct from all other enemy archetypes. No halo, no text, clean cutout."
+      "review_note": "provisional — awaiting human art review",
+      "self_review": "Accepted on attempt 0: hulking lumbering ghost golem, massive chunky slate blue-grey body, tattered loincloth. Chunky, highly readable silhouette, distinct from all other enemy archetypes. No halo, no text, clean cutout.",
+      "repacked_phase": "05.6",
+      "repacked_date": "2026-10-17",
+      "source_recovered_from": "chakravyuha_00041_.png — PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "daitya-atlas.png",
@@ -579,18 +641,23 @@
       "rejected_seeds": [],
       "rejected_count": 0,
       "post_processing": [
-        "rembg u2net background removal",
+        "rembg birefnet-general background removal",
         "alpha despeckle + trim",
-        "bottom-aligned LANCZOS fit to 128x128",
-        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+        "bottom-aligned LANCZOS fit to 256x256 (margin 8)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 4 px, #140b08 a=235, 0.6px feather, under sprite",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
       "raw_image": "assets/sprites/_raw/enemies/daitya/",
       "gen_sidecar": "assets/sprites/_raw/enemies/daitya/daitya.gen.json",
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "Accepted on attempt 0: massive horned asura brute, amber-orange skin, bronze bracers, broad shoulders, dual-wielding a heavy club and a blade (slightly more armed than the single-club prompt, but reads clearly and distinctly as a brute). No halo, no text, clean cutout, chunky readable silhouette."
+      "review_note": "provisional — awaiting human art review",
+      "self_review": "Accepted on attempt 0: massive horned asura brute, amber-orange skin, bronze bracers, broad shoulders, dual-wielding a heavy club and a blade (slightly more armed than the single-club prompt, but reads clearly and distinctly as a brute). No halo, no text, clean cutout, chunky readable silhouette.",
+      "repacked_phase": "05.6",
+      "repacked_date": "2026-10-17",
+      "source_recovered_from": "chakravyuha_00042_.png — PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "yatudhana-atlas.png",
@@ -615,18 +682,23 @@
       "rejected_seeds": [],
       "rejected_count": 0,
       "post_processing": [
-        "rembg u2net background removal",
+        "rembg birefnet-general background removal",
         "alpha despeckle + trim",
-        "bottom-aligned LANCZOS fit to 128x128",
-        "free-tex-packer-core 0.3.8 via tools/pack-atlas.js (trim, 2px padding)"
+        "bottom-aligned LANCZOS fit to 256x256 (margin 9)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 5 px, #140b08 a=235, 0.6px feather, under sprite",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
       "raw_image": "assets/sprites/_raw/enemies/yatudhana/",
       "gen_sidecar": "assets/sprites/_raw/enemies/yatudhana/yatudhana.gen.json",
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "Accepted on attempt 0: rakshasa sorcerer conjurer, magenta-pink robes, wide-brimmed hat, bead necklace, bone staff topped with a glowing pink orb. Distinct silhouette (hat + robe + staff-orb), no halo, no text, clean cutout."
+      "review_note": "provisional — awaiting human art review",
+      "self_review": "Accepted on attempt 0: rakshasa sorcerer conjurer, magenta-pink robes, wide-brimmed hat, bead necklace, bone staff topped with a glowing pink orb. Distinct silhouette (hat + robe + staff-orb), no halo, no text, clean cutout.",
+      "repacked_phase": "05.6",
+      "repacked_date": "2026-10-17",
+      "source_recovered_from": "chakravyuha_00043_.png — PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "naraka_ash_drift_0.png",
@@ -655,7 +727,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s61150: wavy drifted ash/cinder streaks; keys to a soft translucent wisp pattern, reads as scattered ash when tiled at low alpha.",
       "role": "decal",
       "biome": "naraka",
@@ -697,7 +769,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s61090: single wrought-iron tripod brazier with burning coals/flame, plain grey background, clean isolated silhouette.",
       "role": "prop",
       "biome": "naraka",
@@ -739,7 +811,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s61100: single iron post with crossbar and hanging chains/hooks, plain grey background, clean isolated silhouette.",
       "role": "prop",
       "biome": "naraka",
@@ -781,7 +853,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s61040: single isolated obsidian column, cracked lava-glow texture, iron banded cap and base, chains at base, three-quarter view, plain grey background, whole object in frame.",
       "role": "column",
       "biome": "naraka",
@@ -823,8 +895,8 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "s61130: jagged dark-stone cracks with glowing ember veins; decal_finish's \u0394E alpha key produces a soft irregular translucent mark (previewed on checker bg) suitable as a floor decal.",
+      "review_note": "provisional — awaiting human art review",
+      "self_review": "s61130: jagged dark-stone cracks with glowing ember veins; decal_finish's ΔE alpha key produces a soft irregular translucent mark (previewed on checker bg) suitable as a floor decal.",
       "role": "decal",
       "biome": "naraka",
       "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
@@ -865,7 +937,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s61110: ring of scorched stones around glowing embers/flame, circular top-ish view, isolated on plain background.",
       "role": "prop",
       "biome": "naraka",
@@ -907,7 +979,7 @@
       "generated_date": "2026-09-30",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s61000 (dreamshaper_xl_alpha2): cracked dark grey basalt flagstones with thin glowing ember-red cracks, even top-down detail edge to edge, no focal point/radial composition. Matches 02-08 lesson (seamless repeating, evenly scattered).",
       "role": "floor",
       "biome": "naraka",
@@ -956,7 +1028,7 @@
       "generated_date": "2026-09-30",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s61010 (dreamshaper_xl_alpha2): riveted blackened iron floor plates with rust/scorch streaks and ash drifts, even top-down grid, no focal point.",
       "role": "floor",
       "biome": "naraka",
@@ -1007,7 +1079,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s61051: single isolated obsidian/iron gate arch on a plain grey background with a flagstone floor strip at the base, ember-lit side niches, no landscape/mountains behind it (fixes the attempt-0 rembg foreground/background inversion).",
       "role": "gate",
       "biome": "naraka",
@@ -1052,7 +1124,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s61120: empty broken iron cage, bent bars, open door, isolated on plain grey background.",
       "role": "prop",
       "biome": "naraka",
@@ -1094,7 +1166,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s61080: single riveted iron cauldron with orange rim, dull smoke/flame plume, empty interior, plain grey background.",
       "role": "prop",
       "biome": "naraka",
@@ -1136,7 +1208,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s61060: single carved dark wood/iron lectern with an open book on a low stand, plain grey background, no figure, no readable text (illegible marks only).",
       "role": "prop",
       "biome": "naraka",
@@ -1178,7 +1250,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s61140: diagonal soot/scorch stain with dark-to-red gradient; keys cleanly to a soft irregular alpha mark.",
       "role": "decal",
       "biome": "naraka",
@@ -1222,7 +1294,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s61071: single unified stand with rolled scroll bundles on top and an open manuscript below, one object (fixes attempt-0's 4-scattered-clusters composition). The open pages show dense illegible ink-wash line marks mimicking handwriting, consistent with the already-accepted ledger_lectern treatment -- not legible letters/words.",
       "role": "prop",
       "biome": "naraka",
@@ -1267,7 +1339,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s61160: round iron floor grate, radial bars, glowing center, soot-dark rim; verified clean circular cutout after prop_finish (rembg removed raw-generation's stray petal-shaped flame flares at the corners).",
       "role": "hazard-skin",
       "biome": "naraka",
@@ -1306,7 +1378,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s61030: top-down basalt/stone coping blocks with ember-glow seams between bands, even repeating detail, no focal point.",
       "role": "wallcap",
       "biome": "naraka",
@@ -1357,7 +1429,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s61021 (dreamshaper_xl_alpha2): dripping obsidian/basalt cliff face with thin glowing ember-red streaks, dark rubble base, no sky/horizon/vanishing point, reads as a croppable full-width elevation band. Matches palette; no figures/text. Full 1344x768 frame used as crop (no sky present).",
       "role": "wallface",
       "biome": "naraka",
@@ -1402,7 +1474,7 @@
       "biome": "naraka",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review"
+      "review_note": "provisional — awaiting human art review"
     },
     {
       "filename": "patala_column_0.png",
@@ -1431,7 +1503,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s62040: single isolated jade-stone column with an abstract swirling coil relief (reads as a stylized serpent-coil motif without a literal head/hood), plain grey background, clean cutout with no halo.",
       "role": "column",
       "biome": "patala",
@@ -1473,7 +1545,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s62110: cluster of teal crystal formations on a rock outcrop with a sandy path hint; rembg cleanly isolated it from the dark cave backdrop into a self-contained readable silhouette.",
       "role": "prop",
       "biome": "patala",
@@ -1517,7 +1589,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s62101: single coherent toppled column section propped at an angle on a rubble base, scale-relief carving with gold crack inlay on one face, broken capital, one unified object, plain grey background (fixes attempt-0's scattered-fragments composition).",
       "role": "prop",
       "biome": "patala",
@@ -1562,7 +1634,7 @@
       "generated_date": "2026-09-30",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s62000 (dreamshaper_xl_alpha2): dark teal-black bioluminescent cobblestone, even top-down detail, no focal point. Low-contrast per the 02-08 patala lesson (avoid over-saturation).",
       "role": "floor",
       "biome": "patala",
@@ -1611,7 +1683,7 @@
       "generated_date": "2026-09-30",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s62010 (dreamshaper_xl_alpha2): jade-black flagstones in an irregular rectangular grid with worn antique-gold inlay seams, faint moss. No mandala/circular/radial pattern -- reads as plain paving, not a sacred geometric motif.",
       "role": "floor",
       "biome": "patala",
@@ -1660,7 +1732,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s62050: single isolated teal/gold carved stone arch with a glowing cyan stairway beyond, gem-studded jambs. A faint soft grey halo/mist remains above the arch after rembg cutout (minor, reads as ambient fog, not a hard edge artifact) -- accepted rather than spending further generation budget on a first-attempt success.",
       "role": "gate",
       "biome": "patala",
@@ -1704,7 +1776,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s62071: single contained mounded heap of faceted gems and gold coins with clear grey background margin all around it; rembg cutout preserved the whole heap silhouette (fixes attempt-0 edge-to-edge tiling problem).",
       "role": "prop",
       "biome": "patala",
@@ -1749,7 +1821,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s62140: scattered small gems/coins evenly distributed on flat grey ground, no focal point, reads as a ground decal.",
       "role": "decal",
       "biome": "patala",
@@ -1791,7 +1863,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s62060: single cohesive cluster of bioluminescent cyan-teal mushrooms, plain grey background, no figures/text.",
       "role": "prop",
       "biome": "patala",
@@ -1833,7 +1905,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s62130: flat patches of bioluminescent teal/green moss on dark cracked ground, reads as a ground decal texture.",
       "role": "decal",
       "biome": "patala",
@@ -1875,7 +1947,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s62090: single round stone basin with glowing teal bioluminescent water, carved scale rim, plain grey background, clean isolated object.",
       "role": "prop",
       "biome": "patala",
@@ -1917,7 +1989,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s62080: single ornate bronze/teal urn with small decorative serpentine curl handles (abstract scrollwork, not a literal multi-hooded serpent figure), plain grey background, clean isolated object.",
       "role": "prop",
       "biome": "patala",
@@ -1959,7 +2031,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s62160: cluster of wet mossy teal/dark/gold-rimmed stones, reads as a scattered stone ground texture (not a perfect ring shape, but serviceable as a venom-pool rim decal per D-05a's optional/droppable allowance).",
       "role": "decal",
       "biome": "patala",
@@ -2001,7 +2073,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s62030: top-down dark jade stone coping with cracked serpent-scale texture and two gem-studded gold inlay bands, even repeating detail, no focal point.",
       "role": "wallcap",
       "biome": "patala",
@@ -2053,7 +2125,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s62022 (dreamshaper_xl_alpha2): continuous repeating arched naga-palace wall with dark stone, teal bioluminescent glow under the eaves and arch bases, gold-leaf abstract vine/scroll carving on pillars, roofline overhead. A grey studio backdrop remains outside the wall silhouette at the frame edges; crop [230,160,1240,730] stays inside the wall content so the finished strip is edge-to-edge with no visible background after strip_finish's resize + x-seamless blend.",
       "role": "wallface",
       "biome": "patala",
@@ -2101,7 +2173,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review",
+      "review_note": "provisional — awaiting human art review",
       "self_review": "s62150: dark shallow puddle with a gold-rimmed edge and teal water reflection around it.",
       "role": "decal",
       "biome": "patala",
@@ -2140,7 +2212,7 @@
       "biome": "patala",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional \u2014 awaiting human art review"
+      "review_note": "provisional — awaiting human art review"
     }
   ],
   "review_sheet": "assets/sprites/_review/contact-sheet.png",

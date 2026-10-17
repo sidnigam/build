@@ -71,7 +71,7 @@ def hsv_to_rgb_arr(h, s, v):
     return np.stack([r, g, b], axis=-1)
 
 
-def apply_ember(rgba):
+def apply_ember(rgba, scale=1.0):
     arr = np.array(rgba).astype(np.float64)
     rgb = arr[:, :, :3] / 255.0
     alpha = arr[:, :, 3]
@@ -92,11 +92,12 @@ def apply_ember(rgba):
     out[:, :, 3] = alpha
     result = Image.fromarray(out.astype(np.uint8), "RGBA")
 
-    glow = build_glow(alpha.astype(np.uint8), dilate_px=3, blur_sigma=6, color=EMBER_COLOR, opacity=0.85)
+    glow = build_glow(alpha.astype(np.uint8), dilate_px=round(3 * scale), blur_sigma=6 * scale,
+                       color=EMBER_COLOR, opacity=0.85)
     return composite_under(result, [glow])
 
 
-def apply_divine(rgba):
+def apply_divine(rgba, scale=1.0):
     arr = np.array(rgba)
     alpha = arr[:, :, 3]
 
@@ -110,8 +111,10 @@ def apply_divine(rgba):
     out[:, :, 3] = alpha
     result = Image.fromarray(out, "RGBA")
 
-    inner = build_glow(alpha, dilate_px=2, blur_sigma=5, color=DIVINE_INNER_COLOR, opacity=0.8)
-    outer = build_glow(alpha, dilate_px=4, blur_sigma=12, color=DIVINE_OUTER_COLOR, opacity=0.45)
+    inner = build_glow(alpha, dilate_px=round(2 * scale), blur_sigma=5 * scale,
+                        color=DIVINE_INNER_COLOR, opacity=0.8)
+    outer = build_glow(alpha, dilate_px=round(4 * scale), blur_sigma=12 * scale,
+                        color=DIVINE_OUTER_COLOR, opacity=0.45)
     return composite_under(result, [outer, inner])
 
 
@@ -146,14 +149,18 @@ def main():
     ap.add_argument("--in", dest="in_path", required=True)
     ap.add_argument("--out", dest="out_path", required=True)
     ap.add_argument("--mode", required=True, choices=["ember", "divine"])
+    ap.add_argument("--scale", type=float, default=1.0,
+                     help="Multiplies dilate px and every gaussian sigma (05.6-03: bosses at "
+                          "512 use --scale 2 to keep exactly the Phase-2 look). Default 1.0 "
+                          "reproduces the old output byte-identically.")
     args = ap.parse_args()
 
     try:
         src = Image.open(args.in_path).convert("RGBA")
         if args.mode == "ember":
-            result = apply_ember(src)
+            result = apply_ember(src, scale=args.scale)
         else:
-            result = apply_divine(src)
+            result = apply_divine(src, scale=args.scale)
         assert result.size == src.size, "phase2_variant must preserve canvas size"
         result.save(args.out_path, "PNG")
         print(f"mode={args.mode} size={result.size} out={args.out_path}")

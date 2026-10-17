@@ -2,7 +2,7 @@
 // Solves RESEARCH Pitfall 1: free-tex-packer's "Pixi" exporter omits the `animations` block
 // that PixiJS v8's Spritesheet API requires to populate sheet.animations.
 //
-// Usage: node tools/pack-atlas.js <inputDir> <textureName> <outDir> [--size N]
+// Usage: node tools/pack-atlas.js <inputDir> <textureName> <outDir> [--size N] [--padding N]
 //
 // Example:
 //   node tools/pack-atlas.js raw/player player-atlas assets/sprites/player
@@ -28,6 +28,11 @@ let targetSize = null;
 const sizeFlag = args.indexOf('--size');
 if (sizeFlag !== -1 && args[sizeFlag + 1]) {
   targetSize = parseInt(args[sizeFlag + 1], 10);
+}
+let padding = 2; // unchanged default — 05.4's env_build.py relies on this default
+const paddingFlag = args.indexOf('--padding');
+if (paddingFlag !== -1 && args[paddingFlag + 1]) {
+  padding = parseInt(args[paddingFlag + 1], 10);
 }
 
 // ---- groupFramesByAnimation ----
@@ -115,7 +120,7 @@ async function main() {
       exporter: 'Pixi',
       width: 2048,
       height: 2048,
-      padding: 2,
+      padding,
       allowRotation: false,
       allowTrim: true,
       removeFileExtension: false,

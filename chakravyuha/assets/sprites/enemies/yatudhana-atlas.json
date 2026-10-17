@@ -2,22 +2,22 @@
   "frames": {
     "yatudhana_idle_0.png": {
       "frame": {
-        "x": 2,
-        "y": 2,
-        "w": 104,
-        "h": 120
+        "x": 8,
+        "y": 8,
+        "w": 213,
+        "h": 250
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 12,
-        "y": 4,
-        "w": 104,
-        "h": 120
+        "x": 21,
+        "y": 3,
+        "w": 213,
+        "h": 250
       },
       "sourceSize": {
-        "w": 128,
-        "h": 128
+        "w": 256,
+        "h": 256
       },
       "pivot": {
         "x": 0.5,
@@ -31,8 +31,8 @@
     "image": "yatudhana-atlas.png",
     "format": "RGBA8888",
     "size": {
-      "w": 108,
-      "h": 124
+      "w": 229,
+      "h": 266
     },
     "scale": 1
   },

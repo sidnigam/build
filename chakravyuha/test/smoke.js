@@ -7278,5 +7278,43 @@ check('HUD legend (kbm): DASH/ASTRA/SPECIAL badge+label horizontal extents never
 check('HUD legend (pad, ps family): DASH/ASTRA/SPECIAL badge+label horizontal extents never overlap'
   + (legendResults.padReason ? ' — ' + legendResults.padReason : ''), legendResults.padOk === true);
 
+// ---------------- graphics quality setting (05.6-01) ----------------
+console.log('\n— graphics quality setting (05.6-01) —');
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+  // Save the current stored settings so this block's probing (reset/invalid
+  // values) doesn't leak into any later block run in this same process.
+  const savedSettingsJSON = R('JSON.stringify(SETTINGS.all())');
+
+  check('SETTINGS.get(graphicsQuality) === auto on defaults',
+    R("SETTINGS.reset(); SETTINGS.get('graphicsQuality')") === 'auto');
+
+  check("SETTINGS.set('graphicsQuality','high') returns 'high' and persists (a fresh SETTINGS.load() reads 'high')",
+    R("SETTINGS.set('graphicsQuality', 'high')") === 'high' &&
+    R("SETTINGS._v = null; SETTINGS.load(); SETTINGS.get('graphicsQuality')") === 'high');
+
+  check("SETTINGS.set('graphicsQuality','ultra') is rejected (value unchanged)",
+    R("SETTINGS.set('graphicsQuality', 'ultra'); SETTINGS.get('graphicsQuality')") === 'high');
+
+  check("a stored invalid graphicsQuality value loads as 'auto'",
+    R(`
+      SETTINGS._v.graphicsQuality = 'ultra';
+      SETTINGS.save();
+      SETTINGS._v = null;
+      SETTINGS.load();
+      SETTINGS.get('graphicsQuality');
+    `) === 'auto');
+
+  check('resolutionMode enum behavior is unchanged after generalizing ENUMS',
+    R("SETTINGS.set('resolutionMode', '1920x1080')") === '1920x1080' &&
+    R("SETTINGS.set('resolutionMode', 'bogus'); SETTINGS.get('resolutionMode')") === '1920x1080');
+
+  // Restore whatever settings existed before this block ran.
+  R(`
+    SETTINGS._v = Object.assign({}, SETTINGS.DEFAULTS, ${savedSettingsJSON});
+    SETTINGS.save();
+  `);
+}
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

@@ -627,6 +627,782 @@
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Accepted on attempt 0: rakshasa sorcerer conjurer, magenta-pink robes, wide-brimmed hat, bead necklace, bone staff topped with a glowing pink orb. Distinct silhouette (hat + robe + staff-orb), no halo, no text, clean cutout."
+    },
+    {
+      "filename": "naraka_ash_drift_0.png",
+      "path": "assets/sprites/_raw/env/naraka/frames/naraka_ash_drift_0.png",
+      "actor": "naraka_ash_drift",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 61150,
+      "prompt": "top-down orthographic view looking straight down at a soft drift of grey ash and cinders on flat plain mid grey ground, isolated, flat on the ground, soft irregular edges, painterly texture, deep maroon and charcoal with ember red-orange accents, muted, low saturation, no objects, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "decal"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/naraka/ash_drift.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-16",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s61150: wavy drifted ash/cinder streaks; keys to a soft translucent wisp pattern, reads as scattered ash when tiled at low alpha.",
+      "role": "decal",
+      "biome": "naraka",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": true,
+      "grading": {
+        "sat": 0.7,
+        "val": 0.8
+      },
+      "finish": {
+        "mode": "decal",
+        "crop": null
+      }
+    },
+    {
+      "filename": "naraka_brazier_0.png",
+      "path": "assets/sprites/_raw/env/naraka/frames/naraka_brazier_0.png",
+      "actor": "naraka_brazier",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 61090,
+      "prompt": "tall wrought-iron fire brazier on three legs with burning coals, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, deep maroon and charcoal with ember red-orange accents, muted, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/naraka/brazier.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-16",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s61090: single wrought-iron tripod brazier with burning coals/flame, plain grey background, clean isolated silhouette.",
+      "role": "prop",
+      "biome": "naraka",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      }
+    },
+    {
+      "filename": "naraka_chain_post_0.png",
+      "path": "assets/sprites/_raw/env/naraka/frames/naraka_chain_post_0.png",
+      "actor": "naraka_chain_post",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 61100,
+      "prompt": "thick iron post with heavy chains and hooks hanging from a crossbar, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, deep maroon and charcoal with ember red-orange accents, muted, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/naraka/chain_post.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-16",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s61100: single iron post with crossbar and hanging chains/hooks, plain grey background, clean isolated silhouette.",
+      "role": "prop",
+      "biome": "naraka",
+      "cultural_check": "pass: no deity/idol/face; no bodies/figures on the chains.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      }
+    },
+    {
+      "filename": "naraka_column_0.png",
+      "path": "assets/sprites/_raw/env/naraka/frames/naraka_column_0.png",
+      "actor": "naraka_column",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 832,
+      "height": 1216,
+      "seed": 61040,
+      "prompt": "tall obsidian column bound with iron bands and wrapped in heavy chains, ember glow at its cracked base, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, deep maroon and charcoal with ember red-orange accents, muted, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "column"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/naraka/column.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-16",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s61040: single isolated obsidian column, cracked lava-glow texture, iron banded cap and base, chains at base, three-quarter view, plain grey background, whole object in frame.",
+      "role": "column",
+      "biome": "naraka",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; no figure.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.8,
+        "val": 0.82
+      },
+      "finish": {
+        "mode": "column",
+        "crop": null
+      }
+    },
+    {
+      "filename": "naraka_ember_seam_0.png",
+      "path": "assets/sprites/_raw/env/naraka/frames/naraka_ember_seam_0.png",
+      "actor": "naraka_ember_seam",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 61130,
+      "prompt": "top-down orthographic view looking straight down at a jagged crack in dark stone with thin glowing ember lava seams on flat plain mid grey ground, isolated, flat on the ground, soft irregular edges, painterly texture, deep maroon and charcoal with ember red-orange accents, muted, low saturation, no objects, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "decal"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/naraka/ember_seam.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-16",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s61130: jagged dark-stone cracks with glowing ember veins; decal_finish's \u0394E alpha key produces a soft irregular translucent mark (previewed on checker bg) suitable as a floor decal.",
+      "role": "decal",
+      "biome": "naraka",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": true,
+      "grading": {
+        "sat": 0.7,
+        "val": 0.8
+      },
+      "finish": {
+        "mode": "decal",
+        "crop": null
+      }
+    },
+    {
+      "filename": "naraka_fire_pit_0.png",
+      "path": "assets/sprites/_raw/env/naraka/frames/naraka_fire_pit_0.png",
+      "actor": "naraka_fire_pit",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 61110,
+      "prompt": "sunken ring of scorched stones around glowing embers and low flames, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, deep maroon and charcoal with ember red-orange accents, muted, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/naraka/fire_pit.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-16",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s61110: ring of scorched stones around glowing embers/flame, circular top-ish view, isolated on plain background.",
+      "role": "prop",
+      "biome": "naraka",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      }
+    },
+    {
+      "filename": "naraka-floor-a-tile.png",
+      "path": "assets/sprites/env/naraka/naraka-floor-a-tile.png",
+      "actor": "naraka_floor_a",
+      "kind": "env-tile",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "dreamshaperXL_alpha2Xl10.safetensors (DreamShaper XL alpha2 (xl1.0) by Lykon, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 61000,
+      "prompt": "top-down orthographic view looking straight down at cracked dark iron-grey basalt flagstones of an infernal iron city, thin glowing ember seams in the cracks, soot and ash, seamless repeating texture, evenly scattered detail edge to edge, painted game arena floor texture, low contrast, no focal point, Hades-adjacent painterly illustration, deep maroon and charcoal with ember red-orange accents, muted, low saturation, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "tile"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/naraka/floor_a.gen.json",
+      "generated_date": "2026-09-30",
+      "recorded_date": "2026-10-16",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s61000 (dreamshaper_xl_alpha2): cracked dark grey basalt flagstones with thin glowing ember-red cracks, even top-down detail edge to edge, no focal point/radial composition. Matches 02-08 lesson (seamless repeating, evenly scattered).",
+      "role": "floor",
+      "biome": "naraka",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; just cracked stone and ember glow.",
+      "ground_safe": true,
+      "grading": {
+        "graded": false,
+        "contrast_factor": 1.0,
+        "sat_factor": 1.0,
+        "val_factor": 1.0,
+        "stats": {
+          "luma_mean": 0.3204561942276301,
+          "luma_std": 0.05557547574691473,
+          "sat_mean": 0.058287887422085294
+        }
+      },
+      "finish": {
+        "mode": "tile",
+        "crop": null
+      }
+    },
+    {
+      "filename": "naraka-floor-b-tile.png",
+      "path": "assets/sprites/env/naraka/naraka-floor-b-tile.png",
+      "actor": "naraka_floor_b",
+      "kind": "env-tile",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "dreamshaperXL_alpha2Xl10.safetensors (DreamShaper XL alpha2 (xl1.0) by Lykon, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 61010,
+      "prompt": "top-down orthographic view looking straight down at large worn obsidian and blackened iron floor plates with rivets, drifts of grey ash, faint scorch marks, seamless repeating texture, evenly scattered detail edge to edge, painted game arena floor texture, low contrast, no focal point, Hades-adjacent painterly illustration, deep maroon and charcoal with ember red-orange accents, muted, low saturation, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "tile"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/naraka/floor_b.gen.json",
+      "generated_date": "2026-09-30",
+      "recorded_date": "2026-10-16",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s61010 (dreamshaper_xl_alpha2): riveted blackened iron floor plates with rust/scorch streaks and ash drifts, even top-down grid, no focal point.",
+      "role": "floor",
+      "biome": "naraka",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": true,
+      "grading": {
+        "graded": false,
+        "contrast_factor": 1.0,
+        "sat_factor": 1.0,
+        "val_factor": 1.0,
+        "stats": {
+          "luma_mean": 0.3394798460029153,
+          "luma_std": 0.09359350680622532,
+          "sat_mean": 0.0857710398378786
+        }
+      },
+      "finish": {
+        "mode": "tile",
+        "crop": null
+      }
+    },
+    {
+      "filename": "naraka_gate_0.png",
+      "path": "assets/sprites/_raw/env/naraka/frames/naraka_gate_0.png",
+      "actor": "naraka_gate",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 61051,
+      "prompt": "a single massive obsidian gate arch prop isolated on a plain flat background, a lowered iron portcullis of thick bars, ember light seeping from beneath, chains at the sides, no landscape, no scenery behind it, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, deep maroon and charcoal with ember red-orange accents, muted, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, landscape, mountains, snow, scenery, vista, horizon, sky, background scenery, environment",
+      "rejected_seeds": [
+        61050
+      ],
+      "rejected_count": 1,
+      "post_processing": [
+        "gate"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/naraka/gate.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-16",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s61051: single isolated obsidian/iron gate arch on a plain grey background with a flagstone floor strip at the base, ember-lit side niches, no landscape/mountains behind it (fixes the attempt-0 rembg foreground/background inversion).",
+      "role": "gate",
+      "biome": "naraka",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; architecture only.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.8,
+        "val": 0.82
+      },
+      "finish": {
+        "mode": "gate",
+        "crop": null
+      },
+      "rejected_reasons": {
+        "61050": "full scenic landscape with snowy mountains visible through/around the arch; rembg cutout inverted foreground/background and kept the mountain vista instead of the gate structure"
+      }
+    },
+    {
+      "filename": "naraka_iron_cage_0.png",
+      "path": "assets/sprites/_raw/env/naraka/frames/naraka_iron_cage_0.png",
+      "actor": "naraka_iron_cage",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 61120,
+      "prompt": "empty broken iron cage with bent bars and an open door, rusted, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, deep maroon and charcoal with ember red-orange accents, muted, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/naraka/iron_cage.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-16",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s61120: empty broken iron cage, bent bars, open door, isolated on plain grey background.",
+      "role": "prop",
+      "biome": "naraka",
+      "cultural_check": "pass: no body/figure/gore inside; empty cage only.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      }
+    },
+    {
+      "filename": "naraka_iron_cauldron_0.png",
+      "path": "assets/sprites/_raw/env/naraka/frames/naraka_iron_cauldron_0.png",
+      "actor": "naraka_iron_cauldron",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 61080,
+      "prompt": "huge riveted iron cauldron on stone supports, dull red-hot glow at its base, empty, wisps of smoke, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, deep maroon and charcoal with ember red-orange accents, muted, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, person, body, face, blood",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/naraka/iron_cauldron.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-16",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s61080: single riveted iron cauldron with orange rim, dull smoke/flame plume, empty interior, plain grey background.",
+      "role": "prop",
+      "biome": "naraka",
+      "cultural_check": "pass: no body/blood/gore; empty cauldron with smoke only.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      }
+    },
+    {
+      "filename": "naraka_ledger_lectern_0.png",
+      "path": "assets/sprites/_raw/env/naraka/frames/naraka_ledger_lectern_0.png",
+      "actor": "naraka_ledger_lectern",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 61060,
+      "prompt": "tall carved dark wood and iron lectern holding a huge open palm-leaf manuscript ledger, Chitragupta's book of deeds, marks illegible, candle stub, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, deep maroon and charcoal with ember red-orange accents, muted, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, person, scribe, hands, readable text",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/naraka/ledger_lectern.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-16",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s61060: single carved dark wood/iron lectern with an open book on a low stand, plain grey background, no figure, no readable text (illegible marks only).",
+      "role": "prop",
+      "biome": "naraka",
+      "cultural_check": "pass: no deity/idol/face; the open book is Chitragupta's ledger per D-05, no readable text, no scribe figure.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      }
+    },
+    {
+      "filename": "naraka_scorch_0.png",
+      "path": "assets/sprites/_raw/env/naraka/frames/naraka_scorch_0.png",
+      "actor": "naraka_scorch",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 61140,
+      "prompt": "top-down orthographic view looking straight down at a soot scorch mark and burn stain, irregular on flat plain mid grey ground, isolated, flat on the ground, soft irregular edges, painterly texture, deep maroon and charcoal with ember red-orange accents, muted, low saturation, no objects, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "decal"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/naraka/scorch.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-16",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s61140: diagonal soot/scorch stain with dark-to-red gradient; keys cleanly to a soft irregular alpha mark.",
+      "role": "decal",
+      "biome": "naraka",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": true,
+      "grading": {
+        "sat": 0.7,
+        "val": 0.8
+      },
+      "finish": {
+        "mode": "decal",
+        "crop": null
+      }
+    },
+    {
+      "filename": "naraka_scroll_pile_0.png",
+      "path": "assets/sprites/_raw/env/naraka/frames/naraka_scroll_pile_0.png",
+      "actor": "naraka_scroll_pile",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 61071,
+      "prompt": "a single heaped pile of stacked bundles of palm-leaf manuscripts and rolled scrolls tied with cord, on a low iron stand, one unified object, not scattered, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, deep maroon and charcoal with ember red-orange accents, muted, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, multiple objects, repeated pattern, several piles, scattered across image, two groups, grid layout",
+      "rejected_seeds": [
+        61070
+      ],
+      "rejected_count": 1,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/naraka/scroll_pile.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-16",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s61071: single unified stand with rolled scroll bundles on top and an open manuscript below, one object (fixes attempt-0's 4-scattered-clusters composition). The open pages show dense illegible ink-wash line marks mimicking handwriting, consistent with the already-accepted ledger_lectern treatment -- not legible letters/words.",
+      "role": "prop",
+      "biome": "naraka",
+      "cultural_check": "pass: no deity/idol/face; marks are illegible pseudo-script, not readable text per checklist (d).",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      },
+      "rejected_reasons": {
+        "61070": "generated as 4 separate scroll clusters scattered across the frame (reads as a multiple-views/sprite-sheet composition), not one single isolated pile/stand"
+      }
+    },
+    {
+      "filename": "naraka_vent_grate_0.png",
+      "path": "assets/sprites/_raw/env/naraka/frames/naraka_vent_grate_0.png",
+      "actor": "naraka_vent_grate",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 61160,
+      "prompt": "round heavy iron floor grate over a glowing vent, top-down view, thick radial bars, soot around the rim, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, deep maroon and charcoal with ember red-orange accents, muted, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "hazard-skin"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/naraka/vent_grate.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-16",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s61160: round iron floor grate, radial bars, glowing center, soot-dark rim; verified clean circular cutout after prop_finish (rembg removed raw-generation's stray petal-shaped flame flares at the corners).",
+      "role": "hazard-skin",
+      "biome": "naraka",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; ground_safe hazard-skin, top-down round grate only.",
+      "ground_safe": true,
+      "grading": null,
+      "finish": {
+        "mode": "hazard-skin",
+        "crop": null
+      }
+    },
+    {
+      "filename": "naraka-wallcap-tile.png",
+      "path": "assets/sprites/env/naraka/naraka-wallcap-tile.png",
+      "actor": "naraka_wallcap",
+      "kind": "env-tile",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 61030,
+      "prompt": "top-down orthographic view straight down onto the flat top of a thick basalt parapet coping stones bound with iron bands and rivets, seamless repeating texture, even detail, Hades-adjacent painterly illustration, deep maroon and charcoal with ember red-orange accents, muted, low saturation, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "tile"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/naraka/wallcap.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-16",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s61030: top-down basalt/stone coping blocks with ember-glow seams between bands, even repeating detail, no focal point.",
+      "role": "wallcap",
+      "biome": "naraka",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": false,
+      "grading": {
+        "graded": false,
+        "contrast_factor": 1.0,
+        "sat_factor": 1.0,
+        "val_factor": 1.0,
+        "stats": {
+          "luma_mean": 0.3357524875551112,
+          "luma_std": 0.09158168792994902,
+          "sat_mean": 0.1630203518312984
+        }
+      },
+      "finish": {
+        "mode": "tile",
+        "crop": null
+      }
+    },
+    {
+      "filename": "naraka-wallface-tile.png",
+      "path": "assets/sprites/env/naraka/naraka-wallface-tile.png",
+      "actor": "naraka_wallface",
+      "kind": "env-tile",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "dreamshaperXL_alpha2Xl10.safetensors (DreamShaper XL alpha2 (xl1.0) by Lykon, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1344,
+      "height": 768,
+      "seed": 61021,
+      "prompt": "towering fortress wall of Yama's iron city: blackened iron plates riveted over dark basalt blocks, recessed arches glowing faint ember red, heavy chains hanging in loops, soot stains, straight-on elevation of a long continuous horizontal wall section seen from a high three-quarter top-down game camera, architecture repeating across the full width edge to edge, wall base along the lower third, Hades-adjacent painterly illustration, rich carved detail, deep maroon and charcoal with ember red-orange accents, muted, low saturation, no characters, no text, no sky",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, horizon, sky, perspective vanishing point, colosseum, stadium, aerial view, concept art, matte painting, clouds, distant landscape",
+      "rejected_seeds": [
+        61020
+      ],
+      "rejected_count": 1,
+      "post_processing": [
+        "strip"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/naraka/wallface.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-16",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s61021 (dreamshaper_xl_alpha2): dripping obsidian/basalt cliff face with thin glowing ember-red streaks, dark rubble base, no sky/horizon/vanishing point, reads as a croppable full-width elevation band. Matches palette; no figures/text. Full 1344x768 frame used as crop (no sky present).",
+      "role": "wallface",
+      "biome": "naraka",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; architecture only, no figures.",
+      "ground_safe": false,
+      "grading": null,
+      "finish": {
+        "mode": "strip",
+        "crop": [
+          0,
+          0,
+          1344,
+          768
+        ]
+      },
+      "rejected_reasons": {
+        "61020": "full 3-point perspective vista with sky/horizon and a vanishing point (reads as a concept-art scene, not a croppable flat wall elevation strip)"
+      }
+    },
+    {
+      "filename": "naraka-env-atlas.png",
+      "path": "assets/sprites/env/naraka/naraka-env-atlas.png",
+      "actor": "naraka",
+      "kind": "env-atlas",
+      "tool": "free-tex-packer-core 0.3.8 via tools/pack-atlas.js",
+      "method": "atlas-pack",
+      "components": [
+        "naraka_ash_drift_0.png",
+        "naraka_brazier_0.png",
+        "naraka_chain_post_0.png",
+        "naraka_column_0.png",
+        "naraka_ember_seam_0.png",
+        "naraka_fire_pit_0.png",
+        "naraka_gate_0.png",
+        "naraka_iron_cage_0.png",
+        "naraka_iron_cauldron_0.png",
+        "naraka_ledger_lectern_0.png",
+        "naraka_scorch_0.png",
+        "naraka_scroll_pile_0.png",
+        "naraka_vent_grate_0.png"
+      ],
+      "biome": "naraka",
+      "recorded_date": "2026-10-16",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review"
     }
   ],
   "review_sheet": "assets/sprites/_review/contact-sheet.png",

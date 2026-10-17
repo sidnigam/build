@@ -296,7 +296,7 @@
       },
       "checkpoint_decision": {
         "date": "2026-09-29",
-        "outcome": "rejected \u2014 kept sdxl_base",
+        "outcome": "rejected — kept sdxl_base",
         "subjects_tested": [
           "ab:floor (naraka cracked-basalt tile)",
           "ab:wheel (broken chariot wheel prop)"
@@ -309,15 +309,15 @@
         ],
         "scores": {
           "floor": {
-            "painterly_detail_polish": "dreamshaper \u2014 richer, more visible glowing ember seams against desaturated stone (closer to the Hades-adjacent warm-accent look); sdxl's ember glow is nearly invisible/washed out",
-            "framing_prompt_adherence": "dreamshaper \u2014 regular paving-slab grid reads more literally as \"flagstones\"; sdxl's very irregular dried-mud-style cracks read more like cracked earth than paving. Both are even/top-down with no single focal point",
-            "artifacts_cultural_guard": "tie \u2014 both clean, no text/figures/sacred symbols; both pass env_grade.tile_limits ungraded (luma_mean 0.31-0.35, well under 0.45)",
+            "painterly_detail_polish": "dreamshaper — richer, more visible glowing ember seams against desaturated stone (closer to the Hades-adjacent warm-accent look); sdxl's ember glow is nearly invisible/washed out",
+            "framing_prompt_adherence": "dreamshaper — regular paving-slab grid reads more literally as \"flagstones\"; sdxl's very irregular dried-mud-style cracks read more like cracked earth than paving. Both are even/top-down with no single focal point",
+            "artifacts_cultural_guard": "tie — both clean, no text/figures/sacred symbols; both pass env_grade.tile_limits ungraded (luma_mean 0.31-0.35, well under 0.45)",
             "verdict": "dreamshaper wins 2/3"
           },
           "wheel": {
-            "painterly_detail_polish": "tie \u2014 comparable wood-grain/metal detail on both checkpoints",
-            "framing_prompt_adherence": "sdxl \u2014 both sdxl seeds are a single clean isolated wheel silhouette; dreamshaper s60100 has an attached dark shadow-blob artifact and s60101 has a stray protruding axle appendage that breaks the clean single-object read",
-            "artifacts_cultural_guard": "sdxl \u2014 the dreamshaper shadow blob (s60100) and busy stray appendage (s60101) are composition regressions after rembg cutout; sdxl cutouts are clean on both seeds",
+            "painterly_detail_polish": "tie — comparable wood-grain/metal detail on both checkpoints",
+            "framing_prompt_adherence": "sdxl — both sdxl seeds are a single clean isolated wheel silhouette; dreamshaper s60100 has an attached dark shadow-blob artifact and s60101 has a stray protruding axle appendage that breaks the clean single-object read",
+            "artifacts_cultural_guard": "sdxl — the dreamshaper shadow blob (s60100) and busy stray appendage (s60101) are composition regressions after rembg cutout; sdxl cutouts are clean on both seeds",
             "verdict": "sdxl wins 2/3, with 2/2 dreamshaper images showing a composition regression"
           }
         },
@@ -327,12 +327,12 @@
         },
         "reasons": "DreamShaper wins 2/3 criteria on the floor tile subject but loses 2/3 on the wheel prop subject, with an actual composition regression (a retained shadow-blob artifact and a stray axle appendage) on 2/2 of its wheel images after the rembg cutout step. D-01c requires a win on >=2/3 criteria WITH NO composition regression before adopting; the wheel subject's regression disqualifies adoption even though the floor subject alone would have passed. Kept env_checkpoint=sdxl_base. DreamShaper is also ~65% slower per image on this machine (checkpoint-swap + generation), a secondary cost of adopting it. The downloaded+verified dreamshaperXL_alpha2Xl10.safetensors is left in place for a future per-subject override (env_subjects entries may still set checkpoint_profile later) or a revisit once its prop-cutout behavior is investigated further.",
         "god_subjects_supplementary": {
-          "note": "Orchestrator amendment: 2 god-portrait subjects (existing `god` kind) generated raw-only on both checkpoints, not scored against the 3 env criteria above \u2014 see 05.4-01-SUMMARY.md 'Implications for 05.5 portrait retry'.",
+          "note": "Orchestrator amendment: 2 god-portrait subjects (existing `god` kind) generated raw-only on both checkpoints, not scored against the 3 env criteria above — see 05.4-01-SUMMARY.md 'Implications for 05.5 portrait retry'.",
           "subjects": [
             "vayu (seed 71301, the 05.5-01 near-miss recipe)",
             "hanuman (seed 71000, base recipe)"
           ],
-          "verdict": "no checkpoint win \u2014 both vayu attempts read as feminine-presenting (fails 'masculine bearded' hard check) on both checkpoints, and both hanuman attempts read as a fully human face with no muzzle/monkey features on both checkpoints. Not shipped; not intended to be."
+          "verdict": "no checkpoint win — both vayu attempts read as feminine-presenting (fails 'masculine bearded' hard check) on both checkpoints, and both hanuman attempts read as a fully human face with no muzzle/monkey features on both checkpoints. Not shipped; not intended to be."
         },
         "grids": {
           "floor_raw": "/tmp/ab_review/grid_floor_raw.png (scratchpad, not committed)",
@@ -341,6 +341,457 @@
           "gods_raw": "/tmp/ab_review/grid_gods_raw.png (scratchpad, not committed)"
         }
       }
+    },
+    "naraka": {
+      "floor_a": {
+        "template": "tile",
+        "subject": "cracked dark iron-grey basalt flagstones of an infernal iron city, thin glowing ember seams in the cracks, soot and ash",
+        "palette": "deep maroon and charcoal with ember red-orange accents, muted, low saturation",
+        "base_seed": 61000,
+        "role": "floor",
+        "ground_safe": true,
+        "accepted_attempt": 0,
+        "self_review": "s61000 (dreamshaper_xl_alpha2): cracked dark grey basalt flagstones with thin glowing ember-red cracks, even top-down detail edge to edge, no focal point/radial composition. Matches 02-08 lesson (seamless repeating, evenly scattered).",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; just cracked stone and ember glow."
+      },
+      "floor_b": {
+        "template": "tile",
+        "subject": "large worn obsidian and blackened iron floor plates with rivets, drifts of grey ash, faint scorch marks",
+        "palette": "deep maroon and charcoal with ember red-orange accents, muted, low saturation",
+        "base_seed": 61010,
+        "role": "floor",
+        "ground_safe": true,
+        "accepted_attempt": 0,
+        "self_review": "s61010 (dreamshaper_xl_alpha2): riveted blackened iron floor plates with rust/scorch streaks and ash drifts, even top-down grid, no focal point.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
+      },
+      "wallface": {
+        "template": "wallface",
+        "subject": "towering fortress wall of Yama's iron city: blackened iron plates riveted over dark basalt blocks, recessed arches glowing faint ember red, heavy chains hanging in loops, soot stains",
+        "palette": "deep maroon and charcoal with ember red-orange accents, muted, low saturation",
+        "base_seed": 61020,
+        "role": "wallface",
+        "ground_safe": false,
+        "rejected": {
+          "0": "full 3-point perspective vista with sky/horizon and a vanishing point (reads as a concept-art scene, not a croppable flat wall elevation strip)"
+        },
+        "negative_extra": "horizon, sky, perspective vanishing point, colosseum, stadium, aerial view, concept art, matte painting, clouds, distant landscape",
+        "accepted_attempt": 1,
+        "crop": [
+          0,
+          0,
+          1344,
+          768
+        ],
+        "self_review": "s61021 (dreamshaper_xl_alpha2): dripping obsidian/basalt cliff face with thin glowing ember-red streaks, dark rubble base, no sky/horizon/vanishing point, reads as a croppable full-width elevation band. Matches palette; no figures/text. Full 1344x768 frame used as crop (no sky present).",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; architecture only, no figures."
+      },
+      "wallcap": {
+        "template": "wallcap",
+        "subject": "basalt parapet coping stones bound with iron bands and rivets",
+        "palette": "deep maroon and charcoal with ember red-orange accents, muted, low saturation",
+        "base_seed": 61030,
+        "role": "wallcap",
+        "ground_safe": false,
+        "accepted_attempt": 0,
+        "self_review": "s61030: top-down basalt/stone coping blocks with ember-glow seams between bands, even repeating detail, no focal point.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
+      },
+      "column": {
+        "template": "prop",
+        "subject": "tall obsidian column bound with iron bands and wrapped in heavy chains, ember glow at its cracked base",
+        "palette": "deep maroon and charcoal with ember red-orange accents, muted, low saturation",
+        "base_seed": 61040,
+        "role": "column",
+        "ground_safe": false,
+        "size": "tall",
+        "worldH": 150,
+        "accepted_attempt": 0,
+        "self_review": "s61040: single isolated obsidian column, cracked lava-glow texture, iron banded cap and base, chains at base, three-quarter view, plain grey background, whole object in frame.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; no figure."
+      },
+      "gate": {
+        "template": "prop",
+        "subject": "a single massive obsidian gate arch prop isolated on a plain flat background, a lowered iron portcullis of thick bars, ember light seeping from beneath, chains at the sides, no landscape, no scenery behind it",
+        "palette": "deep maroon and charcoal with ember red-orange accents, muted, low saturation",
+        "base_seed": 61050,
+        "role": "gate",
+        "ground_safe": false,
+        "worldH": 210,
+        "rejected": {
+          "0": "full scenic landscape with snowy mountains visible through/around the arch; rembg cutout inverted foreground/background and kept the mountain vista instead of the gate structure"
+        },
+        "negative_extra": "landscape, mountains, snow, scenery, vista, horizon, sky, background scenery, environment",
+        "accepted_attempt": 1,
+        "self_review": "s61051: single isolated obsidian/iron gate arch on a plain grey background with a flagstone floor strip at the base, ember-lit side niches, no landscape/mountains behind it (fixes the attempt-0 rembg foreground/background inversion).",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; architecture only."
+      },
+      "ledger_lectern": {
+        "template": "prop",
+        "subject": "tall carved dark wood and iron lectern holding a huge open palm-leaf manuscript ledger, Chitragupta's book of deeds, marks illegible, candle stub",
+        "palette": "deep maroon and charcoal with ember red-orange accents, muted, low saturation",
+        "base_seed": 61060,
+        "role": "prop",
+        "ground_safe": false,
+        "worldH": 70,
+        "negative_extra": "person, scribe, hands, readable text",
+        "accepted_attempt": 0,
+        "self_review": "s61060: single carved dark wood/iron lectern with an open book on a low stand, plain grey background, no figure, no readable text (illegible marks only).",
+        "cultural_check": "pass: no deity/idol/face; the open book is Chitragupta's ledger per D-05, no readable text, no scribe figure."
+      },
+      "scroll_pile": {
+        "template": "prop",
+        "subject": "a single heaped pile of stacked bundles of palm-leaf manuscripts and rolled scrolls tied with cord, on a low iron stand, one unified object, not scattered",
+        "palette": "deep maroon and charcoal with ember red-orange accents, muted, low saturation",
+        "base_seed": 61070,
+        "role": "prop",
+        "ground_safe": false,
+        "worldH": 44,
+        "low": true,
+        "rejected": {
+          "0": "generated as 4 separate scroll clusters scattered across the frame (reads as a multiple-views/sprite-sheet composition), not one single isolated pile/stand"
+        },
+        "negative_extra": "multiple objects, repeated pattern, several piles, scattered across image, two groups, grid layout",
+        "accepted_attempt": 1,
+        "self_review": "s61071: single unified stand with rolled scroll bundles on top and an open manuscript below, one object (fixes attempt-0's 4-scattered-clusters composition). The open pages show dense illegible ink-wash line marks mimicking handwriting, consistent with the already-accepted ledger_lectern treatment -- not legible letters/words.",
+        "cultural_check": "pass: no deity/idol/face; marks are illegible pseudo-script, not readable text per checklist (d)."
+      },
+      "iron_cauldron": {
+        "template": "prop",
+        "subject": "huge riveted iron cauldron on stone supports, dull red-hot glow at its base, empty, wisps of smoke",
+        "palette": "deep maroon and charcoal with ember red-orange accents, muted, low saturation",
+        "base_seed": 61080,
+        "role": "prop",
+        "ground_safe": false,
+        "worldH": 70,
+        "light": {
+          "color": "#ff6a2a",
+          "r": 140,
+          "alpha": 0.3
+        },
+        "negative_extra": "person, body, face, blood",
+        "accepted_attempt": 0,
+        "self_review": "s61080: single riveted iron cauldron with orange rim, dull smoke/flame plume, empty interior, plain grey background.",
+        "cultural_check": "pass: no body/blood/gore; empty cauldron with smoke only."
+      },
+      "brazier": {
+        "template": "prop",
+        "subject": "tall wrought-iron fire brazier on three legs with burning coals",
+        "palette": "deep maroon and charcoal with ember red-orange accents, muted, low saturation",
+        "base_seed": 61090,
+        "role": "prop",
+        "ground_safe": false,
+        "worldH": 64,
+        "light": {
+          "color": "#ff7a2a",
+          "r": 160,
+          "alpha": 0.38
+        },
+        "accepted_attempt": 0,
+        "self_review": "s61090: single wrought-iron tripod brazier with burning coals/flame, plain grey background, clean isolated silhouette.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
+      },
+      "chain_post": {
+        "template": "prop",
+        "subject": "thick iron post with heavy chains and hooks hanging from a crossbar",
+        "palette": "deep maroon and charcoal with ember red-orange accents, muted, low saturation",
+        "base_seed": 61100,
+        "role": "prop",
+        "ground_safe": false,
+        "worldH": 72,
+        "skinFor": [
+          "naraka_chains:pillar"
+        ],
+        "accepted_attempt": 0,
+        "self_review": "s61100: single iron post with crossbar and hanging chains/hooks, plain grey background, clean isolated silhouette.",
+        "cultural_check": "pass: no deity/idol/face; no bodies/figures on the chains."
+      },
+      "fire_pit": {
+        "template": "prop",
+        "subject": "sunken ring of scorched stones around glowing embers and low flames",
+        "palette": "deep maroon and charcoal with ember red-orange accents, muted, low saturation",
+        "base_seed": 61110,
+        "role": "prop",
+        "ground_safe": false,
+        "worldH": 40,
+        "low": true,
+        "light": {
+          "color": "#ff5a1a",
+          "r": 150,
+          "alpha": 0.32
+        },
+        "accepted_attempt": 0,
+        "self_review": "s61110: ring of scorched stones around glowing embers/flame, circular top-ish view, isolated on plain background.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
+      },
+      "iron_cage": {
+        "template": "prop",
+        "subject": "empty broken iron cage with bent bars and an open door, rusted",
+        "palette": "deep maroon and charcoal with ember red-orange accents, muted, low saturation",
+        "base_seed": 61120,
+        "role": "prop",
+        "ground_safe": false,
+        "worldH": 66,
+        "accepted_attempt": 0,
+        "self_review": "s61120: empty broken iron cage, bent bars, open door, isolated on plain grey background.",
+        "cultural_check": "pass: no body/figure/gore inside; empty cage only."
+      },
+      "ember_seam": {
+        "template": "decal",
+        "subject": "a jagged crack in dark stone with thin glowing ember lava seams",
+        "palette": "deep maroon and charcoal with ember red-orange accents, muted, low saturation",
+        "base_seed": 61130,
+        "role": "decal",
+        "ground_safe": true,
+        "accepted_attempt": 0,
+        "self_review": "s61130: jagged dark-stone cracks with glowing ember veins; decal_finish's ΔE alpha key produces a soft irregular translucent mark (previewed on checker bg) suitable as a floor decal.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
+      },
+      "scorch": {
+        "template": "decal",
+        "subject": "a soot scorch mark and burn stain, irregular",
+        "palette": "deep maroon and charcoal with ember red-orange accents, muted, low saturation",
+        "base_seed": 61140,
+        "role": "decal",
+        "ground_safe": true,
+        "accepted_attempt": 0,
+        "self_review": "s61140: diagonal soot/scorch stain with dark-to-red gradient; keys cleanly to a soft irregular alpha mark.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
+      },
+      "ash_drift": {
+        "template": "decal",
+        "subject": "a soft drift of grey ash and cinders",
+        "palette": "deep maroon and charcoal with ember red-orange accents, muted, low saturation",
+        "base_seed": 61150,
+        "role": "decal",
+        "ground_safe": true,
+        "accepted_attempt": 0,
+        "self_review": "s61150: wavy drifted ash/cinder streaks; keys to a soft translucent wisp pattern, reads as scattered ash when tiled at low alpha.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
+      },
+      "vent_grate": {
+        "template": "prop",
+        "subject": "round heavy iron floor grate over a glowing vent, top-down view, thick radial bars, soot around the rim",
+        "palette": "deep maroon and charcoal with ember red-orange accents, muted, low saturation",
+        "base_seed": 61160,
+        "role": "hazard-skin",
+        "ground_safe": true,
+        "hazard": "fireVent",
+        "finish": "prop",
+        "accepted_attempt": 0,
+        "self_review": "s61160: round iron floor grate, radial bars, glowing center, soot-dark rim; verified clean circular cutout after prop_finish (rembg removed raw-generation's stray petal-shaped flame flares at the corners).",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; ground_safe hazard-skin, top-down round grate only."
+      }
+    },
+    "patala": {
+      "floor_a": {
+        "template": "tile",
+        "subject": "dark, muted, low-contrast deep teal-black underground stone with faint dim bioluminescent moss",
+        "palette": "dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation",
+        "base_seed": 62000,
+        "role": "floor",
+        "ground_safe": true,
+        "accepted_attempt": 0,
+        "self_review": "s62000 (dreamshaper_xl_alpha2): dark teal-black bioluminescent cobblestone, even top-down detail, no focal point. Low-contrast per the 02-08 patala lesson (avoid over-saturation).",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
+      },
+      "floor_b": {
+        "template": "tile",
+        "subject": "polished dark jade-black palace flagstones in a plain rectangular grid with thin worn antique-gold inlay lines, faint moss in the joints",
+        "palette": "dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation",
+        "base_seed": 62010,
+        "role": "floor",
+        "ground_safe": true,
+        "negative_extra": "mandala, yantra, circle pattern, emblem, serpent, face",
+        "accepted_attempt": 0,
+        "self_review": "s62010 (dreamshaper_xl_alpha2): jade-black flagstones in an irregular rectangular grid with worn antique-gold inlay seams, faint moss. No mandala/circular/radial pattern -- reads as plain paving, not a sacred geometric motif.",
+        "cultural_check": "pass: no deity/idol/face/yantra/mandala/sacred symbol; gold lines are plain paving-joint inlay, not a geometric emblem."
+      },
+      "wallface": {
+        "template": "wallface",
+        "subject": "a long continuous underground naga palace wall section filling the entire frame edge to edge, dark carved stone with bands of serpent-scale relief, arched niches set with dim glowing gems, trailing bioluminescent moss, no figures",
+        "palette": "dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation",
+        "base_seed": 62020,
+        "role": "wallface",
+        "ground_safe": false,
+        "rejected": {
+          "0": "full 3-point perspective vista with sky/horizon and a vanishing point (reads as a concept-art scene, not a croppable flat wall elevation strip)",
+          "1": "isolated 3D-render-style cornice/eave piece on a grey studio background with visible padding on all sides -- reads as a single floating prop render, not a continuous edge-to-edge wall texture"
+        },
+        "negative_extra": "horizon, sky, perspective vanishing point, colosseum, stadium, aerial view, concept art, matte painting, clouds, distant landscape, isolated object, product render, studio background, white background, grey background, floating object, cropped render, bounding box, vignette border",
+        "accepted_attempt": 2,
+        "crop": [
+          230,
+          160,
+          1240,
+          730
+        ],
+        "self_review": "s62022 (dreamshaper_xl_alpha2): continuous repeating arched naga-palace wall with dark stone, teal bioluminescent glow under the eaves and arch bases, gold-leaf abstract vine/scroll carving on pillars, roofline overhead. A grey studio backdrop remains outside the wall silhouette at the frame edges; crop [230,160,1240,730] stays inside the wall content so the finished strip is edge-to-edge with no visible background after strip_finish's resize + x-seamless blend.",
+        "cultural_check": "pass: pillar relief is abstract vine/leaf scrollwork, not a figure, face, deity or sacred symbol; no serpent carving on this wall (serpent motif is reserved for the column subject per D-09)."
+      },
+      "wallcap": {
+        "template": "wallcap",
+        "subject": "carved dark stone coping with a serpent-scale pattern and inset small gems",
+        "palette": "dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation",
+        "base_seed": 62030,
+        "role": "wallcap",
+        "ground_safe": false
+      },
+      "column": {
+        "template": "prop",
+        "subject": "stone column with a single carved serpent body coiling around it from base to capital, scales in relief, dim gems as eyes, dark jade stone",
+        "palette": "dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation",
+        "base_seed": 62040,
+        "role": "column",
+        "ground_safe": false,
+        "size": "tall",
+        "worldH": 150,
+        "negative_extra": "multiple heads, multi-hooded, hood canopy, five heads, seven heads, human face, deity, Shesha, Vasuki, crown"
+      },
+      "gate": {
+        "template": "prop",
+        "subject": "grand arch of dark carved stone studded with glowing gems, serpent-scale relief on the jambs, faint cyan glow in the doorway",
+        "palette": "dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation",
+        "base_seed": 62050,
+        "role": "gate",
+        "ground_safe": false,
+        "worldH": 210
+      },
+      "glow_fungus": {
+        "template": "prop",
+        "subject": "cluster of bioluminescent cave mushrooms glowing cyan-teal",
+        "palette": "dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation",
+        "base_seed": 62060,
+        "role": "prop",
+        "ground_safe": false,
+        "worldH": 46,
+        "low": true,
+        "light": {
+          "color": "#3fe0c0",
+          "r": 130,
+          "alpha": 0.3
+        }
+      },
+      "gem_pile": {
+        "template": "prop",
+        "subject": "heap of cut gemstones and old gold coins, naga treasure, spilling over dark stone",
+        "palette": "dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation",
+        "base_seed": 62070,
+        "role": "prop",
+        "ground_safe": false,
+        "worldH": 40,
+        "low": true
+      },
+      "treasure_urn": {
+        "template": "prop",
+        "subject": "tall ornate bronze urn with serpent-scale engraving, jewels spilling from its mouth",
+        "palette": "dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation",
+        "base_seed": 62080,
+        "role": "prop",
+        "ground_safe": false,
+        "worldH": 60
+      },
+      "pool_basin": {
+        "template": "prop",
+        "subject": "low round stone basin of glowing bioluminescent water, carved scale rim",
+        "palette": "dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation",
+        "base_seed": 62090,
+        "role": "prop",
+        "ground_safe": false,
+        "worldH": 48,
+        "low": true,
+        "light": {
+          "color": "#40d8c8",
+          "r": 170,
+          "alpha": 0.34
+        }
+      },
+      "fallen_pillar": {
+        "template": "prop",
+        "subject": "toppled broken section of a carved stone column with scale relief, lying on its side, rubble",
+        "palette": "dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation",
+        "base_seed": 62100,
+        "role": "prop",
+        "ground_safe": false,
+        "worldH": 50
+      },
+      "crystal_rocks": {
+        "template": "prop",
+        "subject": "cave rock outcrop with dim teal crystals",
+        "palette": "dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation",
+        "base_seed": 62110,
+        "role": "prop",
+        "ground_safe": false,
+        "worldH": 58
+      },
+      "bronze_lamp": {
+        "template": "prop",
+        "subject": "tall antique bronze standing oil lamp with several small flames",
+        "palette": "dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation",
+        "base_seed": 62120,
+        "role": "prop",
+        "ground_safe": false,
+        "worldH": 74,
+        "light": {
+          "color": "#ffc870",
+          "r": 140,
+          "alpha": 0.3
+        }
+      },
+      "moss_patch": {
+        "template": "decal",
+        "subject": "a patch of dim bioluminescent moss",
+        "palette": "dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation",
+        "base_seed": 62130,
+        "role": "decal",
+        "ground_safe": true
+      },
+      "gem_scatter": {
+        "template": "decal",
+        "subject": "a few small scattered gems and gold coins lying flat",
+        "palette": "dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation",
+        "base_seed": 62140,
+        "role": "decal",
+        "ground_safe": true
+      },
+      "water_puddle": {
+        "template": "decal",
+        "subject": "a dark shallow water puddle with a faint teal reflection",
+        "palette": "dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation",
+        "base_seed": 62150,
+        "role": "decal",
+        "ground_safe": true
+      },
+      "venom_rim": {
+        "template": "decal",
+        "subject": "ring of mossy wet stones around an empty dark center",
+        "palette": "dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation",
+        "base_seed": 62160,
+        "role": "decal",
+        "ground_safe": true
+      }
     }
+  },
+  "env_checkpoint_policy": {
+    "date": "2026-10-16",
+    "source": "orchestrator amendment, 05.4-02 checkpoint-per-kind override",
+    "rule": "05.4-01's A/B showed DreamShaper XL alpha2 won on the floor tile (richer ember glow, better flagstone framing) but regressed only on rembg-cutout props (shadow-blob / stray-axle artifacts on the wheel subject). Non-cutout kinds (floor tiles, tile variants, wall faces/strips) are generated with the dreamshaper_xl_alpha2 profile; cutout kinds (props, columns, gates, wall caps, decals, hazard-skins) are generated under the sdxl_base default. The mechanism is the per-call `gen_subject.py`/`gen_batch.py --ckpt-profile dreamshaper_xl_alpha2` override (existing config flag, no code change) run against explicit key lists for just the floor_a/floor_b/wallface subjects of each biome -- NOT a global env_checkpoint toggle, since that leaves ambient state that a crashed/interrupted process could strand (this happened once during this plan's execution and was caught and reverted). Because --ckpt-profile suffixes the raw filename ({key}_s{seed}_dreamshaper_xl_alpha2.png) and env_build.py._raw_paths expects the unsuffixed name, the accepted DreamShaper raw file for each of these 3 subjects per biome is copied (not moved -- the suffixed original stays as the reproducibility record) to the unsuffixed {key}_s{seed}.png path once self_review/cultural_check pass, immediately before running env_build.py. The top-level env_checkpoint value stays sdxl_base at all times; it is never toggled globally. If a DreamShaper tile fails the seamless/readability checks (D-08 tile_limits or a visible 2x2 seam), that asset falls back to sdxl_base (plain --attempt rerun, no --ckpt-profile) and is regenerated under the default checkpoint instead.",
+    "applies_to_kinds": [
+      "floor_a",
+      "floor_b",
+      "wallface"
+    ],
+    "excluded_kinds": [
+      "wallcap",
+      "column",
+      "gate",
+      "prop",
+      "decal",
+      "hazard-skin"
+    ],
+    "checkpoint_for_applies_to": "dreamshaper_xl_alpha2",
+    "checkpoint_for_excluded": "sdxl_base",
+    "mechanism": "per-call --ckpt-profile override + copy-to-unsuffixed-name on accept (not a global env_checkpoint toggle)",
+    "note_on_initial_execution": "The first 6 generations (naraka/patala floor_a/floor_b/wallface) were produced before this correction, via a temporary global env_checkpoint=dreamshaper_xl_alpha2 toggle that was reverted to sdxl_base immediately after generation finished and before any other subject was queued. No cutout-kind subject was generated while the toggle was active (verified: ls on assets/sprites/_gen/env/{naraka,patala} shows only floor_a/floor_b/wallface directories at the time of the toggle). These 6 raw files are unsuffixed on disk already (gen_subject.py only adds a suffix when --ckpt-profile is passed, and the global-toggle run did not pass it), so no rename was needed for them; this policy's copy-on-accept step applies only to any later DreamShaper regeneration."
   }
 }

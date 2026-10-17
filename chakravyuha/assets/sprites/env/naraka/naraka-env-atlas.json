@@ -1,0 +1,368 @@
+{
+  "frames": {
+    "naraka_gate_0.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 504,
+        "h": 423
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 504,
+        "h": 423
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 431
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "naraka_ash_drift_0.png": {
+      "frame": {
+        "x": 510,
+        "y": 2,
+        "w": 384,
+        "h": 384
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "naraka_ember_seam_0.png": {
+      "frame": {
+        "x": 898,
+        "y": 2,
+        "w": 384,
+        "h": 384
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "naraka_scorch_0.png": {
+      "frame": {
+        "x": 1286,
+        "y": 2,
+        "w": 384,
+        "h": 384
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "naraka_vent_grate_0.png": {
+      "frame": {
+        "x": 1674,
+        "y": 2,
+        "w": 361,
+        "h": 376
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 361,
+        "h": 376
+      },
+      "sourceSize": {
+        "w": 369,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "naraka_iron_cage_0.png": {
+      "frame": {
+        "x": 1674,
+        "y": 382,
+        "w": 286,
+        "h": 376
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 286,
+        "h": 376
+      },
+      "sourceSize": {
+        "w": 294,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "naraka_scroll_pile_0.png": {
+      "frame": {
+        "x": 510,
+        "y": 390,
+        "w": 376,
+        "h": 375
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 376,
+        "h": 375
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 383
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "naraka_chain_post_0.png": {
+      "frame": {
+        "x": 2,
+        "y": 429,
+        "w": 376,
+        "h": 374
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 376,
+        "h": 374
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 382
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "naraka_iron_cauldron_0.png": {
+      "frame": {
+        "x": 890,
+        "y": 390,
+        "w": 376,
+        "h": 352
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 376,
+        "h": 352
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 360
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "naraka_fire_pit_0.png": {
+      "frame": {
+        "x": 1270,
+        "y": 390,
+        "w": 374,
+        "h": 376
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 374,
+        "h": 376
+      },
+      "sourceSize": {
+        "w": 382,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "naraka_brazier_0.png": {
+      "frame": {
+        "x": 890,
+        "y": 762,
+        "w": 264,
+        "h": 376
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 264,
+        "h": 376
+      },
+      "sourceSize": {
+        "w": 272,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "naraka_ledger_lectern_0.png": {
+      "frame": {
+        "x": 1648,
+        "y": 762,
+        "w": 224,
+        "h": 376
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 224,
+        "h": 376
+      },
+      "sourceSize": {
+        "w": 232,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "naraka_column_0.png": {
+      "frame": {
+        "x": 1158,
+        "y": 770,
+        "w": 187,
+        "h": 440
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 187,
+        "h": 440
+      },
+      "sourceSize": {
+        "w": 195,
+        "h": 448
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  },
+  "meta": {
+    "app": "http://github.com/odrick/free-tex-packer-core",
+    "version": "0.3.8",
+    "image": "naraka-env-atlas.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 2037,
+      "h": 1212
+    },
+    "scale": 1
+  },
+  "animations": {
+    "ash_drift": [
+      "naraka_ash_drift_0.png"
+    ],
+    "brazier": [
+      "naraka_brazier_0.png"
+    ],
+    "chain_post": [
+      "naraka_chain_post_0.png"
+    ],
+    "column": [
+      "naraka_column_0.png"
+    ],
+    "ember_seam": [
+      "naraka_ember_seam_0.png"
+    ],
+    "fire_pit": [
+      "naraka_fire_pit_0.png"
+    ],
+    "gate": [
+      "naraka_gate_0.png"
+    ],
+    "iron_cage": [
+      "naraka_iron_cage_0.png"
+    ],
+    "iron_cauldron": [
+      "naraka_iron_cauldron_0.png"
+    ],
+    "ledger_lectern": [
+      "naraka_ledger_lectern_0.png"
+    ],
+    "scorch": [
+      "naraka_scorch_0.png"
+    ],
+    "scroll_pile": [
+      "naraka_scroll_pile_0.png"
+    ],
+    "vent_grate": [
+      "naraka_vent_grate_0.png"
+    ]
+  }
+}

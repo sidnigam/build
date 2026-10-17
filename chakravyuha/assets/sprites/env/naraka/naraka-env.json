@@ -1,0 +1,308 @@
+{
+  "schema": 1,
+  "biome": "naraka",
+  "atlas": "assets/sprites/env/naraka/naraka-env-atlas.json",
+  "tiles": {
+    "floor_a": {
+      "path": "assets/sprites/env/naraka/naraka-floor-a-tile.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "role": "floor",
+      "ground_safe": true
+    },
+    "floor_b": {
+      "path": "assets/sprites/env/naraka/naraka-floor-b-tile.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "role": "floor",
+      "ground_safe": true
+    },
+    "wallcap": {
+      "path": "assets/sprites/env/naraka/naraka-wallcap-tile.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "role": "wallcap",
+      "ground_safe": false
+    },
+    "wallface": {
+      "path": "assets/sprites/env/naraka/naraka-wallface-tile.png",
+      "size": [
+        1024,
+        585
+      ],
+      "role": "wallface",
+      "ground_safe": false
+    }
+  },
+  "frames": {
+    "ash_drift": {
+      "frame": "naraka_ash_drift_0.png",
+      "size": [
+        384,
+        384
+      ],
+      "role": "decal",
+      "ground_safe": true,
+      "worldW": 180,
+      "alpha": 0.45
+    },
+    "brazier": {
+      "frame": "naraka_brazier_0.png",
+      "size": [
+        272,
+        384
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 64,
+      "zones": [
+        "north",
+        "west",
+        "east",
+        "corner"
+      ],
+      "weight": 1,
+      "low": false,
+      "light": {
+        "color": "#ff7a2a",
+        "r": 160,
+        "alpha": 0.38
+      }
+    },
+    "chain_post": {
+      "frame": "naraka_chain_post_0.png",
+      "size": [
+        384,
+        382
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 72,
+      "zones": [
+        "north",
+        "west",
+        "east",
+        "corner"
+      ],
+      "weight": 1,
+      "low": false
+    },
+    "column": {
+      "frame": "naraka_column_0.png",
+      "size": [
+        195,
+        448
+      ],
+      "role": "column",
+      "ground_safe": false,
+      "worldH": 150,
+      "anchor": [
+        0.5,
+        0.96
+      ],
+      "footW": 156
+    },
+    "ember_seam": {
+      "frame": "naraka_ember_seam_0.png",
+      "size": [
+        384,
+        384
+      ],
+      "role": "decal",
+      "ground_safe": true,
+      "worldW": 180,
+      "alpha": 0.45
+    },
+    "fire_pit": {
+      "frame": "naraka_fire_pit_0.png",
+      "size": [
+        382,
+        384
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 40,
+      "zones": [
+        "north",
+        "west",
+        "east",
+        "corner"
+      ],
+      "weight": 1,
+      "low": true,
+      "light": {
+        "color": "#ff5a1a",
+        "r": 150,
+        "alpha": 0.32
+      }
+    },
+    "gate": {
+      "frame": "naraka_gate_0.png",
+      "size": [
+        512,
+        431
+      ],
+      "role": "gate",
+      "ground_safe": false,
+      "worldH": 210,
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    "iron_cage": {
+      "frame": "naraka_iron_cage_0.png",
+      "size": [
+        294,
+        384
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 66,
+      "zones": [
+        "north",
+        "west",
+        "east",
+        "corner"
+      ],
+      "weight": 1,
+      "low": false
+    },
+    "iron_cauldron": {
+      "frame": "naraka_iron_cauldron_0.png",
+      "size": [
+        384,
+        360
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 70,
+      "zones": [
+        "north",
+        "west",
+        "east",
+        "corner"
+      ],
+      "weight": 1,
+      "low": false,
+      "light": {
+        "color": "#ff6a2a",
+        "r": 140,
+        "alpha": 0.3
+      }
+    },
+    "ledger_lectern": {
+      "frame": "naraka_ledger_lectern_0.png",
+      "size": [
+        232,
+        384
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 70,
+      "zones": [
+        "north",
+        "west",
+        "east",
+        "corner"
+      ],
+      "weight": 1,
+      "low": false
+    },
+    "scorch": {
+      "frame": "naraka_scorch_0.png",
+      "size": [
+        384,
+        384
+      ],
+      "role": "decal",
+      "ground_safe": true,
+      "worldW": 180,
+      "alpha": 0.45
+    },
+    "scroll_pile": {
+      "frame": "naraka_scroll_pile_0.png",
+      "size": [
+        384,
+        383
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 44,
+      "zones": [
+        "north",
+        "west",
+        "east",
+        "corner"
+      ],
+      "weight": 1,
+      "low": true
+    },
+    "vent_grate": {
+      "frame": "naraka_vent_grate_0.png",
+      "size": [
+        369,
+        384
+      ],
+      "role": "hazard-skin",
+      "ground_safe": true
+    }
+  },
+  "floor": {
+    "tileScale": 0.6,
+    "macroScale": 1.7,
+    "macroAlpha": 0.35
+  },
+  "walls": {
+    "faceH": 170,
+    "capT": 48,
+    "lipT": 36,
+    "columnSpacing": [
+      260,
+      380
+    ]
+  },
+  "skins": {
+    "pillar": "column",
+    "wall": "@cap",
+    "pit": "@abyss",
+    "byTemplate": {
+      "naraka_chains": {
+        "pillar": "chain_post"
+      }
+    }
+  },
+  "hazards": {
+    "fireVent": "vent_grate",
+    "venomPool": "@pool"
+  },
+  "lights": {
+    "pools": {
+      "color": "#ff5533",
+      "count": [
+        2,
+        4
+      ],
+      "r": [
+        160,
+        260
+      ],
+      "alpha": 0.08
+    },
+    "shafts": null,
+    "mist": null
+  },
+  "grade": {
+    "floorTint": 0.55,
+    "floorDarken": 0.25,
+    "outerDim": 0.6,
+    "vignette": 0.4,
+    "propTint": "#d8d0cc"
+  }
+}

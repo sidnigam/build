@@ -7278,5 +7278,146 @@ check('HUD legend (kbm): DASH/ASTRA/SPECIAL badge+label horizontal extents never
 check('HUD legend (pad, ps family): DASH/ASTRA/SPECIAL badge+label horizontal extents never overlap'
   + (legendResults.padReason ? ' — ' + legendResults.padReason : ''), legendResults.padOk === true);
 
+// ---------------- graphics quality setting (05.6-01) ----------------
+console.log('\n— graphics quality setting (05.6-01) —');
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+  // Save the current stored settings so this block's probing (reset/invalid
+  // values) doesn't leak into any later block run in this same process.
+  const savedSettingsJSON = R('JSON.stringify(SETTINGS.all())');
+
+  check('SETTINGS.get(graphicsQuality) === auto on defaults',
+    R("SETTINGS.reset(); SETTINGS.get('graphicsQuality')") === 'auto');
+
+  check("SETTINGS.set('graphicsQuality','high') returns 'high' and persists (a fresh SETTINGS.load() reads 'high')",
+    R("SETTINGS.set('graphicsQuality', 'high')") === 'high' &&
+    R("SETTINGS._v = null; SETTINGS.load(); SETTINGS.get('graphicsQuality')") === 'high');
+
+  check("SETTINGS.set('graphicsQuality','ultra') is rejected (value unchanged)",
+    R("SETTINGS.set('graphicsQuality', 'ultra'); SETTINGS.get('graphicsQuality')") === 'high');
+
+  check("a stored invalid graphicsQuality value loads as 'auto'",
+    R(`
+      SETTINGS._v.graphicsQuality = 'ultra';
+      SETTINGS.save();
+      SETTINGS._v = null;
+      SETTINGS.load();
+      SETTINGS.get('graphicsQuality');
+    `) === 'auto');
+
+  check('resolutionMode enum behavior is unchanged after generalizing ENUMS',
+    R("SETTINGS.set('resolutionMode', '1920x1080')") === '1920x1080' &&
+    R("SETTINGS.set('resolutionMode', 'bogus'); SETTINGS.get('resolutionMode')") === '1920x1080');
+
+  // Restore whatever settings existed before this block ran.
+  R(`
+    SETTINGS._v = Object.assign({}, SETTINGS.DEFAULTS, ${savedSettingsJSON});
+    SETTINGS.save();
+  `);
+}
+
+// ---------------- GFX core: tiers, auto-resolve, probe, grading, hooks (05.6-01) ----------------
+console.log('\n— GFX core (05.6-01) —');
+{
+  if (vm.runInContext("typeof GFX", sandbox) === 'undefined') {
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js', 'gfx.js'), 'utf8'), sandbox, { filename: 'gfx.js' });
+  }
+  const R = (src) => vm.runInContext(src, sandbox);
+
+  vm.runInContext(`
+    var __gfxResults = (function () {
+      const r = {};
+      const TIER_KEYS = ['filters', 'grade', 'bloom', 'lightMode', 'lightRes', 'maxLights', 'resCap', 'reducedParticles', 'playerLift'];
+      const hasKeys = (o) => TIER_KEYS.every((k) => k in o);
+      r.tierShapeOk = hasKeys(GFX.TIER_CFG.low) && hasKeys(GFX.TIER_CFG.medium) && hasKeys(GFX.TIER_CFG.high);
+      r.lowFiltersFalse = GFX.TIER_CFG.low.filters === false;
+      r.lowLightModeDirect = GFX.TIER_CFG.low.lightMode === 'direct';
+      r.lowResCap1 = GFX.TIER_CFG.low.resCap === 1;
+
+      r.resolve1 = GFX.resolveTier('high', '') === 'high';
+      r.resolve2 = GFX.resolveTier('auto', 'Google SwiftShader') === 'low';
+      r.resolve3 = GFX.resolveTier('auto', 'ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)') === 'high';
+      r.resolve4 = GFX.resolveTier('auto', 'ANGLE (Apple, ANGLE Metal Renderer: Apple M2, Unspecified Version)') === 'medium';
+      r.resolve5 = GFX.resolveTier('auto', 'Intel(R) Iris(R) Xe Graphics') === 'medium';
+      r.resolve6 = GFX.resolveTier('auto', 'NVIDIA GeForce RTX 3060') === 'high';
+      r.resolve7 = GFX.resolveTier('auto', '') === 'medium';
+      r.resolve8 = GFX.resolveTier('bogus', '') === 'medium';
+
+      const arr25 = new Array(180).fill(25);
+      const arr14 = new Array(180).fill(14);
+      r.probe1 = GFX.probeDecision(arr25, 'high') === 'medium';
+      r.probe2 = GFX.probeDecision(arr25, 'low') === null;
+      r.probe3 = GFX.probeDecision(arr14, 'high') === null;
+      r.probe4 = GFX.probeDecision([1, 2, 3], 'high') === null;
+
+      r.disp1 = GFX.displayResolution(1, 1920, 2) === 1.5;
+      r.disp2 = GFX.displayResolution(2, 1512, 2) === 2;
+      r.disp3 = GFX.displayResolution(2, 1512, 3) === 2.36;
+      r.disp4 = GFX.displayResolution(1, 1280, 1) === 1;
+      r.disp5 = GFX.displayResolution(1, 800, 3) === 1;
+
+      const g1 = GFX.gradeFor('naraka');
+      r.grade1 = ['contrast', 'saturation', 'red', 'green', 'blue', 'brightness', 'gamma'].every((k) => typeof g1[k] === 'number');
+      r.grade2 = JSON.stringify(GFX.gradeFor('nope')) === JSON.stringify(GFX.gradeFor('hub'));
+
+      r.biome1 = GFX.biomeKey({ state: 'hub' }) === 'hub';
+      r.biome2 = GFX.biomeKey({ state: 'combat', biome: { id: 'patala' } }) === 'patala';
+
+      const applyRet = GFX.applyTier('high');
+      r.applyTierReturnsFalse = applyRet === false;
+      r.tierSetToHigh = GFX.tier === 'high';
+      let frameThrew = false;
+      try { GFX.frame(); } catch (e) { frameThrew = true; }
+      r.frameNoThrow = frameThrew === false;
+      r.statsLiveFiltersZero = GFX.stats().liveFilters === 0;
+
+      r.session1 = GFX.sessionOverride('?gfx=low') === 'low';
+      r.session2 = GFX.sessionOverride('?gfx=x') === null;
+
+      return r;
+    })();
+  `, sandbox);
+  const gr = R('__gfxResults');
+
+  check('GFX.TIER_CFG low/medium/high all carry the full tier-config key set', gr.tierShapeOk);
+  check('GFX.TIER_CFG.low.filters === false', gr.lowFiltersFalse);
+  check("GFX.TIER_CFG.low.lightMode === 'direct'", gr.lowLightModeDirect);
+  check('GFX.TIER_CFG.low.resCap === 1', gr.lowResCap1);
+
+  check("resolveTier('high','') === 'high'", gr.resolve1);
+  check("resolveTier('auto', SwiftShader) === 'low'", gr.resolve2);
+  check("resolveTier('auto', Apple M1 Pro) === 'high'", gr.resolve3);
+  check("resolveTier('auto', Apple M2) === 'medium'", gr.resolve4);
+  check("resolveTier('auto', Intel Iris Xe) === 'medium'", gr.resolve5);
+  check("resolveTier('auto', NVIDIA RTX 3060) === 'high'", gr.resolve6);
+  check("resolveTier('auto', '') === 'medium'", gr.resolve7);
+  check("resolveTier('bogus', '') === 'medium'", gr.resolve8);
+
+  check('probeDecision(180x25ms, high) === medium', gr.probe1);
+  check('probeDecision(180x25ms, low) === null (already floor)', gr.probe2);
+  check('probeDecision(180x14ms, high) === null (fast enough)', gr.probe3);
+  check('probeDecision(<180 samples) === null', gr.probe4);
+
+  check('displayResolution(1, 1920, 2) === 1.5', gr.disp1);
+  check('displayResolution(2, 1512, 2) === 2 (capped)', gr.disp2);
+  check('displayResolution(2, 1512, 3) === 2.36', gr.disp3);
+  check('displayResolution(1, 1280, 1) === 1', gr.disp4);
+  check('displayResolution(1, 800, 3) === 1 (never below 1)', gr.disp5);
+
+  check('gradeFor(naraka) has numeric contrast/saturation/red/green/blue/brightness/gamma', gr.grade1);
+  check('gradeFor(nope) deep-equals gradeFor(hub)', gr.grade2);
+
+  check("biomeKey({state:'hub'}) === 'hub'", gr.biome1);
+  check("biomeKey({state:'combat', biome:{id:'patala'}}) === 'patala'", gr.biome2);
+
+  check("headless GFX.applyTier('high') returns false", gr.applyTierReturnsFalse);
+  check("headless GFX.applyTier('high') still sets GFX.tier === 'high'", gr.tierSetToHigh);
+  check('headless GFX.frame() throws nothing', gr.frameNoThrow);
+  check('headless GFX.stats().liveFilters === 0', gr.statsLiveFiltersZero);
+
+  check("GFX.sessionOverride('?gfx=low') === 'low'", gr.session1);
+  check("GFX.sessionOverride('?gfx=x') === null", gr.session2);
+}
+
 console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
 process.exit(failures ? 1 : 0);

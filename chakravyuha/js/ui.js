@@ -688,6 +688,16 @@ const UI = {
     res.value = SETTINGS.get('resolutionMode');
     res.onchange = e => SETTINGS.set('resolutionMode', e.target.value);
 
+    // Phase 05.6 D-05/settings row: Graphics Quality (Auto/Low/Medium/High). Guard
+    // querySelector — the smoke El stub has no such method.
+    const gq = this.el('settings-graphics');
+    if (gq) {
+      gq.value = SETTINGS.get('graphicsQuality');
+      const autoOpt = gq.querySelector && gq.querySelector('option[value="auto"]');
+      if (autoOpt && typeof GFX !== 'undefined') autoOpt.textContent = 'Auto (' + GFX.tier[0].toUpperCase() + GFX.tier.slice(1) + ')';
+      gq.onchange = e => { SETTINGS.set('graphicsQuality', e.target.value); if (typeof GFX !== 'undefined') GFX.applySetting(); };
+    }
+
     const shake = this.el('settings-shake');
     shake.checked = !!SETTINGS.get('screenShake');
     shake.onchange = e => SETTINGS.set('screenShake', !!e.target.checked);

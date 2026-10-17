@@ -24,9 +24,23 @@ const SETTINGS = {
     aimAssist: true,
     rumble: true,
     rumbleIntensity: 0.8,
+    graphicsQuality: 'auto',
   },
   RESOLUTION_MODES: ['auto', '1280x720', '1600x900', '1920x1080'],
+  GRAPHICS_QUALITIES: ['auto', 'low', 'medium', 'high'],
   _v: null,
+
+  // ENUMS: lazily-built map of settings key -> allowed-value list, used by both load() and set()
+  // to generalize the enum-validation branch that used to be hardcoded to 'resolutionMode' only
+  // (Phase 05.6 D-05). Built lazily (not as a top-level object literal) because it references
+  // RESOLUTION_MODES/GRAPHICS_QUALITIES, which can't be referenced from inside the same literal.
+  _enums: null,
+  enums() {
+    if (!this._enums) {
+      this._enums = { resolutionMode: this.RESOLUTION_MODES, graphicsQuality: this.GRAPHICS_QUALITIES };
+    }
+    return this._enums;
+  },
 
   // DOM_MAP: input id -> settings key (Plan 03 fills the pause-panel wiring)
   DOM_MAP: {
@@ -53,8 +67,9 @@ const SETTINGS = {
         const def = this.DEFAULTS[k];
         const val = parsed[k];
         if (typeof val !== typeof def) continue;
-        if (k === 'resolutionMode') {
-          if (this.RESOLUTION_MODES.includes(val)) this._v[k] = val;
+        const enumList = this.enums()[k];
+        if (enumList) {
+          if (enumList.includes(val)) this._v[k] = val;
           continue;
         }
         this._v[k] = typeof val === 'number' ? Math.min(1, Math.max(0, val)) : val;
@@ -76,8 +91,9 @@ const SETTINGS = {
   set(k, v) {
     if (!this._v) this.load();
     if (!(k in this.DEFAULTS)) return this.get(k);
-    if (k === 'resolutionMode') {
-      if (!this.RESOLUTION_MODES.includes(v)) return this._v[k];
+    const enumList = this.enums()[k];
+    if (enumList) {
+      if (!enumList.includes(v)) return this._v[k];
       this._v[k] = v;
       this.save();
       return v;

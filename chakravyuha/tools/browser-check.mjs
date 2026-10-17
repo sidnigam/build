@@ -15,6 +15,15 @@
 //                      Emulation.setDeviceMetricsOverride.
 //   --gfx-only         skip the 05.1 alignment/aim/pad/indicator probes; just boot → begin →
 //                      settle (the combat room entered by startRun() is already 'combat').
+//   --stress           Phase 05.6 Plan 02 (D-24) worst-case combat scenario: top up enemies to
+//                      DATA.WAVES.maxAlive (god-mode HP so real projectile damage never kills
+//                      them), force every fireVent hazard active, then run an in-page rAF loop
+//                      for 5s firing real player projectiles (P.tryCast(), capped at 30 alive),
+//                      a castGlow pulse every 0.5s, and a hit pulse on a random enemy 10x/sec.
+//                      Reports STRESS fps_avg/p95_ms/ticker/lights/particles/enemies, a
+//                      LIGHTALIGN probe (the first active fireVent light's rendered screen
+//                      position vs CAMERA/Pixi's own world->screen mapping), and stress.png /
+//                      telegraph.png screenshots.
 // Every run (flagged or not) always appends GPU/GFX/RES/ISOLATION/MIP lines to report.txt.
 //
 // Usage:
@@ -30,7 +39,7 @@ import { join } from 'node:path';
 
 // ---------------- argv parsing (additive — positional args behave exactly as before) ----------------
 const argv = process.argv.slice(2);
-const flags = { quality: null, gpu: false, size: null, gfxOnly: false };
+const flags = { quality: null, gpu: false, size: null, gfxOnly: false, stress: false };
 const positional = [];
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i];
@@ -38,6 +47,7 @@ for (let i = 0; i < argv.length; i++) {
   else if (a === '--gpu') flags.gpu = true;
   else if (a === '--size') flags.size = argv[++i];
   else if (a === '--gfx-only') flags.gfxOnly = true;
+  else if (a === '--stress') flags.stress = true;
   else positional.push(a);
 }
 const OUT = positional[0];
@@ -77,6 +87,13 @@ ws.onmessage = ev => {
 };
 const send = (method, params = {}) => new Promise(r => { const i = ++id; pending.set(i, r); ws.send(JSON.stringify({ id: i, method, params })); });
 const evalJs = async expr => (await send('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true })).result?.result?.value;
+// evalJsTimeout: same as evalJs, but races against a Node-side timeout so a stalled in-page
+// Promise (e.g. an uncaught exception inside a requestAnimationFrame loop silently stops the
+// loop forever, per CDP's awaitPromise semantics) can never hang this whole script indefinitely.
+const evalJsTimeout = (expr, ms) => Promise.race([
+  evalJs(expr),
+  new Promise((_, rej) => setTimeout(() => rej(new Error(`evalJs timed out after ${ms}ms`)), ms)),
+]);
 const shot = async name => { const r = await send('Page.captureScreenshot', { format: 'png' }); writeFileSync(join(OUT, name), Buffer.from(r.result.data, 'base64')); };
 
 await send('Runtime.enable'); await send('Log.enable'); await send('Page.enable');
@@ -186,6 +203,153 @@ if (!flags.gfxOnly) {
 } else {
   // --gfx-only: boot -> begin -> settle. No alignment/aim/pad/indicator probes.
   await sleep(1500);
+}
+
+// 6.5. Stress scenario (05.6-02 D-24, --stress only).
+if (flags.stress) {
+  await evalJs(`(function() {
+    const A = GAME.arena;
+    const types = (GAME.biome && GAME.biome.enemies) || ['preta'];
+    const maxAlive = (DATA.WAVES && DATA.WAVES.maxAlive) || 26;
+    let alive = (GAME.enemies || []).filter(e => !e.dead).length;
+    let i = 0;
+    while (alive < maxAlive) {
+      const t = types[i % types.length];
+      const e = new Enemy(t, A.x + Math.random() * A.w, A.y + Math.random() * A.h, (GAME.biome && GAME.biome.scale) || 1);
+      e.spawnT = 0; e.hp = 1e9; e.maxhp = 1e9; // god-mode: real projectile damage never kills them — enemy count stays at maxAlive
+      GAME.enemies.push(e);
+      alive++; i++;
+    }
+    for (const h of (GAME.hazards || [])) {
+      if (h.type === 'fireVent') { h.phase = 'erupt'; h.t = 999; h.hitSet = new Set(); h.warnShown = 1; }
+    }
+    const P = GAME.player;
+    P.maxhp = 1e9; P.hp = 1e9; P.castCharges = 999;
+    return { enemies: (GAME.enemies || []).filter(e => !e.dead).length, maxAlive };
+  })()`);
+  await sleep(300);
+
+  let stress = null;
+  try {
+    const stressLine = await evalJsTimeout(`
+      (function() {
+        // The expression evaluated by Runtime.evaluate must itself be the Promise (so
+        // awaitPromise:true actually waits on it) — resolve to a JSON string, not an object,
+        // matching this file's existing stringify-then-JSON.parse-in-Node pattern.
+        return new Promise((resolve) => {
+          const P = GAME.player;
+          const DUR = 5000;
+          const MAX_FRAMES = 1800; // hard circuit breaker: ~30s even at a pathological 60fps-but-never-settling rate
+          const frames = [];
+          let last = performance.now();
+          const t0 = last;
+          let castAcc = 0, hitAcc = 0;
+          function finish() {
+            frames.shift(); // drop the first delta (includes setup/dispatch overhead)
+            const sorted = frames.slice().sort((a, b) => a - b);
+            const avgMs = frames.reduce((s, v) => s + v, 0) / Math.max(1, frames.length);
+            const p95 = sorted[Math.floor(sorted.length * 0.95)] || 0;
+            const alive = (GAME.enemies || []).filter(e => !e.dead);
+            resolve(JSON.stringify({
+              fps_avg: Math.round(1000 / avgMs),
+              p95_ms: Math.round(p95 * 100) / 100,
+              ticker: SPRITES.app ? Math.round(SPRITES.app.ticker.FPS) : null,
+              lights: (typeof GFX !== 'undefined') ? GFX.stats().lights : null,
+              particles: VFX.activeCount,
+              enemies: alive.length,
+              frameCount: frames.length,
+            }));
+          }
+          function tick() {
+            const now = performance.now();
+            try {
+              const dt = now - last;
+              frames.push(dt);
+              last = now;
+              P.hp = P.maxhp;
+              const alive = (GAME.enemies || []).filter(e => !e.dead);
+              if ((GAME.pprojectiles || []).length < 30 && alive.length) {
+                const e = alive[Math.floor(Math.random() * alive.length)];
+                P.aim = Math.atan2(e.y - P.y, e.x - P.x);
+                P.tryCast();
+              }
+              castAcc += dt;
+              if (castAcc >= 500) { castAcc = 0; VFX.emit('castGlow', P.x, P.y, P.aim); }
+              hitAcc += dt;
+              if (hitAcc >= 100) {
+                hitAcc = 0;
+                if (alive.length) {
+                  const e2 = alive[Math.floor(Math.random() * alive.length)];
+                  VFX.emit('hit', e2.x, e2.y, 0);
+                }
+              }
+            } catch (eTick) {
+              // never let a per-frame exception strand this Promise unresolved forever (D-24's
+              // own pass criterion is "no uncaught console errors", so surface it there too).
+              console.error('[stress] tick() threw: ' + (eTick && eTick.stack || eTick));
+            }
+            if (now - t0 < DUR && frames.length < MAX_FRAMES) requestAnimationFrame(tick);
+            else finish();
+          }
+          requestAnimationFrame(tick);
+        });
+      })()
+    `, 20000);
+    stress = JSON.parse(stressLine);
+  } catch (eStress) {
+    console.error('[browser-check] stress scenario failed/timed out: ' + eStress.message);
+  }
+  if (stress) {
+    report.push(TAG + 'STRESS fps_avg=' + stress.fps_avg + ' p95_ms=' + stress.p95_ms + ' ticker=' + stress.ticker
+      + ' lights=' + stress.lights + ' particles=' + stress.particles + ' enemies=' + stress.enemies + ' frames=' + stress.frameCount);
+  } else {
+    report.push(TAG + 'STRESS FAILED (see console errors below)');
+  }
+  await shot(FILE_PREFIX + 'stress.png');
+
+  // Light alignment probe (D-24): an on-screen active fireVent's light-sprite rendered screen
+  // position vs Pixi's own world->screen mapping (SPRITES.worldContainer.toGlobal — same
+  // authority the 05.1 ALIGN probe above already trusts). Picks the on-screen vent via the same
+  // view-rect test GFX.collectLights() itself uses for culling (CAMERA.viewRect(0)), so this
+  // probe — and the telegraph screenshot right after it, which reuses the same vent — never picks
+  // one of the (expected, correctly-culled) off-screen vents in this large arena. direct mode: the
+  // light sprite sits in worldContainer, so toGlobal works directly. rt mode: the light stage is
+  // unparented, so the vent's world point is first mapped into the stage's own local (= rt pixel)
+  // space by hand, then composed through rtSprite's real transform via toGlobal.
+  const probeLine = await evalJs(`
+    JSON.stringify((function() {
+      const view = (typeof CAMERA !== 'undefined' && CAMERA.viewRect) ? CAMERA.viewRect(0) : { x: 0, y: 0, w: 1280, h: 720 };
+      const onScreen = h => h.x + h.r >= view.x && h.x - h.r <= view.x + view.w && h.y + h.r >= view.y && h.y - h.r <= view.y + view.h;
+      const vent = (GAME.hazards || []).find(h => h.type === 'fireVent' && onScreen(h));
+      const out = { vent: vent ? { x: vent.x, y: vent.y, r: vent.r } : null };
+      if (!vent || typeof GFX === 'undefined' || !GFX._light) { out.align = { ok: false, reason: 'no-onscreen-vent-or-light-layer' }; return out; }
+      let actual = null;
+      if (GFX._light.mode === 'direct') {
+        const s = (GFX._light.sprites || []).find(sp => sp.visible && Math.hypot(sp.position.x - vent.x, sp.position.y - vent.y) < 1);
+        if (s) actual = s.toGlobal({ x: 0, y: 0 });
+      } else if (GFX._light.mode === 'rt' && GFX._light.rtSprite) {
+        const stage = GFX._light.stage;
+        const local = { x: vent.x * stage.scale.x + stage.position.x, y: vent.y * stage.scale.y + stage.position.y };
+        actual = GFX._light.rtSprite.toGlobal(local);
+      }
+      if (!actual) { out.align = { ok: false, reason: 'no-sprite-for-onscreen-vent', mode: GFX._light.mode }; return out; }
+      const expected = SPRITES.worldContainer.toGlobal({ x: vent.x, y: vent.y });
+      out.align = { ok: true, mode: GFX._light.mode, dx: Math.abs(expected.x - actual.x), dy: Math.abs(expected.y - actual.y) };
+      return out;
+    })())
+  `);
+  const probe = JSON.parse(probeLine);
+  report.push(TAG + 'LIGHTALIGN ' + JSON.stringify(probe.align));
+
+  // Telegraph readability screenshot: a dangerZone ring right next to the same on-screen vent.
+  if (probe.vent) {
+    await evalJs(`(function() {
+      GAME.dangerZones.push({ x: ${probe.vent.x} + ${probe.vent.r} + 20, y: ${probe.vent.y}, r: 40, frac: 0.6 });
+      return 1;
+    })()`);
+  }
+  await sleep(200);
+  await shot(FILE_PREFIX + 'telegraph.png');
 }
 
 // 7. Final counts + FPS (always).

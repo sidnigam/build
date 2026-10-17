@@ -31,7 +31,13 @@ const GFX = {
     // ---- Phase 05.6-02: light layer (D-13..D-17) ----
     TRANSIENT_CAP: 32,        // tunable: max simultaneous pulses; oldest evicted
     GROUND_SQUASH: 0.72,      // tunable: ground-light vertical squash for the 3/4 top-down view
-    LIGHT_STRENGTH: 0.85,     // tunable: rtSprite alpha compositing the light-map RenderTexture (rt mode)
+    // tunable: rtSprite alpha compositing the light-map RenderTexture (rt mode). Lowered from the
+    // starting 0.85 during Task 3's stress-screenshot review — at 0.85, the worst-case scenario
+    // (every fireVent erupting simultaneously, which real gameplay staggers but the stress test
+    // deliberately forces all at once) bloomed into blinding, telegraph-and-silhouette-washing
+    // "suns" at Medium/High. 0.6 keeps the painterly warm-pool look (confirmed by re-review) while
+    // leaving real single-eruption gameplay comfortably readable.
+    LIGHT_STRENGTH: 0.6,
     PROP_LIGHT_GAIN: 1.6,     // tunable: alpha multiplier for 05.4 per-prop lights GFX takes over, inside the arena
     FIRE_FLICKER: 0.5,        // tunable: flicker depth (D-14's warn/active fireVent formula, reused for fire-type props)
     RING_LIFE_REF: 0.3,       // tunable: GAME.rings has no stored "max life" — rings decay over <=0.3s in practice
@@ -100,7 +106,7 @@ const GFX = {
       color: 0xff7a2a,
       dormant: { r: 60, a: 0.18 },
       warn: { r: 80, a: 0.35 },
-      active: { r: 150, a: 0.75 },
+      active: { r: 150, a: 0.55 }, // tunable: lowered from 0.75 — see LIGHT_STRENGTH's comment (same Task 3 review)
       flicker: 0.5, // tunable: warn/active flicker depth (overrides CFG.FIRE_FLICKER for this preset)
     },
     venomPool: { color: 0x7dff5a, rMul: 1.4, a: 0.22 }, // color falls back to DATA.HAZARDS.venomPool's css color when present
@@ -392,13 +398,20 @@ const GFX = {
     }
   },
 
-  // tunable: D-16 transient pulse kinds.
+  // tunable: D-16 transient pulse kinds. hit/castGlow alphas lowered from the starting 0.6
+  // during Task 3's stress review — a melee swarm (many enemies clustered on a stationary
+  // player, the exact worst-case the stress scenario forces) fires hit pulses up to 10x/sec at
+  // nearly the same point, and the cap (32) does not limit *local density*, only the total
+  // on-screen count — so even individually-modest pulses pile up additively into a blown-out
+  // white blob right on the player. 0.35/0.4 keeps each hit/cast feeling punchy in isolation
+  // while a dense pile-up stays readable. crit/death/bossDeath/phase are rarer events (one per
+  // kill/cast-charge, not 10/sec) and were left at their starting values.
   TRANSIENT_KINDS: {
-    hit: { color: 0xfff1d0, r: 60, a: 0.6, life: 0.10 },
+    hit: { color: 0xfff1d0, r: 60, a: 0.35, life: 0.10 },
     crit: { color: 0xffd34d, r: 90, a: 0.8, life: 0.14 },
     death: { color: 0xffffff, r: 90, a: 0.5, life: 0.25 },
     bossDeath: { color: 0xffffff, r: 400, a: 0.9, life: 0.8 },
-    castGlow: { color: 0xffd34d, r: 110, a: 0.6, life: 0.25 },
+    castGlow: { color: 0xffd34d, r: 110, a: 0.4, life: 0.25 },
     phase: { color: 0xffffff, r: 300, a: 0.7, life: 0.5 },
   },
 

@@ -1,0 +1,341 @@
+{
+  "frames": {
+    "patala_gate_0.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 476,
+        "h": 504
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 476,
+        "h": 504
+      },
+      "sourceSize": {
+        "w": 484,
+        "h": 512
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "patala_column_0.png": {
+      "frame": {
+        "x": 2,
+        "y": 510,
+        "w": 273,
+        "h": 440
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 273,
+        "h": 440
+      },
+      "sourceSize": {
+        "w": 281,
+        "h": 448
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "patala_gem_scatter_0.png": {
+      "frame": {
+        "x": 2,
+        "y": 954,
+        "w": 384,
+        "h": 384
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "patala_moss_patch_0.png": {
+      "frame": {
+        "x": 279,
+        "y": 510,
+        "w": 384,
+        "h": 384
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "patala_venom_rim_0.png": {
+      "frame": {
+        "x": 482,
+        "y": 2,
+        "w": 384,
+        "h": 384
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "patala_water_puddle_0.png": {
+      "frame": {
+        "x": 2,
+        "y": 1342,
+        "w": 384,
+        "h": 384
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "patala_crystal_rocks_0.png": {
+      "frame": {
+        "x": 2,
+        "y": 1730,
+        "w": 376,
+        "h": 299
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 376,
+        "h": 299
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 307
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "patala_pool_basin_0.png": {
+      "frame": {
+        "x": 390,
+        "y": 898,
+        "w": 366,
+        "h": 376
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 366,
+        "h": 376
+      },
+      "sourceSize": {
+        "w": 374,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "patala_fallen_pillar_0.png": {
+      "frame": {
+        "x": 667,
+        "y": 390,
+        "w": 230,
+        "h": 376
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 230,
+        "h": 376
+      },
+      "sourceSize": {
+        "w": 238,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "patala_treasure_urn_0.png": {
+      "frame": {
+        "x": 870,
+        "y": 2,
+        "w": 219,
+        "h": 376
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 219,
+        "h": 376
+      },
+      "sourceSize": {
+        "w": 227,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "patala_glow_fungus_0.png": {
+      "frame": {
+        "x": 390,
+        "y": 1278,
+        "w": 376,
+        "h": 365
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 376,
+        "h": 365
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 373
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "patala_gem_pile_0.png": {
+      "frame": {
+        "x": 390,
+        "y": 1647,
+        "w": 376,
+        "h": 363
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 376,
+        "h": 363
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 371
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  },
+  "meta": {
+    "app": "http://github.com/odrick/free-tex-packer-core",
+    "version": "0.3.8",
+    "image": "patala-env-atlas.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 1091,
+      "h": 2031
+    },
+    "scale": 1
+  },
+  "animations": {
+    "column": [
+      "patala_column_0.png"
+    ],
+    "crystal_rocks": [
+      "patala_crystal_rocks_0.png"
+    ],
+    "fallen_pillar": [
+      "patala_fallen_pillar_0.png"
+    ],
+    "gate": [
+      "patala_gate_0.png"
+    ],
+    "gem_pile": [
+      "patala_gem_pile_0.png"
+    ],
+    "gem_scatter": [
+      "patala_gem_scatter_0.png"
+    ],
+    "glow_fungus": [
+      "patala_glow_fungus_0.png"
+    ],
+    "moss_patch": [
+      "patala_moss_patch_0.png"
+    ],
+    "pool_basin": [
+      "patala_pool_basin_0.png"
+    ],
+    "treasure_urn": [
+      "patala_treasure_urn_0.png"
+    ],
+    "venom_rim": [
+      "patala_venom_rim_0.png"
+    ],
+    "water_puddle": [
+      "patala_water_puddle_0.png"
+    ]
+  }
+}

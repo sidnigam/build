@@ -1,0 +1,127 @@
+{
+  "graph": {
+    "1": {
+      "class_type": "UnetLoaderGGUF",
+      "inputs": {
+        "unet_name": "flux1-schnell-Q4_K_S.gguf"
+      }
+    },
+    "2": {
+      "class_type": "DualCLIPLoaderGGUF",
+      "inputs": {
+        "clip_name1": "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+        "clip_name2": "clip_l.safetensors",
+        "type": "flux"
+      }
+    },
+    "3": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "A half-body bust portrait cropped tight at the waist, of Goddess Durga, a serene mother goddess, compassionate face, golden skin, a slender pointed gold tiara, with nothing but her own dark hair behind her. Four arms rise from each shoulder, eight arms total, fanned symmetrically like a wheel; seven hands hold a trident, discus, sword, bow, conch, lotus and mace, her front right hand raised palm-out in blessing. She wears a red blouse and the top of a red sari with a gold border, with gold jewellery. At the frame's lower edge, her lion's head and mane peek into view. Crimson red, gold and lion tawny. Bold hand-painted game-art character portrait with confident dark ink outlines, rich painterly detail, luminous warm rim light and ornate Indian gold jewellery, in the spirit of classical Indian temple murals and Pahari miniatures. A living figure with naturally shaded skin and open, alert eyes. Half-body portrait cropped at the waist, three-quarter view turned slightly right, head fully in frame. Alone before a flat, even, medium-grey backdrop filling the whole image.",
+        "clip": [
+          "2",
+          0
+        ]
+      }
+    },
+    "4": {
+      "class_type": "ConditioningZeroOut",
+      "inputs": {
+        "conditioning": [
+          "3",
+          0
+        ]
+      }
+    },
+    "5": {
+      "class_type": "EmptySD3LatentImage",
+      "inputs": {
+        "width": 896,
+        "height": 1152,
+        "batch_size": 1
+      }
+    },
+    "6": {
+      "class_type": "KSampler",
+      "inputs": {
+        "seed": 71552,
+        "steps": 4,
+        "cfg": 1.0,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "denoise": 1.0,
+        "model": [
+          "1",
+          0
+        ],
+        "positive": [
+          "3",
+          0
+        ],
+        "negative": [
+          "4",
+          0
+        ],
+        "latent_image": [
+          "5",
+          0
+        ]
+      }
+    },
+    "7": {
+      "class_type": "VAELoader",
+      "inputs": {
+        "vae_name": "ae.safetensors"
+      }
+    },
+    "8": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "6",
+          0
+        ],
+        "vae": [
+          "7",
+          0
+        ]
+      }
+    },
+    "9": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "filename_prefix": "chakravyuha",
+        "images": [
+          "8",
+          0
+        ]
+      }
+    }
+  },
+  "params": {
+    "positive": "A half-body bust portrait cropped tight at the waist, of Goddess Durga, a serene mother goddess, compassionate face, golden skin, a slender pointed gold tiara, with nothing but her own dark hair behind her. Four arms rise from each shoulder, eight arms total, fanned symmetrically like a wheel; seven hands hold a trident, discus, sword, bow, conch, lotus and mace, her front right hand raised palm-out in blessing. She wears a red blouse and the top of a red sari with a gold border, with gold jewellery. At the frame's lower edge, her lion's head and mane peek into view. Crimson red, gold and lion tawny. Bold hand-painted game-art character portrait with confident dark ink outlines, rich painterly detail, luminous warm rim light and ornate Indian gold jewellery, in the spirit of classical Indian temple murals and Pahari miniatures. A living figure with naturally shaded skin and open, alert eyes. Half-body portrait cropped at the waist, three-quarter view turned slightly right, head fully in frame. Alone before a flat, even, medium-grey backdrop filling the whole image.",
+    "negative": "",
+    "seed": 71552,
+    "width": 896,
+    "height": 1152,
+    "steps": 4,
+    "cfg": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": "flux1-schnell-Q4_K_S.gguf",
+    "checkpoint_label": "flux1-schnell-Q4_K_S.gguf (FLUX.1 [schnell] by Black Forest Labs, GGUF Q4_K_S by city96, Apache-2.0) + t5-v1_1-xxl Q5_K_M GGUF (Apache-2.0) + CLIP-L (MIT) + FLUX ae VAE (Apache-2.0)",
+    "checkpoint_profile": "flux1_schnell_q4ks",
+    "graph_type": "flux_gguf",
+    "text_encoders": [
+      "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+      "clip_l.safetensors"
+    ],
+    "vae": "ae.safetensors",
+    "custom_nodes": {
+      "ComfyUI-GGUF": "6ea2651e7df66d7585f6ffee804b20e92fb38b8a"
+    }
+  },
+  "prompt_id": "cba1a3df-43e3-4e35-9522-0bd474a125f6",
+  "comfyui_version": "0.35.0",
+  "generated_at": "2026-10-17T21:55:27Z"
+}

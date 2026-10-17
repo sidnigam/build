@@ -1,0 +1,127 @@
+{
+  "graph": {
+    "1": {
+      "class_type": "UnetLoaderGGUF",
+      "inputs": {
+        "unet_name": "flux1-schnell-Q4_K_S.gguf"
+      }
+    },
+    "2": {
+      "class_type": "DualCLIPLoaderGGUF",
+      "inputs": {
+        "clip_name1": "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+        "clip_name2": "clip_l.safetensors",
+        "type": "flux"
+      }
+    },
+    "3": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "A half-body bust portrait cropped tight at the waist, of Vayu, the Vedic god of wind, a bearded mature man with a calm, dignified face, a full dark beard and hair blown sideways by a strong wind. Fair skin lit by cool sea-green light, a plain silver armband high on his upper arm, bare unadorned wrists and hands, a white dhoti sash at his waist and long sea-green scarves streaming sideways in the wind. His right fist grips a wooden staff held diagonally across his chest; at its top, above his left shoulder, a white pennant streams in the same wind. Two arms. Pale sea-green, silver-white and soft gold. Bold hand-painted game-art character portrait with confident dark ink outlines, rich painterly detail, luminous warm rim light and ornate Indian gold jewellery, in the spirit of classical Indian temple murals and Pahari miniatures. A living figure with naturally shaded skin and open, alert eyes. Half-body portrait cropped at the waist, three-quarter view turned slightly right, head fully in frame. Alone before a flat, even, medium-grey backdrop filling the whole image.",
+        "clip": [
+          "2",
+          0
+        ]
+      }
+    },
+    "4": {
+      "class_type": "ConditioningZeroOut",
+      "inputs": {
+        "conditioning": [
+          "3",
+          0
+        ]
+      }
+    },
+    "5": {
+      "class_type": "EmptySD3LatentImage",
+      "inputs": {
+        "width": 896,
+        "height": 1152,
+        "batch_size": 1
+      }
+    },
+    "6": {
+      "class_type": "KSampler",
+      "inputs": {
+        "seed": 71351,
+        "steps": 4,
+        "cfg": 1.0,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "denoise": 1.0,
+        "model": [
+          "1",
+          0
+        ],
+        "positive": [
+          "3",
+          0
+        ],
+        "negative": [
+          "4",
+          0
+        ],
+        "latent_image": [
+          "5",
+          0
+        ]
+      }
+    },
+    "7": {
+      "class_type": "VAELoader",
+      "inputs": {
+        "vae_name": "ae.safetensors"
+      }
+    },
+    "8": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "6",
+          0
+        ],
+        "vae": [
+          "7",
+          0
+        ]
+      }
+    },
+    "9": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "filename_prefix": "chakravyuha",
+        "images": [
+          "8",
+          0
+        ]
+      }
+    }
+  },
+  "params": {
+    "positive": "A half-body bust portrait cropped tight at the waist, of Vayu, the Vedic god of wind, a bearded mature man with a calm, dignified face, a full dark beard and hair blown sideways by a strong wind. Fair skin lit by cool sea-green light, a plain silver armband high on his upper arm, bare unadorned wrists and hands, a white dhoti sash at his waist and long sea-green scarves streaming sideways in the wind. His right fist grips a wooden staff held diagonally across his chest; at its top, above his left shoulder, a white pennant streams in the same wind. Two arms. Pale sea-green, silver-white and soft gold. Bold hand-painted game-art character portrait with confident dark ink outlines, rich painterly detail, luminous warm rim light and ornate Indian gold jewellery, in the spirit of classical Indian temple murals and Pahari miniatures. A living figure with naturally shaded skin and open, alert eyes. Half-body portrait cropped at the waist, three-quarter view turned slightly right, head fully in frame. Alone before a flat, even, medium-grey backdrop filling the whole image.",
+    "negative": "",
+    "seed": 71351,
+    "width": 896,
+    "height": 1152,
+    "steps": 4,
+    "cfg": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": "flux1-schnell-Q4_K_S.gguf",
+    "checkpoint_label": "flux1-schnell-Q4_K_S.gguf (FLUX.1 [schnell] by Black Forest Labs, GGUF Q4_K_S by city96, Apache-2.0) + t5-v1_1-xxl Q5_K_M GGUF (Apache-2.0) + CLIP-L (MIT) + FLUX ae VAE (Apache-2.0)",
+    "checkpoint_profile": "flux1_schnell_q4ks",
+    "graph_type": "flux_gguf",
+    "text_encoders": [
+      "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+      "clip_l.safetensors"
+    ],
+    "vae": "ae.safetensors",
+    "custom_nodes": {
+      "ComfyUI-GGUF": "6ea2651e7df66d7585f6ffee804b20e92fb38b8a"
+    }
+  },
+  "prompt_id": "21ad9305-ce21-4c3b-8a00-f693e45a5eec",
+  "comfyui_version": "0.35.0",
+  "generated_at": "2026-10-17T21:40:54Z"
+}

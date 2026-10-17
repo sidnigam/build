@@ -139,7 +139,7 @@
       "base_seed": 71000,
       "out_w": 600,
       "out_h": 768,
-      "flux_subject": "Lord Hanuman, the divine vanara, a noble monkey-faced hero: a monkey face with a short rounded muzzle, a wide flat monkey nose, round monkey ears and short saffron-orange fur on his face and arms, kind devoted eyes and a gentle smile. A tall golden mukuta crown, a red vermilion tilak, gold armlets, a pearl necklace and a saffron silk dhoti. His right hand grips the handle of a large golden gada mace held close, its heavy round head resting on his right shoulder beside his crown. His left palm rests on his heart. Two arms. Saffron orange, vermilion and gold.",
+      "flux_subject": "A half-body bust portrait cropped tight at the waist, of Lord Hanuman, the divine vanara, a noble monkey-faced hero: a monkey face with a short rounded muzzle, a wide flat nose, round ears and short saffron-orange fur on his face and arms, kind devoted eyes and a gentle smile. A tall golden mukuta crown, a red vermilion tilak, gold armlets, a pearl necklace and a saffron sash at his waist. His right hand grips the handle of a large golden gada mace held close, its heavy round head resting on his right shoulder beside his crown. His left palm rests on his heart. Two arms. Saffron orange, vermilion and gold.",
       "flux_base_seed": 71050
     },
     "agni": {
@@ -161,7 +161,7 @@
       "base_seed": 71200,
       "out_w": 600,
       "out_h": 768,
-      "flux_subject": "Indra, king of the devas, a youthful regal man with a proud, kind face, a fine black moustache, warm fair skin and open alert eyes. A tall jewelled golden kirita crown, gold earrings, a broad jewelled collar, and indigo and white silk garments with gold trim. With both hands he clasps the Vajra upright against the centre of his chest: a golden double-ended thunderbolt sceptre, perfectly symmetrical, with three curved prongs at the top and three at the bottom around a central grip, glowing with soft white light. Two arms. Royal gold, storm indigo and white.",
+      "flux_subject": "Indra, king of the devas, a youthful regal man with a proud, kind face, a fine black moustache, warm fair skin and open alert eyes. A tall jewelled golden kirita crown, gold earrings, a broad jewelled collar, and indigo and white silk garments with gold trim. Both hands grip the centre of a short golden Vajra held horizontally across his chest: a stubby double-ended thunderbolt club, the same cluster of three curved golden prongs at the left end mirrored exactly at the right end, glowing with soft white light at its centre grip. Two arms. Royal gold, storm indigo and white.",
       "flux_base_seed": 71250
     },
     "vayu": {
@@ -172,7 +172,7 @@
       "base_seed": 71300,
       "out_w": 600,
       "out_h": 768,
-      "flux_subject": "Vayu, the Vedic god of wind, a strong bearded mature man with a calm, dignified masculine face, a full dark beard and long dark hair blown sideways by a strong wind. Fair skin lit by cool sea-green light, light silver jewellery, a white silk dhoti and long pale sea-green silk scarves streaming sideways in the wind. His right fist grips a wooden staff held diagonally across the front of his chest; at its top, just above his left shoulder, a white triangular pennant flag streams in the same wind. Two arms. Pale sea-green, silver-white and soft gold.",
+      "flux_subject": "A half-body bust portrait cropped tight at the waist, of Vayu, the Vedic god of wind, a bearded mature man with a calm, dignified face, a full dark beard and hair blown sideways by a strong wind. Fair skin lit by cool sea-green light, a plain silver armband high on his upper arm, bare unadorned wrists and hands, a white dhoti sash at his waist and long sea-green scarves streaming sideways in the wind. His right fist grips a wooden staff held diagonally across his chest; at its top, above his left shoulder, a white pennant streams in the same wind. Two arms. Pale sea-green, silver-white and soft gold.",
       "flux_base_seed": 71350
     },
     "krishna": {
@@ -196,7 +196,7 @@
       "out_w": 600,
       "out_h": 768,
       "no_mirror": true,
-      "flux_subject": "Goddess Durga, a serene mother goddess with a compassionate face, warm golden skin and a tall golden crown. She has eight arms fanned symmetrically behind her shoulders like a wheel, four on each side; seven hands hold a trident, a discus, a sword, a bow, a conch, a lotus and a mace, and her front right hand is raised palm-out in blessing. She wears a red silk sari with a gold border and a matching red blouse, modestly draped, with gold jewellery. At the lower left edge of the frame, beside her waist, rise the head and golden mane of her lion. Crimson red, gold and lion tawny.",
+      "flux_subject": "A half-body bust portrait cropped tight at the waist, of Goddess Durga, a serene mother goddess, compassionate face, golden skin, tall golden crown. Four arms rise from each shoulder, eight arms total, fanned symmetrically like a wheel; seven hands hold a trident, discus, sword, bow, conch, lotus and mace, her front right hand raised palm-out in blessing beside her face. She wears a red blouse and the top of a red sari with a gold border at her waist, with gold jewellery. At the frame's lower edge, beside her shoulder, her lion's head and mane peek into view. Crimson red, gold and lion tawny.",
       "flux_base_seed": 71550
     }
   },

@@ -1241,6 +1241,17 @@ const SPRITES = {
   },
 
   /**
+   * addLight(opts) / removeLight(h) — Phase 05.6-02 (D-13) thin delegates to GFX's light
+   * registry. No-ops (null / false) when GFX hasn't loaded, so callers never need a typeof guard.
+   */
+  addLight(opts) {
+    return (typeof GFX !== 'undefined' && GFX.addLight) ? GFX.addLight(opts) : null;
+  },
+  removeLight(h) {
+    return (typeof GFX !== 'undefined' && GFX.removeLight) ? GFX.removeLight(h) : false;
+  },
+
+  /**
    * removeEntity(e)
    * Detach + destroy an entity's sprite (always destroys, even when unparented) and stop tracking it.
    */

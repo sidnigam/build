@@ -27,6 +27,16 @@ const GFX = {
     // at reduced filter resolution (D-11)
     BLOOM_HIGH: { threshold: 0.7, bloomScale: 0.7, brightness: 1, blur: 8, quality: 5 },
     BLOOM_HIGH_RESOLUTION: 0.5, // tunable: Filter.resolution for the High-tier world bloom pass
+
+    // ---- Phase 05.6-02: light layer (D-13..D-17) ----
+    TRANSIENT_CAP: 32,        // tunable: max simultaneous pulses; oldest evicted
+    GROUND_SQUASH: 0.72,      // tunable: ground-light vertical squash for the 3/4 top-down view
+    LIGHT_STRENGTH: 0.85,     // tunable: rtSprite alpha compositing the light-map RenderTexture (rt mode)
+    PROP_LIGHT_GAIN: 1.6,     // tunable: alpha multiplier for 05.4 per-prop lights GFX takes over, inside the arena
+    FIRE_FLICKER: 0.5,        // tunable: flicker depth (D-14's warn/active fireVent formula, reused for fire-type props)
+    RING_LIFE_REF: 0.3,       // tunable: GAME.rings has no stored "max life" — rings decay over <=0.3s in practice
+                              // (entities.js/game.js push values 0.18-0.3), so this reference constant stands in for
+                              // "remaining fraction" without needing a schema change to the rings array.
   },
 
   TIERS: ['low', 'medium', 'high'],
@@ -79,6 +89,59 @@ const GFX = {
     ranabhoomi: { gamma: 1, contrast: 1.10, saturation: 0.95, brightness: 1.00, red: 1.05, green: 1.01, blue: 0.92, alpha: 1 },
     vaitarani:  { gamma: 1, contrast: 1.06, saturation: 0.88, brightness: 0.98, red: 0.94, green: 1.00, blue: 1.06, alpha: 1 },
     hub:        { gamma: 1, contrast: 1.04, saturation: 1.02, brightness: 1.00, red: 1.00, green: 1.00, blue: 1.00, alpha: 1 },
+  },
+
+  // tunable: D-14 light presets. Colors are plain 0xRRGGBB numbers (already-parsed — GAME's own
+  // css-string colors, e.g. projectile/zone/boss colors, are run through _colorNum() at collect time).
+  LIGHT_PRESETS: {
+    // h.phase is 'dormant'|'warn'|'erupt' in the real fireVent FSM (js/game.js updateHazards) —
+    // NOT 'active'; 'erupt' is the eruption/damaging phase and maps to this preset's "active" tier.
+    fireVent: {
+      color: 0xff7a2a,
+      dormant: { r: 60, a: 0.18 },
+      warn: { r: 80, a: 0.35 },
+      active: { r: 150, a: 0.75 },
+      flicker: 0.5, // tunable: warn/active flicker depth (overrides CFG.FIRE_FLICKER for this preset)
+    },
+    venomPool: { color: 0x7dff5a, rMul: 1.4, a: 0.22 }, // color falls back to DATA.HAZARDS.venomPool's css color when present
+    playerGlow: { color: 0xffd34d, r: 70, a: 0.22 },
+    pprojectile: { color: 0xffd34d, r: 46, a: 0.45 }, // color falls back to the projectile's own css color when present
+    eprojectile: { color: 0xff5a3c, r: 38, a: 0.35 },
+    orbit: { color: 0xffd34d, r: 50, a: 0.4 },
+    ring: { color: 0xffffff, a: 0.35 }, // r = the ring's own radius; a scales by GFX.CFG.RING_LIFE_REF-relative remaining fraction
+    bolt: { color: 0xbfe3ff, r: 90, a: 0.6 },
+    zoneFire: { color: 0xff5a28 },     // matches game.js renderEffects' rgba(255,90,40,...) fire-zone fill
+    zoneCyclone: { color: 0x7fdcb7 },  // matches game.js renderEffects' rgba(127,220,183,...) cyclone stroke
+    pickupCoin: { color: 0xffcf5c, r: 18, a: 0.2 },      // GAME.pickups' only real item today (type:'mudra') — High tier only
+    pickupBoon: { color: 0xffd34d, r: 70, a: 0.5 },      // future-proofing: any pickup whose type isn't 'mudra'
+    door: { color: 0xffe2a0, r: 110, a: 0.35 },          // only lit once the room is cleared (G.state === 'cleared')
+    bossAura: { rMul: 3.2, a: 0.35 },                     // color comes from the boss's own e.color; phase 2 only
+  },
+
+  // tunable: D-15 per-prop flicker/pulse classification for ENV's manifest `frame.light`-bearing
+  // props (envPropLights() reads item.frame, a manifest frame key like 'brazier'/'glow_fungus').
+  // Keys with no match (e.g. naraka's 'iron_cauldron') default to a flicker, since every 05.4
+  // light-emitting prop seen so far is a fire/ember vessel of some kind.
+  _FIRE_PROP_RE: /brazier|fire|flame|lamp|diya|torch|pillar/i,
+  _PULSE_PROP_RE: /fungus|pool|crystal/i,
+
+  /**
+   * _colorNum(c) — pure. Duplicate of SPRITES.parseColor's (also-pure) logic, kept local so the
+   * light model has zero cross-file coupling and collectLights/addLight/pulse stay callable with
+   * nothing but plain data loaded (D-01's "pure helpers have no Pixi dependency", extended here to
+   * "no other-global dependency either"). Converts '#rrggbb'/'#rgb' CSS strings to 0xRRGGBB;
+   * passes numbers through; falls back to white.
+   */
+  _colorNum(c) {
+    if (typeof c === 'number') return c;
+    if (typeof c === 'string' && c.charCodeAt(0) === 35 /* '#' */) {
+      const hex = c.slice(1);
+      let full = hex;
+      if (hex.length === 3) full = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+      const n = parseInt(full, 16);
+      if (Number.isFinite(n)) return n;
+    }
+    return 0xffffff;
   },
 
   // ---------------- pure section (no Pixi, no DOM — runs headless) ----------------
@@ -173,7 +236,222 @@ const GFX = {
     return (G.biome && G.biome.id) || 'hub';
   },
 
+  /**
+   * collectLights(G, view, tier, envLights, nowSec) — pure (D-14). Reads a plain GAME-shaped
+   * object (never mutates it) and returns {x, y, r, color, a, ground, prio}[], culled to `view`
+   * (expanded per-light by its own radius), sorted by prio descending (ties on projectiles break
+   * nearest-to-player-first), and capped at TIER_CFG[tier].maxLights.
+   *
+   * Sources never lit, for readability (D-14): G.dangerZones, hazards of type 'arrowVolley' /
+   * 'riverCurrent' — simply never matched below.
+   *
+   * envLights entries are flat {x, y, r, color, a, flickerKind?} — color may be a '#rrggbb' string
+   * or an already-parsed number (both normalized by _colorNum via add()); flickerKind is
+   * 'fire'|'pulse'|undefined. Only consulted at tier !== 'low' (enforced here too, defensively,
+   * even though the real caller — frame() — already passes [] at Low).
+   */
+  collectLights(G, view, tier, envLights, nowSec) {
+    const out = [];
+    if (!G) return out;
+    const now = typeof nowSec === 'number' ? nowSec : 0;
+    const cfg = this.TIER_CFG[tier] || this.TIER_CFG.medium;
+    const P = this.LIGHT_PRESETS;
+    const V = view || { x: 0, y: 0, w: 1280, h: 720 };
+    const list = [];
+
+    const add = (x, y, r, color, a, prio, tb, ground) => {
+      if (!Number.isFinite(x) || !Number.isFinite(y) || !(r > 0) || !(a > 0)) return;
+      if (x + r < V.x || x - r > V.x + V.w || y + r < V.y || y - r > V.y + V.h) return;
+      list.push({ x, y, r, color: this._colorNum(color), a, ground: ground !== false, prio, _tb: tb || 0 });
+    };
+
+    // 0. transient pulses — highest priority (D-16)
+    for (const t of this._transients) {
+      const frac = t.max > 0 ? Math.max(0, Math.min(1, t.t / t.max)) : 0;
+      const eased = 1 - (1 - frac) * (1 - frac); // ease-out
+      add(t.x, t.y, t.r, t.color, t.a * eased, 100, 0, true);
+    }
+
+    // 1. boss phase-2 aura
+    for (const e of (G.enemies || [])) {
+      if (!e || e.dead || !e.boss || e.phase !== 2) continue;
+      const pulse = 0.85 + 0.15 * Math.sin(now * 3 + (e.x || 0) * 0.01);
+      add(e.x, e.y, (e.r || 0) * P.bossAura.rMul, e.color, P.bossAura.a * pulse, 90, 0, true);
+    }
+
+    // 2. hazards — fireVent (dormant/warn/erupt — NOT a literal 'active' phase string, see the
+    // preset's own comment) and venomPool only.
+    for (const h of (G.hazards || [])) {
+      if (h.type === 'fireVent') {
+        const fv = P.fireVent;
+        let spec = fv.dormant;
+        if (h.phase === 'erupt') spec = fv.active;
+        else if (h.phase === 'warn') spec = fv.warn;
+        let a = spec.a;
+        if (h.phase === 'warn' || h.phase === 'erupt') {
+          a *= 1 - fv.flicker * (0.5 + 0.5 * Math.sin(now * 11 + h.x * 0.07) * Math.sin(now * 7.3 + h.y * 0.05));
+        }
+        add(h.x, h.y, spec.r, fv.color, a, 80, 0, true);
+      } else if (h.type === 'venomPool') {
+        add(h.x, h.y, (h.r || 0) * P.venomPool.rMul, h.color || P.venomPool.color, P.venomPool.a, 80, 0, true);
+      }
+      // arrowVolley / riverCurrent: never lit — intentionally unmatched.
+    }
+
+    // 3. player ground glow
+    if (G.player) add(G.player.x, G.player.y, P.playerGlow.r, P.playerGlow.color, P.playerGlow.a, 55, 0, true);
+
+    // 4. projectiles / astra effects — tiebreak nearest-to-player-first within the shared prio band
+    const px = G.player ? G.player.x : 0, py = G.player ? G.player.y : 0;
+    const dist = (x, y) => Math.hypot((x || 0) - px, (y || 0) - py);
+    for (const p of (G.pprojectiles || [])) add(p.x, p.y, P.pprojectile.r, p.color || P.pprojectile.color, P.pprojectile.a, 70, dist(p.x, p.y), true);
+    for (const p of (G.eprojectiles || [])) add(p.x, p.y, P.eprojectile.r, p.color || P.eprojectile.color, P.eprojectile.a, 70, dist(p.x, p.y), true);
+    for (const o of (G.orbits || [])) add(o.x, o.y, P.orbit.r, P.orbit.color, P.orbit.a, 70, dist(o.x, o.y), true);
+    for (const r of (G.rings || [])) {
+      const frac = Math.max(0, Math.min(1, (r.t || 0) / this.CFG.RING_LIFE_REF));
+      add(r.x, r.y, r.r, r.color || P.ring.color, P.ring.a * frac, 70, dist(r.x, r.y), true);
+    }
+    for (const b of (G.bolts || [])) {
+      const mx = ((b.x1 || 0) + (b.x2 || 0)) / 2, my = ((b.y1 || 0) + (b.y2 || 0)) / 2;
+      add(mx, my, P.bolt.r, P.bolt.color, P.bolt.a, 70, dist(mx, my), true);
+    }
+    for (const z of (G.zones || [])) {
+      const color = z.type === 'fire' ? P.zoneFire.color : P.zoneCyclone.color;
+      add(z.x, z.y, (z.r || 0) * 1.1, color, 0.35, 70, dist(z.x, z.y), true);
+    }
+
+    // 5. pickups (only real type today is 'mudra'/coin — High only) / doors (once cleared)
+    for (const pk of (G.pickups || [])) {
+      if (pk.type === 'mudra') {
+        if (tier === 'high') add(pk.x, pk.y, P.pickupCoin.r, P.pickupCoin.color, P.pickupCoin.a, 40, 0, true);
+      } else {
+        const pulse = 0.85 + 0.15 * Math.sin(now * 3 + (pk.x || 0) * 0.02);
+        add(pk.x, pk.y, P.pickupBoon.r, P.pickupBoon.color, P.pickupBoon.a * pulse, 60, 0, true);
+      }
+    }
+    if (G.state === 'cleared') {
+      for (const d of (G.doors || [])) add(d.x, d.y, P.door.r, P.door.color, P.door.a, 60, 0, true);
+    }
+
+    // 6. ENV per-prop lights GFX has taken over (D-15) — medium/high only, enforced here too.
+    if (tier !== 'low') {
+      for (const el of (envLights || [])) {
+        let a = el.a;
+        if (el.flickerKind === 'fire') a *= 1 - this.CFG.FIRE_FLICKER * (0.5 + 0.5 * Math.sin(now * 11 + el.x * 0.07) * Math.sin(now * 7.3 + el.y * 0.05));
+        else if (el.flickerKind === 'pulse') a *= 0.85 + 0.15 * Math.sin(now * 2 + el.x * 0.03);
+        add(el.x, el.y, el.r, el.color, a, 50, 0, true);
+      }
+    }
+
+    // 7. registry lights (GFX.addLight) — props/misc, lowest non-coin priority by default.
+    for (const l of this._registry.values()) {
+      let a = l.a;
+      if (l.flicker === 'fire') a *= 1 - this.CFG.FIRE_FLICKER * (0.5 + 0.5 * Math.sin(now * 11 + l.x * 0.07) * Math.sin(now * 7.3 + l.y * 0.05));
+      add(l.x, l.y, l.r, l.color, a, l.prio, 0, l.ground);
+    }
+
+    list.sort((a, b) => (b.prio - a.prio) || (a._tb - b._tb));
+    return list.slice(0, cfg.maxLights).map(l => ({ x: l.x, y: l.y, r: l.r, color: l.color, a: l.a, ground: l.ground, prio: l.prio }));
+  },
+
+  /**
+   * addLight(opts) — D-13/D-15 registry. opts: {x, y, r, color, a, flicker, ground=true,
+   * scope='run', prio=50}. Returns an opaque handle string, or null for malformed opts.
+   * removeLight(h) deletes it. scope:'room' entries are auto-dropped by _roomTick() on room
+   * change; scope:'run' (the default) persists until explicitly removed.
+   */
+  addLight(opts) {
+    if (!opts || !Number.isFinite(opts.x) || !Number.isFinite(opts.y)) return null;
+    const h = 'L' + (++this._regSeq);
+    this._registry.set(h, {
+      x: opts.x, y: opts.y, r: opts.r != null ? opts.r : 60,
+      color: this._colorNum(opts.color != null ? opts.color : 0xffffff),
+      a: opts.a != null ? opts.a : 0.4,
+      flicker: opts.flicker || null,
+      ground: opts.ground !== false,
+      scope: opts.scope || 'run',
+      prio: opts.prio != null ? opts.prio : 50,
+    });
+    return h;
+  },
+  removeLight(h) {
+    return this._registry.delete(h);
+  },
+
+  /**
+   * _roomTick(G) — D-15. Drops every scope:'room' registry entry when the room key changes.
+   * Pure-ish: only mutates GFX's own registry/_roomKey, never G.
+   */
+  _roomTick(G) {
+    if (!G) return;
+    const key = (G.biomeIdx != null ? G.biomeIdx : '') + ':' + (G.roomIdx != null ? G.roomIdx : '') + ':' + (G.state === 'hub');
+    if (key === this._roomKey) return;
+    this._roomKey = key;
+    for (const [h, l] of this._registry) {
+      if (l.scope === 'room') this._registry.delete(h);
+    }
+  },
+
+  // tunable: D-16 transient pulse kinds.
+  TRANSIENT_KINDS: {
+    hit: { color: 0xfff1d0, r: 60, a: 0.6, life: 0.10 },
+    crit: { color: 0xffd34d, r: 90, a: 0.8, life: 0.14 },
+    death: { color: 0xffffff, r: 90, a: 0.5, life: 0.25 },
+    bossDeath: { color: 0xffffff, r: 400, a: 0.9, life: 0.8 },
+    castGlow: { color: 0xffd34d, r: 110, a: 0.6, life: 0.25 },
+    phase: { color: 0xffffff, r: 300, a: 0.7, life: 0.5 },
+  },
+
+  /**
+   * pulse(x, y, kind, color) — D-16. Pushes a transient light that collectLights() decays with an
+   * ease-out curve over its life. Capped at CFG.TRANSIENT_CAP (oldest evicted first). A no-op
+   * (returns null) when SETTINGS.screenFlash is explicitly false, for photosensitivity, or for an
+   * unknown kind / non-finite position.
+   */
+  pulse(x, y, kind, color) {
+    if (typeof SETTINGS !== 'undefined' && SETTINGS.get('screenFlash') === false) return null;
+    const spec = this.TRANSIENT_KINDS[kind];
+    if (!spec || !Number.isFinite(x) || !Number.isFinite(y)) return null;
+    const t = {
+      x, y, r: spec.r, color: this._colorNum(color != null ? color : spec.color), a: spec.a,
+      max: spec.life, t: spec.life,
+    };
+    if (this._transients.length >= this.CFG.TRANSIENT_CAP) this._transients.shift();
+    this._transients.push(t);
+    return t;
+  },
+
+  /**
+   * tickTransients(dt) — ages every pulse by dt seconds and drops any that reached 0.
+   */
+  tickTransients(dt) {
+    if (!dt) return;
+    for (let i = this._transients.length - 1; i >= 0; i--) {
+      const t = this._transients[i];
+      t.t -= dt;
+      if (t.t <= 0) this._transients.splice(i, 1);
+    }
+  },
+
+  /**
+   * envPropLights() — D-15 contract stub. Task 2 (Pixi-dependent section, below) replaces this
+   * method's body with the real ENV._entityItems read. Returns [] whenever ENV isn't loaded, so
+   * this file never hard-depends on js/environment.js.
+   */
+  envPropLights() {
+    if (typeof ENV === 'undefined') return [];
+    return [];
+  },
+
   // ---------------- state ----------------
+  _registry: new Map(),   // addLight()/removeLight() — handle -> {x,y,r,color,a,flicker,ground,scope,prio}
+  _regSeq: 0,
+  _roomKey: '',
+  _transients: [],         // pulse()/tickTransients() — {x,y,r,color,a,max,t}
+  _light: null,            // Task 2: {mode:'direct'|'rt', stage, sprites, tex, rt, rtSprite, lightRes}
+  _envHidden: [],          // Task 2: ENV per-prop pool sprites GFX has hidden at medium/high (see envPropLights)
+  _lightTex: null,
+  _lastEnvTakeoverCount: 0,
   tier: 'medium',          // resolved tier; not persisted — recomputed by applySetting()
   _setting: 'auto',
   _override: null,

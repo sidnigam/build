@@ -7472,6 +7472,128 @@ console.log('\n— GFX core (05.6-01) —');
   check("GFX.sessionOverride('?gfx=x') === null", gr.session2);
 }
 
+// ---------------- GFX light model: presets, collectLights, registry, pulses (05.6-02 Task 1) ----------------
+console.log('\n— GFX light model (05.6-02) —');
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+
+  vm.runInContext(`
+    var __lightResults = (function () {
+      const r = {};
+
+      // ---- collectLights: fireVent dormant/erupt (the real hazard FSM uses 'erupt', not
+      // 'active' — see js/game.js updateHazards / the LIGHT_PRESETS.fireVent comment) ----
+      const Gfire = { hazards: [
+        { type: 'fireVent', x: 100, y: 100, r: 42, phase: 'erupt' },
+        { type: 'fireVent', x: 300, y: 100, r: 42, phase: 'dormant' },
+      ] };
+      const view = { x: 0, y: 0, w: 1280, h: 720 };
+      const lsFire = GFX.collectLights(Gfire, view, 'medium', [], 0);
+      r.fireCount = lsFire.length === 2;
+      const active = lsFire.find(l => l.x === 100), dormant = lsFire.find(l => l.x === 300);
+      r.fireActiveBrighter = !!active && !!dormant && active.a > dormant.a && active.r > dormant.r;
+      r.fireColor = !!active && active.color === 0xff7a2a;
+
+      // ---- never-lit sources: dangerZones, arrowVolley, riverCurrent ----
+      const Gnever = {
+        dangerZones: [{ x: 50, y: 50, r: 40, frac: 0.5 }],
+        hazards: [{ type: 'arrowVolley', x: 60, y: 60, r: 70 }, { type: 'riverCurrent', x: 70, y: 70 }],
+      };
+      r.neverLit = GFX.collectLights(Gnever, view, 'medium', [], 0).length === 0;
+
+      // ---- view-rect culling + maxLights cap, sorted prio-descending (pulses first) ----
+      GFX._transients = [];
+      GFX.pulse(40, 40, 'hit');
+      const Gcull = { hazards: [{ type: 'fireVent', x: 5000, y: 5000, r: 42, phase: 'dormant' }] };
+      const culled = GFX.collectLights(Gcull, view, 'low', [], 0);
+      r.cullsOffscreen = culled.length === 1 && culled[0].x === 40 && culled[0].y === 40; // the pulse; the far-off vent is culled
+      GFX._transients = [];
+
+      const manyEnemies = [];
+      for (let i = 0; i < 200; i++) manyEnemies.push({ x: 10 + i, y: 10, r: 30, boss: true, phase: 2, color: '#ff5533', dead: false });
+      const Gcap = { enemies: manyEnemies };
+      const capped = GFX.collectLights(Gcap, view, 'low', [], 0);
+      r.respectsMaxLights = capped.length === GFX.TIER_CFG.low.maxLights;
+
+      // ---- coin pickups: High only ----
+      const Gcoin = { pickups: [{ x: 20, y: 20, type: 'mudra', val: 3 }] };
+      r.coinHighOnly = GFX.collectLights(Gcoin, view, 'high', [], 0).length === 1
+        && GFX.collectLights(Gcoin, view, 'medium', [], 0).length === 0
+        && GFX.collectLights(Gcoin, view, 'low', [], 0).length === 0;
+
+      // ---- boss aura: phase 2 only ----
+      const bossP2 = { x: 30, y: 30, r: 34, boss: true, phase: 2, color: '#ff5533', dead: false };
+      const bossP1 = { x: 30, y: 30, r: 34, boss: true, phase: 1, color: '#ff5533', dead: false };
+      const auraLs = GFX.collectLights({ enemies: [bossP2] }, view, 'medium', [], 0);
+      r.bossAuraPhase2 = auraLs.length === 1 && Math.abs(auraLs[0].r - 34 * 3.2) < 1e-6;
+      r.bossAuraPhase1None = GFX.collectLights({ enemies: [bossP1] }, view, 'medium', [], 0).length === 0;
+
+      // ---- envLights: appear medium/high only, never low; css-string color parsed to number ----
+      const envLights = [{ x: 15, y: 15, r: 150, color: '#ff7a2a', a: 0.35, flickerKind: 'fire' }];
+      const envMed = GFX.collectLights({}, view, 'medium', envLights, 0);
+      const envLow = GFX.collectLights({}, view, 'low', envLights, 0);
+      r.envLightsMediumHighOnly = envMed.length === 1 && envMed[0].color === 0xff7a2a && envLow.length === 0;
+
+      // ---- registry: addLight/removeLight + scope:'room' auto-drop on room change ----
+      GFX._roomKey = '0:0:false'; // prime "already in this room" so adding lights below is a no-op room-wise
+      const h1 = GFX.addLight({ x: 11, y: 12, r: 40, color: '#ffffff', a: 0.3, scope: 'room' });
+      const h2 = GFX.addLight({ x: 21, y: 22, r: 40, color: '#ffffff', a: 0.3, scope: 'run' });
+      r.addLightHandle = typeof h1 === 'string' && h1 !== h2;
+      const beforeRoomChange = GFX.collectLights({}, { x: 0, y: 0, w: 1280, h: 720 }, 'medium', [], 0).length;
+      r.registryVisible = beforeRoomChange === 2;
+      GFX._roomTick({ biomeIdx: 0, roomIdx: 1, state: 'combat' }); // room changed -> scope:'room' dropped
+      const afterRoomChange = GFX.collectLights({}, { x: 0, y: 0, w: 1280, h: 720 }, 'medium', [], 0).length;
+      r.roomScopeDropped = afterRoomChange === 1; // only the 'run'-scoped h2 survives
+      r.removeLightWorks = GFX.removeLight(h2) === true && GFX.collectLights({}, { x: 0, y: 0, w: 1280, h: 720 }, 'medium', [], 0).length === 0;
+
+      // ---- pulses: decay to 0, cap at 32 (oldest evicted), screenFlash gate ----
+      GFX._transients = [];
+      const p = GFX.pulse(1, 2, 'hit');
+      r.pulseShape = !!p && p.t === p.max && p.t > 0;
+      GFX.tickTransients(p.max);
+      r.pulseDecaysAndRemoved = GFX._transients.length === 0;
+
+      GFX._transients = [];
+      for (let i = 0; i < 40; i++) GFX.pulse(i, i, 'hit');
+      r.pulseCap32 = GFX._transients.length === 32;
+      r.pulseOldestEvicted = GFX._transients[0].x === 8; // first 8 of 40 evicted (40-32=8)
+      GFX._transients = [];
+
+      const savedScreenFlash = SETTINGS.get('screenFlash');
+      SETTINGS.set('screenFlash', false);
+      r.pulseNoopWhenFlashOff = GFX.pulse(5, 5, 'hit') === null && GFX._transients.length === 0;
+      SETTINGS.set('screenFlash', savedScreenFlash);
+
+      // ---- SPRITES.addLight/removeLight delegate ----
+      const sh = SPRITES.addLight({ x: 99, y: 99, r: 50, color: '#ffffff', a: 0.3 });
+      r.spritesAddLightDelegates = typeof sh === 'string';
+      r.spritesRemoveLightDelegates = SPRITES.removeLight(sh) === true;
+
+      return r;
+    })();
+  `, sandbox);
+  const lr = R('__lightResults');
+
+  check('collectLights: fireVent erupt + dormant -> 2 lights', lr.fireCount);
+  check('collectLights: erupt phase is brighter+bigger than dormant', lr.fireActiveBrighter);
+  check('collectLights: fireVent color === 0xff7a2a', lr.fireColor);
+  check('collectLights: dangerZones/arrowVolley/riverCurrent never produce lights', lr.neverLit);
+  check('collectLights: off-screen lights culled by the view rect', lr.cullsOffscreen);
+  check("collectLights: result length <= TIER_CFG[tier].maxLights (low cap)", lr.respectsMaxLights);
+  check("collectLights: coin pickups (type:'mudra') light only at tier 'high'", lr.coinHighOnly);
+  check('collectLights: boss aura only at phase === 2, r = boss.r*3.2', lr.bossAuraPhase2);
+  check('collectLights: boss phase 1 yields no aura', lr.bossAuraPhase1None);
+  check('collectLights: envLights appear at medium/high (css color parsed to number), never at low', lr.envLightsMediumHighOnly);
+  check('GFX.addLight returns a unique handle per call', lr.addLightHandle);
+  check('GFX registry lights are visible via collectLights', lr.registryVisible);
+  check("GFX._roomTick drops scope:'room' registry entries on room change", lr.roomScopeDropped);
+  check('GFX.removeLight removes a registry entry', lr.removeLightWorks);
+  check('GFX.pulse() produces a transient that fully decays after tickTransients(life)', lr.pulseDecaysAndRemoved);
+  check('GFX pulse cap is 32, oldest evicted first', lr.pulseCap32 && lr.pulseOldestEvicted);
+  check('GFX.pulse() is a no-op when SETTINGS.screenFlash === false', lr.pulseNoopWhenFlashOff);
+  check('SPRITES.addLight/removeLight delegate to GFX', lr.spritesAddLightDelegates && lr.spritesRemoveLightDelegates);
+}
+
 Promise.all(pendingAsyncChecks).then(() => {
   console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
   process.exit(failures ? 1 : 0);

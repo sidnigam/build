@@ -747,6 +747,23 @@
       "commercial_use": true,
       "confirmed_date": "2026-09-29",
       "adopted": false
+    },
+    {
+      "checkpoint": "BiRefNet-general (rembg matte, adopted for god portraits)",
+      "file": "birefnet-general.onnx",
+      "role": "matte",
+      "source_url": "https://github.com/danielgatis/rembg/releases/download/v0.0.0/BiRefNet-general-epoch_244.onnx",
+      "upstream_repo": "https://github.com/ZhengPeng7/BiRefNet",
+      "sha256": "58f621f00f5d756097615970a88a791584600dcf7c45b18a0a6267535a1ebd3c",
+      "md5": "7a35a0141cbbc80de11d9c9a28f52697",
+      "size_bytes": 972666916,
+      "license": "MIT",
+      "license_text": "tools/art/licenses/birefnet-mit.LICENSE.txt",
+      "license_text_sha256": "92a7089e0915fc32bc40067560b398f1e6a7a5958abd7d04eda393629a5acefb",
+      "note": "Downloaded on first --matte birefnet-general use from rembg's own official GitHub releases (not a third-party mirror); md5 verified against rembg's own pinned checksum before use. Adopted via the Task 3 CPU bake-off (see prompts.json god_finish for the decision and evidence).",
+      "commercial_use": true,
+      "confirmed_date": "2026-10-16",
+      "adopted": false
     }
   ]
 }

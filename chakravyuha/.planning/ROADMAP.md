@@ -21,8 +21,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 5.2: PS5 DualSense Controller Support** (INSERTED)
 - [x] **Phase 5.3: Adaptive Indian Classical Score** (INSERTED)
 - [ ] **Phase 5.4: Epic-Inspired Environment Art Upgrade** (INSERTED)
-- [ ] **Phase 5.5: God Portraits + Boon Dialogue** (INSERTED)
-- [ ] **Phase 5.6: Graphics Polish (Lighting, Bloom, Sprite Quality)** (INSERTED)
+- [x] **Phase 5.5: God Portraits + Boon Dialogue** (INSERTED)
+- [x] **Phase 5.6: Graphics Polish (Lighting, Bloom, Sprite Quality)** (INSERTED)
 - [ ] **Phase 6: Steam Integration** - Steamworks SDK, 15+ achievements, Cloud saves, validated overlay
 - [ ] **Phase 7: CI/CD + Store Submission + Cultural Review** - Signed CI binaries, store assets, telemetry, AI survey, cultural sign-off, Deck Verified
 

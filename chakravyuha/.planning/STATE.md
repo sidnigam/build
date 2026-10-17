@@ -91,6 +91,8 @@ None yet.
 
 [Issues that affect future work]
 
+- [Cultural review QA-03, god portraits 2026-10-17]: all 6 shipped portraits are provisional. Flags: Agni wears a Vaishnava urdhva-pundra tilak (Vishnu/Krishna mark); Indra's vajra renders as a four-pointed cross rather than the classic double-ended vajra. Earlier SDXL attempts failed 6/6; FLUX.1-schnell (Apache-2.0, user-approved) + birefnet matte succeeded.
+
 - [Polish backlog, 2026-09-27 screenshot review]: (a) RESOLVED by quick 260927-qze. (b) Fallback env north wall is a flat maroon band (resolved when 05.4 wall art lands). (c) Legacy biome bg shows tiling seams under TilingSprite (resolved by 05.4 seamless tiles). (d) Vaitarani rooms plan ~53 enemies from room 1 — tune after playtest. (f) Env art review (2026-10-17): Naraka gate reads Gothic/European rather than Indian (torana); Naraka vent_grate hazard skin reads like a modern hubcap; Naraka floor reads slightly like riveted metal; Patala venom pools very bright vs muted floor — tune in 05.4-05. Env manifests were silently falling back (PIXI spritesheet auto-detect) — fixed 1e3913a. (e) RESOLVED by quick 260929-s6t (production bug in UI.offerAmrit/offerBoon fallbacks).
 
 - [Cultural review]: yama-atlas.png (blue skin + golden crown) reads as Vishnu/Krishna iconography rather than Yama; kumbhakarna carries a trident-like staff (Shiva association). Both provisional — review before any public screenshots. Tataka regenerated to remove deity iconography.
@@ -117,6 +119,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-09-25
-Last activity: 2026-10-16 - Merged 05.1, 05.2, 05.3 (complete), 05.4-01/04, 05.5-01(partial)/02/03, 05.5-04 tasks 1-3 (Flux setup), 05.6-01. In progress: 05.4-02 env art (Naraka/Patala). Pending GPU: 05.5-04 task 4 (Flux portraits), 05.4-03
+Last activity: 2026-10-17 - Phases 5.1, 5.2, 5.3, 5.5 (6/6 god portraits via FLUX.1-schnell), 5.6 (GFX tiers, 2x sprites, dynamic lighting) complete and merged. 5.4: plans 01/02/04 merged + env manifest fix; 05.4-03 (Ranabhoomi/Vaitarani art) generating; 05.4-05 integration pending.
 Stopped at: Phase 5.x execution — see Last activity
 Resume file: None

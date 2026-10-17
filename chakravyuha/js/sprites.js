@@ -50,7 +50,19 @@ const SPRITES = {
         backgroundColor: 0x0b0710,
         antialias: true,
         resolution: window.devicePixelRatio || 1,
-        autoDensity: true,
+        // Phase 05.6 D-08 bugfix (Rule 1): autoDensity:true makes Pixi's TextureSource
+        // resizeCanvas() pin canvas.style.width/height to the fixed LOGICAL size ("1280px"/
+        // "720px") on every renderer.resize() call — including GFX.applyResolution()'s calls —
+        // which permanently overrides the existing #game{width:100%;height:100%} CSS rule
+        // (inline style always wins the cascade) and the mousemove handler's own
+        // getBoundingClientRect()-based scaling (game.js) that already assumes a responsive
+        // canvas CSS size. That made GFX-07's "render resolution follows the ACTUAL displayed
+        // CSS width" impossible: the canvas could never visibly be larger than 1280x720 CSS px
+        // in the first place. autoDensity is Pixi's own built-in CSS-size management and is not
+        // needed here — #stage/#game's existing CSS already does the (responsive, 16:9-letterboxed)
+        // sizing; Pixi's `resolution` option continues to control the backing-store pixel
+        // density independently of this. Verified in vendor/pixi.min.js (resizeCanvas()).
+        autoDensity: false,
       });
 
       // Build scene graph containers
@@ -178,6 +190,7 @@ const SPRITES = {
         try {
           const sheet = await PIXI.Assets.load(entry.path);
           this.sheets[entry.key] = sheet;
+          this._enableMipmaps(sheet);
         } catch (e) {
           console.warn('SPRITES atlas missing — fallback to primitives:', entry.key, e);
           this._missing.add(entry.key);
@@ -188,6 +201,31 @@ const SPRITES = {
     } catch (e) {
       console.warn('SPRITES.load failed — fallback to primitives', e);
       this.ready = false;
+    }
+  },
+
+  /**
+   * _enableMipmaps(sheet) — Phase 05.6 D-18. Character atlases only (never biome bg textures,
+   * which load via loadTextures()/this.textures, not this.sheets). Verified against
+   * vendor/pixi.min.js: Spritesheet#textureSource is the underlying TextureSource;
+   * autoGenerateMipmaps/mipmapFilter/maxAnisotropy are plain settable properties on it, and
+   * updateMipmaps() recomputes mipLevelCount from autoGenerateMipmaps. Best-effort: any failure
+   * just leaves the atlas without mipmaps (same visual result as before this plan).
+   */
+  _enableMipmaps(sheet) {
+    try {
+      let src = sheet && sheet.textureSource;
+      if (!src && sheet && sheet.textures) {
+        const first = Object.values(sheet.textures)[0];
+        src = first && first.source;
+      }
+      if (!src) return;
+      src.autoGenerateMipmaps = true;
+      try { src.mipmapFilter = 'linear'; } catch (eFilter) { /* property name may differ by minor version */ }
+      try { src.maxAnisotropy = 4; } catch (eAniso) { /* optional */ }
+      if (typeof src.updateMipmaps === 'function') src.updateMipmaps();
+    } catch (e) {
+      if (!this._mipWarned) { console.warn('[SPRITES] mipmap enable failed — atlas stays unmipmapped', e); this._mipWarned = true; }
     }
   },
 
@@ -851,8 +889,16 @@ const SPRITES = {
    */
   _applyFlash(spr, k, isPlayer) {
     if (!spr) return;
-    let liftF = spr._liftF;
-    if (isPlayer && !liftF) {
+    // Phase 05.6 D-04 lift gate: Low tier has no steady-state player-lift filter at all. If a
+    // lift filter was already built (tier dropped from Medium/High to Low mid-run), destroy and
+    // drop it. The transient flash filter below is kept at every tier (gameplay feedback).
+    const liftAllowed = !(typeof GFX !== 'undefined' && GFX.TIER_CFG && GFX.TIER_CFG[GFX.tier] && GFX.TIER_CFG[GFX.tier].playerLift === false);
+    if (!liftAllowed && spr._liftF) {
+      try { if (spr._liftF.destroy) spr._liftF.destroy(); } catch (errDestroy) { /* best-effort */ }
+      spr._liftF = null;
+    }
+    let liftF = liftAllowed ? spr._liftF : null;
+    if (isPlayer && liftAllowed && !liftF) {
       try {
         const PIXI = window.PIXI;
         liftF = new PIXI.ColorMatrixFilter();

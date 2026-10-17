@@ -94,6 +94,10 @@ function check(label, cond) {
   if (cond) console.log(`  ok  ${label}`);
   else { console.error(`FAIL  ${label}`); failures++; }
 }
+// Promises pushed here are awaited (via Promise.all) immediately before the final summary/exit —
+// used by the env-art-not-rendering regression check below, which needs a real microtask turn to
+// observe ENV._loadBiome()'s async result (env-art-not-rendering debug session).
+const pendingAsyncChecks = [];
 
 // ---------------- boot ----------------
 vm.runInContext(`
@@ -6962,6 +6966,55 @@ console.log('\n— environment (05.4) —');
   try { R('GAME.render();'); } catch (e) { renderErr = e; }
   check('GAME.render() (incl. renderBackground) does not throw with environment.js loaded headless' + (renderErr ? ' — ' + renderErr.stack : ''),
     renderErr === null);
+
+  // ---- regression: _loadBiome() must not misroute the D-11 manifest through PIXI.Assets.load ----
+  // (env-art-not-rendering debug session). Real PIXI's spritesheetLoader auto-detects ANY *.json
+  // asset whose parsed data has a truthy top-level `frames` key as a spritesheet manifest (it only
+  // checks extension + `!!data.frames`, never the shape), then unconditionally reads
+  // `data.meta.image` to locate the atlas PNG. D-11 manifests (assets/sprites/env/*/*-env.json) have
+  // a top-level `frames` key by design but no `meta` block, so routing the manifest fetch through
+  // PIXI.Assets.load() throws "Cannot read properties of undefined (reading 'image')" — a crash that
+  // _loadBiome's own try/catch swallowed with zero logging, permanently stranding every biome with
+  // real shipped art on the D-13a legacy fallback kit (old bg + procedural walls) with no console
+  // warning to flag it. Reproduces that exact crash via a mock window.PIXI.Assets.load and asserts
+  // ENV still resolves 'ready' (i.e. the manifest fetch itself must bypass PIXI.Assets.load).
+  const regressionManifestPath = path.join(envGlobRoot, 'naraka', 'naraka-env.json');
+  if (fs.existsSync(regressionManifestPath)) {
+    const realManifest = JSON.parse(fs.readFileSync(regressionManifestPath, 'utf8'));
+    sandbox.__ENV_REGRESSION_MANIFEST = realManifest;
+    const prevFetch = sandbox.fetch;
+    const prevPixi = R('typeof PIXI === "undefined" ? undefined : PIXI');
+    sandbox.fetch = (url) => {
+      if (url === 'assets/sprites/env/naraka/naraka-env.json') {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(sandbox.__ENV_REGRESSION_MANIFEST) });
+      }
+      return Promise.resolve({ ok: false });
+    };
+    sandbox.__ENV_MOCK_PIXI = {
+      Assets: {
+        load: (url) => {
+          if (/-env\.json$/.test(url)) {
+            throw new TypeError("Cannot read properties of undefined (reading 'image')");
+          }
+          return Promise.resolve({ width: 8, height: 8, textures: {}, source: {} });
+        },
+      },
+    };
+    R('PIXI = __ENV_MOCK_PIXI;');
+    R('ENV._biomeStatus = {}; ENV._retryAt = null; ENV._manifests = {}; ENV._atlases = {}; ENV._tileTextures = {};');
+    const loadPromise = R('ENV._loadBiome("naraka")');
+    pendingAsyncChecks.push(Promise.resolve(loadPromise).then(() => {
+      const status = R('ENV._biomeStatus.naraka');
+      check("ENV._loadBiome(): real naraka manifest (top-level `frames` key) resolves to 'ready' under a PIXI.Assets.load that reproduces the real spritesheet-collision crash — i.e. the manifest fetch bypasses PIXI.Assets.load", status === 'ready');
+    }).catch((e) => {
+      check('ENV._loadBiome(): regression check threw — ' + (e && e.stack || e), false);
+    }).then(() => {
+      sandbox.fetch = prevFetch;
+      R('ENV._biomeStatus = {}; ENV._retryAt = null; ENV._manifests = {}; ENV._atlases = {}; ENV._tileTextures = {};');
+      sandbox.__ENV_MOCK_PIXI = prevPixi;
+      R('PIXI = __ENV_MOCK_PIXI;');
+    }));
+  }
 }
 
 // ---------------- god presence on boon panel (Phase 05.5) ----------------
@@ -7419,5 +7472,7 @@ console.log('\n— GFX core (05.6-01) —');
   check("GFX.sessionOverride('?gfx=x') === null", gr.session2);
 }
 
-console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
-process.exit(failures ? 1 : 0);
+Promise.all(pendingAsyncChecks).then(() => {
+  console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
+  process.exit(failures ? 1 : 0);
+});

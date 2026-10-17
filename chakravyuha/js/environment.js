@@ -771,7 +771,18 @@ const ENV = {
       if (typeof window === 'undefined' || !window.PIXI) { this._biomeStatus[biomeId] = 'unavailable'; return; }
       const PIXI = window.PIXI;
       let manifest = null;
-      try { manifest = await PIXI.Assets.load(`assets/sprites/env/${biomeId}/${biomeId}-env.json`); } catch (e) { manifest = null; }
+      // D-11 manifests carry a top-level `frames` key (by design — see validateManifest above), which
+      // collides with PIXI's Assets spritesheetLoader auto-detection (`testParse` matches ANY *.json
+      // asset whose parsed data has a truthy `frames` key, regardless of shape — see vendor/pixi.min.js).
+      // Routing this file through PIXI.Assets.load() makes Pixi try to parse it as a spritesheet
+      // manifest, which throws (`Cannot read properties of undefined (reading 'image')`, since our
+      // manifest has no `meta.image`) — silently caught below, permanently stranding every biome with
+      // real art on the D-13a fallback kit. Fetch it as plain JSON instead; it is pure data, never an
+      // asset PIXI needs to cache/track.
+      try {
+        const res = await fetch(`assets/sprites/env/${biomeId}/${biomeId}-env.json`);
+        if (res && res.ok) manifest = await res.json();
+      } catch (e) { manifest = null; }
       if (manifest) {
         const v = this.validateManifest(manifest, { strict: false });
         if (!v.ok) { console.warn('ENV: manifest invalid for', biomeId, v.errors); manifest = null; }

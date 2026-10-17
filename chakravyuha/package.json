@@ -27,7 +27,8 @@
       "electron/**/*",
       "!assets/**/_raw/**",
       "!assets/**/_review/**",
-      "!assets/**/reference/**"
+      "!assets/**/reference/**",
+      "!assets/**/_gen/**"
     ],
     "mac": {
       "target": [

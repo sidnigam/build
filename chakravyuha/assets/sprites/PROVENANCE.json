@@ -212,9 +212,9 @@
       "post_processing": [
         "rembg birefnet-general background removal",
         "alpha despeckle + trim",
-        "bottom-aligned LANCZOS fit to 512x512 (margin 9)",
+        "bottom-aligned LANCZOS fit to 512x512 (margin 5)",
         "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
-        "baked outline: disk dilation 5 px, #140b08 a=235, 0.6px feather, under sprite",
+        "baked outline: disk dilation 1 px, #140b08 a=235, 0.6px feather, under sprite",
         "phase2: tools/art/phase2_variant.py --mode ember --scale 2",
         "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],

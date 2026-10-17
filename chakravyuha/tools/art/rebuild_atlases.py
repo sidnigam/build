@@ -84,7 +84,10 @@ ACTOR_TABLE = [
     {"key": "bhuta", "kind": "enemy", "r": 21, "size_old": 128, "size_new": 256, "outline": 4, "phase2": None},
     {"key": "daitya", "kind": "enemy", "r": 19, "size_old": 128, "size_new": 256, "outline": 4, "phase2": None},
     {"key": "yatudhana", "kind": "enemy", "r": 14, "size_old": 128, "size_new": 256, "outline": 5, "phase2": None},
-    {"key": "tataka", "kind": "boss", "r": 34, "size_old": 256, "size_new": 512, "outline": 5, "phase2": "ember"},
+    # outline 1px (not 5) — review found the default 5px merged her many close, thin trailing
+    # hair/cape wisps into a solid black mass; 1px keeps individual tendrils readable while
+    # still giving a thin dark edge everywhere else (Task 3 tuning round 1).
+    {"key": "tataka", "kind": "boss", "r": 34, "size_old": 256, "size_new": 512, "outline": 1, "phase2": "ember"},
     {"key": "ahiravana", "kind": "boss", "r": 30, "size_old": 256, "size_new": 512, "outline": 5, "phase2": "ember"},
     {"key": "kumbhakarna", "kind": "boss", "r": 46, "size_old": 256, "size_new": 512, "outline": 4, "phase2": "ember"},
     {"key": "yama", "kind": "boss", "r": 36, "size_old": 256, "size_new": 512, "outline": 5, "phase2": "divine"},

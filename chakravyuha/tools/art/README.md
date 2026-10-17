@@ -316,3 +316,87 @@ but does not replace the orchestrator serializing the two phases' art executors.
 - No enemy or asura boss may carry divine iconography (halo, multiple heads/hoods as a
   mark of divinity, worship motifs) — `enemy_negative_extra` in prompts.json enforces this
   in the negative prompt for every subject except Yama.
+
+## Re-finishing character atlases (05.6-03)
+
+Rebuilds the 13 character atlases (player + 8 enemies + 4 bosses) at 2x from the
+**original** full-resolution SDXL/img2img outputs, with sharpening and a baked outline.
+No new generation — every pixel traces back to a ComfyUI output already on disk.
+
+**Do not clear `~/ComfyUI/output`.** The full-resolution sources for every character live
+only there (ComfyUI's PNG-embedded `prompt` metadata is the only record of the exact seed +
+prompt text used). If `~/ComfyUI/output` has been cleared before this pipeline runs,
+`recover_sources.py` will report the actor as unmatched — regenerate it from its recorded
+seed (`assets/sprites/PROVENANCE.json`'s `seed`/`prompt` fields, or the player's
+`seeds`/`denoise`) via `gen_subject.py`/`comfy_client.py` instead, then re-run
+`finish_sprite.py`/`phase2_variant.py` by hand with the same flags `rebuild_atlases.py`
+would have used.
+
+1. **Recover sources** (no ComfyUI connection needed — reads PNG metadata only):
+   ```
+   ~/ComfyUI/venv/bin/python tools/art/recover_sources.py
+   ```
+   Matches every boss/enemy PROVENANCE entry to a `~/ComfyUI/output/*.png` on
+   `(seed, exact prompt text, width, height)`; matches the player's four img2img frames by
+   filename prefix + `denoise==0.35` + seed. Copies matches to `assets/sprites/_gen/...`
+   (gitignored) and writes `assets/sprites/_gen/recovered.json`. Exits non-zero and lists any
+   unmatched actor.
+
+2. **Legacy-reproduction check** (pins source identity + the correct mirror flag before
+   anything is overwritten):
+   ```
+   ~/ComfyUI/venv/bin/python tools/art/rebuild_atlases.py --legacy-check
+   ```
+   Re-finishes each actor's recovered source at the *old* size with the *old* CLI semantics
+   (`--matte u2net`, no `--sharpen`/`--outline`, `margin=4`), diffs both mirror orientations
+   against the committed `assets/sprites/_raw/...` frame, and writes
+   `assets/sprites/_gen/legacy_check.json`. A mean-abs-RGBA diff under 3.0 (0-255 scale) is
+   `ok: true`. The player's historical pipeline predates `despeckle`/`fit_bottom_aligned`, so
+   it may read `ok: false` even when visually identical — check it by eye and record it as a
+   documented exception rather than blocking on it.
+
+3. **(Optional) matte comparison** — compares `u2net` against `birefnet-general` per actor at
+   game scale, so a per-character cutout model can be chosen (the 05.5-04 god-portrait
+   bake-off found `birefnet-general` preserves thin held props/limbs far better, with no new
+   artifacts):
+   ```
+   ~/ComfyUI/venv/bin/python tools/art/rebuild_atlases.py --matte-preview [--only a,b]
+   ```
+   Writes `$SCRATCH/matte-preview/<actor>.png` (u2net left, birefnet-general right). Review
+   with the Read tool and set the winning matte per actor in `rebuild_atlases.py`'s
+   `MATTE_CHOICE` dict before building.
+
+4. **Build** (writes the new `_raw` frames, repacks every atlas, updates PROVENANCE):
+   ```
+   ~/ComfyUI/venv/bin/python tools/art/rebuild_atlases.py --build [--only a,b]
+   ```
+   Backs up the pre-rebuild atlases + `_raw` to `$SCRATCH/old-atlases/` once (never
+   overwritten by a later `--build`, so the tuning loop always diffs against the true
+   pre-05.6-03 originals). Per actor: `finish_sprite.py` at the new size with
+   `--sharpen --outline N` (`ACTOR_TABLE`'s per-actor outline px/color, D-19), the chosen
+   mirror flag from `legacy_check.json`; bosses additionally run `phase2_variant.py
+   --scale 2` on the outlined idle frame; packs with `tools/pack-atlas.js --padding 8`;
+   asserts the atlas JSON's animation keys are unchanged; prints the old-vs-new
+   dimensions/KB/GPU-MB memory report; upserts `PROVENANCE.json` (`post_processing`,
+   `source_recovered_from`, `repacked_phase`, `repacked_date`, and the player's
+   `seeds`/`denoise`) while preserving every other field.
+
+5. **Review**:
+   ```
+   ~/ComfyUI/venv/bin/python tools/art/scale_preview.py
+   ```
+   Writes `$SCRATCH/scale-preview/<actor>.png` and `all.png` — old vs new at on-screen size
+   (render resolution 1 and 2) over a home-biome floor crop and a mid-grey background, plus a
+   4x nearest-neighbour zoom for player/preta/tataka. Review with the Read tool against:
+   sharper with no ringing/halos; a thin ~1px painted ink outline (not a sticker border, no
+   blobbed thin parts); ghost/glow actors still read ethereal/divine; phase-2 glows unchanged;
+   clean silhouette separation from the home floor. Tune `ACTOR_TABLE`'s `outline`/
+   `OUTLINE_COLOR_OVERRIDE` and re-run `--build --only <actor>` + this script to iterate
+   (at most 3 rounds; flag anything still marginal in the plan's SUMMARY).
+
+6. **Report** (no rebuilding — just the memory numbers):
+   ```
+   ~/ComfyUI/venv/bin/python tools/art/rebuild_atlases.py --report
+   ```
+
+7. Run `node tools/check-provenance.js` and `node test/smoke.js` — both must stay green.

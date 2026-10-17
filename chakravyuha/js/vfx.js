@@ -71,7 +71,10 @@ const VFX = {
   },
 
   count(n) {
-    if (typeof SETTINGS !== 'undefined' && SETTINGS.get('reducedParticles')) {
+    // D-17: Low tier forces the reduced-particle path without ever writing SETTINGS.reducedParticles.
+    const reduced = (typeof SETTINGS !== 'undefined' && SETTINGS.get('reducedParticles'))
+      || (typeof GFX !== 'undefined' && GFX.tier === 'low');
+    if (reduced) {
       return Math.max(1, Math.ceil(n * 0.35));
     }
     return n;
@@ -158,7 +161,9 @@ const VFX = {
     const def = this.AMBIENT[biomeId];
     if (!def) return;
     if (this._ambBiome !== biomeId) { this._ambBiome = biomeId; this._ambAcc = 0; }
-    const reduced = typeof SETTINGS !== 'undefined' && SETTINGS.get('reducedParticles');
+    // D-17: Low tier forces the reduced-particle path without ever writing SETTINGS.reducedParticles.
+    const reduced = (typeof SETTINGS !== 'undefined' && SETTINGS.get('reducedParticles'))
+      || (typeof GFX !== 'undefined' && GFX.tier === 'low');
     const rate = def.rate * (reduced ? 0.25 : 1);
     this._ambAcc += rate * dt;
     const capAmb = (this.CAP * 0.15) | 0;
@@ -395,6 +400,7 @@ VFX.PRESETS.hit = function (x, y, a) {
     this.spawn(x, y, Math.cos(ang) * spd, Math.sin(ang) * spd, life, 3, 1, '#ffffff', 1, true, 0.88, 0, 1, false);
   }
   this.spawn(x, y, 0, 0, 0.08, 10, 2, '#ffffff', 0, true, 0.9, 0, 1, false);
+  if (typeof GFX !== 'undefined') GFX.pulse(x, y, 'hit');
 };
 
 VFX.PRESETS.crit = function (x, y, a) {
@@ -406,6 +412,7 @@ VFX.PRESETS.crit = function (x, y, a) {
     this.spawn(x, y, Math.cos(ang) * spd, Math.sin(ang) * spd, life, 3, 1, '#ffd34d', 1, true, 0.88, 0, 1, false);
   }
   this.spawn(x, y, 0, 0, 0.08, 16, 2, '#ffd34d', 0, true, 0.9, 0, 1, false);
+  if (typeof GFX !== 'undefined') GFX.pulse(x, y, 'crit');
 };
 
 VFX.PRESETS.death = function (x, y, a, color) {
@@ -423,6 +430,7 @@ VFX.PRESETS.death = function (x, y, a, color) {
     const life = U.rand(0.6, 1.0);
     this.spawn(x, y, Math.cos(ang) * U.rand(10, 40), U.rand(-70, -20), life, 3, 1, '#ff9a3c', 2, true, 0.97, -120, 1, false);
   }
+  if (typeof GFX !== 'undefined') GFX.pulse(x, y, 'death', color);
 };
 
 VFX.PRESETS.bossDeath = function (x, y, a, color) {
@@ -442,6 +450,7 @@ VFX.PRESETS.bossDeath = function (x, y, a, color) {
     const life = U.rand(0.8, 1.4);
     this.spawn(x, y, Math.cos(ang) * U.rand(40, 120), Math.sin(ang) * U.rand(40, 120) - 40, life, 4, 1, '#ff9a3c', 2, true, 0.96, -80, 1, false);
   }
+  if (typeof GFX !== 'undefined') GFX.pulse(x, y, 'bossDeath', color);
 };
 
 VFX.PRESETS.hurt = function (x, y, a) {
@@ -479,6 +488,7 @@ VFX.PRESETS.castGlow = function (x, y, a) {
     const life = U.rand(0.15, 0.25);
     this.spawn(x, y, Math.cos(ang) * spd, Math.sin(ang) * spd, life, 3, 1, '#ffd34d', 1, true, 0.88, 0, 1, false);
   }
+  if (typeof GFX !== 'undefined') GFX.pulse(x, y, 'castGlow');
 };
 
 VFX.PRESETS.astraTrail = function (x, y) {
@@ -500,6 +510,7 @@ VFX.PRESETS.phase = function (x, y, a, color) {
     const life = U.rand(0.4, 0.7);
     this.spawn(x, y, Math.cos(ang) * spd, Math.sin(ang) * spd, life, 4, 1, col, 0, false, 0.94, 0, 1, false);
   }
+  if (typeof GFX !== 'undefined') GFX.pulse(x, y, 'phase', color);
 };
 
 // ---------------- biome ambient particles (VFX-05, D-16) ----------------

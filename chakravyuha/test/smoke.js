@@ -80,7 +80,18 @@ sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 
 // ---------------- load game scripts ----------------
-const files = ['utils.js', 'settings.js', 'renderer.js', 'sprites.js', 'vfx.js', 'audio.js', 'music.js', 'data.js', 'meta.js', 'entities.js', 'rooms.js', 'ui.js', 'game.js', 'storage.js', 'gamepad.js', 'glyphs.js', 'focus.js'];
+// 05.6-02: js/gfx.js loads here (right after vfx.js), matching index.html's real script order
+// exactly ("it loads in index.html right after js/vfx.js" — 05.6-01). This matters beyond style:
+// loading it lazily at the bottom of this file (after thousands of VFX.count()/PRESETS.* calls
+// have already run with GFX undefined) hits a real V8/vm.runInContext quirk — a hot function's
+// `typeof GFX !== 'undefined'` check, compiled while GFX had never existed, does not reliably
+// pick up a same-named `const` added by a LATER, separate vm.runInContext script in the same
+// context. That is a test-harness-only artifact (production index.html loads vfx.js then gfx.js
+// before any gameplay code ever runs VFX.count()/PRESETS.*, so GFX always exists by first call) —
+// reproduced and confirmed in isolation before this fix; loading gfx.js here, at the same relative
+// position as index.html, makes every later `typeof GFX` check in vfx.js (D-17's count()/ambient()
+// path, and the PRESETS.* -> GFX.pulse() hooks) actually exercise the real code, not a false pass.
+const files = ['utils.js', 'settings.js', 'renderer.js', 'sprites.js', 'vfx.js', 'gfx.js', 'audio.js', 'music.js', 'data.js', 'meta.js', 'entities.js', 'rooms.js', 'ui.js', 'game.js', 'storage.js', 'gamepad.js', 'glyphs.js', 'focus.js'];
 for (const f of files) {
   const src = fs.readFileSync(path.join(__dirname, '..', 'js', f), 'utf8');
   vm.runInContext(src, sandbox, { filename: f });
@@ -7481,6 +7492,17 @@ console.log('\n— GFX light model (05.6-02) —');
     var __lightResults = (function () {
       const r = {};
 
+      // Clean slate: gfx.js now loads right after vfx.js (matching index.html's real script
+      // order — see the 'files' array comment above), so every earlier full-run sim's
+      // VFX.PRESETS.{hit,crit,...} calls have been genuinely firing GFX.pulse() this whole time
+      // (frame()/tickTransients() still no-op headless, so nothing ever decayed them). That is
+      // the hooks working correctly end-to-end — just not something this isolated unit test
+      // below should see as "fixture pollution", so reset the light-model's own mutable state
+      // before asserting pure collectLights() behavior against hand-built fixtures.
+      GFX._transients = [];
+      GFX._registry.clear();
+      GFX._roomKey = '';
+
       // ---- collectLights: fireVent dormant/erupt (the real hazard FSM uses 'erupt', not
       // 'active' — see js/game.js updateHazards / the LIGHT_PRESETS.fireVent comment) ----
       const Gfire = { hazards: [
@@ -7592,6 +7614,71 @@ console.log('\n— GFX light model (05.6-02) —');
   check('GFX pulse cap is 32, oldest evicted first', lr.pulseCap32 && lr.pulseOldestEvicted);
   check('GFX.pulse() is a no-op when SETTINGS.screenFlash === false', lr.pulseNoopWhenFlashOff);
   check('SPRITES.addLight/removeLight delegate to GFX', lr.spritesAddLightDelegates && lr.spritesRemoveLightDelegates);
+}
+
+// ---------------- VFX x GFX pulse hooks + Low-tier reduced particles (05.6-02 Task 2) ----------------
+console.log('\n— VFX x GFX hooks (05.6-02) —');
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+
+  vm.runInContext(`
+    var __vfxGfxResults = (function () {
+      const r = {};
+      const savedTier = GFX.tier;
+
+      GFX.tier = 'low';
+      const lowCount = VFX.count(20);
+      GFX.tier = 'medium';
+      const medCount = VFX.count(20);
+      r.lowReducesCount = lowCount < medCount;
+      r.reducedParticlesSettingUntouched = SETTINGS.get('reducedParticles') === false;
+
+      GFX._transients = [];
+      VFX.emit('hit', 10, 10, 0);
+      r.emitAddsOneTransient = GFX._transients.length === 1;
+      GFX._transients = [];
+
+      const savedScreenFlash = SETTINGS.get('screenFlash');
+      SETTINGS.set('screenFlash', false);
+      VFX.emit('hit', 10, 10, 0);
+      r.emitNoTransientWhenFlashOff = GFX._transients.length === 0;
+      SETTINGS.set('screenFlash', savedScreenFlash);
+      GFX._transients = [];
+
+      let frameThrew = false;
+      try { GFX.frame(); } catch (e) { frameThrew = true; }
+      r.frameNoThrow = !frameThrew;
+
+      // short headless room sim with GFX loaded (GAME.render() -> SPRITES.uploadBridge() ->
+      // GFX.frame() every frame) — asserts nothing throws with the light layer hooks wired in.
+      let simErr = null;
+      try {
+        GAME.startRun();
+        const P = GAME.player;
+        P.maxhp = 1e9; P.hp = 1e9;
+        for (let f = 0; f < 120; f++) {
+          GAME.update(1 / 60);
+          GAME.render();
+        }
+      } catch (e) { simErr = e.stack; }
+      r.simNoThrow = simErr === null;
+      r.simError = simErr;
+
+      GFX.tier = savedTier;
+      GFX._registry.clear();
+      GFX._roomKey = '';
+      return r;
+    })();
+  `, sandbox);
+  const vr = R('__vfxGfxResults');
+
+  check('VFX.count() at GFX.tier low < at medium (D-17 forces the reduced-particle path)', vr.lowReducesCount);
+  check('D-17: forcing the Low reduced-particle path never writes SETTINGS.reducedParticles', vr.reducedParticlesSettingUntouched);
+  check("VFX.emit('hit') adds exactly one GFX transient", vr.emitAddsOneTransient);
+  check("VFX.emit('hit') adds no transient when SETTINGS.screenFlash is off", vr.emitNoTransientWhenFlashOff);
+  check('GFX.frame() still throws nothing headless with the light layer hook wired in', vr.frameNoThrow);
+  check('short headless room sim (GAME.update/render x120, GFX loaded) throws nothing'
+    + (vr.simError ? ' — ' + vr.simError : ''), vr.simNoThrow);
 }
 
 Promise.all(pendingAsyncChecks).then(() => {

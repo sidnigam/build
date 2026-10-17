@@ -434,13 +434,58 @@ const GFX = {
   },
 
   /**
-   * envPropLights() — D-15 contract stub. Task 2 (Pixi-dependent section, below) replaces this
-   * method's body with the real ENV._entityItems read. Returns [] whenever ENV isn't loaded, so
-   * this file never hard-depends on js/environment.js.
+   * envPropLights() — D-15 ENV takeover adapter. Reads ENV._entityItems (an array of
+   * {item, obj} pairs built by ENV.build() — see js/environment.js's `kind === 'prop'` /
+   * `kind === 'pillar-skin'|'wall-skin'` branches) for items carrying a manifest `frameLight`
+   * (set in `_placeProps` from `frame.light`), and returns flat {x, y, r, color, a, flickerKind}
+   * entries — never touching js/environment.js itself (runtime read only, per the file-ownership
+   * "Do NOT touch environment.js" rule).
+   *
+   * Finding recorded for the SUMMARY: as of 05.4-04, ENV does NOT build a separate pool sprite
+   * for per-prop manifest lights (only its biome-ambient `lights.pools` get a `kind:'pool'`
+   * sprite in ENV.lightLayer) — `item.frameLight` is carried on the prop's own entity item with
+   * no companion light sprite to hide. So the "hide ENV's matching per-prop pool sprite" half of
+   * D-15 has nothing to do today; GFX adds the light and there is nothing to double-light.
+   * _restoreEnvPropLights() stays wired (reads this._envHidden) so the contract still holds the
+   * instant a future ENV revision adds one.
    */
   envPropLights() {
-    if (typeof ENV === 'undefined') return [];
-    return [];
+    const out = [];
+    if (typeof ENV === 'undefined' || !ENV.isActive || !ENV.isActive() || !Array.isArray(ENV._entityItems)) return out;
+    try {
+      const A = (typeof GAME !== 'undefined' && GAME.arena) || null;
+      for (let i = 0; i < ENV._entityItems.length; i++) {
+        const pair = ENV._entityItems[i];
+        const item = pair && pair.item, obj = pair && pair.obj;
+        if (!item || !item.frameLight) continue;
+        if (obj && obj.visible === false) continue; // respect ENV's own view culling
+        const x = item.x, y = item.y;
+        if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+        const fl = item.frameLight;
+        const inArena = A ? (x >= A.x && x <= A.x + A.w && y >= A.y && y <= A.y + A.h) : true;
+        let a = fl.alpha != null ? fl.alpha : 0.3;
+        a = inArena ? a * this.CFG.PROP_LIGHT_GAIN : Math.min(a, 0.6);
+        const key = item.frame || '';
+        const flickerKind = this._FIRE_PROP_RE.test(key) ? 'fire' : (this._PULSE_PROP_RE.test(key) ? 'pulse' : 'fire');
+        out.push({ x, y, r: fl.r, color: fl.color, a, flickerKind });
+      }
+    } catch (e) { return []; }
+    return out;
+  },
+
+  /**
+   * _restoreEnvPropLights() — the other half of the D-15 contract: re-shows any ENV per-prop pool
+   * sprite GFX had hidden at Medium/High, called from _teardownLights() on every tier switch
+   * (including down to Low). A no-op today (see envPropLights()'s doc comment — nothing is ever
+   * added to _envHidden because ENV builds no per-prop pool sprite to hide), kept so the contract
+   * is honored automatically if a future ENV revision adds one.
+   */
+  _restoreEnvPropLights() {
+    if (!this._envHidden.length) return;
+    for (const obj of this._envHidden) {
+      try { if (obj) obj.visible = true; } catch (e) { /* best-effort */ }
+    }
+    this._envHidden = [];
   },
 
   // ---------------- state ----------------
@@ -469,6 +514,7 @@ const GFX = {
   _resizeTimer: null,
   _lastFrameT: 0,
   _tierWarned: false,
+  _lightWarned: false,
 
   // ---------------- Pixi-dependent section ----------------
 
@@ -546,6 +592,11 @@ const GFX = {
         this._ensureFallbackVignette();
       }
 
+      // 3.5. Light layer (D-13) — rebuilt at every tier switch (direct at Low; rt at Medium/High),
+      // independent of cfg.filters since lights apply at every tier, including Low.
+      this._teardownLights();
+      this._buildLights(cfg);
+
       // 4. Render resolution follows the tier's resCap.
       this.applyResolution();
     } catch (e) {
@@ -560,6 +611,7 @@ const GFX = {
       this._bloom = null;
       if (SPRITES.worldContainer) SPRITES.worldContainer.filters = null;
       if (SPRITES.fxContainer) SPRITES.fxContainer.filters = null;
+      try { this._teardownLights(); } catch (eLightTeardown) { /* ignore */ }
       return false;
     }
     return true;
@@ -598,6 +650,118 @@ const GFX = {
     } catch (e) {
       this._vignette = null;
     }
+  },
+
+  /**
+   * _buildLightTexture() — D-13. A 128px canvas radial gradient (soft, painterly falloff: stops
+   * at 0:1, 0.2:0.75, 0.45:0.32, 0.75:0.08, 1:0), built once and reused by every pooled light
+   * sprite (tint supplies the color). Radius is 64, so a light's sprite scale = r / 64.
+   */
+  _buildLightTexture() {
+    if (this._lightTex) return this._lightTex;
+    try {
+      const PIXI = window.PIXI;
+      const size = 128;
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const c = size / 2;
+      const grad = ctx.createRadialGradient(c, c, 0, c, c, c);
+      grad.addColorStop(0, 'rgba(255,255,255,1)');
+      grad.addColorStop(0.2, 'rgba(255,255,255,0.75)');
+      grad.addColorStop(0.45, 'rgba(255,255,255,0.32)');
+      grad.addColorStop(0.75, 'rgba(255,255,255,0.08)');
+      grad.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, size, size);
+      this._lightTex = PIXI.Texture.from(canvas);
+    } catch (e) {
+      this._lightTex = null;
+    }
+    return this._lightTex;
+  },
+
+  /**
+   * _buildLights(cfg) — D-13. Builds the pooled light layer for the given tier config: a
+   * Container holding cfg.maxLights invisible, anchor-0.5, blendMode 'add' pooled Sprites.
+   * - 'direct' (Low): the stage is parented straight into worldContainer, at world coordinates.
+   * - 'rt' (Medium/High): the stage stays unparented; a RenderTexture + compositing rtSprite (also
+   *   additive) are created instead, inserted at the same z-slot. Any failure (RenderTexture API
+   *   drift, etc.) warns once and falls back to 'direct' so the game never loses its light layer.
+   * Z-slot: inserted immediately before entityContainer (D-13's documented world order), via
+   * getChildIndex — never a hard-coded index.
+   */
+  _buildLights(cfg) {
+    if (typeof window === 'undefined' || !window.PIXI || typeof SPRITES === 'undefined'
+      || !SPRITES.worldContainer || !SPRITES.entityContainer) return;
+    try {
+      const PIXI = window.PIXI;
+      const tex = this._buildLightTexture();
+      if (!tex) return;
+
+      const stage = new PIXI.Container();
+      const sprites = [];
+      const maxLights = Math.max(0, cfg.maxLights || 0);
+      for (let i = 0; i < maxLights; i++) {
+        const s = new PIXI.Sprite(tex);
+        s.anchor.set(0.5);
+        s.blendMode = 'add';
+        s.visible = false;
+        stage.addChild(s);
+        sprites.push(s);
+      }
+
+      let mode = cfg.lightMode;
+      let rt = null, rtSprite = null;
+      if (mode === 'rt') {
+        try {
+          const lr = cfg.lightRes || 0.5;
+          const w = Math.max(1, Math.round(1280 * lr));
+          const h = Math.max(1, Math.round(720 * lr));
+          rt = PIXI.RenderTexture.create({ width: w, height: h });
+          rtSprite = new PIXI.Sprite(rt);
+          rtSprite.blendMode = 'add';
+          rtSprite.alpha = this.CFG.LIGHT_STRENGTH;
+          const idx = SPRITES.worldContainer.getChildIndex(SPRITES.entityContainer);
+          SPRITES.worldContainer.addChildAt(rtSprite, idx);
+        } catch (eRt) {
+          console.warn('[GFX] rt light mode unavailable — falling back to direct additive sprites', eRt);
+          mode = 'direct';
+          if (rtSprite) { try { if (rtSprite.parent) rtSprite.parent.removeChild(rtSprite); rtSprite.destroy(); } catch (eCleanup) { /* ignore */ } }
+          if (rt) { try { rt.destroy(true); } catch (eCleanup2) { /* ignore */ } }
+          rt = null; rtSprite = null;
+        }
+      }
+      if (mode === 'direct') {
+        const idx = SPRITES.worldContainer.getChildIndex(SPRITES.entityContainer);
+        SPRITES.worldContainer.addChildAt(stage, idx);
+      }
+
+      this._light = { mode, stage, sprites, tex, rt, rtSprite, lightRes: cfg.lightRes || null };
+    } catch (e) {
+      if (!this._lightWarned) { console.warn('[GFX] _buildLights failed — no light layer this tier', e); this._lightWarned = true; }
+      this._teardownLights();
+    }
+  },
+
+  /**
+   * _teardownLights() — destroys everything _buildLights created (sprites, stage, rt, rtSprite)
+   * and restores any ENV per-prop pool sprites GFX had hidden (see envPropLights/D-15), so
+   * dropping to Low (or any tier switch) never leaves ENV's own lights permanently hidden.
+   */
+  _teardownLights() {
+    this._restoreEnvPropLights();
+    const L = this._light;
+    if (!L) { this._light = null; return; }
+    try {
+      for (const s of (L.sprites || [])) {
+        try { if (s.parent) s.parent.removeChild(s); s.destroy(); } catch (eS) { /* best-effort */ }
+      }
+      if (L.stage) { try { if (L.stage.parent) L.stage.parent.removeChild(L.stage); L.stage.destroy(); } catch (eStage) { /* ignore */ } }
+      if (L.rtSprite) { try { if (L.rtSprite.parent) L.rtSprite.parent.removeChild(L.rtSprite); L.rtSprite.destroy(); } catch (eRtSpr) { /* ignore */ } }
+      if (L.rt) { try { L.rt.destroy(true); } catch (eRtTex) { /* ignore */ } }
+    } catch (e) { /* best-effort teardown */ }
+    this._light = null;
   },
 
   /**
@@ -721,12 +885,51 @@ const GFX = {
       }
     } catch (e) { /* probe is best-effort — never throw out of frame() */ }
 
-    // 05.6-02: light layer update
+    // 05.6-02: light layer update (D-13..D-15)
+    try {
+      this._roomTick(G);
+      this.tickTransients(dt / 1000);
+      if (this._light) {
+        const view = (typeof CAMERA !== 'undefined' && CAMERA.viewRect) ? CAMERA.viewRect(0) : { x: 0, y: 0, w: 1280, h: 720 };
+        const envLights = (this.tier === 'low') ? [] : this.envPropLights();
+        this._lastEnvTakeoverCount = envLights.length;
+        const nowSec = now / 1000;
+        const lights = G ? this.collectLights(G, view, this.tier, envLights, nowSec) : [];
+
+        const sprites = this._light.sprites;
+        for (let i = 0; i < sprites.length; i++) {
+          const s = sprites[i];
+          const l = lights[i];
+          if (!l) { if (s.visible) s.visible = false; continue; }
+          s.visible = true;
+          s.position.set(l.x, l.y);
+          const scale = l.r / 64;
+          s.scale.set(scale, scale * (l.ground ? this.CFG.GROUND_SQUASH : 1));
+          try { s.tint = l.color; } catch (eTint) { /* ignore */ }
+          s.alpha = l.a;
+        }
+
+        if (this._light.mode === 'rt' && this._light.rt) {
+          const lr = this._light.lightRes || 0.5;
+          const tx = (typeof CAMERA !== 'undefined' && Number.isFinite(CAMERA.tx)) ? CAMERA.tx : 0;
+          const ty = (typeof CAMERA !== 'undefined' && Number.isFinite(CAMERA.ty)) ? CAMERA.ty : 0;
+          const tz = (typeof CAMERA !== 'undefined' && CAMERA.tz) ? CAMERA.tz : 1;
+          this._light.stage.position.set(tx * lr, ty * lr);
+          this._light.stage.scale.set(tz * lr);
+          try {
+            SPRITES.app.renderer.render({ container: this._light.stage, target: this._light.rt, clear: true, clearColor: [0, 0, 0, 0] });
+          } catch (eRender) { /* best-effort — leave the RT's previous contents on screen */ }
+          if (this._light.rtSprite) {
+            this._light.rtSprite.position.set(-tx / tz, -ty / tz);
+            this._light.rtSprite.scale.set(1 / (tz * lr));
+          }
+        }
+      }
+    } catch (eLight) { /* the light layer is cosmetic — never throw out of frame() */ }
   },
 
   /**
    * stats() — read-only snapshot for the browser-check gate and in-page debugging.
-   * Plan 02 fills in lightMode and adds light/RT counts.
    */
   stats() {
     const hasPixi = typeof window !== 'undefined' && window.PIXI && typeof SPRITES !== 'undefined' && SPRITES.app;
@@ -734,6 +937,7 @@ const GFX = {
     const fx = (hasPixi && SPRITES.fxContainer && SPRITES.fxContainer.filters) ? SPRITES.fxContainer.filters.length : 0;
     const sf = (hasPixi && SPRITES.app.stage && SPRITES.app.stage.filters) ? SPRITES.app.stage.filters.length : 0;
     const hf = (hasPixi && SPRITES.hudContainer && SPRITES.hudContainer.filters) ? SPRITES.hudContainer.filters.length : 0;
+    const visibleLights = (this._light && this._light.sprites) ? this._light.sprites.filter(s => s.visible).length : 0;
     return {
       tier: this.tier,
       setting: this._setting,
@@ -745,7 +949,11 @@ const GFX = {
       stageFilters: sf,
       hudFilters: hf,
       resolution: (hasPixi && SPRITES.app.renderer) ? SPRITES.app.renderer.resolution : 1,
-      lightMode: null, // filled in by 05.6-02
+      lightMode: this._light ? this._light.mode : null,          // 05.6-02 D-13
+      lights: visibleLights,
+      transients: this._transients.length,
+      rt: (this._light && this._light.rt) ? { w: this._light.rt.width, h: this._light.rt.height } : null,
+      envTakeover: this._lastEnvTakeoverCount || 0,
     };
   },
 };

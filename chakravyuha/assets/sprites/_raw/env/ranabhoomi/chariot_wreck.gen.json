@@ -9,7 +9,7 @@
     "6": {
       "class_type": "CLIPTextEncode",
       "inputs": {
-        "text": "a single ancient Indian two-wheeled war chariot (ratha), open-topped low wooden platform with no canopy and no enclosed cabin, overturned on its side in the dust, splintered wooden body with bronze fittings, one large spoked wheel broken off and lying separately, clearly wrecked and damaged, no horses, no people, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+        "text": "a single ancient Indian two-wheeled war chariot (ratha), exactly TWO large ornate spoked wheels (one axle only, no four-wheel wagon), a raised wooden platform car with carved wooden railings around the rim, a single long draught pole extending forward from the platform (the yoke pole for horses, no horses attached), overturned and broken on its side in the dust, splintered wood, bronze fittings, no horses, no people, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
         "clip": [
           "4",
           1
@@ -19,7 +19,7 @@
     "7": {
       "class_type": "CLIPTextEncode",
       "inputs": {
-        "text": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, horse, person, body, blood, gore, intact, upright, pristine, covered wagon, canvas canopy, prairie schooner, Conestoga wagon, enclosed cabin, European cart, medieval cart",
+        "text": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, horse, person, body, blood, gore, intact, upright, pristine, covered wagon, canvas canopy, prairie schooner, Conestoga wagon, enclosed cabin, European cart, medieval cart, four wheels, wagon, cart, farm wagon, two axles, enclosed cabin, covered wagon",
         "clip": [
           "4",
           1
@@ -37,7 +37,7 @@
     "3": {
       "class_type": "KSampler",
       "inputs": {
-        "seed": 63082,
+        "seed": 63083,
         "steps": 32,
         "cfg": 7.0,
         "sampler_name": "dpmpp_2m",
@@ -86,9 +86,9 @@
     }
   },
   "params": {
-    "positive": "a single ancient Indian two-wheeled war chariot (ratha), open-topped low wooden platform with no canopy and no enclosed cabin, overturned on its side in the dust, splintered wooden body with bronze fittings, one large spoked wheel broken off and lying separately, clearly wrecked and damaged, no horses, no people, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
-    "negative": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, horse, person, body, blood, gore, intact, upright, pristine, covered wagon, canvas canopy, prairie schooner, Conestoga wagon, enclosed cabin, European cart, medieval cart",
-    "seed": 63082,
+    "positive": "a single ancient Indian two-wheeled war chariot (ratha), exactly TWO large ornate spoked wheels (one axle only, no four-wheel wagon), a raised wooden platform car with carved wooden railings around the rim, a single long draught pole extending forward from the platform (the yoke pole for horses, no horses attached), overturned and broken on its side in the dust, splintered wood, bronze fittings, no horses, no people, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+    "negative": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, horse, person, body, blood, gore, intact, upright, pristine, covered wagon, canvas canopy, prairie schooner, Conestoga wagon, enclosed cabin, European cart, medieval cart, four wheels, wagon, cart, farm wagon, two axles, enclosed cabin, covered wagon",
+    "seed": 63083,
     "width": 1024,
     "height": 1024,
     "steps": 32,
@@ -99,7 +99,7 @@
     "checkpoint_label": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
     "checkpoint_profile": "sdxl_base"
   },
-  "prompt_id": "9716db0e-cb99-4737-a163-2ca560c3829d",
+  "prompt_id": "c02cf706-d27d-41f5-ad74-13069437e40f",
   "comfyui_version": "0.35.0",
-  "generated_at": "2026-10-19T17:11:52Z"
+  "generated_at": "2026-10-19T21:57:17Z"
 }

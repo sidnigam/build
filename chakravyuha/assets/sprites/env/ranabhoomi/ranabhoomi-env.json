@@ -81,7 +81,7 @@
       "frame": "ranabhoomi_chariot_wreck_0.png",
       "size": [
         384,
-        243
+        378
       ],
       "role": "prop",
       "ground_safe": false,
@@ -98,7 +98,7 @@
     "column": {
       "frame": "ranabhoomi_column_0.png",
       "size": [
-        274,
+        131,
         448
       ],
       "role": "column",
@@ -159,7 +159,7 @@
       "frame": "ranabhoomi_fallen_banner_0.png",
       "size": [
         384,
-        333
+        374
       ],
       "role": "prop",
       "ground_safe": false,

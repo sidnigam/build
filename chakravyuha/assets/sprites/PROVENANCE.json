@@ -2548,14 +2548,15 @@
       "cfg": 7.0,
       "width": 1024,
       "height": 1024,
-      "seed": 63082,
-      "prompt": "a single ancient Indian two-wheeled war chariot (ratha), open-topped low wooden platform with no canopy and no enclosed cabin, overturned on its side in the dust, splintered wooden body with bronze fittings, one large spoked wheel broken off and lying separately, clearly wrecked and damaged, no horses, no people, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
-      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, horse, person, body, blood, gore, intact, upright, pristine, covered wagon, canvas canopy, prairie schooner, Conestoga wagon, enclosed cabin, European cart, medieval cart",
+      "seed": 63083,
+      "prompt": "a single ancient Indian two-wheeled war chariot (ratha), exactly TWO large ornate spoked wheels (one axle only, no four-wheel wagon), a raised wooden platform car with carved wooden railings around the rim, a single long draught pole extending forward from the platform (the yoke pole for horses, no horses attached), overturned and broken on its side in the dust, splintered wood, bronze fittings, no horses, no people, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, horse, person, body, blood, gore, intact, upright, pristine, covered wagon, canvas canopy, prairie schooner, Conestoga wagon, enclosed cabin, European cart, medieval cart, four wheels, wagon, cart, farm wagon, two axles, enclosed cabin, covered wagon",
       "rejected_seeds": [
         63080,
-        63081
+        63081,
+        63083
       ],
-      "rejected_count": 2,
+      "rejected_count": 3,
       "post_processing": [
         "prop"
       ],
@@ -2565,10 +2566,10 @@
       "recorded_date": "2026-10-19",
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "s63082: open wooden two-axle chariot/cart frame, clearly broken down -- splintered slats, one wheel detached and leaning against the body, no canvas canopy or enclosed cabin -- fixes attempt-1's covered-wagon style mismatch. Large spoked wheels read well at prop scale; no horses, no people, no blood.",
+      "self_review": "s63083: ancient two-wheeled war chariot (ratha) -- exactly two large ornate spoked wheels on one axle, a raised platform car with carved railings, a single long draught pole extending forward at a broken angle, overturned/wrecked look -- fixes the orchestrator-flagged 4-wheeled Western farm-wagon mismatch. No horses, no people, no blood.",
       "role": "prop",
       "biome": "ranabhoomi",
-      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; no horses/people/blood/gore; open wrecked wooden chariot frame only, no European/American wagon styling.",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; no horses/people/blood/gore; correct two-wheeled ratha form, no wagon/cart styling.",
       "ground_safe": false,
       "grading": {
         "sat": 0.85,
@@ -2580,7 +2581,8 @@
       },
       "rejected_reasons": {
         "63080": "generated an intact-looking two-wheeled cart, not clearly overturned or damaged -- doesn't read as a battlefield wreck",
-        "63081": "generated an enclosed canvas-topped covered wagon (American prairie-schooner / Conestoga wagon style) -- a major historical/cultural style mismatch, not an ancient Indian war chariot (ratha); CLAUDE.md bars anachronistic/wrong-culture forms"
+        "63081": "generated an enclosed canvas-topped covered wagon (American prairie-schooner / Conestoga wagon style) -- a major historical/cultural style mismatch, not an ancient Indian war chariot (ratha); CLAUDE.md bars anachronistic/wrong-culture forms",
+        "63083": "orchestrator review: current accepted asset (s63082) reads as a 4-wheeled Western farm wagon/cart, not a two-wheeled Mahabharata-era war chariot (ratha) -- needs two large spoked wheels only, a raised platform/car with carved railings, a single draught pole"
       }
     },
     {
@@ -2597,13 +2599,16 @@
       "cfg": 7.0,
       "width": 832,
       "height": 1216,
-      "seed": 63041,
-      "prompt": "a single tall wooden war-camp post, the full height of the post visible top to bottom filling the frame, bronze bands wrapped around the wood, coiled rope wound around the post, a bronze bell hanging from a short crossbar near the top, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
-      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, bell alone, close-up on bell only, cropped post, no post visible",
+      "seed": 63043,
+      "prompt": "a single tall wooden war-camp post, the full height of the post visible top to bottom filling the frame, bronze bands wrapped around the wood, coiled rope wound around the post, a small clay oil lamp (diya) with a tiny open flame resting on a short wooden shelf bracket near the top of the post, no glass, no lantern housing, no modern fixture, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, bell alone, close-up on bell only, cropped post, no post visible, lantern, glass lantern, hurricane lamp, camping lantern, glass globe, glass shade, modern lamp fixture",
       "rejected_seeds": [
-        63040
+        63040,
+        63041,
+        63043,
+        63044
       ],
-      "rejected_count": 1,
+      "rejected_count": 4,
       "post_processing": [
         "column"
       ],
@@ -2613,10 +2618,10 @@
       "recorded_date": "2026-10-19",
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "s63041: single tall wooden war-camp post, full height visible top to bottom, bronze-banded, a lantern/bell hanging from the top on rope, small base plinth -- fixes attempt-0's bell-only framing.",
+      "self_review": "s63043 (final pick after 5 attempts): tall wooden war-camp post, full height visible top to bottom, bronze bands, coiled rope, a plain capped/shelved top -- no modern lantern, no glass, no electric fixture (fixes the orchestrator-flagged Victorian street-lamp anachronism from s63041). An explicit diya/flame on the post was not achieved within the D-15 5-attempt budget (attempt 4 regressed to a tabletop candlestick that lost the tall-post framing); accepted as a culturally clean, non-anachronistic generic war-camp post -- the manifest's attachable light pool can still imply illumination at runtime independent of the static texture.",
       "role": "column",
       "biome": "ranabhoomi",
-      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; no modern/anachronistic fixture.",
       "ground_safe": false,
       "grading": {
         "sat": 0.8,
@@ -2627,7 +2632,10 @@
         "crop": null
       },
       "rejected_reasons": {
-        "63040": "generated only a bronze bell hanging from a rope on a plain background -- no post/pole visible at all, fails the 'tall column' framing entirely"
+        "63040": "generated only a bronze bell hanging from a rope on a plain background -- no post/pole visible at all, fails the 'tall column' framing entirely",
+        "63041": "orchestrator review: accepted asset (s63041) still reads as a lantern/lamp hanging from a post -- replace with an oil diya/clay lamp on a short wooden stand or bronze deepa stand, keeping the post form but removing any lantern/lamp-fixture read",
+        "63043": "generated a wooden post with a pagoda/pyramid-roof decorative cap, no visible lamp/flame/diya bowl at all -- lost the modern lantern anachronism but also lost the requested oil-lamp read entirely",
+        "63044": "generated a close-up tabletop candlestick with an orange wax pillar candle -- lost the 'tall post, full height visible' framing entirely and introduced a modern wax-candle read; worse than attempt 3 on the framing requirement"
       }
     },
     {
@@ -2775,24 +2783,26 @@
       "cfg": 7.0,
       "width": 1024,
       "height": 1024,
-      "seed": 63090,
-      "prompt": "fallen chariot flag-pole lying on the ground with a torn plain faded cloth pennant, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
-      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, emblem, deity, face, symbol, om, swastika",
-      "rejected_seeds": [],
-      "rejected_count": 0,
+      "seed": 63093,
+      "prompt": "a long triangular or swallow-tailed war banner (dhvaja pennant) cut from a single earthy saffron, crimson or ochre dyed cloth with frayed and torn edges, attached to a broken wooden pole lying flat on the ground, the cloth draped and crumpled naturally along the ground, not a canopy or umbrella shape, no stripes, no tricolour pattern, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, emblem, deity, face, symbol, om, swastika, umbrella, parasol, canopy, tricolour, striped, beach umbrella, tent, awning, symmetrical cone shape",
+      "rejected_seeds": [
+        63090
+      ],
+      "rejected_count": 1,
       "post_processing": [
         "prop"
       ],
       "raw_image": null,
       "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/ranabhoomi/fallen_banner.gen.json",
-      "generated_date": "2026-10-18",
+      "generated_date": "2026-10-19",
       "recorded_date": "2026-10-19",
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "s63090: chariot flag-pole fallen at a diagonal angle with a plain striped pennant draped toward the ground, torn edge visible, no emblem.",
+      "self_review": "s63093: war banner (dhvaja pennant) cut from a single earthy saffron/ochre dyed cloth with a frayed fringed edge, triangular cut, hanging from its crossbar pole -- fixes the orchestrator-flagged tricolour-stripe/beach-umbrella mismatch (no stripes, no canopy/umbrella silhouette, no tricolour). The pole is shown horizontal with cloth draped down rather than fully prone on the ground; accepted as a serviceable 'fallen/down' banner read for a margin prop at this zoom, since the core cultural/accuracy correction (earthy plain-dyed cloth, no tricolour, no umbrella) is what the orchestrator flagged.",
       "role": "prop",
       "biome": "ranabhoomi",
-      "cultural_check": "pass: no deity/idol/face/emblem/om/swastika.",
+      "cultural_check": "pass: no deity/idol/face/emblem/om/swastika; plain dyed cloth only, no cultural emblem.",
       "ground_safe": false,
       "grading": {
         "sat": 0.85,
@@ -2801,6 +2811,9 @@
       "finish": {
         "mode": "prop",
         "crop": null
+      },
+      "rejected_reasons": {
+        "63090": "orchestrator review: current accepted asset reads as a striped red/white/blue beach umbrella/canopy shape, not a fallen war banner -- needs a long triangular/swallow-tailed cloth, earthy dyed colors, no tricolour stripes, no umbrella silhouette"
       }
     },
     {

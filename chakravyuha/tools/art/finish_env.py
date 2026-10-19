@@ -284,7 +284,14 @@ def merge_manifest(existing, new):
     preserved from `existing`. New tile/frame ids not present in `existing` are added
     wholesale (their role defaults already computed by the caller). Top-level tuning blocks
     (floor/walls/skins/hazards/lights/grade) are kept wholesale from `existing` when present,
-    else taken from `new`. Returns a new dict; does not mutate either argument."""
+    else taken from `new`. Returns a new dict; does not mutate either argument.
+
+    05.4-03 fix: a partial build (env_build.py --only key,key) passes a `new` manifest whose
+    tiles/frames are a strict SUBSET of the full biome (only the rebuilt subjects). The merge
+    must still carry forward every existing tile/frame id that isn't in `new` untouched --
+    iterating `new_section`'s keys alone (the original implementation) silently dropped every
+    other tile/frame on a partial rebuild. The loop below iterates the UNION of existing and
+    new keys instead, so untouched entries survive a --only rebuild byte-for-byte."""
     if not existing:
         return copy.deepcopy(new)
 
@@ -294,8 +301,13 @@ def merge_manifest(existing, new):
         existing_section = existing.get(section, {}) or {}
         new_section = new.get(section, {}) or {}
         merged_section = {}
-        for key, new_entry in new_section.items():
-            if key in existing_section:
+        for key in {**existing_section, **new_section}.keys():
+            new_entry = new_section.get(key)
+            if new_entry is None:
+                # Not part of this (possibly partial) build -- carry the existing entry
+                # forward unchanged.
+                merged_section[key] = copy.deepcopy(existing_section[key])
+            elif key in existing_section:
                 combined = dict(existing_section[key])
                 for f in structural_fields:
                     if f in new_entry:

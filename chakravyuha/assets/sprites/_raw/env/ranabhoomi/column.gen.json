@@ -9,7 +9,7 @@
     "6": {
       "class_type": "CLIPTextEncode",
       "inputs": {
-        "text": "a single tall wooden war-camp post, the full height of the post visible top to bottom filling the frame, bronze bands wrapped around the wood, coiled rope wound around the post, a bronze bell hanging from a short crossbar near the top, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+        "text": "a single tall wooden war-camp post, the full height of the post visible top to bottom filling the frame, bronze bands wrapped around the wood, coiled rope wound around the post, a small clay oil lamp (diya) with a tiny open flame resting on a short wooden shelf bracket near the top of the post, no glass, no lantern housing, no modern fixture, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
         "clip": [
           "4",
           1
@@ -19,7 +19,7 @@
     "7": {
       "class_type": "CLIPTextEncode",
       "inputs": {
-        "text": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, bell alone, close-up on bell only, cropped post, no post visible",
+        "text": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, bell alone, close-up on bell only, cropped post, no post visible, lantern, glass lantern, hurricane lamp, camping lantern, glass globe, glass shade, modern lamp fixture",
         "clip": [
           "4",
           1
@@ -37,7 +37,7 @@
     "3": {
       "class_type": "KSampler",
       "inputs": {
-        "seed": 63041,
+        "seed": 63043,
         "steps": 32,
         "cfg": 7.0,
         "sampler_name": "dpmpp_2m",
@@ -86,9 +86,9 @@
     }
   },
   "params": {
-    "positive": "a single tall wooden war-camp post, the full height of the post visible top to bottom filling the frame, bronze bands wrapped around the wood, coiled rope wound around the post, a bronze bell hanging from a short crossbar near the top, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
-    "negative": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, bell alone, close-up on bell only, cropped post, no post visible",
-    "seed": 63041,
+    "positive": "a single tall wooden war-camp post, the full height of the post visible top to bottom filling the frame, bronze bands wrapped around the wood, coiled rope wound around the post, a small clay oil lamp (diya) with a tiny open flame resting on a short wooden shelf bracket near the top of the post, no glass, no lantern housing, no modern fixture, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+    "negative": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, bell alone, close-up on bell only, cropped post, no post visible, lantern, glass lantern, hurricane lamp, camping lantern, glass globe, glass shade, modern lamp fixture",
+    "seed": 63043,
     "width": 832,
     "height": 1216,
     "steps": 32,
@@ -99,7 +99,7 @@
     "checkpoint_label": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
     "checkpoint_profile": "sdxl_base"
   },
-  "prompt_id": "e140d7c7-fe47-46d0-aa92-719f4ae7acdc",
+  "prompt_id": "3f1b496a-af97-44ab-9ccf-9f3e26136ed2",
   "comfyui_version": "0.35.0",
-  "generated_at": "2026-10-19T16:47:19Z"
+  "generated_at": "2026-10-19T22:03:13Z"
 }

@@ -9,7 +9,7 @@
     "6": {
       "class_type": "CLIPTextEncode",
       "inputs": {
-        "text": "fallen chariot flag-pole lying on the ground with a torn plain faded cloth pennant, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+        "text": "a long triangular or swallow-tailed war banner (dhvaja pennant) cut from a single earthy saffron, crimson or ochre dyed cloth with frayed and torn edges, attached to a broken wooden pole lying flat on the ground, the cloth draped and crumpled naturally along the ground, not a canopy or umbrella shape, no stripes, no tricolour pattern, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
         "clip": [
           "4",
           1
@@ -19,7 +19,7 @@
     "7": {
       "class_type": "CLIPTextEncode",
       "inputs": {
-        "text": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, emblem, deity, face, symbol, om, swastika",
+        "text": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, emblem, deity, face, symbol, om, swastika, umbrella, parasol, canopy, tricolour, striped, beach umbrella, tent, awning, symmetrical cone shape",
         "clip": [
           "4",
           1
@@ -37,7 +37,7 @@
     "3": {
       "class_type": "KSampler",
       "inputs": {
-        "seed": 63090,
+        "seed": 63093,
         "steps": 32,
         "cfg": 7.0,
         "sampler_name": "dpmpp_2m",
@@ -86,9 +86,9 @@
     }
   },
   "params": {
-    "positive": "fallen chariot flag-pole lying on the ground with a torn plain faded cloth pennant, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
-    "negative": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, emblem, deity, face, symbol, om, swastika",
-    "seed": 63090,
+    "positive": "a long triangular or swallow-tailed war banner (dhvaja pennant) cut from a single earthy saffron, crimson or ochre dyed cloth with frayed and torn edges, attached to a broken wooden pole lying flat on the ground, the cloth draped and crumpled naturally along the ground, not a canopy or umbrella shape, no stripes, no tricolour pattern, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+    "negative": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, emblem, deity, face, symbol, om, swastika, umbrella, parasol, canopy, tricolour, striped, beach umbrella, tent, awning, symmetrical cone shape",
+    "seed": 63093,
     "width": 1024,
     "height": 1024,
     "steps": 32,
@@ -99,7 +99,7 @@
     "checkpoint_label": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
     "checkpoint_profile": "sdxl_base"
   },
-  "prompt_id": "05f8719b-19e1-4678-a044-f99750a33eee",
+  "prompt_id": "bc866e17-05c6-4ec1-b72d-23c54ab0a711",
   "comfyui_version": "0.35.0",
-  "generated_at": "2026-10-18T00:34:34Z"
+  "generated_at": "2026-10-19T22:00:15Z"
 }

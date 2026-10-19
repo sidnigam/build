@@ -79,6 +79,7 @@ Recent decisions affecting current work:
 
 ### Roadmap Evolution
 
+- Phase 5.7 inserted (2026-10-19, user decisions): Yama reframed as a Trial + iconography corrections (Yama, Kumbhakarna, Agni, Indra, Naraka gate/vent) via Flux.
 - Phases 5.1–5.6 inserted after Phase 5 (2026-09-26, user playtest feedback): scrolling camera + larger arenas + denser waves; PS5 DualSense support; adaptive Indian classical score; epic-inspired environment art; god portraits + dialogue; graphics polish.
 
 ### Pending Todos

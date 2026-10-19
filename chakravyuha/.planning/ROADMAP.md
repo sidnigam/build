@@ -23,6 +23,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 5.4: Epic-Inspired Environment Art Upgrade** (INSERTED)
 - [x] **Phase 5.5: God Portraits + Boon Dialogue** (INSERTED)
 - [x] **Phase 5.6: Graphics Polish (Lighting, Bloom, Sprite Quality)** (INSERTED)
+- [ ] **Phase 5.7: Cultural + Iconography Corrections** (INSERTED)
 - [ ] **Phase 6: Steam Integration** - Steamworks SDK, 15+ achievements, Cloud saves, validated overlay
 - [ ] **Phase 7: CI/CD + Store Submission + Cultural Review** - Signed CI binaries, store assets, telemetry, AI survey, cultural sign-off, Deck Verified
 
@@ -173,6 +174,18 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Character sprites are sharper and more detailed at game scale (higher-res source, clean outlines)
   3. Graphics quality settings let lower-end machines disable expensive effects
   4. Frame rate holds at target in worst-case combat on the dev machine
+**Plans**: TBD
+
+### Phase 05.7: Cultural and iconography corrections (INSERTED)
+**Goal**: Honor the "gods are allies only" rule and correct iconography flagged in review — Yama's fight is reframed as a Trial of Dharma with traditional Yama iconography, and flagged boss, portrait and environment art is regenerated.
+**Depends on**: Phase 05.4 (art GPU serialization), Phase 05.5
+**Requirements**: CULT-01, CULT-02, CULT-03, CULT-04
+**Success Criteria** (what must be TRUE):
+  1. CULT-01: Yama's encounter is framed as a trial/judgment in all player-facing text (boss label "THE TRIAL", intro, defeat/victory copy, god dialogue) — no hostile/enemy framing of a deity
+  2. CULT-02: Yama's boss sprite (idle + phase 2) shows traditional iconography (dark/green-hued skin, danda + pasha, buffalo motif, dignified) and does not read as Vishnu/Krishna
+  3. CULT-03: Kumbhakarna carries a club/mace (no trident); Agni portrait has no Vaishnava tilak; Indra holds a classic double-ended vajra
+  4. CULT-04: Naraka gate reads as an Indian torana/temple gateway and the vent-grate hazard skin as a carved stone/iron vent (no Gothic/modern forms)
+  5. Provenance recorded for every regenerated asset; smoke + check-provenance green
 **Plans**: TBD
 
 ### Phase 6: Steam Integration

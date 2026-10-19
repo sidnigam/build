@@ -3295,6 +3295,814 @@
       "recorded_date": "2026-10-19",
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review"
+    },
+    {
+      "filename": "vaitarani_algae_patch_0.png",
+      "path": "assets/sprites/_raw/env/vaitarani/frames/vaitarani_algae_patch_0.png",
+      "actor": "vaitarani_algae_patch",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 64140,
+      "prompt": "top-down orthographic view looking straight down at a patch of dark wet algae on flat plain mid grey ground, isolated, flat on the ground, soft irregular edges, painterly texture, dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation, no objects, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "decal"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/vaitarani/algae_patch.gen.json",
+      "generated_date": "2026-10-19",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s64140: dark wet algae staining against stone, soft irregular decal edges after delta-E key.",
+      "role": "decal",
+      "biome": "vaitarani",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": true,
+      "grading": {
+        "sat": 0.7,
+        "val": 0.8
+      },
+      "finish": {
+        "mode": "decal",
+        "crop": null
+      }
+    },
+    {
+      "filename": "vaitarani_column_0.png",
+      "path": "assets/sprites/_raw/env/vaitarani/frames/vaitarani_column_0.png",
+      "actor": "vaitarani_column",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 832,
+      "height": 1216,
+      "seed": 64051,
+      "prompt": "a single tall ancient carved stone pillar (deepastambha), full height visible top to bottom, made entirely of stone with no metal or glass, several small square carved niches cut directly into the stone at different heights, each niche holding a tiny flame with no glass or fixture covering it, weathered stone texture, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, deity, idol, face, carving of figures, street lamp, lamppost, glass globe, glass shade, metal fixture, electric light, Victorian lamp, modern lamp, lantern",
+      "rejected_seeds": [
+        64050
+      ],
+      "rejected_count": 1,
+      "post_processing": [
+        "column"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/vaitarani/column.gen.json",
+      "generated_date": "2026-10-19",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s64051: plain fluted ancient stone pillar with a capital, no lamp/niches rendered but no modern anachronism either (fixes attempt-0's Victorian street-lamp) -- accepted as a serviceable generic stone lamp-pillar substitute; the manifest's per-frame 'light' pool (warm amber, r130, alpha 0.3) still attaches at runtime regardless of visible flames in the texture.",
+      "role": "column",
+      "biome": "vaitarani",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.8,
+        "val": 0.82
+      },
+      "finish": {
+        "mode": "column",
+        "crop": null
+      },
+      "rejected_reasons": {
+        "64050": "generated a Victorian-style electric/oil street lamp post with a glass globe and metal fixture -- a modern anachronism, not an ancient stone deepastambha lamp pillar"
+      }
+    },
+    {
+      "filename": "vaitarani_driftwood_0.png",
+      "path": "assets/sprites/_raw/env/vaitarani/frames/vaitarani_driftwood_0.png",
+      "actor": "vaitarani_driftwood",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 64120,
+      "prompt": "pile of pale weathered driftwood branches, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/vaitarani/driftwood.gen.json",
+      "generated_date": "2026-10-19",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s64120: pile of pale weathered driftwood branches, clean isolated silhouette.",
+      "role": "prop",
+      "biome": "vaitarani",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      }
+    },
+    {
+      "filename": "vaitarani_floating_diyas_0.png",
+      "path": "assets/sprites/_raw/env/vaitarani/frames/vaitarani_floating_diyas_0.png",
+      "actor": "vaitarani_floating_diyas",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 64103,
+      "prompt": "a photograph of dark blue-black still water filling the entire background from edge to edge, with 3 small clay oil lamps with tiny flames resting on top of the water surface at scattered unaligned positions, water clearly visible all around and between the lamps, seen from directly above, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, grid, pattern, icon set, repeated tile, rows and columns, no water, dry ground, symmetrical, evenly spaced, aligned, centered composition, product photography, many lamps, more than 3 lamps, plain background, beige background, cream background, white background, studio photography, product shot, table, tabletop, fabric, cloth backdrop",
+      "rejected_seeds": [
+        64100,
+        64101,
+        64102
+      ],
+      "rejected_count": 3,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/vaitarani/floating_diyas.gen.json",
+      "generated_date": "2026-10-19",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s64103: 4 small clay oil lamps with lit flames scattered at natural unaligned positions on a dark reflective water surface, water clearly visible around and between them, flame reflections visible -- fixes attempt-0's grid layout, attempt-1's residual grid tendency, and attempt-2's dropped water background. matte=birefnet-general selected to help the rembg cutout preserve all 4 separated lamp clusters (a multi-object scene) rather than isolating only one.",
+      "role": "prop",
+      "biome": "vaitarani",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; diyas on water only, per D-09.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      },
+      "rejected_reasons": {
+        "64100": "generated a flat grid/icon-sheet layout of repeated lamp icons with no water visible at all -- reads as a UI icon set, not a scene of lamps floating on a river",
+        "64101": "still generated a rigid 3x3 grid of evenly-spaced lamp bowls (an icon-sheet composition), though water is now faintly suggested -- needs explicit anti-grid/anti-symmetry language",
+        "64102": "scattered/unaligned composition fixed (6 small lamp bowls at varied positions/angles, 2 lit), but the dark-water background was dropped entirely in favor of a plain cream studio background -- needs the water context reinforced more forcefully"
+      }
+    },
+    {
+      "filename": "vaitarani-floor-a-tile.png",
+      "path": "assets/sprites/env/vaitarani/vaitarani-floor-a-tile.png",
+      "actor": "vaitarani_floor_a",
+      "kind": "env-tile",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "dreamshaperXL_alpha2Xl10.safetensors (DreamShaper XL alpha2 (xl1.0) by Lykon, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 64000,
+      "prompt": "top-down orthographic view looking straight down at seamless repeating texture, evenly scattered dark slate-grey river stones, wet sheen, no water, seamless repeating texture, evenly scattered detail edge to edge, painted game arena floor texture, low contrast, no focal point, Hades-adjacent painterly illustration, dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "tile"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/vaitarani/floor_a.gen.json",
+      "generated_date": "2026-10-19",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s64000 (dreamshaper_xl_alpha2): dark slate-grey smooth river stones/pebbles seen top-down, even edge-to-edge detail, no focal point, wet sheen.",
+      "role": "floor",
+      "biome": "vaitarani",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": true,
+      "grading": {
+        "graded": false,
+        "contrast_factor": 1.0,
+        "sat_factor": 1.0,
+        "val_factor": 1.0,
+        "stats": {
+          "luma_mean": 0.3405161497146008,
+          "luma_std": 0.14637082843884475,
+          "sat_mean": 0.13860593878610017
+        }
+      },
+      "finish": {
+        "mode": "tile",
+        "crop": null
+      }
+    },
+    {
+      "filename": "vaitarani-floor-b-tile.png",
+      "path": "assets/sprites/env/vaitarani/vaitarani-floor-b-tile.png",
+      "actor": "vaitarani_floor_b",
+      "kind": "env-tile",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "dreamshaperXL_alpha2Xl10.safetensors (DreamShaper XL alpha2 (xl1.0) by Lykon, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 64010,
+      "prompt": "top-down orthographic view looking straight down at wet dark ghat stone slabs with a thin film of water, patches of dark algae in the joints, seamless repeating texture, evenly scattered detail edge to edge, painted game arena floor texture, low contrast, no focal point, Hades-adjacent painterly illustration, dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "tile"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/vaitarani/floor_b.gen.json",
+      "generated_date": "2026-10-19",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s64010 (dreamshaper_xl_alpha2): wet dark ghat stone paving slabs with visible mortar joints, even top-down detail, no focal point.",
+      "role": "floor",
+      "biome": "vaitarani",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": true,
+      "grading": {
+        "graded": false,
+        "contrast_factor": 1.0,
+        "sat_factor": 1.0,
+        "val_factor": 1.0,
+        "stats": {
+          "luma_mean": 0.38357319490021363,
+          "luma_std": 0.061431377286989663,
+          "sat_mean": 0.14736765026986118
+        }
+      },
+      "finish": {
+        "mode": "tile",
+        "crop": null
+      }
+    },
+    {
+      "filename": "vaitarani_gate_0.png",
+      "path": "assets/sprites/_raw/env/vaitarani/frames/vaitarani_gate_0.png",
+      "actor": "vaitarani_gate",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 64060,
+      "prompt": "a single weathered stone archway prop at a riverside ghat landing, isolated on a plain flat background, moss, iron mooring rings, no landscape, no scenery behind it, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, landscape, mountains, snow, scenery, vista, horizon, sky, background scenery, environment, temple, shrine, idol, deity",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "gate"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/vaitarani/gate.gen.json",
+      "generated_date": "2026-10-19",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s64060: weathered stone archway at a riverside ghat landing, set in grass with water at the base, moss, clean architectural read.",
+      "role": "gate",
+      "biome": "vaitarani",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol/temple/shrine/lingam.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.8,
+        "val": 0.82
+      },
+      "finish": {
+        "mode": "gate",
+        "crop": null
+      }
+    },
+    {
+      "filename": "vaitarani_moored_boat_0.png",
+      "path": "assets/sprites/_raw/env/vaitarani/frames/vaitarani_moored_boat_0.png",
+      "actor": "vaitarani_moored_boat",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 64070,
+      "prompt": "empty old wooden ferry boat with a single oar, moored, seen from above at three-quarter view, no passengers, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, person, figure, body, skeleton",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/vaitarani/moored_boat.gen.json",
+      "generated_date": "2026-10-19",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s64070: small empty wooden ferry boat with two oars, seen from directly above, no passengers.",
+      "role": "prop",
+      "biome": "vaitarani",
+      "cultural_check": "pass: no person/figure/body/skeleton.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      }
+    },
+    {
+      "filename": "vaitarani_mooring_post_0.png",
+      "path": "assets/sprites/_raw/env/vaitarani/frames/vaitarani_mooring_post_0.png",
+      "actor": "vaitarani_mooring_post",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 64081,
+      "prompt": "a single thick weathered wooden mooring bollard post on a riverbank, bare wood with no lamp and no light fixture of any kind, rope coiled around its base, a plain iron ring bolted to its side, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, lamp, lampshade, light fixture, light bulb, lantern, glowing, illuminated",
+      "rejected_seeds": [
+        64080
+      ],
+      "rejected_count": 1,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/vaitarani/mooring_post.gen.json",
+      "generated_date": "2026-10-19",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s64081: bare weathered wooden mooring post standing in water with coiled rope tied around it -- fixes attempt-0's lamp-with-fabric-shade anachronism cleanly.",
+      "role": "prop",
+      "biome": "vaitarani",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      },
+      "rejected_reasons": {
+        "64080": "generated a modern table lamp with a fabric drum lampshade wrapped in rope -- a severe anachronism, not a bare wooden mooring post"
+      }
+    },
+    {
+      "filename": "vaitarani_reeds_0.png",
+      "path": "assets/sprites/_raw/env/vaitarani/frames/vaitarani_reeds_0.png",
+      "actor": "vaitarani_reeds",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 64090,
+      "prompt": "clump of tall dark river reeds and rushes, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/vaitarani/reeds.gen.json",
+      "generated_date": "2026-10-19",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s64090: clump of tall dark river reeds/rushes, clean isolated silhouette.",
+      "role": "prop",
+      "biome": "vaitarani",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      }
+    },
+    {
+      "filename": "vaitarani_rope_coil_0.png",
+      "path": "assets/sprites/_raw/env/vaitarani/frames/vaitarani_rope_coil_0.png",
+      "actor": "vaitarani_rope_coil",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 64110,
+      "prompt": "coiled heavy rope with a small round anchor stone, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/vaitarani/rope_coil.gen.json",
+      "generated_date": "2026-10-19",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s64110: coiled heavy rope with a small metal ring/clasp (substituting for an anchor stone), clean isolated silhouette.",
+      "role": "prop",
+      "biome": "vaitarani",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      }
+    },
+    {
+      "filename": "vaitarani_stone_cracks_0.png",
+      "path": "assets/sprites/_raw/env/vaitarani/frames/vaitarani_stone_cracks_0.png",
+      "actor": "vaitarani_stone_cracks",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 64160,
+      "prompt": "top-down orthographic view looking straight down at fine cracks in wet dark stone on flat plain mid grey ground, isolated, flat on the ground, soft irregular edges, painterly texture, dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation, no objects, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "decal"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/vaitarani/stone_cracks.gen.json",
+      "generated_date": "2026-10-19",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s64160: fine crack network in wet dark stone, reads clearly at decal scale.",
+      "role": "decal",
+      "biome": "vaitarani",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": true,
+      "grading": {
+        "sat": 0.7,
+        "val": 0.8
+      },
+      "finish": {
+        "mode": "decal",
+        "crop": null
+      }
+    },
+    {
+      "filename": "vaitarani_stone_marker_0.png",
+      "path": "assets/sprites/_raw/env/vaitarani/frames/vaitarani_stone_marker_0.png",
+      "actor": "vaitarani_stone_marker",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 64130,
+      "prompt": "eroded plain standing stone marker post, moss, no inscriptions, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/vaitarani/stone_marker.gen.json",
+      "generated_date": "2026-10-19",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s64130: simple eroded standing stone obelisk marker, plain, no inscriptions, no figure.",
+      "role": "prop",
+      "biome": "vaitarani",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; no inscriptions.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      }
+    },
+    {
+      "filename": "vaitarani-wallcap-tile.png",
+      "path": "assets/sprites/env/vaitarani/vaitarani-wallcap-tile.png",
+      "actor": "vaitarani_wallcap",
+      "kind": "env-tile",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 64040,
+      "prompt": "top-down orthographic view straight down onto the flat top of a thick top of a weathered stone river embankment with iron mooring rings and moss, seamless repeating texture, even detail, Hades-adjacent painterly illustration, dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "tile"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/vaitarani/wallcap.gen.json",
+      "generated_date": "2026-10-19",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s64040: top-down pattern of iron mooring rings set into a weathered stone embankment top, even repeating detail, no focal point.",
+      "role": "wallcap",
+      "biome": "vaitarani",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": false,
+      "grading": {
+        "graded": false,
+        "contrast_factor": 1.0,
+        "sat_factor": 1.0,
+        "val_factor": 1.0,
+        "stats": {
+          "luma_mean": 0.3913170718645583,
+          "luma_std": 0.08830281741549321,
+          "sat_mean": 0.23563257793675332
+        }
+      },
+      "finish": {
+        "mode": "tile",
+        "crop": null
+      }
+    },
+    {
+      "filename": "vaitarani-wallface-tile.png",
+      "path": "assets/sprites/env/vaitarani/vaitarani-wallface-tile.png",
+      "actor": "vaitarani_wallface",
+      "kind": "env-tile",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "dreamshaperXL_alpha2Xl10.safetensors (DreamShaper XL alpha2 (xl1.0) by Lykon, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1344,
+      "height": 768,
+      "seed": 64031,
+      "prompt": "extreme close-up of a riverside ghat stone stairway filling the entire frame edge to edge, camera held at a shallow angle looking directly across at the flat riser faces of the steps (not looking up or down a staircase, no steps receding into depth), carved stone balustrade, iron mooring rings set in the steps, moss and water stains, a flat continuous horizontal band of stone repeating left to right, no sky visible anywhere in frame, straight-on elevation of a long continuous horizontal wall section seen from a high three-quarter top-down game camera, architecture repeating across the full width edge to edge, wall base along the lower third, Hades-adjacent painterly illustration, rich carved detail, dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation, no characters, no text, no sky",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, temple, shrine, idol, lingam, deity, person, pyre, fire, smoke, body, horizon, sky, perspective vanishing point, concept art, matte painting, clouds, distant landscape, field, vista, aerial, panorama, staircase receding into depth, looking up stairs, looking down stairs, steep perspective, diagonal composition",
+      "rejected_seeds": [
+        64030
+      ],
+      "rejected_count": 1,
+      "post_processing": [
+        "strip"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/vaitarani/wallface.gen.json",
+      "generated_date": "2026-10-19",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s64031 (dreamshaper_xl_alpha2): close-up band of wet dark stone ghat steps with moss accents, flanked by rough-cut stone balustrade blocks -- fixes attempt-0's steep receding-staircase perspective. crop=[150,100,1200,700] trims the side balustrade blocks before strip_finish's x-seamless pass, keeping mostly the flat repeating step-riser band. 3x1 seamless repeat preview reviewed: continuous dark step band, a faint feather-blend at the wrap seam but reads clean at game scale.",
+      "role": "wallface",
+      "biome": "vaitarani",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol/temple/shrine; architecture only, no figures, no fire/pyre.",
+      "ground_safe": false,
+      "grading": null,
+      "finish": {
+        "mode": "strip",
+        "crop": [
+          150,
+          100,
+          1200,
+          700
+        ]
+      },
+      "rejected_reasons": {
+        "64030": "generated a strong 3D perspective shot of stairs receding up and away into depth -- not a flat horizontal elevation band, would not crop into a consistent seamless x-repeating strip (steps at different depths/angles left to right)"
+      }
+    },
+    {
+      "filename": "vaitarani-water-tile.png",
+      "path": "assets/sprites/env/vaitarani/vaitarani-water-tile.png",
+      "actor": "vaitarani_water",
+      "kind": "env-tile",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "dreamshaperXL_alpha2Xl10.safetensors (DreamShaper XL alpha2 (xl1.0) by Lykon, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 64022,
+      "prompt": "top-down orthographic view looking straight down at extreme close-up macro photograph of the surface of calm dark water at night, 100 percent water filling the entire image edge to edge with no other surface of any kind, deep navy black water, subtle fine ripples, soft diffuse highlights, photographic texture, seamless repeating texture, evenly scattered detail edge to edge, painted game arena floor texture, low contrast, no focal point, Hades-adjacent painterly illustration, dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra, island, shore, land, bank, coastline, map, aerial satellite view, land mass, beach, cartography, terrain, outline, border, illustration, painting, cartoon, hard edges, contrast boundary, white",
+      "rejected_seeds": [
+        64020,
+        64021
+      ],
+      "rejected_count": 2,
+      "post_processing": [
+        "tile"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/vaitarani/water.gen.json",
+      "generated_date": "2026-10-19",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s64022 (dreamshaper_xl_alpha2): deep navy-black still water filling the entire frame edge to edge, subtle fine ripples, no land/island/shore/map-like shapes anywhere -- fixes the attempt-0/1 cartographic island composition by dropping 'seen from directly above' + 'river' phrasing in favor of a macro-photograph framing. Reads clearly as a river-surface tile, not confusable with a hazard pool (uniform dark texture, no rim/glow).",
+      "role": "water",
+      "biome": "vaitarani",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; no bones/bodies.",
+      "ground_safe": true,
+      "grading": {
+        "graded": true,
+        "contrast_factor": 1.0,
+        "sat_factor": 0.9642436457529442,
+        "val_factor": 1.0,
+        "stats": {
+          "luma_mean": 0.1663820525277829,
+          "luma_std": 0.01045335793390047,
+          "sat_mean": 0.3127590296773345
+        }
+      },
+      "finish": {
+        "mode": "tile",
+        "crop": null
+      },
+      "rejected_reasons": {
+        "64020": "generated as an island/shoreline map shape (a pale land mass surrounded by dark water, like a satellite/aerial map) instead of water filling the entire frame edge to edge -- a severe focal-point/composition failure for a tiling water texture",
+        "64021": "still generated an island/map-like composition (pale land blobs surrounded by dark water with hard cartographic-style outlines) even with explicit no-island/no-shore negatives -- the 'seen from directly above' + 'deep blue-black' phrasing appears to be triggering a map/terrain rendering style from this checkpoint regardless of negatives"
+      }
+    },
+    {
+      "filename": "vaitarani_water_puddle_0.png",
+      "path": "assets/sprites/_raw/env/vaitarani/frames/vaitarani_water_puddle_0.png",
+      "actor": "vaitarani_water_puddle",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 64152,
+      "prompt": "top-down orthographic view looking straight down at a single small oval puddle of dark water resting on flat stone ground, seen from directly above, surrounded by dry stone on all sides, one simple rounded blob shape only with a faint silver highlight reflection in the center, realistic photographic texture on flat plain mid grey ground, isolated, flat on the ground, soft irregular edges, painterly texture, dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation, no objects, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra, map, cartography, terrain, outline, border line, multiple shapes, pattern, illustration, cartoon, flat design, archipelago, islands, rock fracture, geological fault, diagonal line, two-tone split, cliff face, terrain boundary",
+      "rejected_seeds": [
+        64150,
+        64151
+      ],
+      "rejected_count": 2,
+      "post_processing": [
+        "decal"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/vaitarani/water_puddle.gen.json",
+      "generated_date": "2026-10-19",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s64152: single rounded puddle of dark reflective water naturally surrounded by river pebbles, seen from directly above -- fixes both attempt-0's map-like pattern and attempt-1's rock-fracture split. Clean coherent blob shape.",
+      "role": "decal",
+      "biome": "vaitarani",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": true,
+      "grading": {
+        "sat": 0.7,
+        "val": 0.8
+      },
+      "finish": {
+        "mode": "decal",
+        "crop": null
+      },
+      "rejected_reasons": {
+        "64150": "generated a cartoon-map/terrain-like pattern of overlapping outlined blob shapes (the same map-drift failure seen on the water tile subject), not a single realistic puddle with a reflection",
+        "64151": "generated a diagonal two-tone rock/geological fracture boundary rather than a puddle shape -- the delta-E decal key would follow that hard diagonal line rather than a soft puddle blob"
+      }
+    },
+    {
+      "filename": "vaitarani-env-atlas.png",
+      "path": "assets/sprites/env/vaitarani/vaitarani-env-atlas.png",
+      "actor": "vaitarani",
+      "kind": "env-atlas",
+      "tool": "free-tex-packer-core 0.3.8 via tools/pack-atlas.js",
+      "method": "atlas-pack",
+      "components": [
+        "vaitarani_algae_patch_0.png",
+        "vaitarani_column_0.png",
+        "vaitarani_driftwood_0.png",
+        "vaitarani_floating_diyas_0.png",
+        "vaitarani_gate_0.png",
+        "vaitarani_moored_boat_0.png",
+        "vaitarani_mooring_post_0.png",
+        "vaitarani_reeds_0.png",
+        "vaitarani_rope_coil_0.png",
+        "vaitarani_stone_cracks_0.png",
+        "vaitarani_stone_marker_0.png",
+        "vaitarani_water_puddle_0.png"
+      ],
+      "biome": "vaitarani",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review"
     }
   ],
   "review_sheet": "assets/sprites/_review/contact-sheet.png",

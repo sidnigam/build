@@ -1204,7 +1204,10 @@
         "ground_safe": true,
         "base_seed": 64000,
         "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
-        "subject": "seamless repeating texture, evenly scattered dark slate-grey river stones, wet sheen, no water"
+        "subject": "seamless repeating texture, evenly scattered dark slate-grey river stones, wet sheen, no water",
+        "accepted_attempt": 0,
+        "self_review": "s64000 (dreamshaper_xl_alpha2): dark slate-grey smooth river stones/pebbles seen top-down, even edge-to-edge detail, no focal point, wet sheen.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
       },
       "floor_b": {
         "template": "tile",
@@ -1212,7 +1215,10 @@
         "ground_safe": true,
         "base_seed": 64010,
         "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
-        "subject": "wet dark ghat stone slabs with a thin film of water, patches of dark algae in the joints"
+        "subject": "wet dark ghat stone slabs with a thin film of water, patches of dark algae in the joints",
+        "accepted_attempt": 0,
+        "self_review": "s64010 (dreamshaper_xl_alpha2): wet dark ghat stone paving slabs with visible mortar joints, even top-down detail, no focal point.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
       },
       "water": {
         "template": "tile",
@@ -1220,7 +1226,15 @@
         "ground_safe": true,
         "base_seed": 64020,
         "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
-        "subject": "dark still river water seen from directly above, faint ripples, soft reflections of mist, deep blue-black, even texture, no objects, no boats, no reflections of figures"
+        "subject": "extreme close-up macro photograph of the surface of calm dark water at night, 100 percent water filling the entire image edge to edge with no other surface of any kind, deep navy black water, subtle fine ripples, soft diffuse highlights, photographic texture",
+        "rejected": {
+          "0": "generated as an island/shoreline map shape (a pale land mass surrounded by dark water, like a satellite/aerial map) instead of water filling the entire frame edge to edge -- a severe focal-point/composition failure for a tiling water texture",
+          "1": "still generated an island/map-like composition (pale land blobs surrounded by dark water with hard cartographic-style outlines) even with explicit no-island/no-shore negatives -- the 'seen from directly above' + 'deep blue-black' phrasing appears to be triggering a map/terrain rendering style from this checkpoint regardless of negatives"
+        },
+        "negative_extra": "island, shore, land, bank, coastline, map, aerial satellite view, land mass, beach, cartography, terrain, outline, border, illustration, painting, cartoon, hard edges, contrast boundary, white",
+        "accepted_attempt": 2,
+        "self_review": "s64022 (dreamshaper_xl_alpha2): deep navy-black still water filling the entire frame edge to edge, subtle fine ripples, no land/island/shore/map-like shapes anywhere -- fixes the attempt-0/1 cartographic island composition by dropping 'seen from directly above' + 'river' phrasing in favor of a macro-photograph framing. Reads clearly as a river-surface tile, not confusable with a hazard pool (uniform dark texture, no rim/glow).",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; no bones/bodies."
       },
       "wallface": {
         "template": "wallface",
@@ -1228,8 +1242,20 @@
         "ground_safe": false,
         "base_seed": 64030,
         "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
-        "subject": "extreme close-up of a broad weathered stone stairway of a riverside ghat filling the entire frame edge to edge: carved stone balustrades, iron mooring rings set in the steps, moss and water stains, camera pressed close against the stone surface, no sky visible anywhere in frame",
-        "negative_extra": "temple, shrine, idol, lingam, deity, person, pyre, fire, smoke, body, horizon, sky, perspective vanishing point, concept art, matte painting, clouds, distant landscape, field, vista, aerial, panorama"
+        "subject": "extreme close-up of a riverside ghat stone stairway filling the entire frame edge to edge, camera held at a shallow angle looking directly across at the flat riser faces of the steps (not looking up or down a staircase, no steps receding into depth), carved stone balustrade, iron mooring rings set in the steps, moss and water stains, a flat continuous horizontal band of stone repeating left to right, no sky visible anywhere in frame",
+        "negative_extra": "temple, shrine, idol, lingam, deity, person, pyre, fire, smoke, body, horizon, sky, perspective vanishing point, concept art, matte painting, clouds, distant landscape, field, vista, aerial, panorama, staircase receding into depth, looking up stairs, looking down stairs, steep perspective, diagonal composition",
+        "rejected": {
+          "0": "generated a strong 3D perspective shot of stairs receding up and away into depth -- not a flat horizontal elevation band, would not crop into a consistent seamless x-repeating strip (steps at different depths/angles left to right)"
+        },
+        "accepted_attempt": 1,
+        "crop": [
+          150,
+          100,
+          1200,
+          700
+        ],
+        "self_review": "s64031 (dreamshaper_xl_alpha2): close-up band of wet dark stone ghat steps with moss accents, flanked by rough-cut stone balustrade blocks -- fixes attempt-0's steep receding-staircase perspective. crop=[150,100,1200,700] trims the side balustrade blocks before strip_finish's x-seamless pass, keeping mostly the flat repeating step-riser band. 3x1 seamless repeat preview reviewed: continuous dark step band, a faint feather-blend at the wrap seam but reads clean at game scale.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol/temple/shrine; architecture only, no figures, no fire/pyre."
       },
       "wallcap": {
         "template": "wallcap",
@@ -1237,7 +1263,10 @@
         "ground_safe": false,
         "base_seed": 64040,
         "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
-        "subject": "top of a weathered stone river embankment with iron mooring rings and moss"
+        "subject": "top of a weathered stone river embankment with iron mooring rings and moss",
+        "accepted_attempt": 0,
+        "self_review": "s64040: top-down pattern of iron mooring rings set into a weathered stone embankment top, even repeating detail, no focal point.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
       },
       "column": {
         "template": "prop",
@@ -1252,8 +1281,14 @@
           "alpha": 0.3
         },
         "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
-        "subject": "tall weathered stone lamp pillar (deepastambha) with many small oil-lamp niches, a few tiny flames lit",
-        "negative_extra": "deity, idol, face, carving of figures"
+        "subject": "a single tall ancient carved stone pillar (deepastambha), full height visible top to bottom, made entirely of stone with no metal or glass, several small square carved niches cut directly into the stone at different heights, each niche holding a tiny flame with no glass or fixture covering it, weathered stone texture",
+        "negative_extra": "deity, idol, face, carving of figures, street lamp, lamppost, glass globe, glass shade, metal fixture, electric light, Victorian lamp, modern lamp, lantern",
+        "rejected": {
+          "0": "generated a Victorian-style electric/oil street lamp post with a glass globe and metal fixture -- a modern anachronism, not an ancient stone deepastambha lamp pillar"
+        },
+        "accepted_attempt": 1,
+        "self_review": "s64051: plain fluted ancient stone pillar with a capital, no lamp/niches rendered but no modern anachronism either (fixes attempt-0's Victorian street-lamp) -- accepted as a serviceable generic stone lamp-pillar substitute; the manifest's per-frame 'light' pool (warm amber, r130, alpha 0.3) still attaches at runtime regardless of visible flames in the texture.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
       },
       "gate": {
         "template": "prop",
@@ -1264,7 +1299,10 @@
         "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
         "subject": "a single weathered stone archway prop at a riverside ghat landing, isolated on a plain flat background, moss, iron mooring rings, no landscape, no scenery behind it",
         "negative_extra": "landscape, mountains, snow, scenery, vista, horizon, sky, background scenery, environment, temple, shrine, idol, deity",
-        "matte": "birefnet-general"
+        "matte": "birefnet-general",
+        "accepted_attempt": 0,
+        "self_review": "s64060: weathered stone archway at a riverside ghat landing, set in grass with water at the base, moss, clean architectural read.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol/temple/shrine/lingam."
       },
       "moored_boat": {
         "template": "prop",
@@ -1281,7 +1319,10 @@
         "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
         "subject": "empty old wooden ferry boat with a single oar, moored, seen from above at three-quarter view, no passengers",
         "negative_extra": "person, figure, body, skeleton",
-        "matte": "birefnet-general"
+        "matte": "birefnet-general",
+        "accepted_attempt": 0,
+        "self_review": "s64070: small empty wooden ferry boat with two oars, seen from directly above, no passengers.",
+        "cultural_check": "pass: no person/figure/body/skeleton."
       },
       "mooring_post": {
         "template": "prop",
@@ -1301,7 +1342,14 @@
           "vait_posts:pillar"
         ],
         "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
-        "subject": "thick weathered wooden mooring post with coiled rope and an iron ring"
+        "subject": "a single thick weathered wooden mooring bollard post on a riverbank, bare wood with no lamp and no light fixture of any kind, rope coiled around its base, a plain iron ring bolted to its side",
+        "rejected": {
+          "0": "generated a modern table lamp with a fabric drum lampshade wrapped in rope -- a severe anachronism, not a bare wooden mooring post"
+        },
+        "negative_extra": "lamp, lampshade, light fixture, light bulb, lantern, glowing, illuminated",
+        "accepted_attempt": 1,
+        "self_review": "s64081: bare weathered wooden mooring post standing in water with coiled rope tied around it -- fixes attempt-0's lamp-with-fabric-shade anachronism cleanly.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
       },
       "reeds": {
         "template": "prop",
@@ -1319,7 +1367,10 @@
         "low": false,
         "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
         "subject": "clump of tall dark river reeds and rushes",
-        "matte": "birefnet-general"
+        "matte": "birefnet-general",
+        "accepted_attempt": 0,
+        "self_review": "s64090: clump of tall dark river reeds/rushes, clean isolated silhouette.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
       },
       "floating_diyas": {
         "template": "prop",
@@ -1338,7 +1389,17 @@
           "alpha": 0.3
         },
         "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
-        "subject": "a few small clay oil lamps (diyas) with tiny flames floating on dark water"
+        "subject": "a photograph of dark blue-black still water filling the entire background from edge to edge, with 3 small clay oil lamps with tiny flames resting on top of the water surface at scattered unaligned positions, water clearly visible all around and between the lamps, seen from directly above",
+        "rejected": {
+          "0": "generated a flat grid/icon-sheet layout of repeated lamp icons with no water visible at all -- reads as a UI icon set, not a scene of lamps floating on a river",
+          "1": "still generated a rigid 3x3 grid of evenly-spaced lamp bowls (an icon-sheet composition), though water is now faintly suggested -- needs explicit anti-grid/anti-symmetry language",
+          "2": "scattered/unaligned composition fixed (6 small lamp bowls at varied positions/angles, 2 lit), but the dark-water background was dropped entirely in favor of a plain cream studio background -- needs the water context reinforced more forcefully"
+        },
+        "negative_extra": "grid, pattern, icon set, repeated tile, rows and columns, no water, dry ground, symmetrical, evenly spaced, aligned, centered composition, product photography, many lamps, more than 3 lamps, plain background, beige background, cream background, white background, studio photography, product shot, table, tabletop, fabric, cloth backdrop",
+        "accepted_attempt": 3,
+        "matte": "birefnet-general",
+        "self_review": "s64103: 4 small clay oil lamps with lit flames scattered at natural unaligned positions on a dark reflective water surface, water clearly visible around and between them, flame reflections visible -- fixes attempt-0's grid layout, attempt-1's residual grid tendency, and attempt-2's dropped water background. matte=birefnet-general selected to help the rembg cutout preserve all 4 separated lamp clusters (a multi-object scene) rather than isolating only one.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; diyas on water only, per D-09."
       },
       "rope_coil": {
         "template": "prop",
@@ -1356,7 +1417,10 @@
         "low": true,
         "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
         "subject": "coiled heavy rope with a small round anchor stone",
-        "matte": "birefnet-general"
+        "matte": "birefnet-general",
+        "accepted_attempt": 0,
+        "self_review": "s64110: coiled heavy rope with a small metal ring/clasp (substituting for an anchor stone), clean isolated silhouette.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
       },
       "driftwood": {
         "template": "prop",
@@ -1374,7 +1438,10 @@
         "low": true,
         "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
         "subject": "pile of pale weathered driftwood branches",
-        "matte": "birefnet-general"
+        "matte": "birefnet-general",
+        "accepted_attempt": 0,
+        "self_review": "s64120: pile of pale weathered driftwood branches, clean isolated silhouette.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
       },
       "stone_marker": {
         "template": "prop",
@@ -1391,7 +1458,10 @@
         "weight": 1,
         "low": false,
         "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
-        "subject": "eroded plain standing stone marker post, moss, no inscriptions"
+        "subject": "eroded plain standing stone marker post, moss, no inscriptions",
+        "accepted_attempt": 0,
+        "self_review": "s64130: simple eroded standing stone obelisk marker, plain, no inscriptions, no figure.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; no inscriptions."
       },
       "algae_patch": {
         "template": "decal",
@@ -1399,7 +1469,10 @@
         "ground_safe": true,
         "base_seed": 64140,
         "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
-        "subject": "a patch of dark wet algae"
+        "subject": "a patch of dark wet algae",
+        "accepted_attempt": 0,
+        "self_review": "s64140: dark wet algae staining against stone, soft irregular decal edges after delta-E key.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
       },
       "water_puddle": {
         "template": "decal",
@@ -1407,7 +1480,15 @@
         "ground_safe": true,
         "base_seed": 64150,
         "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
-        "subject": "a dark shallow puddle with a faint silver reflection"
+        "subject": "a single small oval puddle of dark water resting on flat stone ground, seen from directly above, surrounded by dry stone on all sides, one simple rounded blob shape only with a faint silver highlight reflection in the center, realistic photographic texture",
+        "rejected": {
+          "0": "generated a cartoon-map/terrain-like pattern of overlapping outlined blob shapes (the same map-drift failure seen on the water tile subject), not a single realistic puddle with a reflection",
+          "1": "generated a diagonal two-tone rock/geological fracture boundary rather than a puddle shape -- the delta-E decal key would follow that hard diagonal line rather than a soft puddle blob"
+        },
+        "negative_extra": "map, cartography, terrain, outline, border line, multiple shapes, pattern, illustration, cartoon, flat design, archipelago, islands, rock fracture, geological fault, diagonal line, two-tone split, cliff face, terrain boundary",
+        "accepted_attempt": 2,
+        "self_review": "s64152: single rounded puddle of dark reflective water naturally surrounded by river pebbles, seen from directly above -- fixes both attempt-0's map-like pattern and attempt-1's rock-fracture split. Clean coherent blob shape.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
       },
       "stone_cracks": {
         "template": "decal",
@@ -1415,7 +1496,10 @@
         "ground_safe": true,
         "base_seed": 64160,
         "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
-        "subject": "fine cracks in wet dark stone"
+        "subject": "fine cracks in wet dark stone",
+        "accepted_attempt": 0,
+        "self_review": "s64160: fine crack network in wet dark stone, reads clearly at decal scale.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
       }
     }
   },

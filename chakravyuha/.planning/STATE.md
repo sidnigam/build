@@ -117,6 +117,7 @@ None yet.
 | 260927-qze | Fix HUD glyph legend overlap | 2026-09-29 | 9b603f9 | Verified (headless Chrome, kbm/PS/Xbox) | [260927-qze-fix-hud-glyph-legend-overlap](./quick/260927-qze-fix-hud-glyph-legend-overlap/) |
 | 260929-s6t | Make god-dialogue smoke test deterministic (real bug: god dialogue left visible on amrit/all-owned fallback) | 2026-09-29 | 5195467 | Verified (30/30 runs) | [260929-s6t-make-god-dialogue-smoke-test-determinist](./quick/260929-s6t-make-god-dialogue-smoke-test-determinist/) |
 | 261019-jdr | Fix desktop settings persistence (sanitizeName rejected dotted key) | 2026-10-19 | 45a4fa9 | Verified (unit table + smoke) | [261019-jdr-fix-desktop-settings-persistence-sanitiz](./quick/261019-jdr-fix-desktop-settings-persistence-sanitiz/) |
+| 261019-nnu | Fix HiDPI sprite blur and excessive camera motion (user playtest report) | 2026-10-19 | c1ff488 | Verified (real-GPU Retina screenshot, 60 FPS) | [261019-nnu-fix-hidpi-sprite-blur-and-excessive-came](./quick/261019-nnu-fix-hidpi-sprite-blur-and-excessive-came/) |
 
 ## Session Continuity
 

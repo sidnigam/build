@@ -66,7 +66,11 @@ const UI = {
 
   bossIntro(def) {
     const t = this.el('boss-intro');
-    t.innerHTML = `<div class="bt-name" style="color:${def.color}">${def.name}</div>
+    // 05.7-01 (D-01/D-02): Yama's intro carries an extra title line above the name — 'THE TRIAL
+    // OF DHARMA' — framing the encounter as a trial, not a hostile fight. Reuses the existing
+    // .bt-sub styling; no new CSS rule needed.
+    const titleHtml = def.title ? `<div class="bt-sub" style="letter-spacing:0.3em;opacity:0.85">${def.title}</div>` : '';
+    t.innerHTML = `${titleHtml}<div class="bt-name" style="color:${def.color}">${def.name}</div>
       <div class="bt-dev" style="color:${def.color}">${this.DEVANAGARI.bosses[def.id] || ''}</div>
       <div class="bt-sub">${def.sub}</div><div class="bt-quote">${def.intro}</div>`;
     t.classList.remove('hidden');
@@ -615,9 +619,14 @@ const UI = {
 
   // ---------- death & victory ----------
   death() {
+    // 05.7-01 (D-05): dying during Yama's Trial (he has weighed but not yet passed Abhimanyu) is
+    // presented as being sent back, not slain. Computed before noteGodRunEnd — that function only
+    // reads GAME.bossRef, it does not mutate it.
+    const trial = !!(GAME.bossRef && !GAME.bossRef.dead && GAME.bossRef.type === 'yama');
     this.noteGodRunEnd('death');
     this.hideAll();
-    const line = U.choice(DATA.DEATH_LINES).replace('%n', META.deaths);
+    this.el('death-h').textContent = trial ? 'SENT BACK' : 'SLAIN';
+    const line = U.choice(trial ? DATA.TRIAL_DEATH_LINES : DATA.DEATH_LINES).replace('%n', META.deaths);
     this.el('death-line').textContent = line;
     this.el('death-stats').innerHTML = this.runStatsHtml(
       DATA.EPITAPHS[GAME.biomeIdx] || DATA.EPITAPHS[0]);

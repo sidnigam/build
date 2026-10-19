@@ -126,13 +126,17 @@ function chainLightning(from, dmg, jumps) {
 function killEnemy(e) {
   if (e.dead) return;
   e.dead = true;
-  VFX.emit(e.boss ? 'bossDeath' : 'death', e.x, e.y, 0, e.color);
+  // 05.7-01 (D-04): Yama's HP reaching 0 is the Trial being passed, not a kill — he is not a
+  // foe. e.dead / every game-logic consequence below this point is unchanged; only the
+  // presentation (VFX preset, flash colour, sfx, and the kills stat) branches.
+  const trial = e.boss && e.type === 'yama';
+  VFX.emit(trial ? 'phase' : (e.boss ? 'bossDeath' : 'death'), e.x, e.y, 0, trial ? '#ffd34d' : e.color);
   VFX.hitstop(e.boss ? 10 : 4);
   CAMERA.punch(e.x, e.y, e.boss ? 0.08 : 0.03, e.boss ? 0.6 : 0.18);
-  if (e.boss) VFX.flash(0xffffff, 0.35, 0.3);
-  AUDIO.sfx(e.boss ? 'bossdie' : 'kill');
+  if (e.boss) VFX.flash(trial ? 0xffd34d : 0xffffff, 0.35, 0.3);
+  if (!trial) AUDIO.sfx(e.boss ? 'bossdie' : 'kill');
   GAME.shake = Math.max(GAME.shake, e.boss ? 18 : 4);
-  GAME.kills++;
+  if (!trial) GAME.kills++;
   // bhuta husks explode in a ring of shades
   if (e.type === 'bhuta') {
     for (let i = 0; i < 8; i++) {

@@ -187,6 +187,17 @@ const GAME = {
     setTimeout(() => UI.victory(), 1200);
   },
 
+  // 05.7-01 (D-01): per-boss HUD room label, so Yama's trial reads as 'THE TRIAL' while the
+  // other three (rakshasa/asura) bosses keep 'THE WARDEN'. Falls back to 'THE WARDEN' if a
+  // boss entry has no label.
+  roomLabel() {
+    if (this.bossRef) {
+      const d = DATA.BOSSES[this.bossRef.type];
+      return (d && d.label) || 'THE WARDEN';
+    }
+    return `Chamber ${this.roomIdx} / ${this.biome.rooms}`;
+  },
+
   // ---------------- frame ----------------
   frame(tms) {
     PAD.poll();
@@ -1326,7 +1337,7 @@ const GAME = {
     ctx.textAlign = 'center';
     ctx.fillStyle = this.biome.accent;
     ctx.font = 'bold 15px Georgia';
-    const roomLabel = this.bossRef ? 'THE WARDEN' : `Chamber ${this.roomIdx} / ${this.biome.rooms}`;
+    const roomLabel = this.roomLabel();
     ctx.fillText(`${this.biome.name} — ${roomLabel}`, this.W / 2, 32);
     this._hudOrnament(ctx, this.W / 2, 40, 160, 'rgba(255,211,77,0.65)');
     const devBiome = (typeof UI !== 'undefined' && UI.DEVANAGARI && UI.DEVANAGARI.biomes) ? UI.DEVANAGARI.biomes[this.biome.id] : '';

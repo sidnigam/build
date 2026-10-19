@@ -21,9 +21,11 @@ function ensureSavesDir() {
   } catch (e) { /* non-fatal: writes will fail gracefully below */ }
 }
 
-// Only allow simple identifiers — the name arrives from renderer input.
+// Only allow simple identifiers — the name arrives from renderer input. Dots are allowed
+// (SETTINGS.KEY is 'chakravyuha.settings') but never leading, never '..', no path separators.
 function sanitizeName(name) {
-  if (typeof name !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(name)) return null;
+  if (typeof name !== 'string' || !/^[a-zA-Z0-9_][a-zA-Z0-9_.-]*$/.test(name)) return null;
+  if (name.includes('..') || name.length > 64) return null;
   return name;
 }
 

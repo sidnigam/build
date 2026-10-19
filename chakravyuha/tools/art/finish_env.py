@@ -197,8 +197,13 @@ def prop_finish_core(cut, max_side, grade=None, margin=4):
     return canvas, bbox
 
 
-def prop_finish(in_path, max_side, grade=None, margin=4):
-    cut = fsprite.load_and_cutout(in_path)
+def prop_finish(in_path, max_side, grade=None, margin=4, matte="u2net"):
+    """matte (05.4-03): pass-through rembg model name to fsprite.load_and_cutout (default
+    "u2net" preserves byte-identical behaviour for every pre-05.4-03 caller). "birefnet-general"
+    preserves thin held/attached detail (arrows, banner poles, wheel spokes) far better per the
+    05.5-04/05.6-03 matte bake-off; env_build.py selects it per-subject via prompts.json
+    env_subjects.{biome}.{key}.matte."""
+    cut = fsprite.load_and_cutout(in_path, matte=matte)
     return prop_finish_core(cut, max_side, grade=grade, margin=margin)
 
 
@@ -527,6 +532,8 @@ def main():
     p_prop.add_argument("--max", type=int, default=384, choices=[384, 448, 512])
     p_prop.add_argument("--grade", choices=["prop", "architecture"], default=None)
     p_prop.add_argument("--silhouette", dest="silhouette_path", default=None)
+    p_prop.add_argument("--matte", choices=fsprite.MATTE_CHOICES, default="u2net",
+                         help="rembg model for the cutout (05.4-03 pass-through; default unchanged).")
 
     p_decal = sub.add_parser("decal")
     p_decal.add_argument("--in", dest="in_path", required=True)
@@ -581,7 +588,7 @@ def main():
 
     elif args.mode == "prop":
         grade = env_grade.get(args.grade) if args.grade else None
-        out_img, bbox = prop_finish(args.in_path, args.max, grade=grade)
+        out_img, bbox = prop_finish(args.in_path, args.max, grade=grade, matte=args.matte)
         out_img.save(args.out_path, "PNG")
         if args.silhouette_path:
             sil_dir = os.path.dirname(os.path.abspath(args.silhouette_path))

@@ -200,14 +200,15 @@ def build_biome(prompts, biome, only=None):
             frame_name = f"{biome}_{key}_0.png"
             frame_path = os.path.join(raw_frames_dir, frame_name)
             max_side = {"tall": 448}.get(entry.get("size"), 512 if role in ("column", "gate") else 384)
+            matte = entry.get("matte", "u2net")  # 05.4-03: per-subject rembg model override (default unchanged)
             if role == "decal":
                 out_img, _bbox = fe.decal_finish(raw_png, max_side, max_alpha=entry.get("alpha", 0.55), grade=grade)
             elif role == "hazard-skin" and entry.get("finish") == "prop":
-                out_img, _bbox = fe.prop_finish(raw_png, max_side, grade=grade)
+                out_img, _bbox = fe.prop_finish(raw_png, max_side, grade=grade, matte=matte)
             elif role == "hazard-skin":
                 out_img, _bbox = fe.decal_finish(raw_png, max_side, max_alpha=entry.get("alpha", 0.55), grade=grade)
             else:
-                out_img, _bbox = fe.prop_finish(raw_png, max_side, grade=grade)
+                out_img, _bbox = fe.prop_finish(raw_png, max_side, grade=grade, matte=matte)
             out_img.save(frame_path, "PNG")
 
             ground_safe = bool(entry.get("ground_safe")) or role in ("decal", "hazard-skin")

@@ -1,0 +1,105 @@
+{
+  "graph": {
+    "4": {
+      "class_type": "CheckpointLoaderSimple",
+      "inputs": {
+        "ckpt_name": "sd_xl_base_1.0.safetensors"
+      }
+    },
+    "6": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "fallen chariot flag-pole lying on the ground with a torn plain faded cloth pennant, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+        "clip": [
+          "4",
+          1
+        ]
+      }
+    },
+    "7": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, emblem, deity, face, symbol, om, swastika",
+        "clip": [
+          "4",
+          1
+        ]
+      }
+    },
+    "5": {
+      "class_type": "EmptyLatentImage",
+      "inputs": {
+        "width": 1024,
+        "height": 1024,
+        "batch_size": 1
+      }
+    },
+    "3": {
+      "class_type": "KSampler",
+      "inputs": {
+        "seed": 63090,
+        "steps": 32,
+        "cfg": 7.0,
+        "sampler_name": "dpmpp_2m",
+        "scheduler": "karras",
+        "denoise": 1.0,
+        "model": [
+          "4",
+          0
+        ],
+        "positive": [
+          "6",
+          0
+        ],
+        "negative": [
+          "7",
+          0
+        ],
+        "latent_image": [
+          "5",
+          0
+        ]
+      }
+    },
+    "8": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "3",
+          0
+        ],
+        "vae": [
+          "4",
+          2
+        ]
+      }
+    },
+    "9": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "filename_prefix": "chakravyuha",
+        "images": [
+          "8",
+          0
+        ]
+      }
+    }
+  },
+  "params": {
+    "positive": "fallen chariot flag-pole lying on the ground with a torn plain faded cloth pennant, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+    "negative": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, emblem, deity, face, symbol, om, swastika",
+    "seed": 63090,
+    "width": 1024,
+    "height": 1024,
+    "steps": 32,
+    "cfg": 7.0,
+    "sampler": "dpmpp_2m",
+    "scheduler": "karras",
+    "checkpoint": "sd_xl_base_1.0.safetensors",
+    "checkpoint_label": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+    "checkpoint_profile": "sdxl_base"
+  },
+  "prompt_id": "05f8719b-19e1-4678-a044-f99750a33eee",
+  "comfyui_version": "0.35.0",
+  "generated_at": "2026-10-18T00:34:34Z"
+}

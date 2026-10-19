@@ -14,7 +14,7 @@
       "animations": {
         "idle": 4
       },
-      "status": "idle 4f (AI img2img from the approved reference); run/attack/dash are procedural code animation + code-drawn weapon per 02-CONTEXT-AMENDMENT D-07a — no further AI frames planned",
+      "status": "idle 4f (AI img2img from the approved reference); run/attack/dash are procedural code animation + code-drawn weapon per 02-CONTEXT-AMENDMENT D-07a \u2014 no further AI frames planned",
       "tool": "ComfyUI (local)",
       "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
       "method": "img2img",
@@ -45,7 +45,7 @@
       "packed_date": "2026-09-24",
       "repacked_phase": "05.6",
       "repacked_date": "2026-10-17",
-      "source_recovered_from": "player_idle_frame_00001_.png, player_idle_frame_00002_.png, player_idle_frame_00003_.png, player_idle_frame_00004_.png — PNG-embedded ComfyUI prompt metadata matched by filename prefix + denoise + seed order; no regeneration"
+      "source_recovered_from": "player_idle_frame_00001_.png, player_idle_frame_00002_.png, player_idle_frame_00003_.png, player_idle_frame_00004_.png \u2014 PNG-embedded ComfyUI prompt metadata matched by filename prefix + denoise + seed order; no regeneration"
     },
     {
       "filename": "naraka-bg.png",
@@ -76,7 +76,7 @@
       "generated_date": "2026-09-25",
       "recorded_date": "2026-09-25",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Accepted on attempt 0: cracked iron-grey basalt flagstones with ember seams, even top-down detail, no figures/text/horizon, reads clearly as infernal ground."
     },
     {
@@ -110,7 +110,7 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Regenerated per orchestrator art-direction feedback: seed 41100 was too saturated/high-contrast (bright green circuit-maze pattern) and would compete with sprites/telegraphs. Accepted seed 41101 with prompt pushed toward dark, muted, low-contrast deep teal-black underground stone with faint dim bioluminescent moss; calmer and reads clearly as dim underground floor."
     },
     {
@@ -146,7 +146,7 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Attempts 0-2 composed the battlefield elements into circular/radial arrangements (a wheel-and-spear emblem, an arc of arrows) or a corner wall fragment, which reads as a scene with a strong focal point rather than an even ground texture. Prompt was tightened toward seamless repeating texture with evenly scattered debris. Accepted seed 41203: cracked pebbled dry earth, even detail throughout, no focal object, no walls/characters/text. Muted desaturated tan-umber; reads as dry battlefield ground."
     },
     {
@@ -178,7 +178,7 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Accepted on attempt 0: dark slate-grey river stones, even top-down detail, no figures/text/horizon/focal object, muted and low-contrast per art-direction guidance to favor dark/subtle floors."
     },
     {
@@ -223,11 +223,11 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "REGENERATED per orchestrator cultural-review: the original accepted seed 52003 (from an earlier prompt revision) was a multi-armed, crowned figure holding a weapon in each hand, reading as deity iconography (Durga/Kali-coded), which violates the hard rule that gods are never enemies. Prompt rewritten to force exactly two arms, no crown/halo/diadem/lotus/trident, no multiple weapons, with negatives for the same. Retry log: seed 52000 was a two-view character turnaround sheet (rejected, not single-pose); 52001 read as a bearded male lion-faced figure, not the female demoness Tataka is written as; 52002 repeated the male-read issue and added a sun-disc halo plus busy tree/bird scenery; 52004 added visible horns (acceptable) but had busy forest scenery and cropped legs/feet (fails full-body-in-frame). FLAGGED: accepted seed 52003 (this prompt revision) resolves the cultural/gender issues -- clearly two-armed, female-presenting, no crown/halo, single weapon, plain background, full body head-to-feet -- but tusks/fangs/claws did not render clearly within the retry budget; she reads as an ethereal/feral forest demoness rather than overtly monstrous. Candidate for a future regeneration pass if a more overtly fanged look is wanted.",
       "repacked_phase": "05.6",
       "repacked_date": "2026-10-17",
-      "source_recovered_from": "chakravyuha_00024_.png — PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
+      "source_recovered_from": "chakravyuha_00024_.png \u2014 PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "ahiravana-atlas.png",
@@ -266,11 +266,11 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Accepted on attempt 0: full body head-to-feet, jade-teal sorcerer-king with a topknot (in place of the prompted crown), swirling green sorcerous smoke, a bowl of green flame in one hand. A faint sketchy background doodle in the corner of the raw image was cleanly removed by rembg (not present in the finished frame). Silhouette reads clearly, no halo.",
       "repacked_phase": "05.6",
       "repacked_date": "2026-10-17",
-      "source_recovered_from": "chakravyuha_00018_.png — PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
+      "source_recovered_from": "chakravyuha_00018_.png \u2014 PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "kumbhakarna-atlas.png",
@@ -311,11 +311,11 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Attempt 0 (seed 52200) had a large sun-disc glow directly behind the figure that reads as a halo/divine aura, a cultural-guard violation for an asura boss. Accepted attempt 1 (seed 52201): two arms only, no crown/halo/lotus, huge round belly, fanged lion-maned face, golden-yellow/bronze palette, holding a single mace-staff. Clean cutout, chunky readable silhouette.",
       "repacked_phase": "05.6",
       "repacked_date": "2026-10-17",
-      "source_recovered_from": "chakravyuha_00020_.png — PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
+      "source_recovered_from": "chakravyuha_00020_.png \u2014 PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "yama-atlas.png",
@@ -359,11 +359,11 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "FLAGGED: Yama needed all 5 attempts. Seed 52300 (seated, floating scepters) lost both arms during rembg cutout -- a segmentation failure, not a cultural issue. Seed 52301 and seed 52302 both rendered a decorative picture-frame border around the whole image, which violates the no-frame/no-border constraint (52301 also had 4 arms). Seed 52303 correctly avoided a border and read as dignified and serene, but its background halo/aureole disc was so large it dominated the 256x256 canvas and made the cutout silhouette read as a solid circle rather than a person -- fails gameplay readability. Accepted seed 52304 as least-bad: standing, two arms, crown, dignified serene closed-mouth-smile expression, no fangs/horns/grotesque features, no border, plain background, readable humanoid silhouette. The staff (danda) prop held in one hand was a thin disconnected shape that did not survive rembg's alpha-despeckle step and is missing from the finished frame; he is shown holding only the round disc/shield prop. Dignity check passed: no demonic, monstrous or menacing features at any point across all 5 attempts.",
       "repacked_phase": "05.6",
       "repacked_date": "2026-10-17",
-      "source_recovered_from": "chakravyuha_00030_.png — PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
+      "source_recovered_from": "chakravyuha_00030_.png \u2014 PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "preta-atlas.png",
@@ -400,11 +400,11 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Accepted on attempt 0: gaunt spectral figure, pale sea-green ghostly glow, tattered pale funeral shroud, holding a ghostly flame staff. Thin/wispy silhouette is appropriate for an emaciated hungry-ghost design; reads as a robed humanoid at 128px. Clean cutout, no halo, no text.",
       "repacked_phase": "05.6",
       "repacked_date": "2026-10-17",
-      "source_recovered_from": "chakravyuha_00031_.png — PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
+      "source_recovered_from": "chakravyuha_00031_.png \u2014 PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "rakshasa-atlas.png",
@@ -443,11 +443,11 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Attempt 0 (seed 63100) had a plain white circular disc directly behind the figure risking a halo/divine misread; rejected out of caution given the same motif was a cultural-guard issue on multiple bosses. Accepted attempt 1 (seed 63101): two arms, single curved sword, fanged horned demon face, dark red-orange skin, bronze armor, no halo, clean cutout, distinct readable silhouette.",
       "repacked_phase": "05.6",
       "repacked_date": "2026-10-17",
-      "source_recovered_from": "chakravyuha_00033_.png — PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
+      "source_recovered_from": "chakravyuha_00033_.png \u2014 PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "archer-atlas.png",
@@ -484,11 +484,11 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Accepted on attempt 0: horned demon bowman in dark bronze/ochre-gold armor, drawing a recurve bow, two arms, no halo, plain background. A decorative floating wing/bow-shaped flourish behind the shoulder was mostly removed by alpha despeckling; a small sliver remains near the head reading as a feather/horn accent. Silhouette reads clearly.",
       "repacked_phase": "05.6",
       "repacked_date": "2026-10-17",
-      "source_recovered_from": "chakravyuha_00034_.png — PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
+      "source_recovered_from": "chakravyuha_00034_.png \u2014 PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "naga-atlas.png",
@@ -530,11 +530,11 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Naga needed all 5 attempts to get the D-15a body plan right (human torso with a serpent tail instead of legs, not a divine multi-hooded Naga). Seed 63300 had an ornate corner border/frame and a full dragon head (not a humanoid face). 63301 and 63302 both grew a separate reptilian/dragon head plus legs AND a tail (a lizardman, not 'tail instead of legs'). 63303 again kept legs+sandaled feet with an ambiguous double-fin hood shape. Reworded the prompt around a merman analogy (human torso, single continuous tail, no legs) and accepted seed 63304: fully human face and muscular torso, no legs, one continuous green serpent tail, holding a single spear with a serpent-head ornament on the haft (not a second head on the character), no cobra-hood iconography that reads as multi-headed/divine. A soft white circular glow behind the figure in the raw generation was cleanly removed by rembg (not a solid halo shape) and does not appear in the finished frame. Clean readable silhouette.",
       "repacked_phase": "05.6",
       "repacked_date": "2026-10-17",
-      "source_recovered_from": "chakravyuha_00039_.png — PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
+      "source_recovered_from": "chakravyuha_00039_.png \u2014 PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "vetala-atlas.png",
@@ -571,11 +571,11 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Accepted on attempt 0: gaunt vampiric corpse-spirit, wide ragged cloth/bat wings, long claws, violet ghostly palette, skull-like face with red eyes. The wide wingspan gives a distinct, highly readable silhouette that stands apart from the other enemy archetypes. No halo, no text, clean cutout.",
       "repacked_phase": "05.6",
       "repacked_date": "2026-10-17",
-      "source_recovered_from": "chakravyuha_00040_.png — PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
+      "source_recovered_from": "chakravyuha_00040_.png \u2014 PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "bhuta-atlas.png",
@@ -612,11 +612,11 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Accepted on attempt 0: hulking lumbering ghost golem, massive chunky slate blue-grey body, tattered loincloth. Chunky, highly readable silhouette, distinct from all other enemy archetypes. No halo, no text, clean cutout.",
       "repacked_phase": "05.6",
       "repacked_date": "2026-10-17",
-      "source_recovered_from": "chakravyuha_00041_.png — PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
+      "source_recovered_from": "chakravyuha_00041_.png \u2014 PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "daitya-atlas.png",
@@ -653,11 +653,11 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Accepted on attempt 0: massive horned asura brute, amber-orange skin, bronze bracers, broad shoulders, dual-wielding a heavy club and a blade (slightly more armed than the single-club prompt, but reads clearly and distinctly as a brute). No halo, no text, clean cutout, chunky readable silhouette.",
       "repacked_phase": "05.6",
       "repacked_date": "2026-10-17",
-      "source_recovered_from": "chakravyuha_00042_.png — PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
+      "source_recovered_from": "chakravyuha_00042_.png \u2014 PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "yatudhana-atlas.png",
@@ -694,11 +694,11 @@
       "generated_date": "2026-09-26",
       "recorded_date": "2026-09-26",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "Accepted on attempt 0: rakshasa sorcerer conjurer, magenta-pink robes, wide-brimmed hat, bead necklace, bone staff topped with a glowing pink orb. Distinct silhouette (hat + robe + staff-orb), no halo, no text, clean cutout.",
       "repacked_phase": "05.6",
       "repacked_date": "2026-10-17",
-      "source_recovered_from": "chakravyuha_00043_.png — PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
+      "source_recovered_from": "chakravyuha_00043_.png \u2014 PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
     },
     {
       "filename": "naraka_ash_drift_0.png",
@@ -727,7 +727,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s61150: wavy drifted ash/cinder streaks; keys to a soft translucent wisp pattern, reads as scattered ash when tiled at low alpha.",
       "role": "decal",
       "biome": "naraka",
@@ -769,7 +769,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s61090: single wrought-iron tripod brazier with burning coals/flame, plain grey background, clean isolated silhouette.",
       "role": "prop",
       "biome": "naraka",
@@ -811,7 +811,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s61100: single iron post with crossbar and hanging chains/hooks, plain grey background, clean isolated silhouette.",
       "role": "prop",
       "biome": "naraka",
@@ -853,7 +853,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s61040: single isolated obsidian column, cracked lava-glow texture, iron banded cap and base, chains at base, three-quarter view, plain grey background, whole object in frame.",
       "role": "column",
       "biome": "naraka",
@@ -895,8 +895,8 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
-      "self_review": "s61130: jagged dark-stone cracks with glowing ember veins; decal_finish's ΔE alpha key produces a soft irregular translucent mark (previewed on checker bg) suitable as a floor decal.",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s61130: jagged dark-stone cracks with glowing ember veins; decal_finish's \u0394E alpha key produces a soft irregular translucent mark (previewed on checker bg) suitable as a floor decal.",
       "role": "decal",
       "biome": "naraka",
       "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
@@ -937,7 +937,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s61110: ring of scorched stones around glowing embers/flame, circular top-ish view, isolated on plain background.",
       "role": "prop",
       "biome": "naraka",
@@ -979,7 +979,7 @@
       "generated_date": "2026-09-30",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s61000 (dreamshaper_xl_alpha2): cracked dark grey basalt flagstones with thin glowing ember-red cracks, even top-down detail edge to edge, no focal point/radial composition. Matches 02-08 lesson (seamless repeating, evenly scattered).",
       "role": "floor",
       "biome": "naraka",
@@ -1028,7 +1028,7 @@
       "generated_date": "2026-09-30",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s61010 (dreamshaper_xl_alpha2): riveted blackened iron floor plates with rust/scorch streaks and ash drifts, even top-down grid, no focal point.",
       "role": "floor",
       "biome": "naraka",
@@ -1079,7 +1079,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s61051: single isolated obsidian/iron gate arch on a plain grey background with a flagstone floor strip at the base, ember-lit side niches, no landscape/mountains behind it (fixes the attempt-0 rembg foreground/background inversion).",
       "role": "gate",
       "biome": "naraka",
@@ -1124,7 +1124,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s61120: empty broken iron cage, bent bars, open door, isolated on plain grey background.",
       "role": "prop",
       "biome": "naraka",
@@ -1166,7 +1166,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s61080: single riveted iron cauldron with orange rim, dull smoke/flame plume, empty interior, plain grey background.",
       "role": "prop",
       "biome": "naraka",
@@ -1208,7 +1208,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s61060: single carved dark wood/iron lectern with an open book on a low stand, plain grey background, no figure, no readable text (illegible marks only).",
       "role": "prop",
       "biome": "naraka",
@@ -1250,7 +1250,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s61140: diagonal soot/scorch stain with dark-to-red gradient; keys cleanly to a soft irregular alpha mark.",
       "role": "decal",
       "biome": "naraka",
@@ -1294,7 +1294,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s61071: single unified stand with rolled scroll bundles on top and an open manuscript below, one object (fixes attempt-0's 4-scattered-clusters composition). The open pages show dense illegible ink-wash line marks mimicking handwriting, consistent with the already-accepted ledger_lectern treatment -- not legible letters/words.",
       "role": "prop",
       "biome": "naraka",
@@ -1339,7 +1339,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s61160: round iron floor grate, radial bars, glowing center, soot-dark rim; verified clean circular cutout after prop_finish (rembg removed raw-generation's stray petal-shaped flame flares at the corners).",
       "role": "hazard-skin",
       "biome": "naraka",
@@ -1378,7 +1378,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s61030: top-down basalt/stone coping blocks with ember-glow seams between bands, even repeating detail, no focal point.",
       "role": "wallcap",
       "biome": "naraka",
@@ -1429,7 +1429,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s61021 (dreamshaper_xl_alpha2): dripping obsidian/basalt cliff face with thin glowing ember-red streaks, dark rubble base, no sky/horizon/vanishing point, reads as a croppable full-width elevation band. Matches palette; no figures/text. Full 1344x768 frame used as crop (no sky present).",
       "role": "wallface",
       "biome": "naraka",
@@ -1474,7 +1474,7 @@
       "biome": "naraka",
       "recorded_date": "2026-10-16",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review"
+      "review_note": "provisional \u2014 awaiting human art review"
     },
     {
       "filename": "patala_column_0.png",
@@ -1503,7 +1503,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s62040: single isolated jade-stone column with an abstract swirling coil relief (reads as a stylized serpent-coil motif without a literal head/hood), plain grey background, clean cutout with no halo.",
       "role": "column",
       "biome": "patala",
@@ -1545,7 +1545,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s62110: cluster of teal crystal formations on a rock outcrop with a sandy path hint; rembg cleanly isolated it from the dark cave backdrop into a self-contained readable silhouette.",
       "role": "prop",
       "biome": "patala",
@@ -1589,7 +1589,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s62101: single coherent toppled column section propped at an angle on a rubble base, scale-relief carving with gold crack inlay on one face, broken capital, one unified object, plain grey background (fixes attempt-0's scattered-fragments composition).",
       "role": "prop",
       "biome": "patala",
@@ -1634,7 +1634,7 @@
       "generated_date": "2026-09-30",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s62000 (dreamshaper_xl_alpha2): dark teal-black bioluminescent cobblestone, even top-down detail, no focal point. Low-contrast per the 02-08 patala lesson (avoid over-saturation).",
       "role": "floor",
       "biome": "patala",
@@ -1683,7 +1683,7 @@
       "generated_date": "2026-09-30",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s62010 (dreamshaper_xl_alpha2): jade-black flagstones in an irregular rectangular grid with worn antique-gold inlay seams, faint moss. No mandala/circular/radial pattern -- reads as plain paving, not a sacred geometric motif.",
       "role": "floor",
       "biome": "patala",
@@ -1732,7 +1732,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s62050: single isolated teal/gold carved stone arch with a glowing cyan stairway beyond, gem-studded jambs. A faint soft grey halo/mist remains above the arch after rembg cutout (minor, reads as ambient fog, not a hard edge artifact) -- accepted rather than spending further generation budget on a first-attempt success.",
       "role": "gate",
       "biome": "patala",
@@ -1776,7 +1776,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s62071: single contained mounded heap of faceted gems and gold coins with clear grey background margin all around it; rembg cutout preserved the whole heap silhouette (fixes attempt-0 edge-to-edge tiling problem).",
       "role": "prop",
       "biome": "patala",
@@ -1821,7 +1821,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s62140: scattered small gems/coins evenly distributed on flat grey ground, no focal point, reads as a ground decal.",
       "role": "decal",
       "biome": "patala",
@@ -1863,7 +1863,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s62060: single cohesive cluster of bioluminescent cyan-teal mushrooms, plain grey background, no figures/text.",
       "role": "prop",
       "biome": "patala",
@@ -1905,7 +1905,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s62130: flat patches of bioluminescent teal/green moss on dark cracked ground, reads as a ground decal texture.",
       "role": "decal",
       "biome": "patala",
@@ -1947,7 +1947,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s62090: single round stone basin with glowing teal bioluminescent water, carved scale rim, plain grey background, clean isolated object.",
       "role": "prop",
       "biome": "patala",
@@ -1989,7 +1989,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s62080: single ornate bronze/teal urn with small decorative serpentine curl handles (abstract scrollwork, not a literal multi-hooded serpent figure), plain grey background, clean isolated object.",
       "role": "prop",
       "biome": "patala",
@@ -2031,7 +2031,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s62160: cluster of wet mossy teal/dark/gold-rimmed stones, reads as a scattered stone ground texture (not a perfect ring shape, but serviceable as a venom-pool rim decal per D-05a's optional/droppable allowance).",
       "role": "decal",
       "biome": "patala",
@@ -2073,7 +2073,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s62030: top-down dark jade stone coping with cracked serpent-scale texture and two gem-studded gold inlay bands, even repeating detail, no focal point.",
       "role": "wallcap",
       "biome": "patala",
@@ -2125,7 +2125,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s62022 (dreamshaper_xl_alpha2): continuous repeating arched naga-palace wall with dark stone, teal bioluminescent glow under the eaves and arch bases, gold-leaf abstract vine/scroll carving on pillars, roofline overhead. A grey studio backdrop remains outside the wall silhouette at the frame edges; crop [230,160,1240,730] stays inside the wall content so the finished strip is edge-to-edge with no visible background after strip_finish's resize + x-seamless blend.",
       "role": "wallface",
       "biome": "patala",
@@ -2173,7 +2173,7 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "s62150: dark shallow puddle with a gold-rimmed edge and teal water reflection around it.",
       "role": "decal",
       "biome": "patala",
@@ -2212,7 +2212,7 @@
       "biome": "patala",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review"
+      "review_note": "provisional \u2014 awaiting human art review"
     },
     {
       "filename": "agni-portrait.png",
@@ -2246,9 +2246,9 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "H1 correct deity (flame-crowned bearded fire god, two arms, ladle/flame-palm pose) PASS. H2 benevolent/serene expression, no menace/fangs/horns/red-eyes PASS. H3 no sexualization, modest attire PASS. H4 no horror/gore/skulls PASS. H5 no conflated deity iconography (not Vishnu, not a fire demon) PASS. H6 no text/watermark/swastika PASS. H7 one primary figure PASS. H-god: single calm wise bearded face (not two-faced), flames read as crown/hair not fire-demon imagery, two arms, no horns -- PASS. HX1 skin colour consistent (red-gold face/neck/arms/hands) PASS. HX2 living figure, painted skin, open eyes, not a statue/idol PASS. HX3 two arms, each attached at the shoulder, no extra/fused limbs PASS. HX4 flame held in raised right palm intact and identifiable at 240px PASS. HX5 no halo/frame/border/text remnants after birefnet-general cutout PASS. S1 bust composition, head fully in frame PASS. S2 hands acceptable at 240px, five fingers each, no fusion PASS. S3 clean cutout, no background remnants PASS. S4 matches house painterly/luminous style PASS. S5 reads clearly at 64px thumbnail PASS. Orchestrator review note (flag for human cultural review QA-03, not a ship blocker): the forehead tilak renders as a U-shaped Vaishnava urdhva-pundra mark, which is traditionally Vishnu/Krishna iconography rather than Agni's; this is a minor cross-deity marking that should be reviewed/corrected by a human cultural reviewer rather than blocking the ship, since every other Agni-specific attribute (flame crown, ladle/flame-palm pose, single bearded face, two arms) is correct and distinct from Vishnu. Shipped on first Flux attempt (round 0, seed 71150, attempt 0); 05.5-01 SDXL history: 7/7 rejected (see 05.5-01-SUMMARY, statue/idol and halo failures).",
-      "cultural_review": "pending — human cultural reviewer (QA-03)",
+      "cultural_review": "pending \u2014 human cultural reviewer (QA-03)",
       "iconography_notes": "radiant red-gold skin uniform across face/neck/arms/hands; hair and crown rendered as rising golden flames; calm wise bearded single face; right hand raised beside face cupping a small bright flame in the palm; left palm raised; two arms; gold jewellery; deep red garment; forehead tilak renders as a U-shaped Vaishnava urdhva-pundra mark rather than Agni-specific markings -- flagged for human cultural review (QA-03), not a ship blocker"
     },
     {
@@ -2283,9 +2283,9 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "H1 correct deity (deep-blue-skinned Krishna, peacock feather crown, bansuri flute, pitambara yellow shawl) PASS. H2 gentle knowing smile, benevolent, no menace PASS. H3 no sexualization, modest attire PASS. H4 no horror/gore/skulls PASS. H5 no conflated deity iconography -- two arms not four (not Vishnu), no trident/serpent/third eye (not Shiva) PASS. H6 no text/watermark/swastika PASS. H7 one primary figure PASS. H-god: two arms PASS; adult (not child/infant) PASS; peacock feather in crown, flute, yellow garment all present PASS; masculine and dignified, not feminized PASS; not mirrored PASS. HX1 skin colour uniformly deep blue across face/neck/chest/arms/hands PASS. HX2 living figure, painted skin, open warm eyes, not a statue/idol PASS. HX3 two arms attached at the shoulders, no extra/fused limbs PASS. HX4 flute held to lips, intact and identifiable at 240px PASS. HX5 no halo/frame/border/text remnants after birefnet-general cutout PASS. S1 bust composition, head fully in frame PASS. S2 hands acceptable at 240px PASS. S3 clean cutout PASS. S4 matches house painterly/luminous style PASS. S5 reads clearly at 64px thumbnail PASS. Minor note (not a fail): flute is held diagonally near the lips by one hand with the other hand resting lower, rather than fully horizontal in both hands as the prompt requested -- cosmetic framing variance only, iconography (feather/flute/yellow garment/blue skin) unaffected. Shipped on first Flux attempt (round 0, seed 71450, attempt 0); 05.5-01 SDXL history: 7/7 rejected (see 05.5-01-SUMMARY, statue/idol and halo failures).",
-      "cultural_review": "pending — human cultural reviewer (QA-03)",
+      "cultural_review": "pending \u2014 human cultural reviewer (QA-03)",
       "iconography_notes": "deep blue skin uniform across face, neck, chest, arms and hands; single peacock feather upright in golden crown; bansuri flute held near the lips; yellow silk pitambara shawl over the shoulders; kaustubha jewel and gold jewellery; U-shaped tilak on forehead; two arms; adult masculine figure, never mirrored"
     },
     {
@@ -2322,9 +2322,9 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "H1 correct deity (noble monkey-faced Hanuman, gada on shoulder) PASS. H2 benevolent devoted expression, no menace PASS. H3 no sexualization, modest traditional attire PASS. H4 no horror/gore PASS. H5 no conflated deity iconography PASS. H6 no text/watermark/swastika in the finished cutout PASS (a faint background cursive signature mark on the raw's flat grey backdrop was cleanly removed by the birefnet-general matte, confirmed by inspection of the finished cutout). H7 one primary figure PASS. H-god: monkey face reads noble and devotional with a short rounded muzzle, flat nose, round ears PASS; two arms PASS; gada mace present and intact resting on right shoulder PASS; no chest-opening imagery PASS. HX1 skin colour consistent across face/neck/arm/hand PASS. HX2 living figure, painted fur/skin, open alert eyes, not a statue/idol PASS. HX3 two arms attached at the shoulders, no extra/fused limbs PASS. HX4 gada held intact and identifiable at 240px PASS. HX5 no halo/frame/border/text remnants in finished cutout PASS. S1 bust composition, head fully in frame PASS. S2 hands acceptable at 240px, resting near chest/necklace PASS. S3 clean cutout PASS. S4 matches house painterly/luminous style PASS. S5 reads clearly at 64px thumbnail PASS. Rejected seed 71050 (round 0): full-body framing, not a waist-cropped bust -- the dhoti mention early in the prompt pulled composition past the waist; fixed in round 1 by leading the prompt with an explicit bust-crop anchor and shortening the dhoti reference to a waist sash. Shipped round 1 (seed 71051, attempt 1). 05.5-01 SDXL history: 7/7 rejected (see 05.5-01-SUMMARY, fully-human-faced Hanuman with no muzzle on every SDXL attempt).",
-      "cultural_review": "pending — human cultural reviewer (QA-03)",
+      "cultural_review": "pending \u2014 human cultural reviewer (QA-03)",
       "iconography_notes": "noble monkey face with short rounded muzzle, flat wide nose, round ears, saffron-orange fur on face/arms; tall golden mukuta crown; red vermilion tilak; gold armlets, pearl necklace; saffron silk waist sash; golden gada mace resting on right shoulder gripped by the right hand; left hand resting near the heart/necklace; two arms"
     },
     {
@@ -2361,9 +2361,9 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "H1 correct deity (regal Indra, kirita crown, double-ended Vajra held across the chest) PASS. H2 proud, kind, benevolent expression PASS. H3 no sexualization, modest regal attire PASS. H4 no horror/gore PASS. H5 no conflated deity iconography -- the Vajra reads as a horizontal double-ended club/thunderbolt, not a vertical trident/trishula, and is not a Greek lightning bolt or hammer PASS. H6 no text/watermark/swastika PASS. H7 one primary figure PASS. H-god: the Vajra is clearly a double-ended pronged object (mirrored points left and right of a central grip), not a Greek bolt or hammer PASS; crowned PASS; two arms PASS; not Zeus-like, no toga PASS; no thousand-eyes motif PASS. HX1 skin colour consistent across face/neck/arms/hands PASS. HX2 living figure, open alert eyes, not a statue/idol PASS. HX3 two arms attached at the shoulders, both gripping the Vajra's central grip, no extra/fused limbs PASS. HX4 Vajra intact and clearly double-ended/symmetric at 240px PASS. HX5 no halo/frame/border/text remnants PASS. S1 bust composition, head fully in frame PASS. S2 hands acceptable at 240px PASS. S3 clean cutout PASS. S4 matches house painterly/luminous style PASS. S5 reads clearly at 64px thumbnail PASS. Rejected seed 71250 (round 0): the Vajra rendered as an upright single-pronged trident/trishula (conflated with Shiva's weapon, H5 fail) because the original prompt described it held upright against the chest, which Flux defaulted to a trident silhouette; fixed in round 1 by describing it held horizontally across the chest with prongs explicitly mirrored left and right of a central grip, a shape that cannot read as a vertical trident. Shipped round 1 (seed 71251, attempt 1). 05.5-01 SDXL history: 7/7 rejected (see 05.5-01-SUMMARY).",
-      "cultural_review": "pending — human cultural reviewer (QA-03)",
+      "cultural_review": "pending \u2014 human cultural reviewer (QA-03)",
       "iconography_notes": "tall jewelled golden kirita crown, fine black moustache, warm fair skin, open alert eyes; both hands grip the centre of a short golden double-ended Vajra held horizontally across the chest, mirrored three-pronged clusters at each end, soft white glow at the centre grip; indigo and white silk garments with gold trim; two arms"
     },
     {
@@ -2400,9 +2400,9 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "H1 correct deity (bearded wind god, windswept hair, staff with pennant) PASS. H2 calm dignified expression, no menace PASS. H3 no sexualization, modest attire PASS. H4 no horror/gore PASS. H5 no conflated deity iconography PASS. H6 no text/watermark/swastika PASS. H7 one primary figure PASS. H-god: solid dignified figure, not a ghost or translucent spectral body PASS; banner/pennant streaming at the staff top and wind-swept scarves/hair read clearly PASS; two arms PASS. HX1 skin colour consistent across face/neck/arms/hands, cool sea-green rim light PASS. HX2 living figure, painted skin, open alert eyes, not a statue/idol PASS. HX3 two arms attached at the shoulders, both gripping the staff, no extra/fused limbs PASS. HX4 staff and pennant intact and identifiable at 240px PASS. HX5 no halo/frame/border/text remnants PASS. S1 bust composition, head fully in frame PASS. S2 hands acceptable at 240px, gripping the staff PASS. S3 clean cutout PASS. S4 matches house painterly/luminous style PASS. S5 reads clearly at 64px thumbnail PASS. Rejected seed 71350 (round 0): a clear anachronistic wristwatch (circular dial with a metallic bezel) rendered on the right wrist, layered with bangles -- hard fail, era-breaking anachronism; fixed in round 1 by replacing the vague 'light silver jewellery' phrase with an explicit single plain silver armband worn high on the upper arm and wrists/hands described as bare and unadorned (the round-1 result shows a traditional beaded bracelet, not a watch -- verified by a zoomed crop, no clock face or dial present). Shipped round 1 (seed 71351, attempt 1). 05.5-01 SDXL history: this god previously read as feminine-presenting on both 05.4-01 A/B checkpoints (see 05.4-01-SUMMARY); the round-1 Flux result reads clearly as a bearded mature man.",
-      "cultural_review": "pending — human cultural reviewer (QA-03)",
+      "cultural_review": "pending \u2014 human cultural reviewer (QA-03)",
       "iconography_notes": "bearded mature man with windswept dark hair, calm dignified face; plain silver armband high on the upper arm, bare unadorned wrists; white dhoti sash at the waist; long sea-green silk scarves streaming in the wind; wooden staff gripped diagonally across the chest with a white triangular pennant streaming above the left shoulder; two arms"
     },
     {
@@ -2440,10 +2440,861 @@
       "generated_date": "2026-10-17",
       "recorded_date": "2026-10-17",
       "review_status": "provisional",
-      "review_note": "provisional — awaiting human art review",
+      "review_note": "provisional \u2014 awaiting human art review",
       "self_review": "H1 correct deity (eight-armed Durga, trident/sword/mace among her weapons, lion beside her) PASS. H2 serene compassionate expression PASS. H3 no sexualization, fully clothed in a red blouse and sari, modest PASS. H4 no horror/gore/skulls/blood, not Kali-coded, no tongue-out PASS. H5 no conflated deity iconography PASS. H6 no text/watermark/swastika PASS. H7 one primary figure (the lion is the explicitly allowed exception) PASS. H-god: eight arms present (three fanned each side plus two front arms), symmetric, no fused or broken limbs PASS; red sari with gold border PASS; crown present PASS; lion's head and mane visible beside her PASS. HX1 skin colour consistent (golden) across face/neck/arms/hands PASS. HX2 living figure, painted skin, open eyes, not a statue/idol/murti PASS. HX3 eight arms, each attached at or near the shoulder in a fanned arc, no extra/fused/floating limbs PASS. HX4 held weapons (trident, small sword, mace) intact and identifiable at 240px PASS. HX5 no halo disc or separate radiant aureole survives in the finished cutout -- the gold spiked arc is read as part of the crown/headdress silhouette itself (same gold tone, textured like metalwork, directly attached to and behind the crown, not a separately colored circular backdrop) PASS. S1 bust composition, head fully in frame PASS. S2 hands acceptable at 240px PASS. S3 clean cutout, no background remnants PASS. S4 matches house painterly/luminous style PASS. S5 reads clearly at 64px thumbnail PASS. Rejected seed 71550 (round 0): full-body framing (not a waist-cropped bust) and only 6 of 8 required arms rendered -- composition and H-god arm-count fails. Rejected seed 71551 (round 1): composition and arm count were fixed, but the 'tall golden crown' phrase generated a large red-and-gold radiant arch/aureole behind her head, visually indistinguishable from the banned halo disc (the Yama lesson from Phase 2) -- rewrote the headwear as a slender pointed gold tiara with nothing but her own hair behind her head. Shipped round 2 (seed 71552, attempt 2). Never mirrored. 05.5-01 SDXL history: 7/7 rejected (see 05.5-01-SUMMARY).",
-      "cultural_review": "pending — human cultural reviewer (QA-03)",
+      "cultural_review": "pending \u2014 human cultural reviewer (QA-03)",
       "iconography_notes": "serene compassionate face, golden skin, slender pointed gold tiara with an integrated gold spiked crown-arch (not a separate halo disc); eight arms fanned symmetrically from the shoulders (three each side plus two crossed in front), holding a trident, a small sword, a mace and other implements with the remaining hands in open/blessing gestures; red silk blouse and the top of a red sari with a gold border; the head and mane of her lion visible at the lower edge of the frame beside her shoulder; never mirrored (abhaya-mudra handedness is iconographic)"
+    },
+    {
+      "filename": "ranabhoomi_arrow_cluster_0.png",
+      "path": "assets/sprites/_raw/env/ranabhoomi/frames/ranabhoomi_arrow_cluster_0.png",
+      "actor": "ranabhoomi_arrow_cluster",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 63101,
+      "prompt": "several complete wooden arrows with bronze arrowheads and feathered fletching, stuck point-down into a patch of dry earth at angles, arrow shafts and fletching clearly visible above the dirt, small patch of ground included in frame, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, feather alone, quill pen, loose feathers, no ground, no shaft",
+      "rejected_seeds": [
+        63100
+      ],
+      "rejected_count": 1,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/ranabhoomi/arrow_cluster.gen.json",
+      "generated_date": "2026-10-19",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s63101: cluster of 6-7 complete arrows with varied bronze/dark triangular fletching standing upright with cast shadows implying ground contact -- fixes attempt-0's bare-feather-only composition. No explicit dirt patch rendered, but the upright-cluster read (the core gameplay need) is clear and unambiguous.",
+      "role": "prop",
+      "biome": "ranabhoomi",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; no blood.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      },
+      "rejected_reasons": {
+        "63100": "generated two large isolated bird feathers on a plain background, not arrows -- no shafts, arrowheads or ground visible"
+      }
+    },
+    {
+      "filename": "ranabhoomi_chariot_wheel_0.png",
+      "path": "assets/sprites/_raw/env/ranabhoomi/frames/ranabhoomi_chariot_wheel_0.png",
+      "actor": "ranabhoomi_chariot_wheel",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 63070,
+      "prompt": "broken wooden war-chariot wheel with snapped spokes and a bronze rim, lying tilted in the dust, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/ranabhoomi/chariot_wheel.gen.json",
+      "generated_date": "2026-10-18",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s63070: single broken wooden spoked wheel with a bronze-toned rim, snapped/splayed spokes, clean isolated silhouette, plain background.",
+      "role": "prop",
+      "biome": "ranabhoomi",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      }
+    },
+    {
+      "filename": "ranabhoomi_chariot_wreck_0.png",
+      "path": "assets/sprites/_raw/env/ranabhoomi/frames/ranabhoomi_chariot_wreck_0.png",
+      "actor": "ranabhoomi_chariot_wreck",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 63082,
+      "prompt": "a single ancient Indian two-wheeled war chariot (ratha), open-topped low wooden platform with no canopy and no enclosed cabin, overturned on its side in the dust, splintered wooden body with bronze fittings, one large spoked wheel broken off and lying separately, clearly wrecked and damaged, no horses, no people, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, horse, person, body, blood, gore, intact, upright, pristine, covered wagon, canvas canopy, prairie schooner, Conestoga wagon, enclosed cabin, European cart, medieval cart",
+      "rejected_seeds": [
+        63080,
+        63081
+      ],
+      "rejected_count": 2,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/ranabhoomi/chariot_wreck.gen.json",
+      "generated_date": "2026-10-19",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s63082: open wooden two-axle chariot/cart frame, clearly broken down -- splintered slats, one wheel detached and leaning against the body, no canvas canopy or enclosed cabin -- fixes attempt-1's covered-wagon style mismatch. Large spoked wheels read well at prop scale; no horses, no people, no blood.",
+      "role": "prop",
+      "biome": "ranabhoomi",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; no horses/people/blood/gore; open wrecked wooden chariot frame only, no European/American wagon styling.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      },
+      "rejected_reasons": {
+        "63080": "generated an intact-looking two-wheeled cart, not clearly overturned or damaged -- doesn't read as a battlefield wreck",
+        "63081": "generated an enclosed canvas-topped covered wagon (American prairie-schooner / Conestoga wagon style) -- a major historical/cultural style mismatch, not an ancient Indian war chariot (ratha); CLAUDE.md bars anachronistic/wrong-culture forms"
+      }
+    },
+    {
+      "filename": "ranabhoomi_column_0.png",
+      "path": "assets/sprites/_raw/env/ranabhoomi/frames/ranabhoomi_column_0.png",
+      "actor": "ranabhoomi_column",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 832,
+      "height": 1216,
+      "seed": 63041,
+      "prompt": "a single tall wooden war-camp post, the full height of the post visible top to bottom filling the frame, bronze bands wrapped around the wood, coiled rope wound around the post, a bronze bell hanging from a short crossbar near the top, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, bell alone, close-up on bell only, cropped post, no post visible",
+      "rejected_seeds": [
+        63040
+      ],
+      "rejected_count": 1,
+      "post_processing": [
+        "column"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/ranabhoomi/column.gen.json",
+      "generated_date": "2026-10-19",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s63041: single tall wooden war-camp post, full height visible top to bottom, bronze-banded, a lantern/bell hanging from the top on rope, small base plinth -- fixes attempt-0's bell-only framing.",
+      "role": "column",
+      "biome": "ranabhoomi",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.8,
+        "val": 0.82
+      },
+      "finish": {
+        "mode": "column",
+        "crop": null
+      },
+      "rejected_reasons": {
+        "63040": "generated only a bronze bell hanging from a rope on a plain background -- no post/pole visible at all, fails the 'tall column' framing entirely"
+      }
+    },
+    {
+      "filename": "ranabhoomi_conch_stand_0.png",
+      "path": "assets/sprites/_raw/env/ranabhoomi/frames/ranabhoomi_conch_stand_0.png",
+      "actor": "ranabhoomi_conch_stand",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 63130,
+      "prompt": "a white conch shell (shankha) resting upright on a small carved wooden stand, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, deity, hand, person, lotus",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/ranabhoomi/conch_stand.gen.json",
+      "generated_date": "2026-10-18",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s63130: single white conch shell (shankha) resting upright on a small carved wooden stand, plain background, no hand/person/deity.",
+      "role": "prop",
+      "biome": "ranabhoomi",
+      "cultural_check": "pass: upright on a stand only (D-09), no deity/hand/person/lotus.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      }
+    },
+    {
+      "filename": "ranabhoomi_dhvaja_0.png",
+      "path": "assets/sprites/_raw/env/ranabhoomi/frames/ranabhoomi_dhvaja_0.png",
+      "actor": "ranabhoomi_dhvaja",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 832,
+      "height": 1216,
+      "seed": 63050,
+      "prompt": "tall chariot flag-pole (dhvaja) with a long tattered plain triangular pennant with a simple geometric border, bronze finial, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, monkey, Hanuman, deity, face, emblem, symbol, om, swastika",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/ranabhoomi/dhvaja.gen.json",
+      "generated_date": "2026-10-18",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s63050: single tall chariot flag-pole with a plain two-tone (cream/crimson) triangular pennant, simple geometric border, isolated on plain background, whole object in frame.",
+      "role": "prop",
+      "biome": "ranabhoomi",
+      "cultural_check": "pass: no deity/idol/face/emblem/om/swastika; plain geometric banner only (D-09).",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      }
+    },
+    {
+      "filename": "ranabhoomi_dust_scuff_0.png",
+      "path": "assets/sprites/_raw/env/ranabhoomi/frames/ranabhoomi_dust_scuff_0.png",
+      "actor": "ranabhoomi_dust_scuff",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 63171,
+      "prompt": "top-down orthographic view looking straight down at a scuffed patch of trampled dust and hoof prints, neutral tan and grey dust tones only on flat plain mid grey ground, isolated, flat on the ground, soft irregular edges, painterly texture, muted desaturated tan and umber dust tones only, no red, low saturation, no objects, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra, blood, red stains, gore, wounds, bruises, crimson, pink, red coloring",
+      "rejected_seeds": [
+        63170
+      ],
+      "rejected_count": 1,
+      "post_processing": [
+        "decal"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/ranabhoomi/dust_scuff.gen.json",
+      "generated_date": "2026-10-19",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s63171: neutral tan/grey scuffed dust patch, no red/crimson coloring -- fixes attempt-0's blood-like red blotches after removing 'faded crimson cloth accents' from this decal's palette and adding an explicit blood/gore negative.",
+      "role": "decal",
+      "biome": "ranabhoomi",
+      "cultural_check": "pass: no blood/gore; neutral dust tones only.",
+      "ground_safe": true,
+      "grading": {
+        "sat": 0.7,
+        "val": 0.8
+      },
+      "finish": {
+        "mode": "decal",
+        "crop": null
+      },
+      "rejected_reasons": {
+        "63170": "generated with strong reddish-crimson blotches that read as blood stains on the dusty ground -- a hard cultural violation (no gore/blood on Kurukshetra ground per D-09/CLAUDE.md), caused by the shared palette's 'faded crimson cloth accents' bleeding into a ground decal with no cloth present"
+      }
+    },
+    {
+      "filename": "ranabhoomi_fallen_banner_0.png",
+      "path": "assets/sprites/_raw/env/ranabhoomi/frames/ranabhoomi_fallen_banner_0.png",
+      "actor": "ranabhoomi_fallen_banner",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 63090,
+      "prompt": "fallen chariot flag-pole lying on the ground with a torn plain faded cloth pennant, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, emblem, deity, face, symbol, om, swastika",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/ranabhoomi/fallen_banner.gen.json",
+      "generated_date": "2026-10-18",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s63090: chariot flag-pole fallen at a diagonal angle with a plain striped pennant draped toward the ground, torn edge visible, no emblem.",
+      "role": "prop",
+      "biome": "ranabhoomi",
+      "cultural_check": "pass: no deity/idol/face/emblem/om/swastika.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      }
+    },
+    {
+      "filename": "ranabhoomi_flat_arrows_0.png",
+      "path": "assets/sprites/_raw/env/ranabhoomi/frames/ranabhoomi_flat_arrows_0.png",
+      "actor": "ranabhoomi_flat_arrows",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 63160,
+      "prompt": "top-down orthographic view looking straight down at a few broken arrows lying flat on dry earth on flat plain mid grey ground, isolated, flat on the ground, soft irregular edges, painterly texture, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, no objects, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "decal"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/ranabhoomi/flat_arrows.gen.json",
+      "generated_date": "2026-10-18",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s63160: a scatter of a few broken dark-fletched arrows lying flat on pale dry earth, reads clearly at decal scale.",
+      "role": "decal",
+      "biome": "ranabhoomi",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; no blood.",
+      "ground_safe": true,
+      "grading": {
+        "sat": 0.7,
+        "val": 0.8
+      },
+      "finish": {
+        "mode": "decal",
+        "crop": null
+      }
+    },
+    {
+      "filename": "ranabhoomi-floor-a-tile.png",
+      "path": "assets/sprites/env/ranabhoomi/ranabhoomi-floor-a-tile.png",
+      "actor": "ranabhoomi_floor_a",
+      "kind": "env-tile",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "dreamshaperXL_alpha2Xl10.safetensors (DreamShaper XL alpha2 (xl1.0) by Lykon, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 63000,
+      "prompt": "top-down orthographic view looking straight down at seamless repeating texture, evenly scattered small debris on cracked pebbled dry battlefield earth, seamless repeating texture, evenly scattered detail edge to edge, painted game arena floor texture, low contrast, no focal point, Hades-adjacent painterly illustration, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "tile"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/ranabhoomi/floor_a.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s63000 (dreamshaper_xl_alpha2): cracked, sun-baked packed battlefield earth with a desiccation-crack flagstone-like pattern (pink-tan/rose, muted), even top-down detail edge to edge, no focal point/radial composition. Matches the 02-08 lesson (seamless repeating, evenly scattered).",
+      "role": "floor",
+      "biome": "ranabhoomi",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; just cracked dry earth.",
+      "ground_safe": true,
+      "grading": {
+        "graded": true,
+        "contrast_factor": 1.0,
+        "sat_factor": 1.0,
+        "val_factor": 0.8161730536658505,
+        "stats": {
+          "luma_mean": 0.4479825132295198,
+          "luma_std": 0.059342005688406835,
+          "sat_mean": 0.28325418419812426
+        }
+      },
+      "finish": {
+        "mode": "tile",
+        "crop": null
+      }
+    },
+    {
+      "filename": "ranabhoomi-floor-b-tile.png",
+      "path": "assets/sprites/env/ranabhoomi/ranabhoomi-floor-b-tile.png",
+      "actor": "ranabhoomi_floor_b",
+      "kind": "env-tile",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "dreamshaperXL_alpha2Xl10.safetensors (DreamShaper XL alpha2 (xl1.0) by Lykon, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 63012,
+      "prompt": "top-down orthographic view looking straight down at parched cracked dry battlefield dirt with long straight parallel cart-wheel ruts pressed into the ground, sparse dry dead grass tufts, small scattered pebbles, bare uniform ground texture only, seamless repeating texture, evenly scattered detail edge to edge, painted game arena floor texture, low contrast, no focal point, Hades-adjacent painterly illustration, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra, crates, boxes, containers, barrels, sacks, objects, props, items, debris piles, clutter, creatures, insects, spiky balls, orbs, mines, urchins, thorned plants, animals, hoofprints shaped like creatures",
+      "rejected_seeds": [
+        63010,
+        63011
+      ],
+      "rejected_count": 2,
+      "post_processing": [
+        "tile"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/ranabhoomi/floor_b.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s63012 (dreamshaper_xl_alpha2): clean long straight parallel cart-wheel ruts cut into cracked dry packed earth, even top-down detail edge to edge, no focal point, no discrete objects/creatures (fixes attempt-0's crate clusters and attempt-1's spiky urchin-blob misreads). Grass tufts/hoofprints did not render distinctly but the ruts alone satisfy the 'breaks up floor_a repetition' purpose.",
+      "role": "floor",
+      "biome": "ranabhoomi",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; cracked dirt and cart ruts only.",
+      "ground_safe": true,
+      "grading": {
+        "graded": true,
+        "contrast_factor": 1.0,
+        "sat_factor": 0.7510679219088499,
+        "val_factor": 0.7819907872976511,
+        "stats": {
+          "luma_mean": 0.44803479071523633,
+          "luma_std": 0.04550949904003733,
+          "sat_mean": 0.31779904935935904
+        }
+      },
+      "finish": {
+        "mode": "tile",
+        "crop": null
+      },
+      "rejected_reasons": {
+        "63010": "generated distinct wooden crate/box clusters as discrete repeating objects on the ground -- a strong focal-point/tiling-repetition violation (ENV-02's 'no focal point' tile rule), not the cart-rut/hoofprint ground texture requested",
+        "63011": "generated small dark spiky urchin/orb-like clusters scattered on the dirt (ambiguous creature/mine-like objects, not cart ruts or hoofprints) -- still a focal-point/object violation, worse read than attempt 0's crates"
+      }
+    },
+    {
+      "filename": "ranabhoomi_gate_0.png",
+      "path": "assets/sprites/_raw/env/ranabhoomi/frames/ranabhoomi_gate_0.png",
+      "actor": "ranabhoomi_gate",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 63061,
+      "prompt": "a single massive timber war-camp gateway arch prop isolated on a plain flat background, two tall bronze-bound timber posts flanking a clear walkthrough opening, lashed log lintel on top, torn faded cloth banners hanging from the lintel, seen head-on, no landscape, no scenery behind it, no tents, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, landscape, mountains, snow, scenery, vista, horizon, sky, background scenery, environment, tent, camp scene, smoke, fire",
+      "rejected_seeds": [
+        63060
+      ],
+      "rejected_count": 1,
+      "post_processing": [
+        "gate"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/ranabhoomi/gate.gen.json",
+      "generated_date": "2026-10-19",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s63061: a bent-timber archway gate with a clear walkthrough opening between two flanking posts, a rag/banner hanging from the curved lintel, flanking plank wall sections -- fixes attempt-0's tent/camp-scene composition. A soft hazy background (distant trees) remains behind the arch; verified after prop_finish's birefnet-general cutout that the background was successfully removed, leaving a clean isolated gate silhouette.",
+      "role": "gate",
+      "biome": "ranabhoomi",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; architecture only, no figures.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.8,
+        "val": 0.82
+      },
+      "finish": {
+        "mode": "gate",
+        "crop": null
+      },
+      "rejected_reasons": {
+        "63060": "generated a rough timber tent/camp-shelter scene (A-frame poles, canvas, smoke) rather than a walkable gateway structure -- doesn't read as an architectural gate"
+      }
+    },
+    {
+      "filename": "ranabhoomi_quiver_0.png",
+      "path": "assets/sprites/_raw/env/ranabhoomi/frames/ranabhoomi_quiver_0.png",
+      "actor": "ranabhoomi_quiver",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 63111,
+      "prompt": "a single abandoned leather quiver case lying on the ground, cylindrical leather container with a strap, a few feathered arrows spilling out of its open top, resting on dry earth, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, no container, arrows alone, quiver missing",
+      "rejected_seeds": [
+        63110
+      ],
+      "rejected_count": 1,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/ranabhoomi/quiver.gen.json",
+      "generated_date": "2026-10-19",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s63111: single leather barrel-banded quiver case lying on its side on the ground with a couple of feathered arrows spilled out nearby -- fixes attempt-0's bare-arrows-only composition, now clearly reads as an abandoned quiver.",
+      "role": "prop",
+      "biome": "ranabhoomi",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; no blood.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      },
+      "rejected_reasons": {
+        "63110": "generated two bare arrows with no quiver container visible at all -- fails the 'abandoned leather quiver' subject entirely"
+      }
+    },
+    {
+      "filename": "ranabhoomi_ruts_0.png",
+      "path": "assets/sprites/_raw/env/ranabhoomi/frames/ranabhoomi_ruts_0.png",
+      "actor": "ranabhoomi_ruts",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 63150,
+      "prompt": "top-down orthographic view looking straight down at two long straight parallel cart-wheel ruts in dry earth on flat plain mid grey ground, isolated, flat on the ground, soft irregular edges, painterly texture, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, no objects, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "decal"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/ranabhoomi/ruts.gen.json",
+      "generated_date": "2026-10-18",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s63150: two long straight parallel cart-wheel ruts cut into pale dry earth, soft irregular decal edges after decal_finish's delta-E key.",
+      "role": "decal",
+      "biome": "ranabhoomi",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": true,
+      "grading": {
+        "sat": 0.7,
+        "val": 0.8
+      },
+      "finish": {
+        "mode": "decal",
+        "crop": null
+      }
+    },
+    {
+      "filename": "ranabhoomi_shield_pile_0.png",
+      "path": "assets/sprites/_raw/env/ranabhoomi/frames/ranabhoomi_shield_pile_0.png",
+      "actor": "ranabhoomi_shield_pile",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 63140,
+      "prompt": "pile of round bronze-rimmed hide shields and broken spears, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, blood, gore, body",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/ranabhoomi/shield_pile.gen.json",
+      "generated_date": "2026-10-18",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s63140: generated as a single round bronze-rimmed hide shield rather than a pile of shields+spears -- accepted as a serviceable single discarded-shield prop (no gore/blood/body), a reasonable substitute per D-15's 'least-bad accepted' allowance for an above-minimum optional variety prop.",
+      "role": "prop",
+      "biome": "ranabhoomi",
+      "cultural_check": "pass: no blood/gore/body; single shield object only.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      }
+    },
+    {
+      "filename": "ranabhoomi-wallcap-tile.png",
+      "path": "assets/sprites/env/ranabhoomi/ranabhoomi-wallcap-tile.png",
+      "actor": "ranabhoomi_wallcap",
+      "kind": "env-tile",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 63030,
+      "prompt": "top-down orthographic view straight down onto the flat top of a thick top of an earthen rampart: packed earth with lashed timber logs and stakes, seamless repeating texture, even detail, Hades-adjacent painterly illustration, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "tile"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/ranabhoomi/wallcap.gen.json",
+      "generated_date": "2026-10-18",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s63030: top-down earthen rampart top with lashed timber logs/stakes in a zigzag line, packed dirt, even detail, no focal point.",
+      "role": "wallcap",
+      "biome": "ranabhoomi",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": false,
+      "grading": {
+        "graded": true,
+        "contrast_factor": 0.9370368760270857,
+        "sat_factor": 0.7574660542293196,
+        "val_factor": 0.811313028364421,
+        "stats": {
+          "luma_mean": 0.44799745725369916,
+          "luma_std": 0.12544434562682164,
+          "sat_mean": 0.3179526714848641
+        }
+      },
+      "finish": {
+        "mode": "tile",
+        "crop": null
+      }
+    },
+    {
+      "filename": "ranabhoomi-wallface-tile.png",
+      "path": "assets/sprites/env/ranabhoomi/ranabhoomi-wallface-tile.png",
+      "actor": "ranabhoomi_wallface",
+      "kind": "env-tile",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "dreamshaperXL_alpha2Xl10.safetensors (DreamShaper XL alpha2 (xl1.0) by Lykon, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1344,
+      "height": 768,
+      "seed": 63021,
+      "prompt": "extreme close-up of an earthen battlefield rampart wall filling the entire frame edge to edge: packed dirt embankment topped with a palisade of lashed sharpened timber stakes, torn faded cloth hangings and plain pennants strung between posts, dust, camera pressed close against the wall surface, no gap above the stakes, no sky visible anywhere in frame, straight-on elevation of a long continuous horizontal wall section seen from a high three-quarter top-down game camera, architecture repeating across the full width edge to edge, wall base along the lower third, Hades-adjacent painterly illustration, rich carved detail, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, no characters, no text, no sky",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, horizon, sky, perspective vanishing point, concept art, matte painting, clouds, distant landscape, field, farmland, open country, vista, aerial, panorama",
+      "rejected_seeds": [
+        63020
+      ],
+      "rejected_count": 1,
+      "post_processing": [
+        "strip"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/ranabhoomi/wallface.gen.json",
+      "generated_date": "2026-10-17",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s63021 (dreamshaper_xl_alpha2): extreme-close palisade of lashed sharpened timber stakes along a packed-earth rampart, torn/no banner cloth visible but plain pennant absence acceptable (stakes+embankment read clearly); a sky sliver on the far left (x<260) was cropped out via crop=[260,0,1344,768] before strip_finish's x-seamless pass (fixes attempt-0's full landscape/horizon drift). 3x1 seamless repeat preview reviewed: continuous palisade band, faint feather-blend at the wrap seam but reads clean at game scale.",
+      "role": "wallface",
+      "biome": "ranabhoomi",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; architecture only, no figures, no emblem.",
+      "ground_safe": false,
+      "grading": null,
+      "finish": {
+        "mode": "strip",
+        "crop": [
+          260,
+          0,
+          1344,
+          768
+        ]
+      },
+      "rejected_reasons": {
+        "63020": "generated a full open-field landscape vista with sky, horizon and distant farmland behind the fence line -- reads as concept art, not a flat croppable wall elevation strip (the known wallface perspective-drift pitfall)"
+      }
+    },
+    {
+      "filename": "ranabhoomi_war_drum_0.png",
+      "path": "assets/sprites/_raw/env/ranabhoomi/frames/ranabhoomi_war_drum_0.png",
+      "actor": "ranabhoomi_war_drum",
+      "kind": "env-prop",
+      "tool": "ComfyUI (local)",
+      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "method": "txt2img",
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "steps": 32,
+      "cfg": 7.0,
+      "width": 1024,
+      "height": 1024,
+      "seed": 63120,
+      "prompt": "large ancient Indian war kettle drum (nagara) with a hide top and bronze body on a wooden stand, drumsticks resting on it, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "prop"
+      ],
+      "raw_image": null,
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p543/chakravyuha/assets/sprites/_raw/env/ranabhoomi/war_drum.gen.json",
+      "generated_date": "2026-10-18",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "s63120: bronze-bodied war kettle drum (nagara) with a hide top, mounted on a wooden tripod stand, clean isolated silhouette.",
+      "role": "prop",
+      "biome": "ranabhoomi",
+      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+      "ground_safe": false,
+      "grading": {
+        "sat": 0.85,
+        "val": 0.88
+      },
+      "finish": {
+        "mode": "prop",
+        "crop": null
+      }
+    },
+    {
+      "filename": "ranabhoomi-env-atlas.png",
+      "path": "assets/sprites/env/ranabhoomi/ranabhoomi-env-atlas.png",
+      "actor": "ranabhoomi",
+      "kind": "env-atlas",
+      "tool": "free-tex-packer-core 0.3.8 via tools/pack-atlas.js",
+      "method": "atlas-pack",
+      "components": [
+        "ranabhoomi_arrow_cluster_0.png",
+        "ranabhoomi_chariot_wheel_0.png",
+        "ranabhoomi_chariot_wreck_0.png",
+        "ranabhoomi_column_0.png",
+        "ranabhoomi_conch_stand_0.png",
+        "ranabhoomi_dhvaja_0.png",
+        "ranabhoomi_dust_scuff_0.png",
+        "ranabhoomi_fallen_banner_0.png",
+        "ranabhoomi_flat_arrows_0.png",
+        "ranabhoomi_gate_0.png",
+        "ranabhoomi_quiver_0.png",
+        "ranabhoomi_ruts_0.png",
+        "ranabhoomi_shield_pile_0.png",
+        "ranabhoomi_war_drum_0.png"
+      ],
+      "biome": "ranabhoomi",
+      "recorded_date": "2026-10-19",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review"
     }
   ],
   "review_sheet": "assets/sprites/_review/contact-sheet.png",

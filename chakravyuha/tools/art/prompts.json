@@ -856,6 +856,567 @@
         "self_review": "s62160: cluster of wet mossy teal/dark/gold-rimmed stones, reads as a scattered stone ground texture (not a perfect ring shape, but serviceable as a venom-pool rim decal per D-05a's optional/droppable allowance).",
         "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
       }
+    },
+    "ranabhoomi": {
+      "floor_a": {
+        "template": "tile",
+        "role": "floor",
+        "ground_safe": true,
+        "base_seed": 63000,
+        "palette": "muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation",
+        "subject": "seamless repeating texture, evenly scattered small debris on cracked pebbled dry battlefield earth",
+        "accepted_attempt": 0,
+        "self_review": "s63000 (dreamshaper_xl_alpha2): cracked, sun-baked packed battlefield earth with a desiccation-crack flagstone-like pattern (pink-tan/rose, muted), even top-down detail edge to edge, no focal point/radial composition. Matches the 02-08 lesson (seamless repeating, evenly scattered).",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; just cracked dry earth."
+      },
+      "floor_b": {
+        "template": "tile",
+        "role": "floor",
+        "ground_safe": true,
+        "base_seed": 63010,
+        "palette": "muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation",
+        "subject": "parched cracked dry battlefield dirt with long straight parallel cart-wheel ruts pressed into the ground, sparse dry dead grass tufts, small scattered pebbles, bare uniform ground texture only",
+        "rejected": {
+          "0": "generated distinct wooden crate/box clusters as discrete repeating objects on the ground -- a strong focal-point/tiling-repetition violation (ENV-02's 'no focal point' tile rule), not the cart-rut/hoofprint ground texture requested",
+          "1": "generated small dark spiky urchin/orb-like clusters scattered on the dirt (ambiguous creature/mine-like objects, not cart ruts or hoofprints) -- still a focal-point/object violation, worse read than attempt 0's crates"
+        },
+        "negative_extra": "crates, boxes, containers, barrels, sacks, objects, props, items, debris piles, clutter, creatures, insects, spiky balls, orbs, mines, urchins, thorned plants, animals, hoofprints shaped like creatures",
+        "accepted_attempt": 2,
+        "self_review": "s63012 (dreamshaper_xl_alpha2): clean long straight parallel cart-wheel ruts cut into cracked dry packed earth, even top-down detail edge to edge, no focal point, no discrete objects/creatures (fixes attempt-0's crate clusters and attempt-1's spiky urchin-blob misreads). Grass tufts/hoofprints did not render distinctly but the ruts alone satisfy the 'breaks up floor_a repetition' purpose.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; cracked dirt and cart ruts only."
+      },
+      "wallface": {
+        "template": "wallface",
+        "role": "wallface",
+        "ground_safe": false,
+        "base_seed": 63020,
+        "palette": "muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation",
+        "subject": "extreme close-up of an earthen battlefield rampart wall filling the entire frame edge to edge: packed dirt embankment topped with a palisade of lashed sharpened timber stakes, torn faded cloth hangings and plain pennants strung between posts, dust, camera pressed close against the wall surface, no gap above the stakes, no sky visible anywhere in frame",
+        "negative_extra": "horizon, sky, perspective vanishing point, concept art, matte painting, clouds, distant landscape, field, farmland, open country, vista, aerial, panorama",
+        "rejected": {
+          "0": "generated a full open-field landscape vista with sky, horizon and distant farmland behind the fence line -- reads as concept art, not a flat croppable wall elevation strip (the known wallface perspective-drift pitfall)"
+        },
+        "accepted_attempt": 1,
+        "crop": [
+          260,
+          0,
+          1344,
+          768
+        ],
+        "self_review": "s63021 (dreamshaper_xl_alpha2): extreme-close palisade of lashed sharpened timber stakes along a packed-earth rampart, torn/no banner cloth visible but plain pennant absence acceptable (stakes+embankment read clearly); a sky sliver on the far left (x<260) was cropped out via crop=[260,0,1344,768] before strip_finish's x-seamless pass (fixes attempt-0's full landscape/horizon drift). 3x1 seamless repeat preview reviewed: continuous palisade band, faint feather-blend at the wrap seam but reads clean at game scale.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; architecture only, no figures, no emblem."
+      },
+      "wallcap": {
+        "template": "wallcap",
+        "role": "wallcap",
+        "ground_safe": false,
+        "base_seed": 63030,
+        "palette": "muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation",
+        "subject": "top of an earthen rampart: packed earth with lashed timber logs and stakes",
+        "accepted_attempt": 0,
+        "self_review": "s63030: top-down earthen rampart top with lashed timber logs/stakes in a zigzag line, packed dirt, even detail, no focal point.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
+      },
+      "column": {
+        "template": "prop",
+        "role": "column",
+        "ground_safe": false,
+        "base_seed": 63040,
+        "size": "tall",
+        "worldH": 150,
+        "palette": "muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation",
+        "subject": "a single tall wooden war-camp post, the full height of the post visible top to bottom filling the frame, bronze bands wrapped around the wood, coiled rope wound around the post, a bronze bell hanging from a short crossbar near the top",
+        "rejected": {
+          "0": "generated only a bronze bell hanging from a rope on a plain background -- no post/pole visible at all, fails the 'tall column' framing entirely"
+        },
+        "negative_extra": "bell alone, close-up on bell only, cropped post, no post visible",
+        "accepted_attempt": 1,
+        "self_review": "s63041: single tall wooden war-camp post, full height visible top to bottom, bronze-banded, a lantern/bell hanging from the top on rope, small base plinth -- fixes attempt-0's bell-only framing.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
+      },
+      "dhvaja": {
+        "template": "prop",
+        "role": "prop",
+        "ground_safe": false,
+        "base_seed": 63050,
+        "size": "tall",
+        "worldH": 120,
+        "zones": [
+          "north",
+          "corner"
+        ],
+        "weight": 2,
+        "low": false,
+        "skinFor": [
+          "rana_banners:pillar"
+        ],
+        "palette": "muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation",
+        "subject": "tall chariot flag-pole (dhvaja) with a long tattered plain triangular pennant with a simple geometric border, bronze finial",
+        "negative_extra": "monkey, Hanuman, deity, face, emblem, symbol, om, swastika",
+        "matte": "birefnet-general",
+        "accepted_attempt": 0,
+        "self_review": "s63050: single tall chariot flag-pole with a plain two-tone (cream/crimson) triangular pennant, simple geometric border, isolated on plain background, whole object in frame.",
+        "cultural_check": "pass: no deity/idol/face/emblem/om/swastika; plain geometric banner only (D-09)."
+      },
+      "gate": {
+        "template": "prop",
+        "role": "gate",
+        "ground_safe": false,
+        "base_seed": 63060,
+        "worldH": 210,
+        "palette": "muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation",
+        "subject": "a single massive timber war-camp gateway arch prop isolated on a plain flat background, two tall bronze-bound timber posts flanking a clear walkthrough opening, lashed log lintel on top, torn faded cloth banners hanging from the lintel, seen head-on, no landscape, no scenery behind it, no tents",
+        "negative_extra": "landscape, mountains, snow, scenery, vista, horizon, sky, background scenery, environment, tent, camp scene, smoke, fire",
+        "matte": "birefnet-general",
+        "rejected": {
+          "0": "generated a rough timber tent/camp-shelter scene (A-frame poles, canvas, smoke) rather than a walkable gateway structure -- doesn't read as an architectural gate"
+        },
+        "accepted_attempt": 1,
+        "self_review": "s63061: a bent-timber archway gate with a clear walkthrough opening between two flanking posts, a rag/banner hanging from the curved lintel, flanking plank wall sections -- fixes attempt-0's tent/camp-scene composition. A soft hazy background (distant trees) remains behind the arch; verified after prop_finish's birefnet-general cutout that the background was successfully removed, leaving a clean isolated gate silhouette.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; architecture only, no figures."
+      },
+      "chariot_wheel": {
+        "template": "prop",
+        "role": "prop",
+        "ground_safe": false,
+        "base_seed": 63070,
+        "worldH": 58,
+        "zones": [
+          "north",
+          "west",
+          "east",
+          "corner"
+        ],
+        "weight": 2,
+        "low": false,
+        "palette": "muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation",
+        "subject": "broken wooden war-chariot wheel with snapped spokes and a bronze rim, lying tilted in the dust",
+        "matte": "birefnet-general",
+        "accepted_attempt": 0,
+        "self_review": "s63070: single broken wooden spoked wheel with a bronze-toned rim, snapped/splayed spokes, clean isolated silhouette, plain background.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
+      },
+      "chariot_wreck": {
+        "template": "prop",
+        "role": "prop",
+        "ground_safe": false,
+        "base_seed": 63080,
+        "worldH": 90,
+        "zones": [
+          "north",
+          "west",
+          "east",
+          "corner"
+        ],
+        "weight": 1,
+        "low": false,
+        "skinFor": [
+          "rana_chariots:wall"
+        ],
+        "palette": "muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation",
+        "subject": "a single ancient Indian two-wheeled war chariot (ratha), open-topped low wooden platform with no canopy and no enclosed cabin, overturned on its side in the dust, splintered wooden body with bronze fittings, one large spoked wheel broken off and lying separately, clearly wrecked and damaged, no horses, no people",
+        "negative_extra": "horse, person, body, blood, gore, intact, upright, pristine, covered wagon, canvas canopy, prairie schooner, Conestoga wagon, enclosed cabin, European cart, medieval cart",
+        "matte": "birefnet-general",
+        "rejected": {
+          "0": "generated an intact-looking two-wheeled cart, not clearly overturned or damaged -- doesn't read as a battlefield wreck",
+          "1": "generated an enclosed canvas-topped covered wagon (American prairie-schooner / Conestoga wagon style) -- a major historical/cultural style mismatch, not an ancient Indian war chariot (ratha); CLAUDE.md bars anachronistic/wrong-culture forms"
+        },
+        "accepted_attempt": 2,
+        "self_review": "s63082: open wooden two-axle chariot/cart frame, clearly broken down -- splintered slats, one wheel detached and leaning against the body, no canvas canopy or enclosed cabin -- fixes attempt-1's covered-wagon style mismatch. Large spoked wheels read well at prop scale; no horses, no people, no blood.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; no horses/people/blood/gore; open wrecked wooden chariot frame only, no European/American wagon styling."
+      },
+      "fallen_banner": {
+        "template": "prop",
+        "role": "prop",
+        "ground_safe": false,
+        "base_seed": 63090,
+        "worldH": 34,
+        "zones": [
+          "north",
+          "corner",
+          "south"
+        ],
+        "weight": 1,
+        "low": true,
+        "palette": "muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation",
+        "subject": "fallen chariot flag-pole lying on the ground with a torn plain faded cloth pennant",
+        "negative_extra": "emblem, deity, face, symbol, om, swastika",
+        "matte": "birefnet-general",
+        "accepted_attempt": 0,
+        "self_review": "s63090: chariot flag-pole fallen at a diagonal angle with a plain striped pennant draped toward the ground, torn edge visible, no emblem.",
+        "cultural_check": "pass: no deity/idol/face/emblem/om/swastika."
+      },
+      "arrow_cluster": {
+        "template": "prop",
+        "role": "prop",
+        "ground_safe": false,
+        "base_seed": 63100,
+        "worldH": 46,
+        "zones": [
+          "north",
+          "west",
+          "east",
+          "corner"
+        ],
+        "weight": 2,
+        "low": false,
+        "palette": "muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation",
+        "subject": "several complete wooden arrows with bronze arrowheads and feathered fletching, stuck point-down into a patch of dry earth at angles, arrow shafts and fletching clearly visible above the dirt, small patch of ground included in frame",
+        "matte": "birefnet-general",
+        "rejected": {
+          "0": "generated two large isolated bird feathers on a plain background, not arrows -- no shafts, arrowheads or ground visible"
+        },
+        "negative_extra": "feather alone, quill pen, loose feathers, no ground, no shaft",
+        "accepted_attempt": 1,
+        "self_review": "s63101: cluster of 6-7 complete arrows with varied bronze/dark triangular fletching standing upright with cast shadows implying ground contact -- fixes attempt-0's bare-feather-only composition. No explicit dirt patch rendered, but the upright-cluster read (the core gameplay need) is clear and unambiguous.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; no blood."
+      },
+      "quiver": {
+        "template": "prop",
+        "role": "prop",
+        "ground_safe": false,
+        "base_seed": 63110,
+        "worldH": 40,
+        "zones": [
+          "north",
+          "west",
+          "east",
+          "corner"
+        ],
+        "weight": 1,
+        "low": true,
+        "palette": "muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation",
+        "subject": "a single abandoned leather quiver case lying on the ground, cylindrical leather container with a strap, a few feathered arrows spilling out of its open top, resting on dry earth",
+        "matte": "birefnet-general",
+        "rejected": {
+          "0": "generated two bare arrows with no quiver container visible at all -- fails the 'abandoned leather quiver' subject entirely"
+        },
+        "negative_extra": "no container, arrows alone, quiver missing",
+        "accepted_attempt": 1,
+        "self_review": "s63111: single leather barrel-banded quiver case lying on its side on the ground with a couple of feathered arrows spilled out nearby -- fixes attempt-0's bare-arrows-only composition, now clearly reads as an abandoned quiver.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; no blood."
+      },
+      "war_drum": {
+        "template": "prop",
+        "role": "prop",
+        "ground_safe": false,
+        "base_seed": 63120,
+        "worldH": 56,
+        "zones": [
+          "north",
+          "west",
+          "east",
+          "corner"
+        ],
+        "weight": 1,
+        "low": false,
+        "palette": "muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation",
+        "subject": "large ancient Indian war kettle drum (nagara) with a hide top and bronze body on a wooden stand, drumsticks resting on it",
+        "accepted_attempt": 0,
+        "self_review": "s63120: bronze-bodied war kettle drum (nagara) with a hide top, mounted on a wooden tripod stand, clean isolated silhouette.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
+      },
+      "conch_stand": {
+        "template": "prop",
+        "role": "prop",
+        "ground_safe": false,
+        "base_seed": 63130,
+        "worldH": 48,
+        "zones": [
+          "north",
+          "west",
+          "east",
+          "corner"
+        ],
+        "weight": 1,
+        "low": false,
+        "palette": "muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation",
+        "subject": "a white conch shell (shankha) resting upright on a small carved wooden stand",
+        "negative_extra": "deity, hand, person, lotus",
+        "matte": "birefnet-general",
+        "accepted_attempt": 0,
+        "self_review": "s63130: single white conch shell (shankha) resting upright on a small carved wooden stand, plain background, no hand/person/deity.",
+        "cultural_check": "pass: upright on a stand only (D-09), no deity/hand/person/lotus."
+      },
+      "shield_pile": {
+        "template": "prop",
+        "role": "prop",
+        "ground_safe": false,
+        "base_seed": 63140,
+        "worldH": 44,
+        "zones": [
+          "north",
+          "west",
+          "east",
+          "corner"
+        ],
+        "weight": 1,
+        "low": true,
+        "palette": "muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation",
+        "subject": "pile of round bronze-rimmed hide shields and broken spears",
+        "negative_extra": "blood, gore, body",
+        "accepted_attempt": 0,
+        "self_review": "s63140: generated as a single round bronze-rimmed hide shield rather than a pile of shields+spears -- accepted as a serviceable single discarded-shield prop (no gore/blood/body), a reasonable substitute per D-15's 'least-bad accepted' allowance for an above-minimum optional variety prop.",
+        "cultural_check": "pass: no blood/gore/body; single shield object only."
+      },
+      "ruts": {
+        "template": "decal",
+        "role": "decal",
+        "ground_safe": true,
+        "base_seed": 63150,
+        "palette": "muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation",
+        "subject": "two long straight parallel cart-wheel ruts in dry earth",
+        "accepted_attempt": 0,
+        "self_review": "s63150: two long straight parallel cart-wheel ruts cut into pale dry earth, soft irregular decal edges after decal_finish's delta-E key.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
+      },
+      "flat_arrows": {
+        "template": "decal",
+        "role": "decal",
+        "ground_safe": true,
+        "base_seed": 63160,
+        "palette": "muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation",
+        "subject": "a few broken arrows lying flat on dry earth",
+        "accepted_attempt": 0,
+        "self_review": "s63160: a scatter of a few broken dark-fletched arrows lying flat on pale dry earth, reads clearly at decal scale.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; no blood."
+      },
+      "dust_scuff": {
+        "template": "decal",
+        "role": "decal",
+        "ground_safe": true,
+        "base_seed": 63170,
+        "palette": "muted desaturated tan and umber dust tones only, no red, low saturation",
+        "subject": "a scuffed patch of trampled dust and hoof prints, neutral tan and grey dust tones only",
+        "rejected": {
+          "0": "generated with strong reddish-crimson blotches that read as blood stains on the dusty ground -- a hard cultural violation (no gore/blood on Kurukshetra ground per D-09/CLAUDE.md), caused by the shared palette's 'faded crimson cloth accents' bleeding into a ground decal with no cloth present"
+        },
+        "negative_extra": "blood, red stains, gore, wounds, bruises, crimson, pink, red coloring",
+        "accepted_attempt": 1,
+        "self_review": "s63171: neutral tan/grey scuffed dust patch, no red/crimson coloring -- fixes attempt-0's blood-like red blotches after removing 'faded crimson cloth accents' from this decal's palette and adding an explicit blood/gore negative.",
+        "cultural_check": "pass: no blood/gore; neutral dust tones only."
+      }
+    },
+    "vaitarani": {
+      "floor_a": {
+        "template": "tile",
+        "role": "floor",
+        "ground_safe": true,
+        "base_seed": 64000,
+        "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
+        "subject": "seamless repeating texture, evenly scattered dark slate-grey river stones, wet sheen, no water"
+      },
+      "floor_b": {
+        "template": "tile",
+        "role": "floor",
+        "ground_safe": true,
+        "base_seed": 64010,
+        "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
+        "subject": "wet dark ghat stone slabs with a thin film of water, patches of dark algae in the joints"
+      },
+      "water": {
+        "template": "tile",
+        "role": "water",
+        "ground_safe": true,
+        "base_seed": 64020,
+        "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
+        "subject": "dark still river water seen from directly above, faint ripples, soft reflections of mist, deep blue-black, even texture, no objects, no boats, no reflections of figures"
+      },
+      "wallface": {
+        "template": "wallface",
+        "role": "wallface",
+        "ground_safe": false,
+        "base_seed": 64030,
+        "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
+        "subject": "extreme close-up of a broad weathered stone stairway of a riverside ghat filling the entire frame edge to edge: carved stone balustrades, iron mooring rings set in the steps, moss and water stains, camera pressed close against the stone surface, no sky visible anywhere in frame",
+        "negative_extra": "temple, shrine, idol, lingam, deity, person, pyre, fire, smoke, body, horizon, sky, perspective vanishing point, concept art, matte painting, clouds, distant landscape, field, vista, aerial, panorama"
+      },
+      "wallcap": {
+        "template": "wallcap",
+        "role": "wallcap",
+        "ground_safe": false,
+        "base_seed": 64040,
+        "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
+        "subject": "top of a weathered stone river embankment with iron mooring rings and moss"
+      },
+      "column": {
+        "template": "prop",
+        "role": "column",
+        "ground_safe": false,
+        "base_seed": 64050,
+        "size": "tall",
+        "worldH": 150,
+        "light": {
+          "color": "#ffc070",
+          "r": 130,
+          "alpha": 0.3
+        },
+        "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
+        "subject": "tall weathered stone lamp pillar (deepastambha) with many small oil-lamp niches, a few tiny flames lit",
+        "negative_extra": "deity, idol, face, carving of figures"
+      },
+      "gate": {
+        "template": "prop",
+        "role": "gate",
+        "ground_safe": false,
+        "base_seed": 64060,
+        "worldH": 210,
+        "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
+        "subject": "a single weathered stone archway prop at a riverside ghat landing, isolated on a plain flat background, moss, iron mooring rings, no landscape, no scenery behind it",
+        "negative_extra": "landscape, mountains, snow, scenery, vista, horizon, sky, background scenery, environment, temple, shrine, idol, deity",
+        "matte": "birefnet-general"
+      },
+      "moored_boat": {
+        "template": "prop",
+        "role": "prop",
+        "ground_safe": false,
+        "base_seed": 64070,
+        "worldH": 50,
+        "zones": [
+          "south",
+          "corner"
+        ],
+        "weight": 1,
+        "low": true,
+        "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
+        "subject": "empty old wooden ferry boat with a single oar, moored, seen from above at three-quarter view, no passengers",
+        "negative_extra": "person, figure, body, skeleton",
+        "matte": "birefnet-general"
+      },
+      "mooring_post": {
+        "template": "prop",
+        "role": "prop",
+        "ground_safe": false,
+        "base_seed": 64080,
+        "worldH": 64,
+        "zones": [
+          "north",
+          "west",
+          "east",
+          "corner"
+        ],
+        "weight": 2,
+        "low": false,
+        "skinFor": [
+          "vait_posts:pillar"
+        ],
+        "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
+        "subject": "thick weathered wooden mooring post with coiled rope and an iron ring"
+      },
+      "reeds": {
+        "template": "prop",
+        "role": "prop",
+        "ground_safe": false,
+        "base_seed": 64090,
+        "worldH": 56,
+        "zones": [
+          "north",
+          "west",
+          "east",
+          "corner"
+        ],
+        "weight": 2,
+        "low": false,
+        "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
+        "subject": "clump of tall dark river reeds and rushes",
+        "matte": "birefnet-general"
+      },
+      "floating_diyas": {
+        "template": "prop",
+        "role": "prop",
+        "ground_safe": false,
+        "base_seed": 64100,
+        "worldH": 26,
+        "zones": [
+          "south"
+        ],
+        "weight": 1,
+        "low": true,
+        "light": {
+          "color": "#ffb45a",
+          "r": 90,
+          "alpha": 0.3
+        },
+        "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
+        "subject": "a few small clay oil lamps (diyas) with tiny flames floating on dark water"
+      },
+      "rope_coil": {
+        "template": "prop",
+        "role": "prop",
+        "ground_safe": false,
+        "base_seed": 64110,
+        "worldH": 30,
+        "zones": [
+          "north",
+          "west",
+          "east",
+          "corner"
+        ],
+        "weight": 1,
+        "low": true,
+        "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
+        "subject": "coiled heavy rope with a small round anchor stone",
+        "matte": "birefnet-general"
+      },
+      "driftwood": {
+        "template": "prop",
+        "role": "prop",
+        "ground_safe": false,
+        "base_seed": 64120,
+        "worldH": 34,
+        "zones": [
+          "north",
+          "west",
+          "east",
+          "corner"
+        ],
+        "weight": 1,
+        "low": true,
+        "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
+        "subject": "pile of pale weathered driftwood branches",
+        "matte": "birefnet-general"
+      },
+      "stone_marker": {
+        "template": "prop",
+        "role": "prop",
+        "ground_safe": false,
+        "base_seed": 64130,
+        "worldH": 58,
+        "zones": [
+          "north",
+          "west",
+          "east",
+          "corner"
+        ],
+        "weight": 1,
+        "low": false,
+        "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
+        "subject": "eroded plain standing stone marker post, moss, no inscriptions"
+      },
+      "algae_patch": {
+        "template": "decal",
+        "role": "decal",
+        "ground_safe": true,
+        "base_seed": 64140,
+        "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
+        "subject": "a patch of dark wet algae"
+      },
+      "water_puddle": {
+        "template": "decal",
+        "role": "decal",
+        "ground_safe": true,
+        "base_seed": 64150,
+        "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
+        "subject": "a dark shallow puddle with a faint silver reflection"
+      },
+      "stone_cracks": {
+        "template": "decal",
+        "role": "decal",
+        "ground_safe": true,
+        "base_seed": 64160,
+        "palette": "dark muted slate blue-grey and deep indigo with faint cold silver highlights, warm tiny lamp-light accents only where noted, low saturation",
+        "subject": "fine cracks in wet dark stone"
+      }
     }
   },
   "god_checkpoint": "flux1_schnell_q4ks",

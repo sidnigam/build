@@ -1,0 +1,319 @@
+{
+  "schema": 1,
+  "biome": "ranabhoomi",
+  "atlas": "assets/sprites/env/ranabhoomi/ranabhoomi-env-atlas.json",
+  "tiles": {
+    "floor_a": {
+      "path": "assets/sprites/env/ranabhoomi/ranabhoomi-floor-a-tile.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "role": "floor",
+      "ground_safe": true
+    },
+    "floor_b": {
+      "path": "assets/sprites/env/ranabhoomi/ranabhoomi-floor-b-tile.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "role": "floor",
+      "ground_safe": true
+    },
+    "wallcap": {
+      "path": "assets/sprites/env/ranabhoomi/ranabhoomi-wallcap-tile.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "role": "wallcap",
+      "ground_safe": false
+    },
+    "wallface": {
+      "path": "assets/sprites/env/ranabhoomi/ranabhoomi-wallface-tile.png",
+      "size": [
+        1024,
+        725
+      ],
+      "role": "wallface",
+      "ground_safe": false
+    }
+  },
+  "frames": {
+    "arrow_cluster": {
+      "frame": "ranabhoomi_arrow_cluster_0.png",
+      "size": [
+        350,
+        384
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 46,
+      "zones": [
+        "north",
+        "west",
+        "east",
+        "corner"
+      ],
+      "weight": 2,
+      "low": false
+    },
+    "chariot_wheel": {
+      "frame": "ranabhoomi_chariot_wheel_0.png",
+      "size": [
+        354,
+        384
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 58,
+      "zones": [
+        "north",
+        "west",
+        "east",
+        "corner"
+      ],
+      "weight": 2,
+      "low": false
+    },
+    "chariot_wreck": {
+      "frame": "ranabhoomi_chariot_wreck_0.png",
+      "size": [
+        384,
+        243
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 90,
+      "zones": [
+        "north",
+        "west",
+        "east",
+        "corner"
+      ],
+      "weight": 1,
+      "low": false
+    },
+    "column": {
+      "frame": "ranabhoomi_column_0.png",
+      "size": [
+        274,
+        448
+      ],
+      "role": "column",
+      "ground_safe": false,
+      "worldH": 150,
+      "anchor": [
+        0.5,
+        0.96
+      ],
+      "footW": 219
+    },
+    "conch_stand": {
+      "frame": "ranabhoomi_conch_stand_0.png",
+      "size": [
+        243,
+        384
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 48,
+      "zones": [
+        "north",
+        "west",
+        "east",
+        "corner"
+      ],
+      "weight": 1,
+      "low": false
+    },
+    "dhvaja": {
+      "frame": "ranabhoomi_dhvaja_0.png",
+      "size": [
+        142,
+        448
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 120,
+      "zones": [
+        "north",
+        "corner"
+      ],
+      "weight": 2,
+      "low": false
+    },
+    "dust_scuff": {
+      "frame": "ranabhoomi_dust_scuff_0.png",
+      "size": [
+        384,
+        384
+      ],
+      "role": "decal",
+      "ground_safe": true,
+      "worldW": 180,
+      "alpha": 0.45
+    },
+    "fallen_banner": {
+      "frame": "ranabhoomi_fallen_banner_0.png",
+      "size": [
+        384,
+        333
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 34,
+      "zones": [
+        "north",
+        "corner",
+        "south"
+      ],
+      "weight": 1,
+      "low": true
+    },
+    "flat_arrows": {
+      "frame": "ranabhoomi_flat_arrows_0.png",
+      "size": [
+        384,
+        384
+      ],
+      "role": "decal",
+      "ground_safe": true,
+      "worldW": 180,
+      "alpha": 0.45
+    },
+    "gate": {
+      "frame": "ranabhoomi_gate_0.png",
+      "size": [
+        512,
+        398
+      ],
+      "role": "gate",
+      "ground_safe": false,
+      "worldH": 210,
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    "quiver": {
+      "frame": "ranabhoomi_quiver_0.png",
+      "size": [
+        355,
+        384
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 40,
+      "zones": [
+        "north",
+        "west",
+        "east",
+        "corner"
+      ],
+      "weight": 1,
+      "low": true
+    },
+    "ruts": {
+      "frame": "ranabhoomi_ruts_0.png",
+      "size": [
+        384,
+        384
+      ],
+      "role": "decal",
+      "ground_safe": true,
+      "worldW": 180,
+      "alpha": 0.45
+    },
+    "shield_pile": {
+      "frame": "ranabhoomi_shield_pile_0.png",
+      "size": [
+        367,
+        384
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 44,
+      "zones": [
+        "north",
+        "west",
+        "east",
+        "corner"
+      ],
+      "weight": 1,
+      "low": true
+    },
+    "war_drum": {
+      "frame": "ranabhoomi_war_drum_0.png",
+      "size": [
+        352,
+        384
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 56,
+      "zones": [
+        "north",
+        "west",
+        "east",
+        "corner"
+      ],
+      "weight": 1,
+      "low": false
+    }
+  },
+  "floor": {
+    "tileScale": 0.6,
+    "macroScale": 1.7,
+    "macroAlpha": 0.35
+  },
+  "walls": {
+    "faceH": 170,
+    "capT": 48,
+    "lipT": 36,
+    "columnSpacing": [
+      260,
+      380
+    ]
+  },
+  "skins": {
+    "pillar": "column",
+    "wall": "@cap",
+    "pit": "@abyss",
+    "byTemplate": {
+      "rana_chariots": {
+        "wall": "chariot_wreck"
+      },
+      "rana_banners": {
+        "pillar": "dhvaja"
+      }
+    }
+  },
+  "hazards": {
+    "venomPool": "@pool"
+  },
+  "lights": {
+    "pools": {
+      "color": "#ff5533",
+      "count": [
+        2,
+        4
+      ],
+      "r": [
+        160,
+        260
+      ],
+      "alpha": 0.08
+    },
+    "shafts": null,
+    "mist": null
+  },
+  "grade": {
+    "floorTint": 0.55,
+    "floorDarken": 0.25,
+    "outerDim": 0.6,
+    "vignette": 0.4,
+    "propTint": "#d8d0cc"
+  }
+}

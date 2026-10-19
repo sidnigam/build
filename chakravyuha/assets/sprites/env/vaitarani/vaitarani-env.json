@@ -1,0 +1,298 @@
+{
+  "schema": 1,
+  "biome": "vaitarani",
+  "atlas": "assets/sprites/env/vaitarani/vaitarani-env-atlas.json",
+  "tiles": {
+    "floor_a": {
+      "path": "assets/sprites/env/vaitarani/vaitarani-floor-a-tile.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "role": "floor",
+      "ground_safe": true
+    },
+    "floor_b": {
+      "path": "assets/sprites/env/vaitarani/vaitarani-floor-b-tile.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "role": "floor",
+      "ground_safe": true
+    },
+    "wallcap": {
+      "path": "assets/sprites/env/vaitarani/vaitarani-wallcap-tile.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "role": "wallcap",
+      "ground_safe": false
+    },
+    "wallface": {
+      "path": "assets/sprites/env/vaitarani/vaitarani-wallface-tile.png",
+      "size": [
+        1024,
+        585
+      ],
+      "role": "wallface",
+      "ground_safe": false
+    },
+    "water": {
+      "path": "assets/sprites/env/vaitarani/vaitarani-water-tile.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "role": "water",
+      "ground_safe": true
+    }
+  },
+  "frames": {
+    "algae_patch": {
+      "frame": "vaitarani_algae_patch_0.png",
+      "size": [
+        384,
+        384
+      ],
+      "role": "decal",
+      "ground_safe": true,
+      "worldW": 180,
+      "alpha": 0.45
+    },
+    "column": {
+      "frame": "vaitarani_column_0.png",
+      "size": [
+        238,
+        448
+      ],
+      "role": "column",
+      "ground_safe": false,
+      "worldH": 150,
+      "anchor": [
+        0.5,
+        0.96
+      ],
+      "footW": 190,
+      "light": {
+        "color": "#ffc070",
+        "r": 130,
+        "alpha": 0.3
+      }
+    },
+    "driftwood": {
+      "frame": "vaitarani_driftwood_0.png",
+      "size": [
+        384,
+        356
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 34,
+      "zones": [
+        "north",
+        "west",
+        "east",
+        "corner"
+      ],
+      "weight": 1,
+      "low": true
+    },
+    "floating_diyas": {
+      "frame": "vaitarani_floating_diyas_0.png",
+      "size": [
+        384,
+        349
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 26,
+      "zones": [
+        "south"
+      ],
+      "weight": 1,
+      "low": true,
+      "light": {
+        "color": "#ffb45a",
+        "r": 90,
+        "alpha": 0.3
+      }
+    },
+    "gate": {
+      "frame": "vaitarani_gate_0.png",
+      "size": [
+        402,
+        512
+      ],
+      "role": "gate",
+      "ground_safe": false,
+      "worldH": 210,
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    "moored_boat": {
+      "frame": "vaitarani_moored_boat_0.png",
+      "size": [
+        155,
+        384
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 50,
+      "zones": [
+        "south",
+        "corner"
+      ],
+      "weight": 1,
+      "low": true
+    },
+    "mooring_post": {
+      "frame": "vaitarani_mooring_post_0.png",
+      "size": [
+        117,
+        384
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 64,
+      "zones": [
+        "north",
+        "west",
+        "east",
+        "corner"
+      ],
+      "weight": 2,
+      "low": false
+    },
+    "reeds": {
+      "frame": "vaitarani_reeds_0.png",
+      "size": [
+        384,
+        363
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 56,
+      "zones": [
+        "north",
+        "west",
+        "east",
+        "corner"
+      ],
+      "weight": 2,
+      "low": false
+    },
+    "rope_coil": {
+      "frame": "vaitarani_rope_coil_0.png",
+      "size": [
+        384,
+        262
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 30,
+      "zones": [
+        "north",
+        "west",
+        "east",
+        "corner"
+      ],
+      "weight": 1,
+      "low": true
+    },
+    "stone_cracks": {
+      "frame": "vaitarani_stone_cracks_0.png",
+      "size": [
+        384,
+        384
+      ],
+      "role": "decal",
+      "ground_safe": true,
+      "worldW": 180,
+      "alpha": 0.45
+    },
+    "stone_marker": {
+      "frame": "vaitarani_stone_marker_0.png",
+      "size": [
+        73,
+        384
+      ],
+      "role": "prop",
+      "ground_safe": false,
+      "worldH": 58,
+      "zones": [
+        "north",
+        "west",
+        "east",
+        "corner"
+      ],
+      "weight": 1,
+      "low": false
+    },
+    "water_puddle": {
+      "frame": "vaitarani_water_puddle_0.png",
+      "size": [
+        384,
+        384
+      ],
+      "role": "decal",
+      "ground_safe": true,
+      "worldW": 180,
+      "alpha": 0.45
+    }
+  },
+  "floor": {
+    "tileScale": 0.6,
+    "macroScale": 1.7,
+    "macroAlpha": 0.35
+  },
+  "walls": {
+    "faceH": 170,
+    "capT": 48,
+    "lipT": 36,
+    "columnSpacing": [
+      260,
+      380
+    ]
+  },
+  "skins": {
+    "pillar": "column",
+    "wall": "@cap",
+    "pit": "@water",
+    "byTemplate": {
+      "vait_posts": {
+        "pillar": "mooring_post"
+      }
+    }
+  },
+  "hazards": {
+    "venomPool": "@pool",
+    "riverCurrent": "@water"
+  },
+  "lights": {
+    "pools": {
+      "color": "#ff5533",
+      "count": [
+        2,
+        4
+      ],
+      "r": [
+        160,
+        260
+      ],
+      "alpha": 0.08
+    },
+    "shafts": null,
+    "mist": null
+  },
+  "grade": {
+    "floorTint": 0.55,
+    "floorDarken": 0.25,
+    "outerDim": 0.6,
+    "vignette": 0.4,
+    "propTint": "#d8d0cc"
+  }
+}

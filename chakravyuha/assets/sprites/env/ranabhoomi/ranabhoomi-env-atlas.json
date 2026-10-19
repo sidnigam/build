@@ -1,0 +1,395 @@
+{
+  "frames": {
+    "ranabhoomi_gate_0.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 504,
+        "h": 390
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 504,
+        "h": 390
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 398
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "ranabhoomi_dust_scuff_0.png": {
+      "frame": {
+        "x": 510,
+        "y": 2,
+        "w": 384,
+        "h": 384
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "ranabhoomi_flat_arrows_0.png": {
+      "frame": {
+        "x": 898,
+        "y": 2,
+        "w": 384,
+        "h": 384
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "ranabhoomi_ruts_0.png": {
+      "frame": {
+        "x": 1286,
+        "y": 2,
+        "w": 384,
+        "h": 384
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "ranabhoomi_shield_pile_0.png": {
+      "frame": {
+        "x": 1674,
+        "y": 2,
+        "w": 359,
+        "h": 376
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 359,
+        "h": 376
+      },
+      "sourceSize": {
+        "w": 367,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "ranabhoomi_quiver_0.png": {
+      "frame": {
+        "x": 1674,
+        "y": 382,
+        "w": 347,
+        "h": 376
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 347,
+        "h": 376
+      },
+      "sourceSize": {
+        "w": 355,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "ranabhoomi_chariot_wreck_0.png": {
+      "frame": {
+        "x": 510,
+        "y": 390,
+        "w": 376,
+        "h": 370
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 376,
+        "h": 370
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 378
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "ranabhoomi_fallen_banner_0.png": {
+      "frame": {
+        "x": 2,
+        "y": 396,
+        "w": 376,
+        "h": 366
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 376,
+        "h": 366
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 374
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "ranabhoomi_column_0.png": {
+      "frame": {
+        "x": 382,
+        "y": 396,
+        "w": 123,
+        "h": 440
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 123,
+        "h": 440
+      },
+      "sourceSize": {
+        "w": 131,
+        "h": 448
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "ranabhoomi_chariot_wheel_0.png": {
+      "frame": {
+        "x": 2,
+        "y": 766,
+        "w": 346,
+        "h": 376
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 346,
+        "h": 376
+      },
+      "sourceSize": {
+        "w": 354,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "ranabhoomi_war_drum_0.png": {
+      "frame": {
+        "x": 890,
+        "y": 390,
+        "w": 344,
+        "h": 376
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 344,
+        "h": 376
+      },
+      "sourceSize": {
+        "w": 352,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "ranabhoomi_arrow_cluster_0.png": {
+      "frame": {
+        "x": 509,
+        "y": 764,
+        "w": 342,
+        "h": 376
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 342,
+        "h": 376
+      },
+      "sourceSize": {
+        "w": 350,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "ranabhoomi_dhvaja_0.png": {
+      "frame": {
+        "x": 352,
+        "y": 840,
+        "w": 134,
+        "h": 440
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 134,
+        "h": 440
+      },
+      "sourceSize": {
+        "w": 142,
+        "h": 448
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "ranabhoomi_conch_stand_0.png": {
+      "frame": {
+        "x": 2,
+        "y": 1146,
+        "w": 235,
+        "h": 376
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 235,
+        "h": 376
+      },
+      "sourceSize": {
+        "w": 243,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  },
+  "meta": {
+    "app": "http://github.com/odrick/free-tex-packer-core",
+    "version": "0.3.8",
+    "image": "ranabhoomi-env-atlas.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 2035,
+      "h": 1524
+    },
+    "scale": 1
+  },
+  "animations": {
+    "arrow_cluster": [
+      "ranabhoomi_arrow_cluster_0.png"
+    ],
+    "chariot_wheel": [
+      "ranabhoomi_chariot_wheel_0.png"
+    ],
+    "chariot_wreck": [
+      "ranabhoomi_chariot_wreck_0.png"
+    ],
+    "column": [
+      "ranabhoomi_column_0.png"
+    ],
+    "conch_stand": [
+      "ranabhoomi_conch_stand_0.png"
+    ],
+    "dhvaja": [
+      "ranabhoomi_dhvaja_0.png"
+    ],
+    "dust_scuff": [
+      "ranabhoomi_dust_scuff_0.png"
+    ],
+    "fallen_banner": [
+      "ranabhoomi_fallen_banner_0.png"
+    ],
+    "flat_arrows": [
+      "ranabhoomi_flat_arrows_0.png"
+    ],
+    "gate": [
+      "ranabhoomi_gate_0.png"
+    ],
+    "quiver": [
+      "ranabhoomi_quiver_0.png"
+    ],
+    "ruts": [
+      "ranabhoomi_ruts_0.png"
+    ],
+    "shield_pile": [
+      "ranabhoomi_shield_pile_0.png"
+    ],
+    "war_drum": [
+      "ranabhoomi_war_drum_0.png"
+    ]
+  }
+}

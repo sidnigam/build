@@ -197,8 +197,13 @@ def prop_finish_core(cut, max_side, grade=None, margin=4):
     return canvas, bbox
 
 
-def prop_finish(in_path, max_side, grade=None, margin=4):
-    cut = fsprite.load_and_cutout(in_path)
+def prop_finish(in_path, max_side, grade=None, margin=4, matte="u2net"):
+    """matte (05.4-03): pass-through rembg model name to fsprite.load_and_cutout (default
+    "u2net" preserves byte-identical behaviour for every pre-05.4-03 caller). "birefnet-general"
+    preserves thin held/attached detail (arrows, banner poles, wheel spokes) far better per the
+    05.5-04/05.6-03 matte bake-off; env_build.py selects it per-subject via prompts.json
+    env_subjects.{biome}.{key}.matte."""
+    cut = fsprite.load_and_cutout(in_path, matte=matte)
     return prop_finish_core(cut, max_side, grade=grade, margin=margin)
 
 
@@ -279,7 +284,14 @@ def merge_manifest(existing, new):
     preserved from `existing`. New tile/frame ids not present in `existing` are added
     wholesale (their role defaults already computed by the caller). Top-level tuning blocks
     (floor/walls/skins/hazards/lights/grade) are kept wholesale from `existing` when present,
-    else taken from `new`. Returns a new dict; does not mutate either argument."""
+    else taken from `new`. Returns a new dict; does not mutate either argument.
+
+    05.4-03 fix: a partial build (env_build.py --only key,key) passes a `new` manifest whose
+    tiles/frames are a strict SUBSET of the full biome (only the rebuilt subjects). The merge
+    must still carry forward every existing tile/frame id that isn't in `new` untouched --
+    iterating `new_section`'s keys alone (the original implementation) silently dropped every
+    other tile/frame on a partial rebuild. The loop below iterates the UNION of existing and
+    new keys instead, so untouched entries survive a --only rebuild byte-for-byte."""
     if not existing:
         return copy.deepcopy(new)
 
@@ -289,8 +301,13 @@ def merge_manifest(existing, new):
         existing_section = existing.get(section, {}) or {}
         new_section = new.get(section, {}) or {}
         merged_section = {}
-        for key, new_entry in new_section.items():
-            if key in existing_section:
+        for key in {**existing_section, **new_section}.keys():
+            new_entry = new_section.get(key)
+            if new_entry is None:
+                # Not part of this (possibly partial) build -- carry the existing entry
+                # forward unchanged.
+                merged_section[key] = copy.deepcopy(existing_section[key])
+            elif key in existing_section:
                 combined = dict(existing_section[key])
                 for f in structural_fields:
                     if f in new_entry:
@@ -527,6 +544,8 @@ def main():
     p_prop.add_argument("--max", type=int, default=384, choices=[384, 448, 512])
     p_prop.add_argument("--grade", choices=["prop", "architecture"], default=None)
     p_prop.add_argument("--silhouette", dest="silhouette_path", default=None)
+    p_prop.add_argument("--matte", choices=fsprite.MATTE_CHOICES, default="u2net",
+                         help="rembg model for the cutout (05.4-03 pass-through; default unchanged).")
 
     p_decal = sub.add_parser("decal")
     p_decal.add_argument("--in", dest="in_path", required=True)
@@ -581,7 +600,7 @@ def main():
 
     elif args.mode == "prop":
         grade = env_grade.get(args.grade) if args.grade else None
-        out_img, bbox = prop_finish(args.in_path, args.max, grade=grade)
+        out_img, bbox = prop_finish(args.in_path, args.max, grade=grade, matte=args.matte)
         out_img.save(args.out_path, "PNG")
         if args.silhouette_path:
             sil_dir = os.path.dirname(os.path.abspath(args.silhouette_path))

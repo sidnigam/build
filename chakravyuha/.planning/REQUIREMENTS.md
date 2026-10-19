@@ -53,7 +53,7 @@ Source: PROJECT.md + Research (STACK, FEATURES, ARCHITECTURE, PITFALLS)
 - [ ] **STEAM-02**: Steam achievements — minimum 15 achievements covering weapons, biomes, bosses, meta milestones
 - [ ] **STEAM-03**: Steam Cloud Auto-Cloud syncing the userData save file across devices
 - [ ] **STEAM-04**: Steam overlay functional on Windows; macOS overlay validated (fallback to steamworks-ffi-node if broken)
-- [ ] **STEAM-05**: Steam store page assets — capsule art (616×353, 460×215, header 460×215), 6+ screenshots, store description, short description
+- [ ] **STEAM-05**: Steam store page assets — capsule art at current Steam sizes (header 920×430, small 462×174, main 1232×706, vertical 748×896, library 600×900, library hero 3840×1240, logo), 6+ screenshots, store description, short description (sizes corrected 2026-10-19 per 07-RESEARCH)
 
 ### QA — Quality & Launch Gates
 
@@ -64,6 +64,13 @@ Source: PROJECT.md + Research (STACK, FEATURES, ARCHITECTURE, PITFALLS)
 - [ ] **QA-05**: Steam Deck Verified checklist passed — controller-complete, glyphs correct, minimum 9px font at 1280×800, functional default framerate
 
 ---
+
+### CULTURAL — Reverence & Iconography (Phase 5.7, inserted 2026-10-19)
+
+- [x] **CULT-01**: Yama's encounter is framed as a Trial of Dharma in all player-facing text — no hostile/enemy framing of a deity
+- [ ] **CULT-02**: Yama's boss sprite shows traditional iconography (dark/green-hued skin, danda + pasha, buffalo motif) and does not read as Vishnu/Krishna
+- [ ] **CULT-03**: Kumbhakarna carries a club/mace (no trident); Agni portrait has no Vaishnava tilak; Indra holds a classic double-ended vajra
+- [ ] **CULT-04**: Naraka gate reads as an Indian torana/temple gateway; vent-grate hazard skin reads as a carved stone/iron vent
 
 ## v2 Requirements (deferred)
 
@@ -128,3 +135,7 @@ Source: PROJECT.md + Research (STACK, FEATURES, ARCHITECTURE, PITFALLS)
 | QA-03 | Phase 7 | Pending |
 | QA-04 | Phase 2 | Complete |
 | QA-05 | Phase 7 | Pending |
+| CULT-01 | Phase 5.7 | Complete (05.7-01) |
+| CULT-02 | Phase 5.7 | Pending (05.7-02) |
+| CULT-03 | Phase 5.7 | Pending (05.7-02) |
+| CULT-04 | Phase 5.7 | Pending (05.7-02) |

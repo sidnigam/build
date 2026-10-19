@@ -394,7 +394,7 @@ if (typeof window !== 'undefined') window.DIALOGUE = DIALOGUE;
     { id: 'indra_ranabhoomi', god: 'indra', when: { biome: 'ranabhoomi' },
       text: 'A field of the fallen. I watched Kurukshetra from above, grandson. When you stood alone in the formation, every deva in heaven rose to his feet.' },
     { id: 'indra_lastdeath_yama', god: 'indra', when: { lastDeathBoss: 'yama' },
-      text: "Yama bested you. Do not sulk. He is Dharma's own judge, not your enemy. Earn his verdict.",
+      text: "The Trial sent you back to me. Do not sulk, grandson. Yama is Dharma's own judge, and a judge is never won against, only satisfied. Earn his verdict.",
       reply: 'I will, Grandfather.' },
     { id: 'indra_won', god: 'indra', when: { lastRunWon: true },
       text: 'You broke the wheel and came back to break it again. Your father would call that foolish. I call it royal.' },

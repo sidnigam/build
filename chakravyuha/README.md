@@ -41,7 +41,7 @@ repo and the game is served at `/chakravyuha/`.
 1. **NARAKA** — the Iron City of Yama → boss: **Tataka**
 2. **PATALA** — Realm of the Serpent Kings → boss: **Ahiravana**
 3. **RANABHOOMI** — Field of the Fallen Warriors → boss: **Kumbhakarna**
-4. **VAITARANI** — the River Between Worlds → final boss: **Yama Dharmaraja**
+4. **VAITARANI** — the River Between Worlds → the final Trial: **Yama Dharmaraja**, who judges whether you may leave (a judge, never an enemy)
 
 Clear a chamber, choose your gate (each previews its reward), collect
 **boons** from Hanuman, Krishna, Agni, Indra, Vayu and Durga, spend

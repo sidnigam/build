@@ -41,6 +41,11 @@ const SPRITES = {
       const PIXI = (typeof window !== 'undefined' && window.PIXI);
       if (!PIXI) { this.ready = false; return; }
 
+      // Pixi v8 renders every Filter at resolution 1 by default, so any filter on the world
+      // (grade/bloom) or on a sprite (player lift, hit flash) re-rasterized it at 1x and the GPU
+      // stretched it on HiDPI displays -> blurry sprites. 'inherit' = the renderer's resolution.
+      try { if (PIXI.Filter && PIXI.Filter.defaultOptions) PIXI.Filter.defaultOptions.resolution = 'inherit'; } catch (eRes) { /* older Pixi: keep default */ }
+
       // Build the PixiJS Application (v8 async init)
       this.app = new PIXI.Application();
       await this.app.init({

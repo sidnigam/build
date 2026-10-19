@@ -132,10 +132,10 @@ function killEnemy(e) {
   const trial = e.boss && e.type === 'yama';
   VFX.emit(trial ? 'phase' : (e.boss ? 'bossDeath' : 'death'), e.x, e.y, 0, trial ? '#ffd34d' : e.color);
   VFX.hitstop(e.boss ? 10 : 4);
-  CAMERA.punch(e.x, e.y, e.boss ? 0.08 : 0.03, e.boss ? 0.6 : 0.18);
+  CAMERA.punch(e.x, e.y, e.boss ? 0.08 : 0.015, e.boss ? 0.6 : 0.16);
   if (e.boss) VFX.flash(trial ? 0xffd34d : 0xffffff, 0.35, 0.3);
   if (!trial) AUDIO.sfx(e.boss ? 'bossdie' : 'kill');
-  GAME.shake = Math.max(GAME.shake, e.boss ? 18 : 4);
+  GAME.shake = Math.max(GAME.shake, e.boss ? 18 : 2);
   if (!trial) GAME.kills++;
   // bhuta husks explode in a ring of shades
   if (e.type === 'bhuta') {

@@ -7557,7 +7557,7 @@ console.log('\n— GFX core (05.6-01) —');
       r.tierShapeOk = hasKeys(GFX.TIER_CFG.low) && hasKeys(GFX.TIER_CFG.medium) && hasKeys(GFX.TIER_CFG.high);
       r.lowFiltersFalse = GFX.TIER_CFG.low.filters === false;
       r.lowLightModeDirect = GFX.TIER_CFG.low.lightMode === 'direct';
-      r.lowResCap1 = GFX.TIER_CFG.low.resCap === 1;
+      r.lowResCap1 = GFX.TIER_CFG.low.resCap === 2;  // raised 1->2 (HiDPI blur fix, quick 261019-nnu)
 
       r.resolve1 = GFX.resolveTier('high', '') === 'high';
       r.resolve2 = GFX.resolveTier('auto', 'Google SwiftShader') === 'low';
@@ -7607,7 +7607,7 @@ console.log('\n— GFX core (05.6-01) —');
   check('GFX.TIER_CFG low/medium/high all carry the full tier-config key set', gr.tierShapeOk);
   check('GFX.TIER_CFG.low.filters === false', gr.lowFiltersFalse);
   check("GFX.TIER_CFG.low.lightMode === 'direct'", gr.lowLightModeDirect);
-  check('GFX.TIER_CFG.low.resCap === 1', gr.lowResCap1);
+  check('GFX.TIER_CFG.low.resCap === 2 (HiDPI-sharp at Low)', gr.lowResCap1);
 
   check("resolveTier('high','') === 'high'", gr.resolve1);
   check("resolveTier('auto', SwiftShader) === 'low'", gr.resolve2);

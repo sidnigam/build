@@ -56,7 +56,7 @@ const GFX = {
       lightMode: 'direct',   // plain additive sprites in the world (05.6-02)
       lightRes: null,
       maxLights: 24,
-      resCap: 1,
+      resCap: 2,               // was 1: on HiDPI (Retina) a 1x backing store is visibly soft; filters stay off at Low
       reducedParticles: true,  // forces VFX's reduced-particle path (05.6-02), independent of the user's own setting
       playerLift: false,       // no steady-state player-lift ColorMatrixFilter at Low
     },
@@ -74,7 +74,8 @@ const GFX = {
     high: {
       filters: true,
       grade: true,
-      bloom: 'world',          // AdvancedBloomFilter on SPRITES.worldContainer, after the grade
+      bloom: 'fx',             // bloom on SPRITES.fxContainer (stronger BLOOM_HIGH opts). Was 'world' at
+                               // 0.5x resolution, which re-rendered the entire world at quarter sharpness (blur).
       lightMode: 'rt',
       lightRes: 0.75,
       maxLights: 96,
@@ -584,11 +585,13 @@ const GFX = {
         this._gradeT = 1; // already "arrived" — no lerp needed on a fresh tier apply
 
         this._grade = new PIXI.filters.AdjustmentFilter(gradeOpts);
+        try { this._grade.resolution = 'inherit'; } catch (eRes) { /* keep default */ }  // full-res world (no HiDPI blur)
         this._filters.push(this._grade);
         SPRITES.worldContainer.filters = [this._grade];
 
         if (cfg.bloom === 'fx' && SPRITES.fxContainer) {
-          this._bloom = new PIXI.filters.AdvancedBloomFilter(this.CFG.BLOOM_MEDIUM);
+          this._bloom = new PIXI.filters.AdvancedBloomFilter(this.tier === 'high' ? this.CFG.BLOOM_HIGH : this.CFG.BLOOM_MEDIUM);
+          try { this._bloom.resolution = 'inherit'; } catch (eRes) { /* keep default */ }
           this._filters.push(this._bloom);
           SPRITES.fxContainer.filters = [this._bloom];
         } else if (cfg.bloom === 'world') {

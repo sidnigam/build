@@ -17,10 +17,10 @@ const CAMERA = {
   VW: 1280, VH: 720,          // viewport size
 
   CFG: {
-    FOLLOW_RATE: 7,       // tunable: exponential follow damping rate (1/s)
-    LOOK_AIM: 0.2,         // tunable: look-ahead fraction toward aim
-    LOOK_AIM_MAX: 110,     // tunable: max look-ahead-toward-aim magnitude (px)
-    LOOK_MOVE: 40,         // tunable: look-ahead-toward-movement magnitude (px)
+    FOLLOW_RATE: 6,       // tunable: exponential follow damping rate (1/s)
+    LOOK_AIM: 0.06,         // tunable: look-ahead fraction toward aim
+    LOOK_AIM_MAX: 40,     // tunable: max look-ahead-toward-aim magnitude (px)
+    LOOK_MOVE: 20,         // tunable: look-ahead-toward-movement magnitude (px)
     SNAP_DIST: 900,        // tunable: distance beyond which the camera snaps instead of easing
     CULL_MARGIN: 48,       // tunable: default AABB cull margin (px)
     IND_INSET: { l: 28, r: 28, t: 96, b: 64 },  // tunable: off-screen indicator inset rect
@@ -38,6 +38,13 @@ const CAMERA = {
   // D-14: kill-zoom camera punch, focused on a world point. Overlapping punches take the max.
   punch(wx, wy, amount, dur) {
     if (this.shakeScale() === 0) return;
+    // Small (non-boss) kill punches are rate-limited: dense waves were re-triggering the zoom
+    // pulse several times a second, which read as the whole world constantly pumping.
+    if (amount < 0.05) {
+      const now = (typeof GAME !== 'undefined' && GAME.time) || 0;
+      if (this._lastSmallPunch !== undefined && now - this._lastSmallPunch < 0.6) return;
+      this._lastSmallPunch = now;
+    }
     if (amount >= this.punchAmt) {
       this.fx = wx; this.fy = wy;
       this.punchAmt = amount;
@@ -73,6 +80,7 @@ const CAMERA = {
   resetFx() {
     this.punchAmt = 0; this.punchT = 0; this.punchDur = 0; this.fx = 0; this.fy = 0;
     this.kx = 0; this.ky = 0; this.zoom = 1;
+    this._lastSmallPunch = undefined;   // clear the small-punch rate limit too
   },
 
   // ============================================================

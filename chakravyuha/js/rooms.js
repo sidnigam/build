@@ -541,7 +541,10 @@ const ROOMS = {
     P.punyaRun += amt; META.punya += amt; META.save();
     AUDIO.sfx('punya');
 
-    if (isLast) { G.onVictory(); return; }
+    // 05.7-01 (D-04): on the last biome the defeated boss is Yama — show the Trial-passed
+    // banner before handing off to the victory flow. Punya and every other consequence above
+    // and below this line are unchanged.
+    if (isLast) { UI.banner('THE TRIAL IS PASSED', '#ffd34d'); G.onVictory(); return; }
 
     UI.banner(`+${amt} PUNYA — THE WAY OPENS`, '#c77dff');
     // heal between biomes, like the well between Hades regions

@@ -2766,6 +2766,167 @@ console.log('\n— character readability: ground marker spec (quick 260926-djs) 
   R(`META.dialogue = ${__snapDialogue2}; META.runs = ${__snapRuns2}; META.save();`);
 }
 
+// ---------------- Phase 05.7: Trial of Dharma + reverence lint ----------------
+console.log('\n— Phase 05.7: Trial of Dharma + reverence lint —');
+{
+  const R = (src) => vm.runInContext(src, sandbox);
+
+  // ---- reverence lint: deity-hostility checks over the full player-facing corpus (D-09) ----
+  const HV = "kill(?:s|ed|ing)?|slay(?:s|ing)?|slew|slain|defeat(?:s|ed|ing)?|destroy(?:s|ed|ing)?|vanquish(?:es|ed|ing)?|conquer(?:s|ed|ing)?|murder(?:s|ed)?|crush(?:es|ed)?|beat(?:s|en)?|best(?:s|ed)?|overthrow(?:s|n)?|hunt(?:s|ed)?";
+  const DEITY = "Yama|Dharmaraja|Hanuman|Agni|Indra|Vayu|Krishna|Durga|Shiva|Vishnu|Brahma|Saraswati";
+  const lintA1 = new RegExp(`\\b(?:${HV})\\s+(?:the\\s+)?(?:(?:lord|god|great|mighty)\\s+)?(?:${DEITY})\\b`, 'i');
+  const lintA2 = new RegExp(`\\b(?:${DEITY})(?:'s)?\\s+(?:is\\s+|was\\s+|lies\\s+|has\\s+been\\s+)?(?:slain|killed|defeated|destroyed|vanquished|dead|falls|fell)\\b`, 'i');
+  const yamaSentenceName = /\b(Yama|Dharmaraja|Lord of Death)\b/; // case-SENSITIVE (skips lowercase ids like boss:'yama' and the raga Yaman)
+  const yamaHostileWords = /\b(kill\w*|slay\w*|slain|slew|defeat\w*|destroy\w*|vanquish\w*|conquer\w*|enem(?:y|ies)|foes?|monster\w*|demon\w*|evil|wicked|tyrant\w*|villain\w*|boss(?:es)?|bested|beat(?:en|s)?)\b/i;
+
+  function reverenceLint(entries) {
+    const bad = [];
+    for (const { where, text } of entries) {
+      if (typeof text !== 'string' || !text) continue;
+      if (lintA1.test(text)) bad.push(`${where}: Lint A hostile-verb+deity — "${text.slice(0, 80)}"`);
+      if (lintA2.test(text)) bad.push(`${where}: Lint A deity+hostile-passive — "${text.slice(0, 80)}"`);
+      const sentences = text.split(/(?<=[.!?])\s+/);
+      for (const s of sentences) {
+        if (yamaSentenceName.test(s) && yamaHostileWords.test(s)) bad.push(`${where}: Lint B Yama sentence has hostile vocab — "${s.slice(0, 100)}"`);
+      }
+    }
+    return bad;
+  }
+
+  // corpus: deep walk of DATA (skip functions), DIALOGUE.LINES (every string field, including
+  // text/reply/beats[].t — a full walk also reaches id/when/god so Lint B's case-sensitive Yama
+  // match can deliberately skip lowercase ids like `boss:'yama'` and the raga `Yaman`), plus
+  // DIALOGUE.LORE and PHASE2_TITLES. Collected inside the sandbox so DATA functions are skipped.
+  const __corpusRaw = R(`(function(){
+    var out = [];
+    function walk(obj, p) {
+      if (obj === null || obj === undefined) return;
+      if (typeof obj === 'function') return;
+      if (typeof obj === 'string') { out.push([p, obj]); return; }
+      if (Array.isArray(obj)) { for (var i = 0; i < obj.length; i++) walk(obj[i], p + '[' + i + ']'); return; }
+      if (typeof obj === 'object') { for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k)) walk(obj[k], p + '.' + k); return; }
+    }
+    walk(DATA, 'DATA');
+    walk(DIALOGUE.LINES, 'DIALOGUE.LINES');
+    walk(DIALOGUE.LORE, 'DIALOGUE.LORE');
+    walk(PHASE2_TITLES, 'PHASE2_TITLES');
+    return JSON.stringify(out);
+  })()`);
+  const __corpusPairs = JSON.parse(__corpusRaw);
+
+  // index.html: strip <script>/<style> blocks, pull content="..." attrs, strip remaining tags,
+  // split on newlines, trim.
+  const __indexRaw = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const __indexStripped = __indexRaw.replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?<\/style>/gi, '');
+  const __metaContents = [];
+  { const re = /content="([^"]*)"/g; let m; while ((m = re.exec(__indexStripped))) __metaContents.push(m[1]); }
+  const __indexTextOnly = __indexStripped.replace(/<[^>]+>/g, '\n');
+  const __indexLines = __indexTextOnly.split('\n').map(s => s.trim()).filter(Boolean);
+  for (const line of __indexLines) __corpusPairs.push(['index.html:text', line]);
+  for (const c of __metaContents) __corpusPairs.push(['index.html:meta', c]);
+
+  const __corpusEntries = __corpusPairs.map(([where, text]) => ({ where, text }));
+  const __lintBad = reverenceLint(__corpusEntries);
+
+  check(`05.7 reverence lint corpus size (${__corpusEntries.length} strings, expect >= 900)`, __corpusEntries.length >= 900);
+  check('05.7 reverence lint: no deity as hostile target, no enemy framing of Yama (' + __corpusEntries.length + ' strings)' +
+    (__lintBad.length ? ' — ' + __lintBad.slice(0, 8).join(' | ') : ''), __lintBad.length === 0);
+
+  // ---- Trial of Dharma data-level checks (D-01/D-02/D-03) ----
+  check("DATA.BOSSES.yama.label === 'THE TRIAL'", R("DATA.BOSSES.yama.label") === 'THE TRIAL');
+  check("DATA.BOSSES.tataka/ahiravana/kumbhakarna.label === 'THE WARDEN'",
+    R("DATA.BOSSES.tataka.label") === 'THE WARDEN' &&
+    R("DATA.BOSSES.ahiravana.label") === 'THE WARDEN' &&
+    R("DATA.BOSSES.kumbhakarna.label") === 'THE WARDEN');
+  check("DATA.BOSSES.yama.title === 'THE TRIAL OF DHARMA'", R("DATA.BOSSES.yama.title") === 'THE TRIAL OF DHARMA');
+  check('DATA.BOSSES.yama.sub + .intro read as trial/judgment vocabulary',
+    /trial|judg|weigh|dharma/i.test(R("DATA.BOSSES.yama.sub") || '') && /trial|judg|weigh|dharma/i.test(R("DATA.BOSSES.yama.intro") || ''));
+  check("UI.DEVANAGARI.bosses.yama === 'यम धर्मराज' (unchanged)", R("UI.DEVANAGARI.bosses.yama") === 'यम धर्मराज');
+  check("PHASE2_TITLES.yama === 'THE LEDGER IS OPENED' (unchanged, D-03)", R("PHASE2_TITLES.yama") === 'THE LEDGER IS OPENED');
+
+  // ---- runtime checks: roomLabel(), bossIntro title, Trial death/normal death, killEnemy
+  // Trial-passed presentation, onBossDefeated Trial-passed banner. Single vm script so every
+  // snapshot/restore preserves real object identity (not a JSON round-trip); one RUN() per
+  // assertion reported through its own check(), guarded so a throw fails just that assertion.
+  vm.runInContext(`
+(function() {
+  globalThis.__trialResults = [];
+  var RES = globalThis.__trialResults;
+  function RUN(label, fn) {
+    try { RES.push([label, !!fn()]); }
+    catch (e) { RES.push([label + ' [threw: ' + (e && e.stack ? e.stack.split("\\n")[0] : e) + ']', false]); }
+  }
+  var savedBossRef = GAME.bossRef, savedState = GAME.state, savedBiome = GAME.biome, savedBiomeIdx = GAME.biomeIdx;
+  var savedKills = GAME.kills, savedDeaths = META.deaths, savedDialogue = META.dialogue, savedPunya = META.punya;
+  var savedPunyaRun = GAME.player.punyaRun;
+  var savedBanner = UI.banner, savedOnVictory = GAME.onVictory, savedEmit = VFX.emit;
+
+  GAME.bossRef = { type: 'yama', dead: false };
+  RUN("GAME.roomLabel(): yama bossRef -> 'THE TRIAL'", function() { return GAME.roomLabel() === 'THE TRIAL'; });
+  GAME.bossRef = { type: 'tataka', dead: false };
+  RUN("GAME.roomLabel(): tataka bossRef -> 'THE WARDEN'", function() { return GAME.roomLabel() === 'THE WARDEN'; });
+  GAME.bossRef = null;
+  RUN("GAME.roomLabel(): no bossRef -> starts with 'Chamber '", function() { return String(GAME.roomLabel()).indexOf('Chamber ') === 0; });
+
+  RUN("UI.bossIntro(yama) shows 'THE TRIAL OF DHARMA'", function() {
+    UI.bossIntro(DATA.BOSSES.yama);
+    return document.getElementById('boss-intro').innerHTML.indexOf('THE TRIAL OF DHARMA') !== -1;
+  });
+  RUN("UI.bossIntro(yama) keeps the unchanged Devanagari 'यम धर्मराज'", function() {
+    return document.getElementById('boss-intro').innerHTML.indexOf('यम धर्मराज') !== -1;
+  });
+
+  GAME.bossRef = { type: 'yama', dead: false };
+  UI.death();
+  RUN("death() during the Trial: #death-h === 'SENT BACK'", function() {
+    return document.getElementById('death-h').textContent === 'SENT BACK';
+  });
+  RUN("death() during the Trial: #death-line is a DATA.TRIAL_DEATH_LINES line", function() {
+    var line = document.getElementById('death-line').textContent;
+    return DATA.TRIAL_DEATH_LINES.some(function(l) { return l.replace('%n', META.deaths) === line; });
+  });
+
+  GAME.bossRef = null;
+  UI.death();
+  RUN("death() elsewhere: #death-h === 'SLAIN' (unchanged)", function() {
+    return document.getElementById('death-h').textContent === 'SLAIN';
+  });
+  RUN("death() elsewhere: #death-line is a DATA.DEATH_LINES line (unchanged)", function() {
+    var line = document.getElementById('death-line').textContent;
+    return DATA.DEATH_LINES.some(function(l) { return l.replace('%n', META.deaths) === line; });
+  });
+
+  var vfxCalls = [];
+  VFX.emit = function(preset) { vfxCalls.push(preset); };
+  GAME.kills = 0;
+  killEnemy({ boss: true, type: 'yama', x: 0, y: 0, color: '#9fb8ff', dead: false });
+  RUN("killEnemy(yama boss) does not increment GAME.kills (not a foe)", function() { return GAME.kills === 0; });
+  RUN("killEnemy(yama boss) emits VFX 'phase', not 'bossDeath'", function() { return vfxCalls[0] === 'phase'; });
+  killEnemy({ boss: true, type: 'tataka', x: 0, y: 0, color: '#ff5533', dead: false });
+  RUN("killEnemy(tataka boss) increments GAME.kills (unchanged)", function() { return GAME.kills === 1; });
+  RUN("killEnemy(tataka boss) still emits VFX 'bossDeath' (unchanged)", function() { return vfxCalls[1] === 'bossDeath'; });
+  VFX.emit = savedEmit;
+
+  var banners = [];
+  UI.banner = function(text) { banners.push(text); };
+  GAME.onVictory = function() {};
+  GAME.biomeIdx = DATA.BIOMES.length - 1;
+  ROOMS.onBossDefeated();
+  RUN("ROOMS.onBossDefeated() on the last biome banners 'THE TRIAL IS PASSED'", function() {
+    return banners.indexOf('THE TRIAL IS PASSED') !== -1;
+  });
+  UI.banner = savedBanner; GAME.onVictory = savedOnVictory;
+
+  GAME.bossRef = savedBossRef; GAME.state = savedState; GAME.biome = savedBiome; GAME.biomeIdx = savedBiomeIdx;
+  GAME.kills = savedKills; META.deaths = savedDeaths; META.dialogue = savedDialogue; META.punya = savedPunya;
+  GAME.player.punyaRun = savedPunyaRun;
+  META.save();
+})();
+`, sandbox);
+  const __trialResults = R('__trialResults');
+  for (const [label, ok] of __trialResults) check(label, ok);
+}
+
 // ---------------- Phase 05.1: camera math ----------------
 console.log('\n— camera math (Phase 05.1) —');
 vm.runInContext(`

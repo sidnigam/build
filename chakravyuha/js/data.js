@@ -214,21 +214,29 @@ DATA.BOSSES = {
     id: 'tataka', name: 'TATAKA', sub: 'The Devourer of Forests', hp: 950, r: 34, color: '#ff5533',
     intro: '"Little prince... Rama\'s arrow freed me once. You carry no such arrow."',
     lore: 'The yaksha princess cursed into a rakshasi, first foe slain by young Rama.',
+    label: 'THE WARDEN',
   },
   ahiravana: {
     id: 'ahiravana', name: 'AHIRAVANA', sub: 'Sorcerer-King of Patala', hp: 1500, r: 30, color: '#2ee6a8',
     intro: '"I stole Rama and Lakshmana from under Hanuman\'s nose. You, I will simply keep."',
     lore: 'Ravana\'s ally who dragged the brothers to the netherworld — slain only when Hanuman snuffed five lamps at once.',
+    label: 'THE WARDEN',
   },
   kumbhakarna: {
     id: 'kumbhakarna', name: 'KUMBHAKARNA', sub: 'The Sleeping Mountain', hp: 2300, r: 46, color: '#ffcf5c',
     intro: '"...who dares... six months... I was promised six months..."',
     lore: 'Ravana\'s giant brother, tricked by Saraswati into sleeping half the year. Waking him early always ends badly.',
+    label: 'THE WARDEN',
   },
   yama: {
-    id: 'yama', name: 'YAMA DHARMARAJA', sub: 'Lord of Death, Keeper of the Ledger', hp: 2800, r: 36, color: '#9fb8ff',
-    intro: '"Abhimanyu. Sixteen rings you have broken to stand here. The ledger says you died well. Why is that not enough?"',
+    // 05.7-01 (CULT-01): Yama's encounter is reframed as the Trial of Dharma — he weighs
+    // Abhimanyu, never slays him. `title`/`sub`/`intro` are new trial copy; `name`, `hp`, `r`
+    // and `color` are byte-identical (mechanics unchanged, D-02).
+    id: 'yama', name: 'YAMA DHARMARAJA', sub: 'Lord of Dharma — The Final Judgment', hp: 2800, r: 36, color: '#9fb8ff',
+    title: 'THE TRIAL OF DHARMA',
+    intro: '"Abhimanyu. Sixteen rings you have broken to stand here. No soul leaves my realm untested. Show me that your dharma holds when death itself weighs it."',
     lore: 'The first mortal to die, who became the judge of all the dead. Even he was once argued into returning a soul — ask Savitri.',
+    label: 'THE TRIAL',
   },
 };
 
@@ -475,9 +483,18 @@ DATA.DEATH_LINES = [
   '"One day you will break through," Chitragupta says quietly, then pretends he said nothing.',
   'Chitragupta stamps the page. "Processed. Next time, try not to be sixteen about it."',
 ];
+// 05.7-01 (D-05): Yama's Trial of Dharma does not slay Abhimanyu — dying during the Trial is
+// presented as being weighed and sent back, not as a death. '%n' is replaced like DEATH_LINES.
+DATA.TRIAL_DEATH_LINES = [
+  'Dharmaraja lowers his danda. "Not yet, Abhimanyu. The scale has not settled. Go back, and return weighed truer."',
+  'Chitragupta writes: "Weighed by Dharmaraja. Sent back. Expected again shortly." He does not sound displeased.',
+  '"The noose is not a punishment, prince," Yama says. "It is a question. You will answer it better next time."',
+  '"Nachiketa waited three days at my door, and I taught him what survives death," says Yama. "You, I will simply wait for."',
+];
 DATA.VICTORY_LINES = [
   'Yama lowers his danda. "The ledger says you died well, Abhimanyu. It will now say you UN-died well. Chitragupta will be furious."',
   '"Go," says Death, almost smiling. "Tell your father the formation has been broken twice — once inward, once out."',
+  '"The Trial is complete," says Dharmaraja. "Let the ledger record that you were weighed and found whole. Go. The way out was always dharma."',
 ];
 
 // run-end titles by how far you got

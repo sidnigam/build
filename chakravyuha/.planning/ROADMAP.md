@@ -24,8 +24,10 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 5.5: God Portraits + Boon Dialogue** (INSERTED)
 - [x] **Phase 5.6: Graphics Polish (Lighting, Bloom, Sprite Quality)** (INSERTED)
 - [x] **Phase 5.7: Cultural + Iconography Corrections** (INSERTED) (completed 2026-11-07; CULT-02 Yama danda + CULT-03 Indra vajra deferred to Phase 7 QA-03)
-- [ ] **Phase 5.7.1: Hades-style Combat Depth** (INSERTED) - smarter enemies, player kit, difficulty curve, boss variety, tighter arenas
-- [ ] **Phase 5.7.2: Thrilling Combat + Boss Theme** (INSERTED) - procedural score upgrade
+- [ ] **Phase 5.7.1: Hades-style Combat Depth** (INSERTED) - pace, closer camera, enemy variety + mini-bosses, projectile/status variety, player kit, difficulty, boss variety
+- [ ] **Phase 5.7.2: Thrilling Combat + Boss Theme** (INSERTED) - per-biome, high-tempo, Hades-inspired Indian procedural score
+- [ ] **Phase 5.7.3: Room Shape + Size Variety** (INSERTED) - non-rectangular, varied arenas
+- [ ] **Phase 5.7.4: Art Direction Refresh** (INSERTED) - style exploration, then vibrant backgrounds
 - [ ] **Phase 6: Steam Integration** - Steamworks SDK, 15+ achievements, Cloud saves, validated overlay
 - [ ] **Phase 7: CI/CD + Store Submission + Cultural Review** - Signed CI binaries, store assets, telemetry, AI survey, cultural sign-off, Deck Verified
 
@@ -196,36 +198,55 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 ### Phase 05.7.1: Hades-style combat depth: smarter enemies, player kit, difficulty curve, boss variety, tighter arenas (INSERTED)
 
-**Goal:** Combat feels dynamic, dangerous and unpredictable like Hades. Smarter enemies, a deeper player kit, a steeper difficulty curve and varied bosses replace today's easy, predictable fights, and arenas are slightly tighter to raise pressure. Source: user playtest 2026-11-07.
+**Goal:** Combat feels fast, exciting, dangerous and unpredictable like Hades. Smarter and more varied enemies, mini-bosses, distinct projectiles and hit effects, a deeper player kit, a steeper difficulty curve and varied bosses replace today's easy, samey fights. A closer camera raises immersion. Source: user playtests 2026-11-07 (rounds 1 and 2).
 **Requirements**: TBD (derive in discuss-phase)
 **Depends on:** Phase 05.7
 **Success Criteria** (what must be TRUE):
-  1. Smarter enemies: they flank and surround, mix melee and ranged roles, vary attack timing within readable telegraphs, and elites carry modifiers, so no fight is solved by waiting out telegraphs
-  2. Player kit depth: a dash-strike, attack combos with cancels, a meaningful special/cast, and improved hit feel
-  3. Difficulty curve: higher pressure and damage, mixed wave compositions, faster pacing, plus an opt-in Heat-style difficulty modifier system
-  4. Boss variety: boss move order is randomized within each phase, there are new patterns and fewer permanent safe spots, and every attack keeps a fair telegraph (Phase 4 invariant)
-  5. Arenas are slightly smaller (about 10-20% vs 05.1 sizes), while env art, obstacle layouts and readability limits still hold (05.4-05 shot_stats PASS)
-  6. Gods remain allies only; `node test/smoke.js` stays green, with new headless balance/AI tests
-**Plans:** 0 plans
-
-Plans:
-- [ ] TBD (run /gsd:plan-phase 05.7.1 to break down)
+  1. Pace: faster player and enemy tempo, shorter downtime between waves and quicker room clears, so the game feels fast-paced and exciting
+  2. Camera: zoomed in closer than today (05.1 scrolling camera) for immersion. Threats are still visible in time (off-screen indicators or look-ahead where needed), and every arena size still frames correctly
+  3. Smarter, more varied enemies: more enemy types per biome, flanking and surrounding, mixed melee and ranged roles, varied attack timing within readable telegraphs, and elites with modifiers
+  4. Mini-bosses: at least one per biome (asura/rakshasa only), with their own movesets and telegraphs, appearing as special rooms or elite encounters
+  5. Projectile and hit variety: enemy attacks look and behave distinctly (stun, large or slow orbs, fast needles, piercing beams, homing, splitting, ground AoE, knockback, DoT/burn, slow), each with its own visual identity and a clear status-effect read on the player
+  6. Player kit depth: a dash-strike, attack combos with cancels, a meaningful special/cast, and improved hit feel
+  7. Difficulty: higher pressure and damage, mixed wave compositions, plus an opt-in Heat-style difficulty modifier system. Base difficulty is noticeably harder than today
+  8. Boss variety: boss move order is randomized within each phase, there are new patterns and fewer permanent safe spots, and every attack keeps a fair telegraph (Phase 4 invariant)
+  9. Gods remain allies only; `node test/smoke.js` stays green, with new headless balance/AI tests
 
 ### Phase 05.7.2: Thrilling adaptive combat and boss theme (procedural score upgrade) (INSERTED)
 
-**Goal:** The procedural Indian-classical score gains a thrilling, driving combat and boss theme that makes fights feel epic, with no licensed audio. Source: user playtest 2026-11-07.
+**Goal:** A high-tempo, unmistakably Indian score in the spirit of Hades' music, with its own musical identity per biome, combat and boss state, made more dynamic and more Indian. It stays procedural and license-clean. Source: user playtests 2026-11-07.
 **Requirements**: TBD (derive in discuss-phase)
-**Depends on:** Phase 05.3 (procedural score); can run in parallel with 05.7.1
+**Depends on:** Phase 05.3 (procedural score; the 2026-11-07 ConvolverNode fix d2e0f4b makes it audible). Can run in parallel with 05.7.1
 **Success Criteria** (what must be TRUE):
-  1. Combat rooms play a driving theme: faster tala, a heavy dhol/tabla/pakhawaj ostinato, a strong melodic hook in the biome raga, and tension builds with drops/hits on wave start, elite spawns and room clear
-  2. Bosses get a distinct, more intense theme that escalates in phase 2
-  3. The music stays adaptive: it follows the existing INTENSITY levels and crossfades smoothly between explore, combat, boss and calm (hub/boon) states
-  4. It stays fully procedural and license-clean, respects the music volume setting, and does not cost frame rate in worst-case combat
-  5. `node test/smoke.js` stays green, with headless tests for the new generators
-**Plans:** 0 plans
+  1. Each biome has its own distinct theme (raga, tala, instrumentation, groove), each phase or state (explore, combat, elite/mini-boss, boss phase 1/2, hub, boon) has distinct music, and tempo stays high in combat
+  2. Hades-inspired energy, Indian voice: a driving rhythm section (dhol, tabla, pakhawaj, mridangam, nagada), strong melodic hooks (bansuri, shehnai, sitar, sarangi, veena-like leads), riffs and builds with drops on wave start, elite spawns and room clear
+  3. Bosses get a more intense theme that escalates in phase 2
+  4. It stays adaptive: it follows the INTENSITY levels and crossfades smoothly between states
+  5. It stays fully procedural and license-clean, respects the music volume setting, and has no frame-rate cost in worst-case combat
+  6. `node test/smoke.js` stays green, with headless tests for the new generators
 
-Plans:
-- [ ] TBD (run /gsd:plan-phase 05.7.2 to break down)
+### Phase 05.7.3: Room shape and size variety (INSERTED)
+
+**Goal:** No two rooms feel like the same rectangular box. Arenas use varied boundary shapes and sizes while keeping each biome's theme. Source: user playtest 2026-11-07.
+**Requirements**: TBD (derive in discuss-phase)
+**Depends on:** Phase 05.7.1 (camera zoom and pacing settle first)
+**Success Criteria** (what must be TRUE):
+  1. Non-rectangular arena boundaries: L, T and cross shapes, circular or octagonal rings, multi-chamber rooms joined by corridors, irregular cave or riverbank edges, islands across water or pits. Each biome has its own shape set
+  2. Room sizes vary per encounter (small duel rooms up to large set-piece arenas), tuned to the encounter type
+  3. Collision, enemy spawning and pathing, hazards, doors and the scrolling camera all work with arbitrary room polygons
+  4. The env renderer (05.4) dresses arbitrary boundaries (walls, edges, props) and the 05.4-05 readability limits still pass
+  5. `node test/smoke.js` stays green, with headless tests covering every room template
+
+### Phase 05.7.4: Art direction refresh (vibrant backgrounds) (INSERTED)
+
+**Goal:** Backgrounds and arenas look vibrant and striking. Several art-direction options are explored on the real game first, the user picks one, and the environment art is updated to match. Source: user playtest 2026-11-07.
+**Requirements**: TBD (derive in discuss-phase)
+**Depends on:** Phase 05.7.3 (art must dress the new room shapes); the style exploration can run earlier
+**Success Criteria** (what must be TRUE):
+  1. A style exploration board shows the same Naraka (and ideally Patala) arena in 4-6 candidate art directions, with cost and feasibility notes for each, and the user chooses one
+  2. Environment backgrounds use more vibrant colour and stronger visual identity per biome in the chosen direction, while the 05.4-05 readability limits for combat still hold (floor contrast, telegraphs, characters readable)
+  3. Characters, bosses and portraits stay coherent with the chosen direction (restyled, or confirmed compatible)
+  4. Provenance is recorded for every new asset; smoke and check-provenance stay green
 
 ### Phase 6: Steam Integration
 **Goal**: The desktop build talks to Steam — achievements unlock and persist, saves sync via Steam Cloud across machines, and the overlay is validated on both Windows and macOS.

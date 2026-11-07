@@ -64,7 +64,7 @@ All AI-generated assets above are marked `review_status: "provisional"` in `PROV
 4. The conch (shankha) appears only upright on its stand (`conch_stand`, a vertical margin prop), never on the ground.
 5. Diyas appear only on water (`floating_diyas` is restricted to the south river strip) or on lamp pillars/plinths.
 6. No gore, blood, bones, skulls, corpses, pyres or cremation imagery anywhere; no deity figures in any env art.
-Visual flags for review (not cultural violations): the Naraka `vent_grate` reads like a wheel hub; Ranabhoomi `chariot_wreck` can read as a gun carriage and `war_drum` as a cooking pot; `ranabhoomi:column` shows no visible diya flame (see `05.4-03-SUMMARY.md`).
+Visual flags for review (not cultural violations): RESOLVED in 05.7-02 (regenerated, see the Phase 05.7 section): Naraka `vent_grate` (was a wheel hub), Ranabhoomi `chariot_wreck` (was a gun carriage), `war_drum` (was a cooking pot) and `ranabhoomi:column` (now has a lit diya).
 
 ## Checkpoint License
 
@@ -157,3 +157,23 @@ Vishnu/Krishna iconography) rather than an Agni-specific mark; every other Agni 
 (flame crown, ladle/flame-palm pose, single bearded face, two arms) is correct and distinct
 from Vishnu, so this was not treated as a ship blocker — see the `agni-portrait.png`
 provenance entry.
+
+(05.7-02 update: the Agni tilak flag above is RESOLVED, the tilak was removed; see the Phase 05.7 section. The Indra vajra flag remains open: NOT SHIPPED.)
+
+## Phase 05.7 cultural and iconography corrections
+
+Nine assets were flagged in cultural/iconography review and regenerated in plan 05.7-02. They replace existing files, so the file total is unchanged. Every shipped asset carries `cultural_review: pending (QA-03)` and a `superseded` record in PROVENANCE.json. Model for all shipped items: FLUX.1-schnell Q4_K_S GGUF (no SDXL fallback was needed).
+
+| Asset | Flag fixed | Result |
+|---|---|---|
+| Yama boss atlas | Blue skin and tall gold crown read as Vishnu/Krishna (CULT-02) | SHIPPED seed 52354 (attempt 4; 4 rejects). Green skin, buffalo-head danda, pasha. Forehead mark removed by deterministic inpaint (`tools/art/retouch_mark.py`). QA-03 caveats: trident-like horn silhouette on the danda, rudraksha beads. |
+| Kumbhakarna boss atlas | Prong staff read as a Shaiva trishula (CULT-03) | SHIPPED seed 52250 (attempt 0). Iron-banded club, no prongs. |
+| Agni portrait | Vaishnava urdhva-pundra tilak (CULT-03) | SHIPPED seed 71150. Three prompt rewrites still painted a forehead mark, so the tilak was removed by deterministic inpaint. |
+| Indra portrait | Vajra read as a cross (CULT-03) | NOT SHIPPED. 6/6 Flux attempts failed (cross, trident, T-rod). The earlier portrait (seed 71251) stays and is still flagged for the human reviewer. |
+| Naraka gate | Gothic arch and portcullis (CULT-04) | SHIPPED seed 61501. Torana with lotus-panel square posts, transparent doorway. Slight torii-like crossbeam flagged. |
+| Naraka vent_grate | Hubcap-like radial spokes (CULT-04) | SHIPPED seed 61510. Round stone ring with square lattice. Reads somewhat like a manhole cover. |
+| Ranabhoomi chariot_wreck | Gun-carriage read (CULT-04) | SHIPPED seed 63812 (2 rejects). |
+| Ranabhoomi war_drum | Cooking-pot read (CULT-04) | SHIPPED seed 63820. Laced barrel drum. |
+| Ranabhoomi column | No visible diya flame (CULT-04) | SHIPPED seed 63800. Clay diya with one flame. |
+
+Two shipped assets (Agni, Yama) were retouched after generation to remove a painted forehead mark. This is a deterministic cv2 inpaint of a small region, recorded in their `post_processing`.

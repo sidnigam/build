@@ -327,25 +327,26 @@
         "phase2": 1
       },
       "tool": "ComfyUI (local)",
-      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "checkpoint": "flux1-schnell-Q4_K_S.gguf (FLUX.1 [schnell] by Black Forest Labs, GGUF Q4_K_S by city96, Apache-2.0) + t5-v1_1-xxl Q5_K_M GGUF (Apache-2.0) + CLIP-L (MIT) + FLUX ae VAE (Apache-2.0)",
       "method": "txt2img",
-      "sampler": "dpmpp_2m",
-      "scheduler": "karras",
-      "steps": 32,
-      "cfg": 7,
-      "width": 1024,
-      "height": 1024,
-      "seed": 52304,
-      "prompt": "full-length standing full-body view from head to feet, exactly two arms only, Yama Dharmaraja, the dignified Hindu god of death and righteous judge of the dead, standing upright, stern regal noble expression, dark blue-grey skin, tall golden crown, small simple circular halo directly behind the head only (not covering the body), royal indigo and pale blue silk garments, holding a noose (pasha) in one hand and a golden staff (danda) in the other, serene authority, divine, standing in front of a plain flat solid pale grey background that is much larger than the character, character occupies the center of the frame with plenty of plain background around the whole body, indigo, pale blue and gold, Hades-adjacent illustrated 2D game character art, painterly digital illustration, bold clean linework, strong readable silhouette, chunky proportions, 3/4 top-down game sprite, full body, entire figure visible from head to feet, single character, solo, centered, Indian mythology, warm earth tones, high detail, concept art, plain flat pale grey background",
-      "negative_prompt": "pixel art, 3d render, photorealistic, photo, blurry, lowres, low quality, jpeg artifacts, extra limbs, extra arms, extra legs, extra heads, deformed hands, fused fingers, bad anatomy, watermark, text, signature, logo, letters, caption, cropped, cut off, close-up, portrait, bust, headshot, multiple characters, crowd, collage, duplicate, extra views, character sheet, turnaround, floating objects, disembodied, busy background, scenery, landscape, frame, border, western medieval armor, roman armor, samurai armor, demon, monster, monstrous, grotesque, fangs, tusks, horns, skull face, evil grin, menacing, blood, gore, asura, picture frame, ornate border, decorative border, vignette border, framed illustration, four arms, six arms, extra arms, temple building, architecture, landscape, clouds, seated, sitting, lotus throne, cropped legs, large background medallion, full-body aureole, mandala disc, circular background pattern, background covering entire image, sun disc filling frame",
+      "sampler": "euler",
+      "scheduler": "simple",
+      "steps": 4,
+      "cfg": 1.0,
+      "width": 896,
+      "height": 1152,
+      "seed": 52354,
+      "prompt": "Full-length figure from head to feet: Yama Dharmaraja, the Hindu lord of dharma, a tall dignified mature man with a calm, noble, kingly human face, round human ears, a dark moustache and steady open eyes. His skin is deep dark green like a monsoon storm cloud, the same on face, arms and hands. A low plain dark-bronze crown band rests on his eyebrows, copper earrings and a crimson silk dhoti. His right hand holds upright a plain straight dark iron staff, topped by one carved bronze water-buffalo head with short horns swept back. His left fist clutches a golden rope noose, one loop of rope hanging from his fist. Two arms. Deep green, crimson and dark bronze. Bold hand-painted 2D action-game character art with confident dark ink outlines, rich painterly detail, a strong readable silhouette and chunky heroic proportions, three-quarter top-down game sprite view, in the spirit of classical Indian temple murals. The entire figure is visible from head to feet, standing on the ground, centered, alone before a flat, even, medium-grey backdrop filling the whole image.",
+      "negative_prompt": "",
       "rejected_seeds": [
-        52300,
-        52301,
-        52302,
-        52303
+        52350,
+        52351,
+        52352,
+        52353
       ],
       "rejected_count": 4,
       "post_processing": [
+        "retouch: tools/art/retouch_mark.py cv2 Telea inpaint of the forehead mark (raw 896x1152, boxes 428,148,498,172 + 430,141,496,160)",
         "rembg birefnet-general background removal",
         "alpha despeckle + trim",
         "bottom-aligned LANCZOS fit to 512x512 (margin 9)",
@@ -354,16 +355,28 @@
         "phase2: tools/art/phase2_variant.py --mode divine --scale 2",
         "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
-      "raw_image": "assets/sprites/_raw/bosses/yama/",
+      "raw_image": "assets/sprites/_gen/bosses/yama/yama_s52354.png",
       "gen_sidecar": "assets/sprites/_raw/bosses/yama/yama.gen.json",
-      "generated_date": "2026-09-26",
-      "recorded_date": "2026-09-26",
+      "generated_date": "2026-11-07",
+      "recorded_date": "2026-11-07",
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "FLAGGED: Yama needed all 5 attempts. Seed 52300 (seated, floating scepters) lost both arms during rembg cutout -- a segmentation failure, not a cultural issue. Seed 52301 and seed 52302 both rendered a decorative picture-frame border around the whole image, which violates the no-frame/no-border constraint (52301 also had 4 arms). Seed 52303 correctly avoided a border and read as dignified and serene, but its background halo/aureole disc was so large it dominated the 256x256 canvas and made the cutout silhouette read as a solid circle rather than a person -- fails gameplay readability. Accepted seed 52304 as least-bad: standing, two arms, crown, dignified serene closed-mouth-smile expression, no fangs/horns/grotesque features, no border, plain background, readable humanoid silhouette. The staff (danda) prop held in one hand was a thin disconnected shape that did not survive rembg's alpha-despeckle step and is missing from the finished frame; he is shown holding only the round disc/shield prop. Dignity check passed: no demonic, monstrous or menacing features at any point across all 5 attempts.",
-      "repacked_phase": "05.6",
-      "repacked_date": "2026-10-17",
-      "source_recovered_from": "chakravyuha_00030_.png \u2014 PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
+      "self_review": "05.7-02 Yama, Flux seed 52354 (attempt 4). Raw and finished idle + phase2 frames Read at 512 and at game scale (scale_preview vs old). Reads as Yama not Vishnu/Krishna/Shiva: deep dark green skin (not blue), no tall gold kirita, no disc/conch/lotus, dark low crown band + topknot, danda topped by a carved bronze buffalo head, coiled rope pasha held in the left fist, crimson dhoti, rudraksha beads. Caveats for QA-03: the buffalo head's horns + central spike give a partly trident-like silhouette at small size; rudraksha beads and pointed ears lean Shaiva/rakshasa; expression is stern, not menacing; no gore. A red/orange forehead chevron (tilak-like) was removed from the raw with tools/art/retouch_mark.py (faint shadow remains under the band). H2 stern no gore PASS, H3 modest PASS, H4 PASS, H6 no text PASS, HX1 consistent green PASS, HX3 two arms, noose and danda both held PASS, HX4 danda and noose intact in cutout PASS, HX5 no halo/frame PASS. Phase2 divine glow is restrained indigo/gold PASS. Style sits with the Tataka/Ahiravana atlases (painted, dark ink outline).",
+      "cultural_review": "pending \u2014 human cultural reviewer (QA-03)",
+      "iconography_notes": "dark green skin; low dark-bronze crown band; danda topped with buffalo head; pasha rope noose in left fist; crimson dhoti; no blue skin/no tall gold crown/no disc/conch",
+      "rejected_reasons": {
+        "52350": "trishula-like prong set on danda + tilak + goblin face",
+        "52351": "noose floating unheld, second noose on staff, scowl",
+        "52352": "danda head became trident, V tilak, scowl",
+        "52353": "plain spear no buffalo head, red mark"
+      },
+      "superseded": {
+        "seed": 52304,
+        "checkpoint": "sdxl_base",
+        "phase": "02/05.6-03",
+        "reason": "05.7 CULT-02: blue skin + gold crown read as Vishnu/Krishna"
+      },
+      "cultural_check": "pending QA-03: trident-like horn silhouette on the danda and rudraksha beads flagged for human review"
     },
     {
       "filename": "preta-atlas.png",

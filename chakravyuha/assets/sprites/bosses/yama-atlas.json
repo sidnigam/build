@@ -4,15 +4,15 @@
       "frame": {
         "x": 8,
         "y": 8,
-        "w": 389,
+        "w": 436,
         "h": 512
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 61,
+        "x": 38,
         "y": 0,
-        "w": 389,
+        "w": 436,
         "h": 512
       },
       "sourceSize": {
@@ -28,15 +28,15 @@
       "frame": {
         "x": 8,
         "y": 536,
-        "w": 264,
+        "w": 309,
         "h": 506
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 123,
+        "x": 101,
         "y": 3,
-        "w": 264,
+        "w": 309,
         "h": 506
       },
       "sourceSize": {
@@ -55,7 +55,7 @@
     "image": "yama-atlas.png",
     "format": "RGBA8888",
     "size": {
-      "w": 405,
+      "w": 452,
       "h": 1050
     },
     "scale": 1

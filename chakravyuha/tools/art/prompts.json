@@ -90,7 +90,25 @@
         "phase": "02/05.6-03",
         "reason": "05.7 CULT-02: blue skin + gold crown read as Vishnu/Krishna"
       },
-      "flux_subject": "Full-length figure from head to feet: Yama Dharmaraja, the Hindu lord of dharma and judge of the dead, a tall dignified mature man with a stern, calm, noble face, a dark moustache and steady open eyes. His skin is deep dark green like a monsoon storm cloud, the same green on face, neck, arms and hands. A low dark-bronze crown band bearing a small water-buffalo head emblem, copper earrings, a crimson silk dhoti and dark red sash. His right hand holds upright a tall dark iron danda staff crowned with a carved water-buffalo head. His left hand holds a coiled golden rope noose against his hip. Two arms. Deep green, crimson and dark bronze."
+      "flux_subject": "Full-length figure from head to feet: Yama Dharmaraja, the Hindu lord of dharma, a tall dignified mature man with a calm, noble, kingly human face, round human ears, a dark moustache and steady open eyes. His skin is deep dark green like a monsoon storm cloud, the same on face, arms and hands. A low plain dark-bronze crown band rests on his eyebrows, copper earrings and a crimson silk dhoti. His right hand holds upright a plain straight dark iron staff, topped by one carved bronze water-buffalo head with short horns swept back. His left fist clutches a golden rope noose, one loop of rope hanging from his fist. Two arms. Deep green, crimson and dark bronze.",
+      "accepted_attempt": 4,
+      "rejected": {
+        "0": "[flux] danda topped by a trident-shaped prong set (Shaiva trishula) + Vaishnava-style red/white forehead tilak + goblin face",
+        "1": "[flux] staff + buffalo head good but noose floating unheld (HX3), second noose looped on the staff, scowling face",
+        "2": "[flux] danda head became a trident again, V-shaped forehead tilak, scowl",
+        "3": "[flux] plain spear with no buffalo head, red forehead mark, goblin face"
+      },
+      "retouch": {
+        "tool": "tools/art/retouch_mark.py",
+        "box": [
+          428,
+          148,
+          498,
+          172
+        ],
+        "warm": true,
+        "note": "orange/red painted forehead chevron (tilak-like) removed from the raw by deterministic inpainting (two passes, second box 430,141,496,160) before the boss finish"
+      }
     },
     "preta": {
       "kind": "enemy",
@@ -201,13 +219,26 @@
       "base_seed": 71200,
       "out_w": 600,
       "out_h": 768,
-      "flux_subject": "Indra, king of the devas, a youthful regal man with a proud, kind face, a fine black moustache, warm fair skin and open alert eyes. A tall golden kirita crown, gold earrings, a jewelled collar and indigo and white silk garments. Both hands hold the centre grip of a short golden Vajra lying horizontally across his chest: a slim thunderbolt with a round central grip, and at each end five slender curved prongs bowing outward then closing into one sharp point, like a closed lotus bud. Both ends are identical mirror images on one straight horizontal axis, glowing softly white. Two arms. Royal gold, storm indigo and white.",
+      "flux_subject": "Indra, king of the devas, a youthful regal man with a proud, kind face, a fine black moustache, warm fair skin and open alert eyes. A tall jewelled golden kirita crown, gold earrings, a broad jewelled collar, and indigo and white silk garments with gold trim. Both hands grip the centre of a short golden Vajra held horizontally across his chest: a stubby double-ended thunderbolt club, the same cluster of three curved golden prongs at the left end mirrored exactly at the right end, glowing with soft white light at its centre grip. Two arms. Royal gold, storm indigo and white.",
       "flux_base_seed": 71250,
       "superseded": {
         "seed": 71251,
         "phase": "05.5-04",
         "flux_subject": "Indra, king of the devas, a youthful regal man with a proud, kind face, a fine black moustache, warm fair skin and open alert eyes. A tall jewelled golden kirita crown, gold earrings, a broad jewelled collar, and indigo and white silk garments with gold trim. Both hands grip the centre of a short golden Vajra held horizontally across his chest: a stubby double-ended thunderbolt club, the same cluster of three curved golden prongs at the left end mirrored exactly at the right end, glowing with soft white light at its centre grip. Two arms. Royal gold, storm indigo and white.",
         "reason": "05.7 CULT-03: vajra prongs splayed into a cross / four-pointed star"
+      },
+      "attempts_05_7": {
+        "status": "NOT SHIPPED",
+        "reason": "6/6 Flux attempts failed the vajra check (cross / trident / T-rod / floating trident); shipped portrait (seed 71251, old prompt) kept and its provenance untouched",
+        "rejected": {
+          "71251": "[flux] horizontal pronged bar with a vertical blade-hilt below the grip = cross shape",
+          "71252": "[flux] upright vajra read as a trident; second trident-like prop",
+          "71253": "[flux] plain rod, no prongs, not a vajra",
+          "71254": "[flux] floating trident, not held; bindi",
+          "71255": "[flux] T-shaped rod (hammer), not a vajra",
+          "71256": "[flux] 'dorje' prompt: horizontal prongs plus a vertical shaft below the grip = cross; Vaishnava-style forehead mark"
+        },
+        "last_flux_subject_tried": "Indra, king of the devas, a youthful regal man facing the viewer with a kind face, a fine black moustache and open alert eyes. A tall golden kirita crown, gold earrings and indigo and white silk. Both hands hold a golden dorje vajra level across his chest, lying horizontally: a ribbed round ball in the middle, a ring of lotus petals on each side of the ball, and beyond each ring four golden prongs that curve inward to meet at one point, so the vajra looks like two identical lotus buds joined back to back. It glows softly white. Two arms."
       }
     },
     "vayu": {

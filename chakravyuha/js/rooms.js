@@ -551,10 +551,13 @@ const ROOMS = {
     const heal = Math.round(P.maxhp * 0.25);
     P.hp = Math.min(P.maxhp, P.hp + heal);
 
+    // color must be full #rrggbb: renderBackground appends a 2-digit alpha ('cc'/'00') for the door
+    // glow gradient, and '#fff' + 'cc' = '#fffcc' made addColorStop throw, killing the frame loop the
+    // moment this door scrolled on screen (freeze-after-first-boss).
     G.doors = [{
       x: G.arena.x + G.arena.w - 36,
       y: G.arena.y + G.arena.h / 2,
-      r: 34, reward: { id: 'nextbiome', name: DATA.BIOMES[G.biomeIdx + 1].name, sym: '⛩', color: '#fff' },
+      r: 34, reward: { id: 'nextbiome', name: DATA.BIOMES[G.biomeIdx + 1].name, sym: '⛩', color: '#ffffff' },
     }];
     AUDIO.sfx('door');
   },

@@ -37,10 +37,32 @@ class El {
 }
 
 const noop = () => {};
+// Browser-faithful CanvasGradient.addColorStop (freeze-after-first-boss debug session): a real canvas
+// THROWS (SyntaxError) for any color string it cannot parse, and (IndexSizeError) for an offset
+// outside [0, 1]. A throw inside GAME.render() aborts GAME.frame() before it re-arms
+// requestAnimationFrame, i.e. the whole game freezes. The old `addColorStop: noop` stub hid exactly
+// that: the post-boss door's '#fff' + 'cc' -> '#fffcc' froze every real run after the first boss.
+function isCanvasColor(c) {
+  if (typeof c !== 'string') return false;
+  const s = c.trim().toLowerCase();
+  if (/^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/.test(s)) return true;
+  if (/^(?:rgba?|hsla?)\([^()]*\)$/.test(s)) return !/nan|undefined|infinity/.test(s);
+  return /^[a-z]+$/.test(s) && ['undefined', 'null', 'nan', 'infinity'].indexOf(s) === -1;   // named colors
+}
+function strictAddColorStop(offset, color) {
+  if (!(typeof offset === 'number' && isFinite(offset) && offset >= 0 && offset <= 1)) {
+    const e = new Error(`Failed to execute 'addColorStop' on 'CanvasGradient': The provided value (${offset}) is outside the range (0.0, 1.0).`);
+    e.name = 'IndexSizeError'; throw e;
+  }
+  if (!isCanvasColor(color)) {
+    const e = new Error(`Failed to execute 'addColorStop' on 'CanvasGradient': The value provided ('${color}') could not be parsed as a color.`);
+    e.name = 'SyntaxError'; throw e;
+  }
+}
 const ctxStub = new Proxy({}, {
   get(t, prop) {
     if (prop === 'createRadialGradient' || prop === 'createLinearGradient')
-      return () => ({ addColorStop: noop });
+      return () => ({ addColorStop: strictAddColorStop });
     if (prop === 'measureText') return () => ({ width: 0 });
     if (prop in t) return t[prop];
     return noop;
@@ -7933,6 +7955,61 @@ console.log('\n— VFX x GFX hooks (05.6-02) —');
   check('GFX.frame() still throws nothing headless with the light layer hook wired in', vr.frameNoThrow);
   check('short headless room sim (GAME.update/render x120, GFX loaded) throws nothing'
     + (vr.simError ? ' — ' + vr.simError : ''), vr.simNoThrow);
+}
+
+// ---------------- freeze-after-first-boss regression ----------------
+// Defeating a (non-final) boss spawns the 'nextbiome' door at the arena's right edge. With the
+// scrolling camera it is culled until the player walks toward it; the first frame it is on screen,
+// renderBackground's door glow ran addColorStop(0, reward.color + 'cc'). The door's color was '#fff'
+// -> '#fffcc' (invalid) -> the canvas threw -> GAME.frame() died before re-arming rAF -> total freeze.
+// This drives the real boss-defeat path for every non-final biome, brings the door on screen, and
+// renders it through the browser-faithful gradient stub above.
+console.log('\n— post-boss door renders on screen without throwing (freeze-after-first-boss) —');
+vm.runInContext(`
+globalThis.__bossDoorResults = { errors: [], doors: [], visible: [], badColors: [] };
+(function() {
+  const R = __bossDoorResults;
+  for (let bi = 0; bi < DATA.BIOMES.length - 1; bi++) {
+    try {
+      UI.hideAll();
+      GAME.startRun();
+      if (bi > 0) ROOMS.enterBiome(bi);
+      UI.hideAll();
+      GAME.state = 'combat';
+      ROOMS.enterRoom('boss');
+      const B = GAME.bossRef;
+      B.hp = 1;
+      hitEnemy(B, 50, 'attack');
+      for (let f = 0; f < 120 && !GAME.bossRewarded; f++) GAME.update(1 / 60);   // hitstop, then the reward path
+      const d = GAME.doors[0];
+      R.doors.push(d ? d.reward.id : null);
+      GAME.player.x = d.x - 200; GAME.player.y = d.y;   // walk up to the door, not onto it
+      CAMERA.snap();
+      R.visible.push(CAMERA.visible(d.x, d.y, d.r + 60));
+      GAME.renderBackground(__ctx);
+      GAME.render();
+    } catch (e) { R.errors.push('biome ' + bi + ': ' + String(e && e.stack || e).split('\\n').slice(0, 2).join(' | ')); }
+  }
+  // every door reward color must survive the renderer's 2-hex-digit alpha suffix ('cc' / '00')
+  const colors = Object.keys(DATA.REWARDS).map(k => [k, DATA.REWARDS[k].color]);
+  try {
+    GAME.startRun(); GAME.state = 'cleared'; ROOMS.onBossDefeated();
+    colors.push(['nextbiome', GAME.doors[0].reward.color]);
+  } catch (e) { R.errors.push('onBossDefeated: ' + (e && e.message)); }
+  for (const [k, c] of colors) if (!/^#[0-9a-fA-F]{6}$/.test(String(c))) R.badColors.push(k + '=' + c);
+  UI.hub();
+})();
+`, sandbox);
+{
+  const br = vm.runInContext('__bossDoorResults', sandbox);
+  check('boss defeat spawns the nextbiome door in every non-final biome',
+    br.doors.length === vm.runInContext('DATA.BIOMES.length - 1', sandbox) && br.doors.every(id => id === 'nextbiome'));
+  check('post-boss door is actually on screen for the render pass (test exercises the culled-in path)',
+    br.visible.length > 0 && br.visible.every(Boolean));
+  check('renderBackground/render with the post-boss door on screen does not throw (freeze-after-first-boss)'
+    + (br.errors.length ? ' — ' + br.errors.join('; ') : ''), br.errors.length === 0);
+  check('every door reward color is #rrggbb, so renderer alpha suffixes stay valid CSS'
+    + (br.badColors.length ? ' — ' + br.badColors.join(', ') : ''), br.badColors.length === 0);
 }
 
 Promise.all(pendingAsyncChecks).then(() => {

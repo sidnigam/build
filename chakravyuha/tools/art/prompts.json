@@ -175,6 +175,22 @@
         "phase": "05.5-04",
         "flux_subject": "Agni, the Vedic god of fire, a mature man with one calm, wise, bearded face and warm red-gold skin. His hair and crown are made of golden flames rising upward from his head. A gold crown band, a white sacred thread across his chest, gold necklaces and a deep red silk dhoti. His right hand is raised close beside his face, palm up, cupping a small bright flame in the palm. His left hand rests on his chest. Two arms, a kind and benevolent expression. Flame red, ember orange and gold.",
         "reason": "05.7 CULT-03: forehead tilak rendered as a Vaishnava urdhva-pundra"
+      },
+      "accepted_attempt": 0,
+      "rejected": {
+        "1": "[flux] 'crown band low on brow' rewrite: small white tilak marks still painted on the brow; head turned to profile (composition drift)",
+        "2": "[flux] 'wide crown band covers the brow' rewrite: U-shaped tilak + red dot still painted below the band; extra tall pointed crown, flame not cupped",
+        "3": "[flux] 'dark fringe over the brow' rewrite: red bindi dot on the brow, stern/menacing scowl with a second flame on the other palm"
+      },
+      "retouch": {
+        "tool": "tools/art/retouch_mark.py",
+        "box": [
+          462,
+          352,
+          516,
+          434
+        ],
+        "note": "Flux repeatedly paints a forehead tilak (positive-only prompting cannot suppress it); attempt 0 composition kept and the mark removed by deterministic inpainting of the skin before the portrait finish"
       }
     },
     "indra": {

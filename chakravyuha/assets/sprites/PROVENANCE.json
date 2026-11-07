@@ -2229,11 +2229,16 @@
       "width": 896,
       "height": 1152,
       "seed": 71150,
-      "prompt": "Agni, the Vedic god of fire, a mature man with one calm, wise, bearded face and warm red-gold skin. His hair and crown are made of golden flames rising upward from his head. A gold crown band, a white sacred thread across his chest, gold necklaces and a deep red silk dhoti. His right hand is raised close beside his face, palm up, cupping a small bright flame in the palm. His left hand rests on his chest. Two arms, a kind and benevolent expression. Flame red, ember orange and gold. Bold hand-painted game-art character portrait with confident dark ink outlines, rich painterly detail, luminous warm rim light and ornate Indian gold jewellery, in the spirit of classical Indian temple murals and Pahari miniatures. A living figure with naturally shaded skin and open, alert eyes. Half-body portrait cropped at the waist, three-quarter view turned slightly right, head fully in frame. Alone before a flat, even, medium-grey backdrop filling the whole image.",
+      "prompt": "Agni, the Vedic god of fire, a mature man with one calm, wise, bearded face and warm red-gold skin. His broad forehead is smooth and bare, the same warm red-gold skin as his face. His hair and crown are made of golden flames rising upward from his head. A gold crown band, a white sacred thread across his chest, gold necklaces and a deep red silk dhoti. His right hand is raised close beside his face, palm up, cupping a small bright flame in the palm. His left hand rests on his chest. Two arms, a kind and benevolent expression. Flame red, ember orange and gold. Bold hand-painted game-art character portrait with confident dark ink outlines, rich painterly detail, luminous warm rim light and ornate Indian gold jewellery, in the spirit of classical Indian temple murals and Pahari miniatures. A living figure with naturally shaded skin and open, alert eyes. Half-body portrait cropped at the waist, three-quarter view turned slightly right, head fully in frame. Alone before a flat, even, medium-grey backdrop filling the whole image.",
       "negative_prompt": "",
-      "rejected_seeds": [],
-      "rejected_count": 0,
+      "rejected_seeds": [
+        71151,
+        71152,
+        71153
+      ],
+      "rejected_count": 3,
       "post_processing": [
+        "retouch: tools/art/retouch_mark.py cv2 Telea inpaint of the forehead mark (box 462,352,516,434 on the 896x1152 raw)",
         "rembg birefnet-general",
         "alpha clean <16",
         "despeckle >=0.02",
@@ -2243,13 +2248,24 @@
       ],
       "raw_image": "assets/sprites/_raw/gods/agni/",
       "gen_sidecar": "assets/sprites/_raw/gods/agni/agni-portrait.gen.json",
-      "generated_date": "2026-10-17",
-      "recorded_date": "2026-10-17",
+      "generated_date": "2026-11-07",
+      "recorded_date": "2026-11-06",
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "H1 correct deity (flame-crowned bearded fire god, two arms, ladle/flame-palm pose) PASS. H2 benevolent/serene expression, no menace/fangs/horns/red-eyes PASS. H3 no sexualization, modest attire PASS. H4 no horror/gore/skulls PASS. H5 no conflated deity iconography (not Vishnu, not a fire demon) PASS. H6 no text/watermark/swastika PASS. H7 one primary figure PASS. H-god: single calm wise bearded face (not two-faced), flames read as crown/hair not fire-demon imagery, two arms, no horns -- PASS. HX1 skin colour consistent (red-gold face/neck/arms/hands) PASS. HX2 living figure, painted skin, open eyes, not a statue/idol PASS. HX3 two arms, each attached at the shoulder, no extra/fused limbs PASS. HX4 flame held in raised right palm intact and identifiable at 240px PASS. HX5 no halo/frame/border/text remnants after birefnet-general cutout PASS. S1 bust composition, head fully in frame PASS. S2 hands acceptable at 240px, five fingers each, no fusion PASS. S3 clean cutout, no background remnants PASS. S4 matches house painterly/luminous style PASS. S5 reads clearly at 64px thumbnail PASS. Orchestrator review note (flag for human cultural review QA-03, not a ship blocker): the forehead tilak renders as a U-shaped Vaishnava urdhva-pundra mark, which is traditionally Vishnu/Krishna iconography rather than Agni's; this is a minor cross-deity marking that should be reviewed/corrected by a human cultural reviewer rather than blocking the ship, since every other Agni-specific attribute (flame crown, ladle/flame-palm pose, single bearded face, two arms) is correct and distinct from Vishnu. Shipped on first Flux attempt (round 0, seed 71150, attempt 0); 05.5-01 SDXL history: 7/7 rejected (see 05.5-01-SUMMARY, statue/idol and halo failures).",
+      "self_review": "05.7-02 Agni, Flux seed 71150 (attempt 0 of the 05.7 prompt). Raw still showed the U-shaped Vaishnava urdhva-pundra; attempts 71151-71153 (three positive-only rewrites: low crown band, wide band covering brow, dark fringe) all re-painted a forehead mark, so the tilak was removed from the raw with a deterministic inpaint (tools/art/retouch_mark.py) and the finished portrait Read at full size: forehead bare, smooth red-gold skin, no mark. Reads as Agni not Vishnu/Krishna (no tilak, no disc/conch, no blue, flame crown + sacred thread + flame in palm). H2 calm stern-benevolent, no menace. H3 modest. H4 none. H6 no text/glyph. HX1 consistent skin. HX3 two arms attached. HX4 flame intact. HX5 no halo/frame. Composition matches the shipped portrait (bust, flame crown, palm-up flame beside face); style matches the other gods.",
       "cultural_review": "pending \u2014 human cultural reviewer (QA-03)",
-      "iconography_notes": "radiant red-gold skin uniform across face/neck/arms/hands; hair and crown rendered as rising golden flames; calm wise bearded single face; right hand raised beside face cupping a small bright flame in the palm; left palm raised; two arms; gold jewellery; deep red garment; forehead tilak renders as a U-shaped Vaishnava urdhva-pundra mark rather than Agni-specific markings -- flagged for human cultural review (QA-03), not a ship blocker"
+      "iconography_notes": "bare forehead (no tilak/bindi); flame crown; white sacred thread; flame cupped in palm; two arms; no Vishnu markers",
+      "superseded": {
+        "seed": 71150,
+        "phase": "05.5-04",
+        "flux_subject": "Agni, the Vedic god of fire, a mature man with one calm, wise, bearded face and warm red-gold skin. His hair and crown are made of golden flames rising upward from his head. A gold crown band, a white sacred thread across his chest, gold necklaces and a deep red silk dhoti. His right hand is raised close beside his face, palm up, cupping a small bright flame in the palm. His left hand rests on his chest. Two arms, a kind and benevolent expression. Flame red, ember orange and gold.",
+        "reason": "05.7 CULT-03: forehead tilak rendered as a Vaishnava urdhva-pundra"
+      },
+      "rejected_reasons": {
+        "71151": "small white tilak still painted; profile drift",
+        "71152": "U-shaped tilak + red dot under crown band; tall pointed crown",
+        "71153": "red bindi dot; stern scowl; second flame on other palm"
+      }
     },
     {
       "filename": "krishna-portrait.png",

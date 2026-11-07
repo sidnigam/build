@@ -548,8 +548,48 @@
         "flux_base_seed": 61500,
         "subject": "a single massive Indian torana temple gateway of dark basalt and blackened iron, two thick carved square pillars supporting a heavy stepped stone lintel topped by a curved crossbeam with scrolled ends, carved lotus and vine scrollwork and geometric bands, an open rectangular doorway glowing with ember light, iron chains hanging at the sides, isolated on a plain flat background",
         "negative_extra": "landscape, mountains, snow, scenery, vista, sky, gothic, gothic arch, pointed arch, cathedral, church, portcullis, castle, crenellations, european, medieval, statue, idol, deity, human figure, face, carved figures",
-        "flux_subject": "A single massive Indian torana temple gateway of dark basalt and blackened iron: two thick carved square pillars hold a heavy stepped lintel crowned by a curved crossbeam with scrolled ends, decorated only with carved lotus-vine scrollwork and geometric bands. Between the pillars an open rectangular doorway glows with deep ember-orange light. Iron chains hang at the sides. Deep maroon and charcoal with ember red-orange accents, muted.",
-        "hole_punch": true
+        "flux_subject": "A single Indian torana gateway of dark basalt and blackened iron, as at an ancient Buddhist stupa: two tall thick square stone posts covered in carved lotus-vine panels, with three stacked horizontal curved stone crossbeams above them, each beam ending in outward spiral scrolls. Between the square posts the open doorway is a plain tall rectangle glowing deep ember-orange. Plain iron chains with simple iron rings hang at the sides. Deep maroon and charcoal with ember red-orange accents, muted.",
+        "hole_punch": [
+          [
+            257,
+            150
+          ],
+          [
+            257,
+            175
+          ],
+          [
+            257,
+            200
+          ],
+          [
+            257,
+            230
+          ],
+          [
+            257,
+            260
+          ],
+          [
+            257,
+            290
+          ],
+          [
+            257,
+            320
+          ],
+          [
+            257,
+            350
+          ]
+        ],
+        "accepted_attempt": 1,
+        "rejected": {
+          "0": "[flux] round fluted Greek-style columns and hanging Chinese-style lanterns; doorway stayed an opaque dark-red gradient (hole_punch 0.3% < 0.5% threshold)"
+        },
+        "self_review": "s61501 [flux]: single isolated torana gateway of black basalt/iron, Read raw + finished preview + style grid. Square carved posts with lotus-in-panel reliefs and kalasha finials, a curved stone crossbeam with spiral scroll ends over a stepped lintel, plain iron chains, doorway an open rectangle (hole_punch with 8 centre-line seeds makes it transparent, a few red specks remain at the lintel edge). NOT a Gothic/pointed arch, NOT a portcullis, no round Greek columns, no lanterns. Caveat: the sweeping curved crossbeam gives a slight torii-like read; lotus panels and kalasha finials keep it Indian. Flux render is crisper than the sdxl kit; env_grade desaturates it to the muted palette.",
+        "cultural_check": "pass: no deity/idol/face/figure/yantra/mandala; lotus-vine relief and architecture only; no pointed arch/portcullis/lantern. Human review flag: crossbeam curve vs torii",
+        "iconography": "Indian torana: square carved posts with lotus panels + kalasha finials; curved scrolled crossbeam; transparent rectangular doorway; chains; no pointed arch/portcullis"
       },
       "ledger_lectern": {
         "template": "prop",
@@ -715,7 +755,12 @@
         "flux_base_seed": 61510,
         "subject": "round carved basalt floor vent set into flagstones, top-down view, a thick stone ring rim with a plain notched geometric band, covered by a heavy lattice of crossed square iron bars, glowing ember light beneath the lattice, soot around the rim",
         "negative_extra": "hubcap, wheel, spokes, radial bars, car rim, tire, hub, lotus, mandala, yantra, flower, petals, star, symbol, text",
-        "flux_subject": "Top-down view of a round carved basalt floor vent set into dark flagstones: a thick stone ring rim with a plain notched geometric band, covered by a heavy square lattice of crossed iron bars, deep ember-orange light glowing beneath the lattice, soot darkening the rim. Deep maroon and charcoal with ember red-orange accents, muted."
+        "flux_subject": "Top-down view of a round carved basalt floor vent set into dark flagstones: a thick stone ring rim with a plain notched geometric band, covered by a heavy square lattice of crossed iron bars, deep ember-orange light glowing beneath the lattice, soot darkening the rim. Deep maroon and charcoal with ember red-orange accents, muted.",
+        "accepted_attempt": 0,
+        "self_review": "s61510 [flux] attempt 0: round carved basalt vent, a thick segmented stone ring rim with a plain notched geometric band, heavy square lattice of crossed iron bars over ember-orange glow, soot-dark stone. Read raw, finished preview and style grid: NO radial spokes, NO hub/centre cap, NO flower/lotus/mandala/yantra, no text. Lattice gaps show ember glow (no grey backdrop fill, hole_punch not needed). Caveats: reads somewhat like a manhole cover; the glowing centre has a plus-shaped pattern from the lattice (abstract, not a symbol). Flux render is crisper than the sdxl kit; env_grade/hazardTint mute it.",
+        "cultural_check": "pass: no deity/idol/face/yantra/mandala/sacred symbol; ground_safe hazard-skin, geometric lattice only. Human review flag: central plus-shaped lattice glow",
+        "iconography": "round carved stone ring rim with notched geometric band; square iron lattice; ember glow; no spokes/hub/lotus/mandala",
+        "rejected": {}
       }
     },
     "patala": {

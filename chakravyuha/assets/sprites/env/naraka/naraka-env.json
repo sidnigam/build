@@ -146,7 +146,7 @@
       "frame": "naraka_gate_0.png",
       "size": [
         512,
-        431
+        400
       ],
       "role": "gate",
       "ground_safe": false,
@@ -247,8 +247,8 @@
     "vent_grate": {
       "frame": "naraka_vent_grate_0.png",
       "size": [
-        369,
-        384
+        384,
+        381
       ],
       "role": "hazard-skin",
       "ground_safe": true

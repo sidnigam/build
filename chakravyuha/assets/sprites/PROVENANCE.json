@@ -1073,34 +1073,50 @@
       "actor": "naraka_gate",
       "kind": "env-prop",
       "tool": "ComfyUI (local)",
-      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "checkpoint": "flux1-schnell-Q4_K_S.gguf (FLUX.1 [schnell] by Black Forest Labs, GGUF Q4_K_S by city96, Apache-2.0) + t5-v1_1-xxl Q5_K_M GGUF (Apache-2.0) + CLIP-L (MIT) + FLUX ae VAE (Apache-2.0)",
       "method": "txt2img",
-      "sampler": "dpmpp_2m",
-      "scheduler": "karras",
-      "steps": 32,
-      "cfg": 7.0,
+      "sampler": "euler",
+      "scheduler": "simple",
+      "steps": 4,
+      "cfg": 1.0,
       "width": 1024,
       "height": 1024,
-      "seed": 61051,
-      "prompt": "a single massive obsidian gate arch prop isolated on a plain flat background, a lowered iron portcullis of thick bars, ember light seeping from beneath, chains at the sides, no landscape, no scenery behind it, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, deep maroon and charcoal with ember red-orange accents, muted, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
-      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, landscape, mountains, snow, scenery, vista, horizon, sky, background scenery, environment",
+      "seed": 61501,
+      "prompt": "A single Indian torana gateway of dark basalt and blackened iron, as at an ancient Buddhist stupa: two tall thick square stone posts covered in carved lotus-vine panels, with three stacked horizontal curved stone crossbeams above them, each beam ending in outward spiral scrolls. Between the square posts the open doorway is a plain tall rectangle glowing deep ember-orange. Plain iron chains with simple iron rings hang at the sides. Deep maroon and charcoal with ember red-orange accents, muted. Hades-inspired painterly game prop illustration, three-quarter top-down view, bold clean shapes, rich carved detail, a soft baked cast shadow, the whole object in frame and centered, alone on a flat, even, pale-grey background.",
+      "negative_prompt": "",
       "rejected_seeds": [
-        61050
+        61500
       ],
       "rejected_count": 1,
       "post_processing": [
         "gate"
       ],
       "raw_image": null,
-      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/naraka/gate.gen.json",
-      "generated_date": "2026-10-17",
-      "recorded_date": "2026-10-16",
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/chakravyuha/assets/sprites/_raw/env/naraka/gate.gen.json",
+      "generated_date": "2026-11-07",
+      "recorded_date": "2026-11-07",
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "s61051: single isolated obsidian/iron gate arch on a plain grey background with a flagstone floor strip at the base, ember-lit side niches, no landscape/mountains behind it (fixes the attempt-0 rembg foreground/background inversion).",
+      "self_review": "s61501 [flux]: single isolated torana gateway of black basalt/iron, Read raw + finished preview + style grid. Square carved posts with lotus-in-panel reliefs and kalasha finials, a curved stone crossbeam with spiral scroll ends over a stepped lintel, plain iron chains, doorway an open rectangle (hole_punch with 8 centre-line seeds makes it transparent, a few red specks remain at the lintel edge). NOT a Gothic/pointed arch, NOT a portcullis, no round Greek columns, no lanterns. Caveat: the sweeping curved crossbeam gives a slight torii-like read; lotus panels and kalasha finials keep it Indian. Flux render is crisper than the sdxl kit; env_grade desaturates it to the muted palette.",
+      "cultural_review": "pending \u2014 human cultural reviewer (QA-03)",
+      "iconography_notes": "Indian torana: square carved posts with lotus panels + kalasha finials; curved scrolled crossbeam; transparent rectangular doorway; chains; no pointed arch/portcullis",
+      "superseded": {
+        "seed": 61051,
+        "checkpoint": "sdxl_base",
+        "phase": "05.4-02",
+        "reason": "05.7 CULT-04: Gothic/European arch + portcullis",
+        "accepted_attempt": 1,
+        "rejected": {
+          "0": "full scenic landscape with snowy mountains visible through/around the arch; rembg cutout inverted foreground/background and kept the mountain vista instead of the gate structure"
+        },
+        "self_review": "s61051: single isolated obsidian/iron gate arch on a plain grey background with a flagstone floor strip at the base, ember-lit side niches, no landscape/mountains behind it (fixes the attempt-0 rembg foreground/background inversion).",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; architecture only.",
+        "subject": "a single massive obsidian gate arch prop isolated on a plain flat background, a lowered iron portcullis of thick bars, ember light seeping from beneath, chains at the sides, no landscape, no scenery behind it",
+        "negative_extra": "landscape, mountains, snow, scenery, vista, horizon, sky, background scenery, environment"
+      },
       "role": "gate",
       "biome": "naraka",
-      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; architecture only.",
+      "cultural_check": "pass: no deity/idol/face/figure/yantra/mandala; lotus-vine relief and architecture only; no pointed arch/portcullis/lantern. Human review flag: crossbeam curve vs torii",
       "ground_safe": false,
       "grading": {
         "sat": 0.8,
@@ -1108,10 +1124,48 @@
       },
       "finish": {
         "mode": "gate",
-        "crop": null
+        "crop": null,
+        "hole_punch": {
+          "applied": true,
+          "frac": 0.1118,
+          "seeds": [
+            [
+              257,
+              150
+            ],
+            [
+              257,
+              175
+            ],
+            [
+              257,
+              200
+            ],
+            [
+              257,
+              230
+            ],
+            [
+              257,
+              260
+            ],
+            [
+              257,
+              290
+            ],
+            [
+              257,
+              320
+            ],
+            [
+              257,
+              350
+            ]
+          ]
+        }
       },
       "rejected_reasons": {
-        "61050": "full scenic landscape with snowy mountains visible through/around the arch; rembg cutout inverted foreground/background and kept the mountain vista instead of the gate structure"
+        "61500": "[flux] round fluted Greek-style columns and hanging Chinese-style lanterns; doorway stayed an opaque dark-red gradient (hole_punch 0.3% < 0.5% threshold)"
       }
     },
     {
@@ -1335,32 +1389,44 @@
       "actor": "naraka_vent_grate",
       "kind": "env-prop",
       "tool": "ComfyUI (local)",
-      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "checkpoint": "flux1-schnell-Q4_K_S.gguf (FLUX.1 [schnell] by Black Forest Labs, GGUF Q4_K_S by city96, Apache-2.0) + t5-v1_1-xxl Q5_K_M GGUF (Apache-2.0) + CLIP-L (MIT) + FLUX ae VAE (Apache-2.0)",
       "method": "txt2img",
-      "sampler": "dpmpp_2m",
-      "scheduler": "karras",
-      "steps": 32,
-      "cfg": 7.0,
+      "sampler": "euler",
+      "scheduler": "simple",
+      "steps": 4,
+      "cfg": 1.0,
       "width": 1024,
       "height": 1024,
-      "seed": 61160,
-      "prompt": "round heavy iron floor grate over a glowing vent, top-down view, thick radial bars, soot around the rim, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, deep maroon and charcoal with ember red-orange accents, muted, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
-      "negative_prompt": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres",
+      "seed": 61510,
+      "prompt": "Top-down view of a round carved basalt floor vent set into dark flagstones: a thick stone ring rim with a plain notched geometric band, covered by a heavy square lattice of crossed iron bars, deep ember-orange light glowing beneath the lattice, soot darkening the rim. Deep maroon and charcoal with ember red-orange accents, muted. Hades-inspired painterly game prop illustration, three-quarter top-down view, bold clean shapes, rich carved detail, a soft baked cast shadow, the whole object in frame and centered, alone on a flat, even, pale-grey background.",
+      "negative_prompt": "",
       "rejected_seeds": [],
       "rejected_count": 0,
       "post_processing": [
         "hazard-skin"
       ],
       "raw_image": null,
-      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/.claude/worktrees/p54art/chakravyuha/assets/sprites/_raw/env/naraka/vent_grate.gen.json",
-      "generated_date": "2026-10-17",
-      "recorded_date": "2026-10-16",
+      "gen_sidecar": "/Users/sidnigam/Documents/coding/build/chakravyuha/assets/sprites/_raw/env/naraka/vent_grate.gen.json",
+      "generated_date": "2026-11-07",
+      "recorded_date": "2026-11-07",
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "s61160: round iron floor grate, radial bars, glowing center, soot-dark rim; verified clean circular cutout after prop_finish (rembg removed raw-generation's stray petal-shaped flame flares at the corners).",
+      "self_review": "s61510 [flux] attempt 0: round carved basalt vent, a thick segmented stone ring rim with a plain notched geometric band, heavy square lattice of crossed iron bars over ember-orange glow, soot-dark stone. Read raw, finished preview and style grid: NO radial spokes, NO hub/centre cap, NO flower/lotus/mandala/yantra, no text. Lattice gaps show ember glow (no grey backdrop fill, hole_punch not needed). Caveats: reads somewhat like a manhole cover; the glowing centre has a plus-shaped pattern from the lattice (abstract, not a symbol). Flux render is crisper than the sdxl kit; env_grade/hazardTint mute it.",
+      "cultural_review": "pending \u2014 human cultural reviewer (QA-03)",
+      "iconography_notes": "round carved stone ring rim with notched geometric band; square iron lattice; ember glow; no spokes/hub/lotus/mandala",
+      "superseded": {
+        "seed": 61160,
+        "checkpoint": "sdxl_base",
+        "phase": "05.4-02",
+        "reason": "05.7 CULT-04: radial-spoke grate reads as a modern hubcap / wheel hub (also 05.4-05 visual flag)",
+        "accepted_attempt": 0,
+        "self_review": "s61160: round iron floor grate, radial bars, glowing center, soot-dark rim; verified clean circular cutout after prop_finish (rembg removed raw-generation's stray petal-shaped flame flares at the corners).",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; ground_safe hazard-skin, top-down round grate only.",
+        "subject": "round heavy iron floor grate over a glowing vent, top-down view, thick radial bars, soot around the rim"
+      },
       "role": "hazard-skin",
       "biome": "naraka",
-      "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; ground_safe hazard-skin, top-down round grate only.",
+      "cultural_check": "pass: no deity/idol/face/yantra/mandala/sacred symbol; ground_safe hazard-skin, geometric lattice only. Human review flag: central plus-shaped lattice glow",
       "ground_safe": true,
       "grading": null,
       "finish": {
@@ -1489,7 +1555,7 @@
         "naraka_vent_grate_0.png"
       ],
       "biome": "naraka",
-      "recorded_date": "2026-10-16",
+      "recorded_date": "2026-11-07",
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review"
     },

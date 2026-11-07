@@ -241,6 +241,21 @@
           "71256": "[flux] 'dorje' prompt: horizontal prongs plus a vertical shaft below the grip = cross; Vaishnava-style forehead mark"
         },
         "last_flux_subject_tried": "Indra, king of the devas, a youthful regal man facing the viewer with a kind face, a fine black moustache and open alert eyes. A tall golden kirita crown, gold earrings and indigo and white silk. Both hands hold a golden dorje vajra level across his chest, lying horizontally: a ribbed round ball in the middle, a ring of lotus petals on each side of the ball, and beyond each ring four golden prongs that curve inward to meet at one point, so the vajra looks like two identical lotus buds joined back to back. It glows softly white. Two arms."
+      },
+      "gap_05_7_03": {
+        "status": "NOT SHIPPED",
+        "attempts": {
+          "repair_71270_d0.65": "REJECTED: best result (hand resting on chest, collar intact, no ghost) but blurry blotches of orange/red/teal jewel-like colour and a coloured vertical streak left in the old shaft/necklace area, visible at 256px; faint pale streaks on the right upper arm",
+          "repair_71271_d0.55": "REJECTED: ghost of the old bar (grey-green streaks across the chest) and shaft stripe survive at low denoise",
+          "repair_71272_d0.75": "REJECTED: new object invented (grey sword/rod across the chest) and tattoo-like text on the upper arm",
+          "repair_telea_prefill_only": "REJECTED: grey/orange smear bands where bar and shaft were, visible at 256px",
+          "path_B_71253": "NOT VIABLE: rod grip axis measured about 37 degrees from horizontal (190,655)->(630,990) in the 896x1152 raw; limit is 15 degrees",
+          "vajra_geometry": "PASSED on first iteration: centre (262,440), L 330, angle 0, outline 2; aspect 3.98, center_ratio 0.679, tip_ratio 0.476/0.476, mirror IoU 0.998/0.995, 1 component, widest_abs_u 0.347",
+          "candidate_check": "composite with 71270 repair: diffcheck changed_outside 0; Q1-Q4 NO, Q5 YES, Q9 YES, Q8 NO (blotches visible outside the vajra). Candidate kept at assets/sprites/_raw/gods/indra/indra-0573-candidate-s71270-REJECTED.png for human sign-off"
+        },
+        "reason": "Repair stage failed acceptance: no clean garment repair in budget (3 Flux seeds + 1 deterministic). Vajra overlay itself passed its metrics.",
+        "candidate": "assets/sprites/_raw/gods/indra/indra-0573-candidate-s71270-REJECTED.png",
+        "old_object_mask": "assets/sprites/_raw/gods/indra/indra-old-object-mask.png"
       }
     },
     "vayu": {

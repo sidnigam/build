@@ -72,7 +72,9 @@
         "phase": "02/05.6-03",
         "reason": "05.7 CULT-03: trident-like pronged staff reads as Shaiva trishula"
       },
-      "flux_subject": "Full-length figure from head to feet: Kumbhakarna, a colossal rakshasa giant standing heavily with bent knees, a huge round belly and massive shoulders, a broad brutish leonine face with heavy-lidded sleepy eyes, short white tusks and a wild dark-gold mane. Warm golden-yellow skin everywhere, ornate bronze shoulder armour, bronze armbands, a round bronze belt plate and a brown loincloth. His right hand grips upright at his side a huge war club: a thick dark wooden club bound with iron bands and studded with blunt iron knobs, its heavy rounded head rising above his shoulder. Two arms. Golden-yellow ochre and bronze."
+      "flux_subject": "Full-length figure from head to feet: Kumbhakarna, a colossal rakshasa giant standing heavily with bent knees, a huge round belly and massive shoulders, a broad brutish leonine face with heavy-lidded sleepy eyes, short white tusks and a wild dark-gold mane. Warm golden-yellow skin everywhere, ornate bronze shoulder armour, bronze armbands, a round bronze belt plate and a brown loincloth. His right hand grips upright at his side a huge war club: a thick dark wooden club bound with iron bands and studded with blunt iron knobs, its heavy rounded head rising above his shoulder. Two arms. Golden-yellow ochre and bronze.",
+      "accepted_attempt": 0,
+      "rejected": {}
     },
     "yama": {
       "kind": "boss",

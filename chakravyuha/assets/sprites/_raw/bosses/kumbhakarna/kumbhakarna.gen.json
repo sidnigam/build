@@ -1,58 +1,65 @@
 {
   "graph": {
-    "4": {
-      "class_type": "CheckpointLoaderSimple",
+    "1": {
+      "class_type": "UnetLoaderGGUF",
       "inputs": {
-        "ckpt_name": "sd_xl_base_1.0.safetensors"
+        "unet_name": "flux1-schnell-Q4_K_S.gguf"
       }
     },
-    "6": {
+    "2": {
+      "class_type": "DualCLIPLoaderGGUF",
+      "inputs": {
+        "clip_name1": "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+        "clip_name2": "clip_l.safetensors",
+        "type": "flux"
+      }
+    },
+    "3": {
       "class_type": "CLIPTextEncode",
       "inputs": {
-        "text": "Kumbhakarna, colossal rakshasa giant, huge round belly, heavy-lidded sleepy eyes, tusks, golden-yellow armor and ornaments, massive iron mace, golden-yellow ochre and bronze, Hades-adjacent illustrated 2D game character art, painterly digital illustration, bold clean linework, strong readable silhouette, chunky proportions, 3/4 top-down game sprite, full body, entire figure visible from head to feet, single character, solo, centered, Indian mythology, warm earth tones, high detail, concept art, plain flat pale grey background",
+        "text": "Full-length figure from head to feet: Kumbhakarna, a colossal rakshasa giant standing heavily with bent knees, a huge round belly and massive shoulders, a broad brutish leonine face with heavy-lidded sleepy eyes, short white tusks and a wild dark-gold mane. Warm golden-yellow skin everywhere, ornate bronze shoulder armour, bronze armbands, a round bronze belt plate and a brown loincloth. His right hand grips upright at his side a huge war club: a thick dark wooden club bound with iron bands and studded with blunt iron knobs, its heavy rounded head rising above his shoulder. Two arms. Golden-yellow ochre and bronze. Bold hand-painted 2D action-game character art with confident dark ink outlines, rich painterly detail, a strong readable silhouette and chunky heroic proportions, three-quarter top-down game sprite view, in the spirit of classical Indian temple murals. The entire figure is visible from head to feet, standing on the ground, centered, alone before a flat, even, medium-grey backdrop filling the whole image.",
         "clip": [
-          "4",
-          1
+          "2",
+          0
         ]
       }
     },
-    "7": {
-      "class_type": "CLIPTextEncode",
+    "4": {
+      "class_type": "ConditioningZeroOut",
       "inputs": {
-        "text": "pixel art, 3d render, photorealistic, photo, blurry, lowres, low quality, jpeg artifacts, extra limbs, extra arms, extra legs, extra heads, deformed hands, fused fingers, bad anatomy, watermark, text, signature, logo, letters, caption, cropped, cut off, close-up, portrait, bust, headshot, multiple characters, crowd, collage, duplicate, extra views, character sheet, turnaround, floating objects, disembodied, busy background, scenery, landscape, frame, border, western medieval armor, roman armor, samurai armor, halo, deity, god, goddess, divine aura, religious icon, worship",
-        "clip": [
-          "4",
-          1
+        "conditioning": [
+          "3",
+          0
         ]
       }
     },
     "5": {
-      "class_type": "EmptyLatentImage",
+      "class_type": "EmptySD3LatentImage",
       "inputs": {
-        "width": 1024,
-        "height": 1024,
+        "width": 896,
+        "height": 1152,
         "batch_size": 1
       }
     },
-    "3": {
+    "6": {
       "class_type": "KSampler",
       "inputs": {
-        "seed": 52201,
-        "steps": 32,
-        "cfg": 7.0,
-        "sampler_name": "dpmpp_2m",
-        "scheduler": "karras",
+        "seed": 52250,
+        "steps": 4,
+        "cfg": 1.0,
+        "sampler_name": "euler",
+        "scheduler": "simple",
         "denoise": 1.0,
         "model": [
-          "4",
+          "1",
           0
         ],
         "positive": [
-          "6",
+          "3",
           0
         ],
         "negative": [
-          "7",
+          "4",
           0
         ],
         "latent_image": [
@@ -61,16 +68,22 @@
         ]
       }
     },
+    "7": {
+      "class_type": "VAELoader",
+      "inputs": {
+        "vae_name": "ae.safetensors"
+      }
+    },
     "8": {
       "class_type": "VAEDecode",
       "inputs": {
         "samples": [
-          "3",
+          "6",
           0
         ],
         "vae": [
-          "4",
-          2
+          "7",
+          0
         ]
       }
     },
@@ -86,18 +99,29 @@
     }
   },
   "params": {
-    "positive": "Kumbhakarna, colossal rakshasa giant, huge round belly, heavy-lidded sleepy eyes, tusks, golden-yellow armor and ornaments, massive iron mace, golden-yellow ochre and bronze, Hades-adjacent illustrated 2D game character art, painterly digital illustration, bold clean linework, strong readable silhouette, chunky proportions, 3/4 top-down game sprite, full body, entire figure visible from head to feet, single character, solo, centered, Indian mythology, warm earth tones, high detail, concept art, plain flat pale grey background",
-    "negative": "pixel art, 3d render, photorealistic, photo, blurry, lowres, low quality, jpeg artifacts, extra limbs, extra arms, extra legs, extra heads, deformed hands, fused fingers, bad anatomy, watermark, text, signature, logo, letters, caption, cropped, cut off, close-up, portrait, bust, headshot, multiple characters, crowd, collage, duplicate, extra views, character sheet, turnaround, floating objects, disembodied, busy background, scenery, landscape, frame, border, western medieval armor, roman armor, samurai armor, halo, deity, god, goddess, divine aura, religious icon, worship",
-    "seed": 52201,
-    "width": 1024,
-    "height": 1024,
-    "steps": 32,
-    "cfg": 7.0,
-    "sampler": "dpmpp_2m",
-    "scheduler": "karras",
-    "checkpoint": "sd_xl_base_1.0.safetensors"
+    "positive": "Full-length figure from head to feet: Kumbhakarna, a colossal rakshasa giant standing heavily with bent knees, a huge round belly and massive shoulders, a broad brutish leonine face with heavy-lidded sleepy eyes, short white tusks and a wild dark-gold mane. Warm golden-yellow skin everywhere, ornate bronze shoulder armour, bronze armbands, a round bronze belt plate and a brown loincloth. His right hand grips upright at his side a huge war club: a thick dark wooden club bound with iron bands and studded with blunt iron knobs, its heavy rounded head rising above his shoulder. Two arms. Golden-yellow ochre and bronze. Bold hand-painted 2D action-game character art with confident dark ink outlines, rich painterly detail, a strong readable silhouette and chunky heroic proportions, three-quarter top-down game sprite view, in the spirit of classical Indian temple murals. The entire figure is visible from head to feet, standing on the ground, centered, alone before a flat, even, medium-grey backdrop filling the whole image.",
+    "negative": "",
+    "seed": 52250,
+    "width": 896,
+    "height": 1152,
+    "steps": 4,
+    "cfg": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": "flux1-schnell-Q4_K_S.gguf",
+    "checkpoint_label": "flux1-schnell-Q4_K_S.gguf (FLUX.1 [schnell] by Black Forest Labs, GGUF Q4_K_S by city96, Apache-2.0) + t5-v1_1-xxl Q5_K_M GGUF (Apache-2.0) + CLIP-L (MIT) + FLUX ae VAE (Apache-2.0)",
+    "checkpoint_profile": "flux1_schnell_q4ks",
+    "graph_type": "flux_gguf",
+    "text_encoders": [
+      "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+      "clip_l.safetensors"
+    ],
+    "vae": "ae.safetensors",
+    "custom_nodes": {
+      "ComfyUI-GGUF": "6ea2651e7df66d7585f6ffee804b20e92fb38b8a"
+    }
   },
-  "prompt_id": "1c88969f-6a7b-4613-9018-2eead6a49b62",
+  "prompt_id": "49818b4c-2490-4f8b-a294-59b68b1da3aa",
   "comfyui_version": "0.35.0",
-  "generated_at": "2026-09-26T13:59:40Z"
+  "generated_at": "2026-11-07T05:08:38Z"
 }

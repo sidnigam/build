@@ -282,21 +282,19 @@
         "phase2": 1
       },
       "tool": "ComfyUI (local)",
-      "checkpoint": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
+      "checkpoint": "flux1-schnell-Q4_K_S.gguf (FLUX.1 [schnell] by Black Forest Labs, GGUF Q4_K_S by city96, Apache-2.0) + t5-v1_1-xxl Q5_K_M GGUF (Apache-2.0) + CLIP-L (MIT) + FLUX ae VAE (Apache-2.0)",
       "method": "txt2img",
-      "sampler": "dpmpp_2m",
-      "scheduler": "karras",
-      "steps": 32,
-      "cfg": 7,
-      "width": 1024,
-      "height": 1024,
-      "seed": 52201,
-      "prompt": "Kumbhakarna, colossal rakshasa giant, huge round belly, heavy-lidded sleepy eyes, tusks, golden-yellow armor and ornaments, massive iron mace, golden-yellow ochre and bronze, Hades-adjacent illustrated 2D game character art, painterly digital illustration, bold clean linework, strong readable silhouette, chunky proportions, 3/4 top-down game sprite, full body, entire figure visible from head to feet, single character, solo, centered, Indian mythology, warm earth tones, high detail, concept art, plain flat pale grey background",
-      "negative_prompt": "pixel art, 3d render, photorealistic, photo, blurry, lowres, low quality, jpeg artifacts, extra limbs, extra arms, extra legs, extra heads, deformed hands, fused fingers, bad anatomy, watermark, text, signature, logo, letters, caption, cropped, cut off, close-up, portrait, bust, headshot, multiple characters, crowd, collage, duplicate, extra views, character sheet, turnaround, floating objects, disembodied, busy background, scenery, landscape, frame, border, western medieval armor, roman armor, samurai armor, halo, deity, god, goddess, divine aura, religious icon, worship",
-      "rejected_seeds": [
-        52200
-      ],
-      "rejected_count": 1,
+      "sampler": "euler",
+      "scheduler": "simple",
+      "steps": 4,
+      "cfg": 1.0,
+      "width": 896,
+      "height": 1152,
+      "seed": 52250,
+      "prompt": "Full-length figure from head to feet: Kumbhakarna, a colossal rakshasa giant standing heavily with bent knees, a huge round belly and massive shoulders, a broad brutish leonine face with heavy-lidded sleepy eyes, short white tusks and a wild dark-gold mane. Warm golden-yellow skin everywhere, ornate bronze shoulder armour, bronze armbands, a round bronze belt plate and a brown loincloth. His right hand grips upright at his side a huge war club: a thick dark wooden club bound with iron bands and studded with blunt iron knobs, its heavy rounded head rising above his shoulder. Two arms. Golden-yellow ochre and bronze. Bold hand-painted 2D action-game character art with confident dark ink outlines, rich painterly detail, a strong readable silhouette and chunky heroic proportions, three-quarter top-down game sprite view, in the spirit of classical Indian temple murals. The entire figure is visible from head to feet, standing on the ground, centered, alone before a flat, even, medium-grey backdrop filling the whole image.",
+      "negative_prompt": "",
+      "rejected_seeds": [],
+      "rejected_count": 0,
       "post_processing": [
         "rembg birefnet-general background removal",
         "alpha despeckle + trim",
@@ -306,16 +304,22 @@
         "phase2: tools/art/phase2_variant.py --mode ember --scale 2",
         "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
       ],
-      "raw_image": "assets/sprites/_raw/bosses/kumbhakarna/",
+      "raw_image": "assets/sprites/_gen/bosses/kumbhakarna/kumbhakarna_s52250.png",
       "gen_sidecar": "assets/sprites/_raw/bosses/kumbhakarna/kumbhakarna.gen.json",
-      "generated_date": "2026-09-26",
-      "recorded_date": "2026-09-26",
+      "generated_date": "2026-11-07",
+      "recorded_date": "2026-11-07",
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "Attempt 0 (seed 52200) had a large sun-disc glow directly behind the figure that reads as a halo/divine aura, a cultural-guard violation for an asura boss. Accepted attempt 1 (seed 52201): two arms only, no crown/halo/lotus, huge round belly, fanged lion-maned face, golden-yellow/bronze palette, holding a single mace-staff. Clean cutout, chunky readable silhouette.",
-      "repacked_phase": "05.6",
-      "repacked_date": "2026-10-17",
-      "source_recovered_from": "chakravyuha_00020_.png \u2014 PNG-embedded ComfyUI prompt metadata matched seed+prompt+size; no regeneration"
+      "self_review": "05.7-02 Kumbhakarna, Flux seed 52250 (attempt 0, shipped first try). Raw and finished idle + phase2 Read at 512 and game scale (scale_preview vs old). Weapon: a thick dark wooden war club bound with iron bands, heavy rounded iron head with blunt studs, zero prongs/tines, does not read as a trishula or Hanuman's gada (iron-banded studded club, held on the shoulder). Look: golden-yellow ochre skin, wild dark-gold mane, white tusks, bronze shoulder armour/armbands/belt plate, brown loincloth, round belly, bent-knee stance, two arms: same rakshasa read as before but smoother/brighter painting and a lion tail. A small jewelled brow ornament (not a third-eye mark or tilak). H2 menacing rakshasa, no gore PASS, H3 PASS, H4 PASS, H6 no text PASS, HX1 PASS, HX3 two arms, club held PASS, HX4 club intact in cutout PASS, HX5 no halo/frame PASS. Phase2 ember glow works as before.",
+      "cultural_review": "pending \u2014 human cultural reviewer (QA-03)",
+      "iconography_notes": "iron-banded studded war club, zero prongs; golden-ochre rakshasa; no forehead third-eye mark; no trident",
+      "superseded": {
+        "seed": 52201,
+        "checkpoint": "sdxl_base",
+        "phase": "02/05.6-03",
+        "reason": "05.7 CULT-03: trident-like pronged staff reads as Shaiva trishula"
+      },
+      "cultural_check": "pending QA-03: club (no prongs) verified; human reviewer to confirm it does not read as a Shaiva/Hanuman weapon"
     },
     {
       "filename": "yama-atlas.png",

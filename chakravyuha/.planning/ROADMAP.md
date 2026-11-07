@@ -20,7 +20,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 5.1: Scrolling Camera + Larger Arenas + Denser Waves** (INSERTED)
 - [x] **Phase 5.2: PS5 DualSense Controller Support** (INSERTED)
 - [x] **Phase 5.3: Adaptive Indian Classical Score** (INSERTED)
-- [ ] **Phase 5.4: Epic-Inspired Environment Art Upgrade** (INSERTED)
+- [x] **Phase 5.4: Epic-Inspired Environment Art Upgrade** (INSERTED) (completed 2026-11-07, human visual check deferred)
 - [x] **Phase 5.5: God Portraits + Boon Dialogue** (INSERTED)
 - [x] **Phase 5.6: Graphics Polish (Lighting, Bloom, Sprite Quality)** (INSERTED)
 - [ ] **Phase 5.7: Cultural + Iconography Corrections** (INSERTED)

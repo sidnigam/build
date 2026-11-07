@@ -24,6 +24,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 5.5: God Portraits + Boon Dialogue** (INSERTED)
 - [x] **Phase 5.6: Graphics Polish (Lighting, Bloom, Sprite Quality)** (INSERTED)
 - [x] **Phase 5.7: Cultural + Iconography Corrections** (INSERTED) (completed 2026-11-07; CULT-02 Yama danda + CULT-03 Indra vajra deferred to Phase 7 QA-03)
+- [ ] **Phase 5.7.1: Hades-style Combat Depth** (INSERTED) - smarter enemies, player kit, difficulty curve, boss variety, tighter arenas
+- [ ] **Phase 5.7.2: Thrilling Combat + Boss Theme** (INSERTED) - procedural score upgrade
 - [ ] **Phase 6: Steam Integration** - Steamworks SDK, 15+ achievements, Cloud saves, validated overlay
 - [ ] **Phase 7: CI/CD + Store Submission + Cultural Review** - Signed CI binaries, store assets, telemetry, AI survey, cultural sign-off, Deck Verified
 
@@ -191,6 +193,39 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] 05.7-02-PLAN.md — Flux regeneration: Yama, Kumbhakarna, Agni, Naraka gate/vent, Ranabhoomi props (CULT-02/03/04; Indra NOT SHIPPED)
 - [ ] 05.7-03-PLAN.md — Gap closure: Indra classic vajra via Flux masked garment repair + code-drawn vajra overlay (CULT-03)
 - [ ] 05.7-04-PLAN.md — Gap closure: Yama blunt buffalo-horn danda finial + beads; sheets, disclosure, REQUIREMENTS consistency (CULT-02, CULT-03)
+
+### Phase 05.7.1: Hades-style combat depth: smarter enemies, player kit, difficulty curve, boss variety, tighter arenas (INSERTED)
+
+**Goal:** Combat feels dynamic, dangerous and unpredictable like Hades. Smarter enemies, a deeper player kit, a steeper difficulty curve and varied bosses replace today's easy, predictable fights, and arenas are slightly tighter to raise pressure. Source: user playtest 2026-11-07.
+**Requirements**: TBD (derive in discuss-phase)
+**Depends on:** Phase 05.7
+**Success Criteria** (what must be TRUE):
+  1. Smarter enemies: they flank and surround, mix melee and ranged roles, vary attack timing within readable telegraphs, and elites carry modifiers, so no fight is solved by waiting out telegraphs
+  2. Player kit depth: a dash-strike, attack combos with cancels, a meaningful special/cast, and improved hit feel
+  3. Difficulty curve: higher pressure and damage, mixed wave compositions, faster pacing, plus an opt-in Heat-style difficulty modifier system
+  4. Boss variety: boss move order is randomized within each phase, there are new patterns and fewer permanent safe spots, and every attack keeps a fair telegraph (Phase 4 invariant)
+  5. Arenas are slightly smaller (about 10-20% vs 05.1 sizes), while env art, obstacle layouts and readability limits still hold (05.4-05 shot_stats PASS)
+  6. Gods remain allies only; `node test/smoke.js` stays green, with new headless balance/AI tests
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 05.7.1 to break down)
+
+### Phase 05.7.2: Thrilling adaptive combat and boss theme (procedural score upgrade) (INSERTED)
+
+**Goal:** The procedural Indian-classical score gains a thrilling, driving combat and boss theme that makes fights feel epic, with no licensed audio. Source: user playtest 2026-11-07.
+**Requirements**: TBD (derive in discuss-phase)
+**Depends on:** Phase 05.3 (procedural score); can run in parallel with 05.7.1
+**Success Criteria** (what must be TRUE):
+  1. Combat rooms play a driving theme: faster tala, a heavy dhol/tabla/pakhawaj ostinato, a strong melodic hook in the biome raga, and tension builds with drops/hits on wave start, elite spawns and room clear
+  2. Bosses get a distinct, more intense theme that escalates in phase 2
+  3. The music stays adaptive: it follows the existing INTENSITY levels and crossfades smoothly between explore, combat, boss and calm (hub/boon) states
+  4. It stays fully procedural and license-clean, respects the music volume setting, and does not cost frame rate in worst-case combat
+  5. `node test/smoke.js` stays green, with headless tests for the new generators
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 05.7.2 to break down)
 
 ### Phase 6: Steam Integration
 **Goal**: The desktop build talks to Steam — achievements unlock and persist, saves sync via Steam Cloud across machines, and the overlay is validated on both Windows and macOS.

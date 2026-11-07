@@ -257,7 +257,8 @@
   "floor": {
     "tileScale": 0.6,
     "macroScale": 1.7,
-    "macroAlpha": 0.35
+    "macroAlpha": 0.18,
+    "base": "floor_a"
   },
   "walls": {
     "faceH": 170,
@@ -284,25 +285,29 @@
   },
   "lights": {
     "pools": {
-      "color": "#ff5533",
+      "color": "#ff5a2a",
       "count": [
         2,
         4
       ],
       "r": [
-        160,
-        260
+        180,
+        280
       ],
-      "alpha": 0.08
+      "alpha": 0.1
     },
     "shafts": null,
     "mist": null
   },
   "grade": {
-    "floorTint": 0.55,
-    "floorDarken": 0.25,
+    "floorTint": 0.3,
+    "floorDarken": 0.22,
     "outerDim": 0.6,
     "vignette": 0.4,
-    "propTint": "#d8d0cc"
+    "propTint": "#d8d0cc",
+    "floorDesat": 0.15,
+    "floorDesatLuma": 0.2,
+    "hazardTint": "#8c7c74",
+    "floorSat": 0.6
   }
 }

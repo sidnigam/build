@@ -11,7 +11,12 @@
 // there, and kills it on exit.
 //
 // Usage:
-//   node tools/art/env_shots.mjs OUT_DIR [--biomes naraka,patala,ranabhoomi,vaitarani] [--port 8091]
+//   node tools/art/env_shots.mjs OUT_DIR [--biomes naraka,patala,ranabhoomi,vaitarani] [--port 8091] [--seed N|--random] [--gfx low|medium|high]
+//
+// 05.4-05: layouts use a fixed ENV.CFG.FIXED_SEED (default 5405) so before/after tuning shots are
+// comparable (--random restores per-room random seeds); the biome/boss title-card DOM overlays are
+// hidden before every capture (they covered the arena centre); the combat shot centres the camera
+// on the forced telegraph so it is actually in frame.
 import { spawn } from 'node:child_process';
 import { writeFileSync, mkdirSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -29,10 +34,15 @@ if (!OUT) {
   process.exit(1);
 }
 let PORT = '8091';
+let SEED = 5405;
+let GFX_TIER = null;   // --gfx low|medium|high -> index.html?gfx=TIER (05.6 session override)
 let BIOMES = ['naraka', 'patala', 'ranabhoomi', 'vaitarani'];
 for (let i = 1; i < args.length; i++) {
   if (args[i] === '--port') PORT = args[++i];
   else if (args[i] === '--biomes') BIOMES = args[++i].split(',').map(s => s.trim()).filter(Boolean);
+  else if (args[i] === '--seed') SEED = parseInt(args[++i], 10);
+  else if (args[i] === '--random') SEED = null;
+  else if (args[i] === '--gfx') GFX_TIER = args[++i];
 }
 mkdirSync(OUT, { recursive: true });
 
@@ -85,21 +95,25 @@ async function main() {
 
   await send('Runtime.enable'); await send('Page.enable');
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
-  await send('Page.navigate', { url: `${base}/index.html` });
+  await send('Page.navigate', { url: `${base}/index.html${GFX_TIER ? '?gfx=' + encodeURIComponent(GFX_TIER) : ''}` });
   await sleep(4000);
 
   const shots = [];
   let errPtr = 0;
   async function captureShot(name) {
+    await evalJs(`(function(){ ['biome-title','boss-intro'].forEach(function(id){ var e = document.getElementById(id); if (e) e.classList.add('hidden'); }); return 1; })()`);
+    await sleep(60);
     const r = await send('Page.captureScreenshot', { format: 'png' });
     writeFileSync(join(OUT, name), Buffer.from(r.result.data, 'base64'));
     const envJson = await evalJs(`JSON.stringify((typeof ENV !== 'undefined' && ENV.isActive()) ? ENV.stats() : null)`);
     const errs = exceptions.slice(errPtr);
     errPtr = exceptions.length;
-    shots.push({ name, env: envJson ? JSON.parse(envJson) : null, errors: errs });
+    const gfxTier = await evalJs(`(typeof GFX !== 'undefined' && GFX.tier) || null`);
+    shots.push({ name, env: envJson ? JSON.parse(envJson) : null, gfx: gfxTier, errors: errs });
   }
   const snapTo = (x, y) => evalJs(`(function(){ GAME.player.x = ${x}; GAME.player.y = ${y}; if (typeof CAMERA !== 'undefined') CAMERA.snap(); return 1; })()`);
 
+  await evalJs(`(function(){ if (typeof ENV !== 'undefined') ENV.CFG.FIXED_SEED = ${SEED == null ? 'null' : SEED}; return 1; })()`);
   await evalJs(`(function(){ (document.getElementById('btn-begin')||{click(){}}).click(); return GAME.state; })()`);
   await sleep(2000);
 
@@ -147,17 +161,22 @@ async function main() {
     await evalJs(`(function(){ ROOMS.enterRoom('boon'); return 1; })()`);
     await sleep(300);
     await evalJs('(function(){ ROOMS.spawnWave(4); return 1; })()');
-    await evalJs(`(function(){
+    const focus = JSON.parse(await evalJs(`(function(){
+      var A = GAME.arena, f = { x: A.x + A.w / 2, y: A.y + A.h / 2 };
       var h = (GAME.hazards || [])[0];
       if (h) {
-        if (h.type === 'fireVent') { h.phase = 'warn'; h.t = 999; h.warnShown = 0.5; }
-        else if (h.type === 'arrowVolley') { var A = GAME.arena; h.markers.push({ x: A.x + A.w / 2, y: A.y + A.h / 2, r: DATA.HAZARDS.arrowVolley.r, t: 0.6, shown: 0.3 }); }
-        else if (h.type === 'riverCurrent') { h.phase = 'surgeWarn'; h.t = 999; }
+        if (h.type === 'fireVent') { h.phase = 'warn'; h.t = 999; h.warnShown = 0.5; f = { x: h.x, y: h.y }; }
+        else if (h.type === 'arrowVolley') { h.markers.push({ x: f.x, y: f.y, r: DATA.HAZARDS.arrowVolley.r, t: 0.6, shown: 0.3 }); }
+        else if (h.type === 'riverCurrent') { h.phase = 'surgeWarn'; h.t = 999; f = { x: Math.min(Math.max(f.x, h.x), h.x + h.w), y: h.y + h.h / 2 }; }
+        else if (h.type === 'venomPool') { f = { x: h.x, y: h.y }; }
       }
-      return 1;
-    })()`);
-    const AC = JSON.parse(await evalJs(`JSON.stringify(GAME.arena)`));
-    await snapTo(AC.x + AC.w / 2, AC.y + AC.h / 2);
+      // pull the wave towards the telegraph so enemies + telegraph share the frame
+      (GAME.enemies || []).forEach(function(e, i){ var a = i * 2.399; e.x = f.x + Math.cos(a) * (160 + 30 * (i % 4)); e.y = f.y + Math.sin(a) * (120 + 20 * (i % 3)); });
+      return JSON.stringify(f);
+    })()`));
+    // telegraph in the left third of the frame (not the centre 60% that shot_stats samples as
+    // "floor" — a translucent venom/fire fill there would be scored as floor, not as a telegraph)
+    await snapTo(focus.x + 420, focus.y);
     await sleep(150);
     await captureShot(`${biome}-combat.png`);
   }

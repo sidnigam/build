@@ -246,8 +246,9 @@
   },
   "floor": {
     "tileScale": 0.6,
-    "macroScale": 1.7,
-    "macroAlpha": 0.35
+    "macroScale": 0.3,
+    "macroAlpha": 0.15,
+    "base": "floor_b"
   },
   "walls": {
     "faceH": 170,
@@ -274,25 +275,36 @@
   },
   "lights": {
     "pools": {
-      "color": "#ff5533",
+      "color": "#7f9cff",
       "count": [
-        2,
-        4
+        1,
+        3
       ],
       "r": [
-        160,
-        260
+        200,
+        300
       ],
       "alpha": 0.08
     },
     "shafts": null,
-    "mist": null
+    "mist": {
+      "count": [
+        5,
+        8
+      ],
+      "alpha": 0.1,
+      "marginAlpha": 0.3
+    }
   },
   "grade": {
-    "floorTint": 0.55,
-    "floorDarken": 0.25,
+    "floorTint": 0.2,
+    "floorDarken": 0.2,
     "outerDim": 0.6,
     "vignette": 0.4,
-    "propTint": "#d8d0cc"
+    "propTint": "#d8d0cc",
+    "floorDesat": 0.25,
+    "floorDesatLuma": 0.2,
+    "floorSat": 0.35,
+    "waterTint": "#b4b4b4"
   }
 }

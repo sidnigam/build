@@ -266,7 +266,7 @@
   "floor": {
     "tileScale": 0.6,
     "macroScale": 1.7,
-    "macroAlpha": 0.35
+    "macroAlpha": 0.25
   },
   "walls": {
     "faceH": 170,
@@ -275,7 +275,9 @@
     "columnSpacing": [
       260,
       380
-    ]
+    ],
+    "capTile": "floor_a",
+    "capTileScale": 0.3
   },
   "skins": {
     "pillar": "column",
@@ -295,25 +297,35 @@
   },
   "lights": {
     "pools": {
-      "color": "#ff5533",
+      "color": "#ffb060",
+      "count": [
+        1,
+        2
+      ],
+      "r": [
+        220,
+        320
+      ],
+      "alpha": 0.07
+    },
+    "shafts": {
       "count": [
         2,
         4
       ],
-      "r": [
-        160,
-        260
-      ],
-      "alpha": 0.08
+      "alpha": 0.06,
+      "angle": -0.5
     },
-    "shafts": null,
     "mist": null
   },
   "grade": {
-    "floorTint": 0.55,
+    "floorTint": 0.2,
     "floorDarken": 0.25,
     "outerDim": 0.6,
     "vignette": 0.4,
-    "propTint": "#d8d0cc"
+    "propTint": "#d8d0cc",
+    "floorDesat": 0.35,
+    "floorDesatLuma": 0.2,
+    "floorSat": 0.35
   }
 }

@@ -110,6 +110,18 @@
         ],
         "warm": true,
         "note": "orange/red painted forehead chevron (tilak-like) removed from the raw by deterministic inpainting (two passes, second box 430,141,496,160) before the boss finish"
+      },
+      "gap_05_7_04": {
+        "status": "NOT SHIPPED",
+        "attempts": {
+          "base": "05.7-02 retouched raw seed 52354 (control build mean abs diff 0.0 vs shipped frames)",
+          "removal": "spike + both upturned horns filled with flat backdrop (3 polygons, fg-only mask, dilate 3): clean, peaks 3 -> 1",
+          "horns_1": "poll 684,100 Wh 100 reach 1.0/1.2: gap_ok, tip_overlap_r 0.017; oversized ram-like hoops, large dome reads as a lollipop/Mickey ears",
+          "horns_2": "poll 684,106 Wh 80 reach 0.9/1.1 lift 1.1: peaks 1; thin hoop horns with ladder-like ridge rungs, dome reads as a glass bubble behind the knob",
+          "horns_3": "poll 686,112 Wh 96 reach 0.8/1.0: tip_overlap_r 0.68 (fail, tip on muzzle)",
+          "harmonize": "FLUX.1-schnell masked img2img seed 52360 denoise 0.35 on horn layer minus head: softened but hoops and white rungs remain; candidate kept as assets/sprites/_raw/bosses/yama/yama-0574-candidate-s52360-REJECTED.png"
+        },
+        "reason": "The procedural horns generator only produces thin hoop-shaped horns; at 512/256 they read as ring handles/ram horns, not thick buffalo horns curling down (Y4 fail), with a bubble-like dome and notched halo at the knob (Y6 fail). Trident read was removed (peaks 1) but the replacement is not shippable quality. Shipped yama atlas is unchanged from 12b7d80; QA-03 flag stays. A thicker horn shape (generator change) or a human-approved retouch is needed."
       }
     },
     "preta": {

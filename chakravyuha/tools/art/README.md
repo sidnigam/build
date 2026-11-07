@@ -481,3 +481,22 @@ prominence >= 8% of the box height. A trident gives 3, a dome-capped finial give
 
 Code-drawn overlays are not AI art. Record them in PROVENANCE as
 `procedural_overlay: {tool, ai_generated: false, recipe, metrics}` plus a `post_processing` line.
+
+### `guided_inpaint.py`
+
+```
+guided_inpaint.py --in IMG --mask MASK --prompt TEXT --seed N --denoise D --out OUT.png \
+    [--bg "#767676"] [--prefill telea|none] [--grow 6] [--feather 3] [--timeout 900] \
+    [--dry-run] [--prefill-only] [--self-test]
+```
+
+FLUX.1-schnell masked img2img (LoadImage + LoadImageMask(red) + VAEEncode + SetLatentNoiseMask + KSampler
+denoise D). Telea prefill, pad to /16, recomposite strictly inside the soft mask M (grow, Gaussian sigma
+feather). The AI part records its seed, denoise, prompt and a `OUT.gen.json` sidecar. `--prefill-only` is the
+deterministic cv2 fallback (no ComfyUI). The prompt is LINTed like gen_subject (no negation words, <= 180
+words). `--self-test` prints `guided_inpaint self-test: 5/5 PASS`.
+
+Notes: `realpha` deliberately re-blends guided_inpaint's already-blended output with the same soft mask M, so
+the generated pixels carry an effective weight of M squared. This is intentional, harmless and seam-free (the
+result is still exactly the original wherever M = 0). Do not "fix" it into a hard cut, which would
+reintroduce the seam ring.

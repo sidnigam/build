@@ -416,3 +416,24 @@ would have used.
    ```
 
 7. Run `node tools/check-provenance.js` and `node test/smoke.js` — both must stay green.
+
+## Phase 05.7-02 additions (cultural / iconography regeneration)
+
+- **Non-god Flux routing.** A boss/enemy entry in `prompts.json` opts in with
+  `"checkpoint_profile": "flux1_schnell_q4ks"` + `flux_base_seed` + `flux_subject`; its prompt is
+  `flux_subject + boss_style_positive_flux`, negative is empty, size is `boss_size_flux`. Env entries
+  route to Flux only with `--ckpt-profile flux1_schnell_q4ks` AND a `flux_subject`
+  (`flux_subject + env_style_positive_flux`); every other env key is unchanged.
+- **`rebuild_atlases.py --src KEY=PATH [--mirror KEY]`** finishes a freshly generated source for a boss
+  (no `recovered.json` / `legacy_check.json` needed). It skips `update_provenance` and prints a
+  `POST: a|b|c` line to pass to `record_provenance.py --post`. Set `GSD_SCRATCH` so the `old-atlases`
+  backup lands in your own scratch.
+- **`finish_env.hole_punch(img, seeds=None, tol=18)`** punches an enclosed flat-coloured region (a gate
+  doorway that rembg filled in) to alpha 0. Enable per subject with `"hole_punch": true` (centre seed) or
+  `[[x,y],...]` in `env_subjects`; the result is recorded in provenance `finish.hole_punch`.
+- **`env_build.py BIOME --preview KEY --raw RAW.png --out OUT.png`** runs only the finish chain and
+  writes OUT.png (no manifest/atlas/provenance/_raw writes); prints `{size, hole_punch}`.
+- **`env_build.py --only k,k` is safe** for partial rebuilds: `finish_env.merge_manifest` (05.4-03 fix)
+  keeps every non-rebuilt tile/frame and all tuning blocks from the existing manifest.
+- **`record_provenance.py --superseded JSON`** records the replaced generation; `--iconography` now also
+  applies to boss / env-* kinds (sets `cultural_review: pending` + `iconography_notes`).

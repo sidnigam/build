@@ -63,16 +63,34 @@
       "palette": "golden-yellow ochre and bronze",
       "base_seed": 52200,
       "out_size": 256,
-      "phase2_mode": "ember"
+      "phase2_mode": "ember",
+      "checkpoint_profile": "flux1_schnell_q4ks",
+      "flux_base_seed": 52250,
+      "superseded": {
+        "seed": 52201,
+        "checkpoint": "sdxl_base",
+        "phase": "02/05.6-03",
+        "reason": "05.7 CULT-03: trident-like pronged staff reads as Shaiva trishula"
+      },
+      "flux_subject": "Full-length figure from head to feet: Kumbhakarna, a colossal rakshasa giant standing heavily with bent knees, a huge round belly and massive shoulders, a broad brutish leonine face with heavy-lidded sleepy eyes, short white tusks and a wild dark-gold mane. Warm golden-yellow skin everywhere, ornate bronze shoulder armour, bronze armbands, a round bronze belt plate and a brown loincloth. His right hand grips upright at his side a huge war club: a thick dark wooden club bound with iron bands and studded with blunt iron knobs, its heavy rounded head rising above his shoulder. Two arms. Golden-yellow ochre and bronze."
     },
     "yama": {
       "kind": "boss",
       "subject": "full-length standing full-body view from head to feet, exactly two arms only, Yama Dharmaraja, the dignified Hindu god of death and righteous judge of the dead, standing upright, stern regal noble expression, dark blue-grey skin, tall golden crown, small simple circular halo directly behind the head only (not covering the body), royal indigo and pale blue silk garments, holding a noose (pasha) in one hand and a golden staff (danda) in the other, serene authority, divine, standing in front of a plain flat solid pale grey background that is much larger than the character, character occupies the center of the frame with plenty of plain background around the whole body",
-      "palette": "indigo, pale blue and gold",
+      "palette": "deep green, crimson and dark bronze",
       "negative_extra": "demon, monster, monstrous, grotesque, fangs, tusks, horns, skull face, evil grin, menacing, blood, gore, asura, picture frame, ornate border, decorative border, vignette border, framed illustration, four arms, six arms, extra arms, temple building, architecture, landscape, clouds, seated, sitting, lotus throne, cropped legs, large background medallion, full-body aureole, mandala disc, circular background pattern, background covering entire image, sun disc filling frame",
       "base_seed": 52300,
       "out_size": 256,
-      "phase2_mode": "divine"
+      "phase2_mode": "divine",
+      "checkpoint_profile": "flux1_schnell_q4ks",
+      "flux_base_seed": 52350,
+      "superseded": {
+        "seed": 52304,
+        "checkpoint": "sdxl_base",
+        "phase": "02/05.6-03",
+        "reason": "05.7 CULT-02: blue skin + gold crown read as Vishnu/Krishna"
+      },
+      "flux_subject": "Full-length figure from head to feet: Yama Dharmaraja, the Hindu lord of dharma and judge of the dead, a tall dignified mature man with a stern, calm, noble face, a dark moustache and steady open eyes. His skin is deep dark green like a monsoon storm cloud, the same green on face, neck, arms and hands. A low dark-bronze crown band bearing a small water-buffalo head emblem, copper earrings, a crimson silk dhoti and dark red sash. His right hand holds upright a tall dark iron danda staff crowned with a carved water-buffalo head. His left hand holds a coiled golden rope noose against his hip. Two arms. Deep green, crimson and dark bronze."
     },
     "preta": {
       "kind": "enemy",
@@ -150,8 +168,14 @@
       "base_seed": 71100,
       "out_w": 600,
       "out_h": 768,
-      "flux_subject": "Agni, the Vedic god of fire, a mature man with one calm, wise, bearded face and warm red-gold skin. His hair and crown are made of golden flames rising upward from his head. A gold crown band, a white sacred thread across his chest, gold necklaces and a deep red silk dhoti. His right hand is raised close beside his face, palm up, cupping a small bright flame in the palm. His left hand rests on his chest. Two arms, a kind and benevolent expression. Flame red, ember orange and gold.",
-      "flux_base_seed": 71150
+      "flux_subject": "Agni, the Vedic god of fire, a mature man with one calm, wise, bearded face and warm red-gold skin. His broad forehead is smooth and bare, the same warm red-gold skin as his face. His hair and crown are made of golden flames rising upward from his head. A gold crown band, a white sacred thread across his chest, gold necklaces and a deep red silk dhoti. His right hand is raised close beside his face, palm up, cupping a small bright flame in the palm. His left hand rests on his chest. Two arms, a kind and benevolent expression. Flame red, ember orange and gold.",
+      "flux_base_seed": 71150,
+      "superseded": {
+        "seed": 71150,
+        "phase": "05.5-04",
+        "flux_subject": "Agni, the Vedic god of fire, a mature man with one calm, wise, bearded face and warm red-gold skin. His hair and crown are made of golden flames rising upward from his head. A gold crown band, a white sacred thread across his chest, gold necklaces and a deep red silk dhoti. His right hand is raised close beside his face, palm up, cupping a small bright flame in the palm. His left hand rests on his chest. Two arms, a kind and benevolent expression. Flame red, ember orange and gold.",
+        "reason": "05.7 CULT-03: forehead tilak rendered as a Vaishnava urdhva-pundra"
+      }
     },
     "indra": {
       "kind": "god",
@@ -161,8 +185,14 @@
       "base_seed": 71200,
       "out_w": 600,
       "out_h": 768,
-      "flux_subject": "Indra, king of the devas, a youthful regal man with a proud, kind face, a fine black moustache, warm fair skin and open alert eyes. A tall jewelled golden kirita crown, gold earrings, a broad jewelled collar, and indigo and white silk garments with gold trim. Both hands grip the centre of a short golden Vajra held horizontally across his chest: a stubby double-ended thunderbolt club, the same cluster of three curved golden prongs at the left end mirrored exactly at the right end, glowing with soft white light at its centre grip. Two arms. Royal gold, storm indigo and white.",
-      "flux_base_seed": 71250
+      "flux_subject": "Indra, king of the devas, a youthful regal man with a proud, kind face, a fine black moustache, warm fair skin and open alert eyes. A tall golden kirita crown, gold earrings, a jewelled collar and indigo and white silk garments. Both hands hold the centre grip of a short golden Vajra lying horizontally across his chest: a slim thunderbolt with a round central grip, and at each end five slender curved prongs bowing outward then closing into one sharp point, like a closed lotus bud. Both ends are identical mirror images on one straight horizontal axis, glowing softly white. Two arms. Royal gold, storm indigo and white.",
+      "flux_base_seed": 71250,
+      "superseded": {
+        "seed": 71251,
+        "phase": "05.5-04",
+        "flux_subject": "Indra, king of the devas, a youthful regal man with a proud, kind face, a fine black moustache, warm fair skin and open alert eyes. A tall jewelled golden kirita crown, gold earrings, a broad jewelled collar, and indigo and white silk garments with gold trim. Both hands grip the centre of a short golden Vajra held horizontally across his chest: a stubby double-ended thunderbolt club, the same cluster of three curved golden prongs at the left end mirrored exactly at the right end, glowing with soft white light at its centre grip. Two arms. Royal gold, storm indigo and white.",
+        "reason": "05.7 CULT-03: vajra prongs splayed into a cross / four-pointed star"
+      }
     },
     "vayu": {
       "kind": "god",
@@ -447,19 +477,30 @@
       },
       "gate": {
         "template": "prop",
-        "subject": "a single massive obsidian gate arch prop isolated on a plain flat background, a lowered iron portcullis of thick bars, ember light seeping from beneath, chains at the sides, no landscape, no scenery behind it",
         "palette": "deep maroon and charcoal with ember red-orange accents, muted, low saturation",
-        "base_seed": 61050,
+        "base_seed": 61500,
         "role": "gate",
         "ground_safe": false,
         "worldH": 210,
-        "rejected": {
-          "0": "full scenic landscape with snowy mountains visible through/around the arch; rembg cutout inverted foreground/background and kept the mountain vista instead of the gate structure"
+        "superseded": {
+          "seed": 61051,
+          "checkpoint": "sdxl_base",
+          "phase": "05.4-02",
+          "reason": "05.7 CULT-04: Gothic/European arch + portcullis",
+          "accepted_attempt": 1,
+          "rejected": {
+            "0": "full scenic landscape with snowy mountains visible through/around the arch; rembg cutout inverted foreground/background and kept the mountain vista instead of the gate structure"
+          },
+          "self_review": "s61051: single isolated obsidian/iron gate arch on a plain grey background with a flagstone floor strip at the base, ember-lit side niches, no landscape/mountains behind it (fixes the attempt-0 rembg foreground/background inversion).",
+          "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; architecture only.",
+          "subject": "a single massive obsidian gate arch prop isolated on a plain flat background, a lowered iron portcullis of thick bars, ember light seeping from beneath, chains at the sides, no landscape, no scenery behind it",
+          "negative_extra": "landscape, mountains, snow, scenery, vista, horizon, sky, background scenery, environment"
         },
-        "negative_extra": "landscape, mountains, snow, scenery, vista, horizon, sky, background scenery, environment",
-        "accepted_attempt": 1,
-        "self_review": "s61051: single isolated obsidian/iron gate arch on a plain grey background with a flagstone floor strip at the base, ember-lit side niches, no landscape/mountains behind it (fixes the attempt-0 rembg foreground/background inversion).",
-        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; architecture only."
+        "flux_base_seed": 61500,
+        "subject": "a single massive Indian torana temple gateway of dark basalt and blackened iron, two thick carved square pillars supporting a heavy stepped stone lintel topped by a curved crossbeam with scrolled ends, carved lotus and vine scrollwork and geometric bands, an open rectangular doorway glowing with ember light, iron chains hanging at the sides, isolated on a plain flat background",
+        "negative_extra": "landscape, mountains, snow, scenery, vista, sky, gothic, gothic arch, pointed arch, cathedral, church, portcullis, castle, crenellations, european, medieval, statue, idol, deity, human figure, face, carved figures",
+        "flux_subject": "A single massive Indian torana temple gateway of dark basalt and blackened iron: two thick carved square pillars hold a heavy stepped lintel crowned by a curved crossbeam with scrolled ends, decorated only with carved lotus-vine scrollwork and geometric bands. Between the pillars an open rectangular doorway glows with deep ember-orange light. Iron chains hang at the sides. Deep maroon and charcoal with ember red-orange accents, muted.",
+        "hole_punch": true
       },
       "ledger_lectern": {
         "template": "prop",
@@ -606,16 +647,26 @@
       },
       "vent_grate": {
         "template": "prop",
-        "subject": "round heavy iron floor grate over a glowing vent, top-down view, thick radial bars, soot around the rim",
         "palette": "deep maroon and charcoal with ember red-orange accents, muted, low saturation",
-        "base_seed": 61160,
+        "base_seed": 61510,
         "role": "hazard-skin",
         "ground_safe": true,
         "hazard": "fireVent",
         "finish": "prop",
-        "accepted_attempt": 0,
-        "self_review": "s61160: round iron floor grate, radial bars, glowing center, soot-dark rim; verified clean circular cutout after prop_finish (rembg removed raw-generation's stray petal-shaped flame flares at the corners).",
-        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; ground_safe hazard-skin, top-down round grate only."
+        "superseded": {
+          "seed": 61160,
+          "checkpoint": "sdxl_base",
+          "phase": "05.4-02",
+          "reason": "05.7 CULT-04: radial-spoke grate reads as a modern hubcap / wheel hub (also 05.4-05 visual flag)",
+          "accepted_attempt": 0,
+          "self_review": "s61160: round iron floor grate, radial bars, glowing center, soot-dark rim; verified clean circular cutout after prop_finish (rembg removed raw-generation's stray petal-shaped flame flares at the corners).",
+          "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; ground_safe hazard-skin, top-down round grate only.",
+          "subject": "round heavy iron floor grate over a glowing vent, top-down view, thick radial bars, soot around the rim"
+        },
+        "flux_base_seed": 61510,
+        "subject": "round carved basalt floor vent set into flagstones, top-down view, a thick stone ring rim with a plain notched geometric band, covered by a heavy lattice of crossed square iron bars, glowing ember light beneath the lattice, soot around the rim",
+        "negative_extra": "hubcap, wheel, spokes, radial bars, car rim, tire, hub, lotus, mandala, yantra, flower, petals, star, symbol, text",
+        "flux_subject": "Top-down view of a round carved basalt floor vent set into dark flagstones: a thick stone ring rim with a plain notched geometric band, covered by a heavy square lattice of crossed iron bars, deep ember-orange light glowing beneath the lattice, soot darkening the rim. Deep maroon and charcoal with ember red-orange accents, muted."
       }
     },
     "patala": {
@@ -921,21 +972,31 @@
         "template": "prop",
         "role": "column",
         "ground_safe": false,
-        "base_seed": 63040,
+        "base_seed": 63800,
         "size": "tall",
         "worldH": 150,
         "palette": "muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation",
-        "subject": "a single tall wooden war-camp post, the full height of the post visible top to bottom filling the frame, bronze bands wrapped around the wood, coiled rope wound around the post, near the top a small dark bowl-shaped clay oil lamp (diya) sits on a short flat wooden shelf bracket, a single small visible orange flame rising from the lamp, no roof, no canopy cap, no pagoda shape, no glass, no lantern housing",
-        "rejected": {
-          "0": "generated only a bronze bell hanging from a rope on a plain background -- no post/pole visible at all, fails the 'tall column' framing entirely",
-          "1": "orchestrator review: accepted asset (s63041) still reads as a lantern/lamp hanging from a post -- replace with an oil diya/clay lamp on a short wooden stand or bronze deepa stand, keeping the post form but removing any lantern/lamp-fixture read",
-          "3": "generated a wooden post with a pagoda/pyramid-roof decorative cap, no visible lamp/flame/diya bowl at all -- lost the modern lantern anachronism but also lost the requested oil-lamp read entirely",
-          "4": "generated a close-up tabletop candlestick with an orange wax pillar candle -- lost the 'tall post, full height visible' framing entirely and introduced a modern wax-candle read; worse than attempt 3 on the framing requirement"
+        "superseded": {
+          "seed": 63043,
+          "checkpoint": "sdxl_base",
+          "phase": "05.4-03",
+          "reason": "05.7 CULT-04 (05.4-05 flag): diya/flame never achieved; post reads unlit",
+          "accepted_attempt": 3,
+          "rejected": {
+            "0": "generated only a bronze bell hanging from a rope on a plain background -- no post/pole visible at all, fails the 'tall column' framing entirely",
+            "1": "orchestrator review: accepted asset (s63041) still reads as a lantern/lamp hanging from a post -- replace with an oil diya/clay lamp on a short wooden stand or bronze deepa stand, keeping the post form but removing any lantern/lamp-fixture read",
+            "3": "generated a wooden post with a pagoda/pyramid-roof decorative cap, no visible lamp/flame/diya bowl at all -- lost the modern lantern anachronism but also lost the requested oil-lamp read entirely",
+            "4": "generated a close-up tabletop candlestick with an orange wax pillar candle -- lost the 'tall post, full height visible' framing entirely and introduced a modern wax-candle read; worse than attempt 3 on the framing requirement"
+          },
+          "self_review": "s63043 (final pick after 5 attempts): tall wooden war-camp post, full height visible top to bottom, bronze bands, coiled rope, a plain capped/shelved top -- no modern lantern, no glass, no electric fixture (fixes the orchestrator-flagged Victorian street-lamp anachronism from s63041). An explicit diya/flame on the post was not achieved within the D-15 5-attempt budget (attempt 4 regressed to a tabletop candlestick that lost the tall-post framing); accepted as a culturally clean, non-anachronistic generic war-camp post -- the manifest's attachable light pool can still imply illumination at runtime independent of the static texture.",
+          "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; no modern/anachronistic fixture.",
+          "subject": "a single tall wooden war-camp post, the full height of the post visible top to bottom filling the frame, bronze bands wrapped around the wood, coiled rope wound around the post, near the top a small dark bowl-shaped clay oil lamp (diya) sits on a short flat wooden shelf bracket, a single small visible orange flame rising from the lamp, no roof, no canopy cap, no pagoda shape, no glass, no lantern housing",
+          "negative_extra": "bell alone, close-up on bell only, cropped post, no post visible, lantern, glass lantern, hurricane lamp, camping lantern, glass globe, glass shade, modern lamp fixture, roof, pagoda roof, pyramid cap, canopy top, umbrella top, hat-shaped top"
         },
-        "negative_extra": "bell alone, close-up on bell only, cropped post, no post visible, lantern, glass lantern, hurricane lamp, camping lantern, glass globe, glass shade, modern lamp fixture, roof, pagoda roof, pyramid cap, canopy top, umbrella top, hat-shaped top",
-        "self_review": "s63043 (final pick after 5 attempts): tall wooden war-camp post, full height visible top to bottom, bronze bands, coiled rope, a plain capped/shelved top -- no modern lantern, no glass, no electric fixture (fixes the orchestrator-flagged Victorian street-lamp anachronism from s63041). An explicit diya/flame on the post was not achieved within the D-15 5-attempt budget (attempt 4 regressed to a tabletop candlestick that lost the tall-post framing); accepted as a culturally clean, non-anachronistic generic war-camp post -- the manifest's attachable light pool can still imply illumination at runtime independent of the static texture.",
-        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; no modern/anachronistic fixture.",
-        "accepted_attempt": 3
+        "flux_base_seed": 63800,
+        "subject": "a single tall wooden war-camp post, the full height of the post visible top to bottom filling the frame, bronze bands wrapped around the wood, coiled rope wound around the post, near the top a short flat wooden bracket shelf holding a small open clay oil lamp (diya), a shallow terracotta bowl with one small bright orange flame",
+        "negative_extra": "bell alone, close-up on bell only, cropped post, no post visible, lantern, glass lantern, hurricane lamp, camping lantern, glass globe, glass shade, modern lamp fixture, roof, pagoda roof, pyramid cap, canopy top, umbrella top, hat-shaped top, candle, candlestick, wax candle, tabletop, close-up",
+        "flux_subject": "A single tall upright wooden war-camp post, its full height visible from the ground to the top, filling the frame vertically: a thick weathered timber post bound with bronze bands and wound with coiled rope. Near the top a short flat wooden bracket shelf holds a small open clay oil lamp, a shallow terracotta diya bowl, with one small bright orange flame rising from its wick and a faint warm glow on the wood. Muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation."
       },
       "dhvaja": {
         "template": "prop",
@@ -1003,7 +1064,7 @@
         "template": "prop",
         "role": "prop",
         "ground_safe": false,
-        "base_seed": 63080,
+        "base_seed": 63810,
         "worldH": 90,
         "zones": [
           "north",
@@ -1017,17 +1078,27 @@
           "rana_chariots:wall"
         ],
         "palette": "muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation",
-        "subject": "a single ancient Indian two-wheeled war chariot (ratha), exactly TWO large ornate spoked wheels (one axle only, no four-wheel wagon), a raised wooden platform car with carved wooden railings around the rim, a single long draught pole extending forward from the platform (the yoke pole for horses, no horses attached), overturned and broken on its side in the dust, splintered wood, bronze fittings, no horses, no people",
-        "negative_extra": "horse, person, body, blood, gore, intact, upright, pristine, covered wagon, canvas canopy, prairie schooner, Conestoga wagon, enclosed cabin, European cart, medieval cart, four wheels, wagon, cart, farm wagon, two axles, enclosed cabin, covered wagon",
         "matte": "birefnet-general",
-        "rejected": {
-          "0": "generated an intact-looking two-wheeled cart, not clearly overturned or damaged -- doesn't read as a battlefield wreck",
-          "1": "generated an enclosed canvas-topped covered wagon (American prairie-schooner / Conestoga wagon style) -- a major historical/cultural style mismatch, not an ancient Indian war chariot (ratha); CLAUDE.md bars anachronistic/wrong-culture forms",
-          "3": "orchestrator review: current accepted asset (s63082) reads as a 4-wheeled Western farm wagon/cart, not a two-wheeled Mahabharata-era war chariot (ratha) -- needs two large spoked wheels only, a raised platform/car with carved railings, a single draught pole"
+        "superseded": {
+          "seed": 63083,
+          "checkpoint": "sdxl_base",
+          "phase": "05.4-03",
+          "reason": "05.7 CULT-04 (05.4-05 flag): long draught pole on a two-wheel axle reads as an artillery gun carriage",
+          "accepted_attempt": 3,
+          "rejected": {
+            "0": "generated an intact-looking two-wheeled cart, not clearly overturned or damaged -- doesn't read as a battlefield wreck",
+            "1": "generated an enclosed canvas-topped covered wagon (American prairie-schooner / Conestoga wagon style) -- a major historical/cultural style mismatch, not an ancient Indian war chariot (ratha); CLAUDE.md bars anachronistic/wrong-culture forms",
+            "3": "orchestrator review: current accepted asset (s63082) reads as a 4-wheeled Western farm wagon/cart, not a two-wheeled Mahabharata-era war chariot (ratha) -- needs two large spoked wheels only, a raised platform/car with carved railings, a single draught pole"
+          },
+          "self_review": "s63083: ancient two-wheeled war chariot (ratha) -- exactly two large ornate spoked wheels on one axle, a raised platform car with carved railings, a single long draught pole extending forward at a broken angle, overturned/wrecked look -- fixes the orchestrator-flagged 4-wheeled Western farm-wagon mismatch. No horses, no people, no blood.",
+          "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; no horses/people/blood/gore; correct two-wheeled ratha form, no wagon/cart styling.",
+          "subject": "a single ancient Indian two-wheeled war chariot (ratha), exactly TWO large ornate spoked wheels (one axle only, no four-wheel wagon), a raised wooden platform car with carved wooden railings around the rim, a single long draught pole extending forward from the platform (the yoke pole for horses, no horses attached), overturned and broken on its side in the dust, splintered wood, bronze fittings, no horses, no people",
+          "negative_extra": "horse, person, body, blood, gore, intact, upright, pristine, covered wagon, canvas canopy, prairie schooner, Conestoga wagon, enclosed cabin, European cart, medieval cart, four wheels, wagon, cart, farm wagon, two axles, enclosed cabin, covered wagon"
         },
-        "self_review": "s63083: ancient two-wheeled war chariot (ratha) -- exactly two large ornate spoked wheels on one axle, a raised platform car with carved railings, a single long draught pole extending forward at a broken angle, overturned/wrecked look -- fixes the orchestrator-flagged 4-wheeled Western farm-wagon mismatch. No horses, no people, no blood.",
-        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; no horses/people/blood/gore; correct two-wheeled ratha form, no wagon/cart styling.",
-        "accepted_attempt": 3
+        "flux_base_seed": 63810,
+        "subject": "a single wrecked ancient Indian two-wheeled war chariot (ratha) overturned on its side in the dust, a box-shaped wooden chariot car with tall carved side panels and a curved front rail, two large spoked wooden wheels on one axle, one wheel broken off and leaning against the car, a short snapped squared wooden yoke pole, a broken flagstaff with a torn plain ochre pennant, bronze fittings, splintered planks",
+        "negative_extra": "horse, person, body, blood, gore, intact, upright, pristine, covered wagon, canvas canopy, prairie schooner, Conestoga wagon, enclosed cabin, European cart, medieval cart, four wheels, wagon, cart, farm wagon, two axles, enclosed cabin, covered wagon, cannon, gun carriage, artillery, field gun, gun barrel, cannon barrel, tube, cylinder, trail legs, long pole",
+        "flux_subject": "A single wrecked ancient Indian war chariot (ratha) lying overturned on its side in the dust: a box-shaped wooden chariot car with tall carved side panels and a curved front rail, two large spoked wooden wheels on one axle with one wheel broken off and leaning against the car, a short snapped squared wooden yoke pole, a broken bamboo flagstaff with a torn plain ochre pennant, bronze corner fittings and splintered planks. Muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation."
       },
       "fallen_banner": {
         "template": "prop",
@@ -1107,7 +1178,7 @@
         "template": "prop",
         "role": "prop",
         "ground_safe": false,
-        "base_seed": 63120,
+        "base_seed": 63820,
         "worldH": 56,
         "zones": [
           "north",
@@ -1118,10 +1189,20 @@
         "weight": 1,
         "low": false,
         "palette": "muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation",
-        "subject": "large ancient Indian war kettle drum (nagara) with a hide top and bronze body on a wooden stand, drumsticks resting on it",
-        "accepted_attempt": 0,
-        "self_review": "s63120: bronze-bodied war kettle drum (nagara) with a hide top, mounted on a wooden tripod stand, clean isolated silhouette.",
-        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol."
+        "superseded": {
+          "seed": 63120,
+          "checkpoint": "sdxl_base",
+          "phase": "05.4-03",
+          "reason": "05.7 CULT-04 (05.4-05 flag): kettle drum on a tripod reads as a cooking pot",
+          "accepted_attempt": 0,
+          "self_review": "s63120: bronze-bodied war kettle drum (nagara) with a hide top, mounted on a wooden tripod stand, clean isolated silhouette.",
+          "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol.",
+          "subject": "large ancient Indian war kettle drum (nagara) with a hide top and bronze body on a wooden stand, drumsticks resting on it"
+        },
+        "flux_base_seed": 63820,
+        "subject": "a single large barrel-shaped ancient Indian war drum lying horizontally on a low carved wooden cradle stand, stretched hide drumheads at both ends, criss-cross leather lacing cords along the full length of the drum body, two brass bands, two curved wooden drumsticks resting on top",
+        "negative_extra": "cooking pot, pot, cauldron, bowl, urn, kettle, vase, jar, tripod, fire, flames, steam, food, lid, handles, open top",
+        "flux_subject": "A single large barrel-shaped ancient Indian war drum lying horizontally on a low carved wooden cradle stand: a long rounded wooden drum body with stretched pale hide drumheads at both ends, tight criss-cross leather lacing cords running the full length of the body from one drumhead to the other, two brass bands around the middle, and two curved wooden drumsticks resting across the top. Muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation."
       },
       "conch_stand": {
         "template": "prop",
@@ -1543,5 +1624,11 @@
     "checkpoint_for_excluded": "sdxl_base",
     "mechanism": "per-call --ckpt-profile override + copy-to-unsuffixed-name on accept (not a global env_checkpoint toggle)",
     "note_on_initial_execution": "The first 6 generations (naraka/patala floor_a/floor_b/wallface) were produced before this correction, via a temporary global env_checkpoint=dreamshaper_xl_alpha2 toggle that was reverted to sdxl_base immediately after generation finished and before any other subject was queued. No cutout-kind subject was generated while the toggle was active (verified: ls on assets/sprites/_gen/env/{naraka,patala} shows only floor_a/floor_b/wallface directories at the time of the toggle). These 6 raw files are unsuffixed on disk already (gen_subject.py only adds a suffix when --ckpt-profile is passed, and the global-toggle run did not pass it), so no rename was needed for them; this policy's copy-on-accept step applies only to any later DreamShaper regeneration."
-  }
+  },
+  "boss_size_flux": [
+    896,
+    1152
+  ],
+  "boss_style_positive_flux": "Bold hand-painted 2D action-game character art with confident dark ink outlines, rich painterly detail, a strong readable silhouette and chunky heroic proportions, three-quarter top-down game sprite view, in the spirit of classical Indian temple murals. The entire figure is visible from head to feet, standing on the ground, centered, alone before a flat, even, medium-grey backdrop filling the whole image.",
+  "env_style_positive_flux": "Hades-inspired painterly game prop illustration, three-quarter top-down view, bold clean shapes, rich carved detail, a soft baked cast shadow, the whole object in frame and centered, alone on a flat, even, pale-grey background."
 }

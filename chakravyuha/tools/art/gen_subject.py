@@ -84,6 +84,11 @@ def build_prompt(prompts, key, ckpt_profile=None):
         template = entry["template"]
         size_key = entry.get("size") or template
         width, height = prompts["env_sizes"][size_key]
+        # 05.7-02: Flux routing for env entries that carry a positive-only flux_subject.
+        env_profile = resolve_profile(prompts, key, entry, "env", ckpt_profile)
+        if env_profile and env_profile.get("graph") == "flux_gguf" and entry.get("flux_subject"):
+            return ("env", f"{entry['flux_subject']} {prompts['env_style_positive_flux']}", "",
+                    width, height)
         subject = entry["subject"]
         palette = entry.get("palette", "")
         pos = prompts["env_templates"][template].format(subject=subject, palette=palette)
@@ -125,17 +130,24 @@ def build_prompt(prompts, key, ckpt_profile=None):
                 neg = neg + ", " + extra
             width, height = prompts["god_size"]
     else:
-        subject = entry["subject"]
-        palette = entry.get("palette", "")
-        pos = f"{subject}, {palette}, {prompts['style_positive']}" if palette else \
-            f"{subject}, {prompts['style_positive']}"
-        neg = prompts["style_negative"]
-        if key != "yama":
-            neg = neg + ", " + prompts["enemy_negative_extra"]
-        extra = entry.get("negative_extra")
-        if extra:
-            neg = neg + ", " + extra
-        width, height = prompts["character_size"]
+        profile = resolve_profile(prompts, key, entry, kind, ckpt_profile)
+        if profile and profile.get("graph") == "flux_gguf" and kind in ("boss", "enemy"):
+            flux_subject = entry.get("flux_subject") or entry["subject"]
+            pos = f"{flux_subject} {prompts['boss_style_positive_flux']}"
+            neg = ""
+            width, height = prompts.get("boss_size_flux") or prompts["character_size"]
+        else:
+            subject = entry["subject"]
+            palette = entry.get("palette", "")
+            pos = f"{subject}, {palette}, {prompts['style_positive']}" if palette else \
+                f"{subject}, {prompts['style_positive']}"
+            neg = prompts["style_negative"]
+            if key != "yama":
+                neg = neg + ", " + prompts["enemy_negative_extra"]
+            extra = entry.get("negative_extra")
+            if extra:
+                neg = neg + ", " + extra
+            width, height = prompts["character_size"]
 
     return kind, pos, neg, width, height
 
@@ -161,7 +173,9 @@ def _profile_name_for(prompts, entry, kind, override):
         return prompts["env_checkpoint"]
     if kind == "god":
         return entry.get("checkpoint_profile") or prompts.get("god_checkpoint")
-    return None
+    # 05.7-02: boss/enemy entries may opt in to a profile (Flux) via entry.checkpoint_profile.
+    # Legacy entries have no such key, so they stay on the byte-identical legacy path.
+    return entry.get("checkpoint_profile")
 
 
 def resolve_profile(prompts, key, entry, kind, override):

@@ -61,7 +61,8 @@ def entry_from_sidecar(sidecar, filename, path, actor, kind, rejected_seeds=None
                         post_processing=None, self_review="", animations=None,
                         raw_image=None, gen_sidecar=None, iconography=None,
                         role=None, biome=None, cultural_check=None, ground_safe=None,
-                        grading=None, finish=None, rejected_reasons=None, components=None):
+                        grading=None, finish=None, rejected_reasons=None, components=None,
+                        superseded=None):
     """Build one PROVENANCE.json entry dict from a .gen.json sidecar dict plus fields.
 
     kind in {biome, boss, enemy, god, env-tile, env-prop, env-atlas}. env-atlas entries
@@ -120,6 +121,14 @@ def entry_from_sidecar(sidecar, filename, path, actor, kind, rejected_seeds=None
     if kind == "god":
         entry["cultural_review"] = "pending — human cultural reviewer (QA-03)"
         entry["iconography_notes"] = iconography or ""
+    elif kind in ("boss",) + ENV_ASSET_KINDS and iconography:
+        # 05.7-02: iconography-corrected boss / env assets also await human cultural review.
+        entry["cultural_review"] = "pending — human cultural reviewer (QA-03)"
+        entry["iconography_notes"] = iconography
+    if superseded:
+        entry["superseded"] = superseded
+    if rejected_reasons and kind not in ENV_ASSET_KINDS:
+        entry["rejected_reasons"] = rejected_reasons
 
     if kind in ENV_ASSET_KINDS:
         entry["role"] = role
@@ -149,7 +158,7 @@ def main():
     ap.add_argument("--animations", default=None)
     ap.add_argument("--raw", dest="raw_image", default=None)
     ap.add_argument("--iconography", dest="iconography", default=None,
-                     help="(kind=god only) one-line note of attributes verified present.")
+                     help="(kind=god/boss/env-*) one-line note of attributes verified present.")
     ap.add_argument("--role", default=None,
                      help="(kind=env-tile/env-prop) floor|water|wallface|wallcap|column|gate|prop|decal|hazard-skin")
     ap.add_argument("--biome", default=None, help="(kind=env-* only)")
@@ -161,6 +170,8 @@ def main():
                      help="(kind=env-atlas) comma-separated atlas frame filenames")
     ap.add_argument("--rejected-reasons", dest="rejected_reasons", default=None,
                      help='JSON object {"seed": "reason", ...}')
+    ap.add_argument("--superseded", default=None,
+                     help="JSON object describing the superseded (replaced) generation record.")
     ap.add_argument("--provenance-path", dest="provenance_path", default="assets/sprites/PROVENANCE.json")
     args = ap.parse_args()
 
@@ -182,6 +193,7 @@ def main():
     grading = json.loads(args.grading) if args.grading else None
     finish = json.loads(args.finish) if args.finish else None
     rejected_reasons = json.loads(args.rejected_reasons) if args.rejected_reasons else None
+    superseded = json.loads(args.superseded) if args.superseded else None
     components = [c.strip() for c in args.components.split(",") if c.strip()] if args.components else None
 
     entry = entry_from_sidecar(
@@ -191,6 +203,7 @@ def main():
         iconography=args.iconography, role=args.role, biome=args.biome,
         cultural_check=args.cultural_check, ground_safe=args.ground_safe, grading=grading,
         finish=finish, rejected_reasons=rejected_reasons, components=components,
+        superseded=superseded,
     )
 
     action = upsert_entry(args.provenance_path, entry)

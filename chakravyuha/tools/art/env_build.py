@@ -100,6 +100,40 @@ def check_biome(prompts, biome):
         print(f"{key:<{width}}  {acc:<8}  {str(attempts):<24}  {', '.join(missing) or '-'}")
 
 
+def _finish_frame(entry, role, raw_png, grade):
+    """Frame-role image chain (shared by build_biome and --preview). Returns (img, hole_info);
+    hole_info is None unless entry.hole_punch is set (05.7-02 D-16)."""
+    max_side = {"tall": 448}.get(entry.get("size"), 512 if role in ("column", "gate") else 384)
+    matte = entry.get("matte", "u2net")  # 05.4-03: per-subject rembg model override (default unchanged)
+    if role == "decal":
+        out_img, _bbox = fe.decal_finish(raw_png, max_side, max_alpha=entry.get("alpha", 0.55), grade=grade)
+    elif role == "hazard-skin" and entry.get("finish") == "prop":
+        out_img, _bbox = fe.prop_finish(raw_png, max_side, grade=grade, matte=matte)
+    elif role == "hazard-skin":
+        out_img, _bbox = fe.decal_finish(raw_png, max_side, max_alpha=entry.get("alpha", 0.55), grade=grade)
+    else:
+        out_img, _bbox = fe.prop_finish(raw_png, max_side, grade=grade, matte=matte)
+    hole_info = None
+    hp = entry.get("hole_punch")
+    if hp:
+        seeds = None if hp is True else [tuple(p) for p in hp]
+        out_img, hole_info = fe.hole_punch(out_img, seeds)
+    return out_img, hole_info
+
+
+def preview_frame(prompts, biome, key, raw_png, out_png):
+    """--preview: finish ONE raw into out_png only (no manifest/atlas/provenance/_raw writes)."""
+    entry = prompts["env_subjects"][biome][key]
+    role = entry["role"]
+    env_grade = prompts.get("env_grade", {})
+    grade_profile = "architecture" if role in ("wallface", "wallcap", "column", "gate") else role
+    grade = env_grade.get(grade_profile)
+    img, hole_info = _finish_frame(entry, role, raw_png, grade)
+    os.makedirs(os.path.dirname(os.path.abspath(out_png)), exist_ok=True)
+    img.save(out_png, "PNG")
+    print(json.dumps({"size": list(img.size), "hole_punch": hole_info}))
+
+
 def _frame_defaults(role, size):
     defaults = dict(ROLE_DEFAULTS.get(role, {}))
     if role == "column" and "footW" not in defaults:
@@ -199,16 +233,7 @@ def build_biome(prompts, biome, only=None):
         elif is_frame_role:
             frame_name = f"{biome}_{key}_0.png"
             frame_path = os.path.join(raw_frames_dir, frame_name)
-            max_side = {"tall": 448}.get(entry.get("size"), 512 if role in ("column", "gate") else 384)
-            matte = entry.get("matte", "u2net")  # 05.4-03: per-subject rembg model override (default unchanged)
-            if role == "decal":
-                out_img, _bbox = fe.decal_finish(raw_png, max_side, max_alpha=entry.get("alpha", 0.55), grade=grade)
-            elif role == "hazard-skin" and entry.get("finish") == "prop":
-                out_img, _bbox = fe.prop_finish(raw_png, max_side, grade=grade, matte=matte)
-            elif role == "hazard-skin":
-                out_img, _bbox = fe.decal_finish(raw_png, max_side, max_alpha=entry.get("alpha", 0.55), grade=grade)
-            else:
-                out_img, _bbox = fe.prop_finish(raw_png, max_side, grade=grade, matte=matte)
+            out_img, hole_info = _finish_frame(entry, role, raw_png, grade)
             out_img.save(frame_path, "PNG")
 
             ground_safe = bool(entry.get("ground_safe")) or role in ("decal", "hazard-skin")
@@ -230,7 +255,9 @@ def build_biome(prompts, biome, only=None):
             prov_entries.append(("env-prop", frame_name, os.path.relpath(frame_path, ROOT), {
                 "role": role, "biome": biome, "cultural_check": entry.get("cultural_check", ""),
                 "ground_safe": ground_safe, "grading": grade,
-                "finish": {"mode": role, "crop": None}, "rejected_seeds": rejected_seeds,
+                "finish": ({"mode": role, "crop": None, "hole_punch": hole_info}
+                           if hole_info is not None else {"mode": role, "crop": None}),
+                "rejected_seeds": rejected_seeds,
                 "rejected_reasons": rejected_reasons,
             }))
         else:
@@ -317,6 +344,7 @@ def build_biome(prompts, biome, only=None):
             cultural_check=kwargs.get("cultural_check"), ground_safe=kwargs.get("ground_safe"),
             grading=kwargs.get("grading"), finish=kwargs.get("finish"),
             rejected_reasons=kwargs.get("rejected_reasons"),
+            iconography=sub_entry.get("iconography"), superseded=sub_entry.get("superseded"),
         )
         upsert_entry(PROVENANCE_PATH, prov_entry)
 
@@ -334,9 +362,19 @@ def main():
     ap.add_argument("biome")
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--only", default=None)
+    ap.add_argument("--preview", default=None, metavar="KEY",
+                    help="finish-only mode: with --raw RAW.png --out OUT.png, writes ONLY OUT.png")
+    ap.add_argument("--raw", default=None)
+    ap.add_argument("--out", default=None)
     args = ap.parse_args()
 
     prompts = _load_prompts()
+
+    if args.preview:
+        if not (args.raw and args.out):
+            ap.error("--preview requires --raw and --out")
+        preview_frame(prompts, args.biome, args.preview, args.raw, args.out)
+        return
 
     if args.check:
         check_biome(prompts, args.biome)

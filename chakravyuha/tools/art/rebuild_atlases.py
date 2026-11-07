@@ -122,12 +122,21 @@ def actor_outline_color(key):
 # ---- recovered.json access ----
 
 def load_recovered():
+    if not (GEN_DIR / "recovered.json").exists():
+        return {}
     with open(GEN_DIR / "recovered.json") as f:
         return json.load(f)["recovered"]
 
 
+# 05.7-02: --src KEY=PATH overrides (freshly generated source, no recovered.json needed).
+SRC_OVERRIDES = {}
+MIRROR_OVERRIDES = set()
+
+
 def actor_frames(actor_key, kind, recovered):
     """Returns a list of (frame_index, src_path) for an actor's idle frame(s)."""
+    if actor_key in SRC_OVERRIDES:
+        return [(0, SRC_OVERRIDES[actor_key])]
     entry = recovered[actor_key]
     if kind == "player":
         return [(f["idx"], f["src"]) for f in entry["frames"]]
@@ -345,6 +354,8 @@ def backup_old_once():
 
 
 def load_legacy_check():
+    if not LEGACY_CHECK_PATH.exists():
+        return {}
     with open(LEGACY_CHECK_PATH) as f:
         return json.load(f)
 
@@ -370,7 +381,10 @@ def build_one(actor, legacy, raw_input_cache):
 
     recovered = raw_input_cache["recovered"]
     frames = actor_frames(key, kind, recovered)
-    mirror = legacy.get(key, {}).get("chosen_mirror", False)
+    if key in SRC_OVERRIDES:
+        mirror = key in MIRROR_OVERRIDES
+    else:
+        mirror = legacy.get(key, {}).get("chosen_mirror", False)
 
     raw_dir = RAW_DIR / "player" if kind == "player" else RAW_DIR / KIND_DIR[kind] / key
     raw_dir.mkdir(parents=True, exist_ok=True)
@@ -580,7 +594,14 @@ def build(only=None):
         print(f"Built {actor['key']}: matte={r['matte']} outline={r['outline_px']}px "
               f"mirror={r['mirror']} animations={list(r['new_atlas'].get('animations', {}).keys())}")
 
-    update_provenance(results, recovered)
+    recovered_results = [r for r in results if r["key"] not in SRC_OVERRIDES]
+    for r in results:
+        if r["key"] in SRC_OVERRIDES:
+            steps = POST_PROCESSING_STEPS(ACTOR_BY_KEY[r["key"]]["size_new"], r["margin"], r["matte"],
+                                          r["outline_px"], r["outline_color"], r["phase2_mode"])
+            print("POST: " + "|".join(steps))
+    if recovered_results:
+        update_provenance(recovered_results, recovered)
     ok, total_old, total_new = memory_report(results)
     print(f"\nMemory report: old total {total_old:.2f} MB -> new total {total_new:.2f} MB")
     return 0 if ok else 1
@@ -593,7 +614,17 @@ def main():
     ap.add_argument("--build", action="store_true")
     ap.add_argument("--report", action="store_true")
     ap.add_argument("--only", default=None, help="Comma-separated actor keys.")
+    ap.add_argument("--src", action="append", default=[], metavar="KEY=PATH",
+                    help="Use a freshly generated source PNG for KEY (05.7-02); repeatable. "
+                         "Skips recovered.json/legacy_check.json lookup and update_provenance for KEY "
+                         "(prints a 'POST: ' line for record_provenance --post).")
+    ap.add_argument("--mirror", action="append", default=[], metavar="KEY",
+                    help="Mirror the --src actor KEY (default: no mirror).")
     args = ap.parse_args()
+    for kv in args.src:
+        k, _, v = kv.partition("=")
+        SRC_OVERRIDES[k] = str(Path(v).resolve())
+    MIRROR_OVERRIDES.update(args.mirror)
 
     only = set(args.only.split(",")) if args.only else None
 

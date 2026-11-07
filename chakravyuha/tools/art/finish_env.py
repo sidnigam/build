@@ -276,6 +276,56 @@ STRUCTURAL_FRAME_FIELDS = {"frame", "size", "role", "ground_safe"}
 TUNING_BLOCKS = ("floor", "walls", "skins", "hazards", "lights", "grade")
 
 
+def hole_punch(img_rgba, seeds=None, tol=18.0):
+    """Punch a transparent hole through an enclosed, flat-coloured region (05.7-02 D-16).
+
+    Generalises the 05.4-02 ad-hoc BFS: rembg fills enclosed openings (a gate doorway, lattice
+    gaps) with the backdrop colour. Flood-fill (4-connectivity) from each seed over pixels with
+    alpha > 0 and RGB Euclidean distance <= tol of the seed pixel; commit (alpha -> 0) only if
+    the region never touches the image border and covers >= 0.5% of the pixels.
+    seeds default to [image centre]. Returns (img, info) with
+    info = {"applied": bool, "frac": float, "seeds": [[x, y], ...]}.
+    """
+    from collections import deque
+    img = img_rgba.convert("RGBA")
+    arr = np.array(img)
+    h, w = arr.shape[:2]
+    if not seeds:
+        seeds = [(w // 2, h // 2)]
+    seeds = [(int(x), int(y)) for x, y in seeds]
+    rgb = arr[..., :3].astype(np.float32)
+    opaque = arr[..., 3] > 0
+    total = float(h * w)
+    region = np.zeros((h, w), dtype=bool)
+    touched_border = False
+    for sx, sy in seeds:
+        if not (0 <= sx < w and 0 <= sy < h) or not opaque[sy, sx] or region[sy, sx]:
+            continue
+        ref = rgb[sy, sx]
+        seen = np.zeros((h, w), dtype=bool)
+        seen[sy, sx] = True
+        q = deque([(sx, sy)])
+        local = []
+        while q:
+            x, y = q.popleft()
+            local.append((y, x))
+            if x == 0 or y == 0 or x == w - 1 or y == h - 1:
+                touched_border = True
+            for nx, ny in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+                if 0 <= nx < w and 0 <= ny < h and not seen[ny, nx] and opaque[ny, nx]:
+                    if float(np.sqrt(((rgb[ny, nx] - ref) ** 2).sum())) <= tol:
+                        seen[ny, nx] = True
+                        q.append((nx, ny))
+        for yy, xx in local:
+            region[yy, xx] = True
+    frac = float(region.sum()) / total
+    applied = bool(region.any()) and not touched_border and frac >= 0.005
+    if applied:
+        arr[region, 3] = 0
+        img = Image.fromarray(arr, "RGBA")
+    return img, {"applied": applied, "frac": round(frac, 4), "seeds": [[x, y] for x, y in seeds]}
+
+
 def merge_manifest(existing, new):
     """Merge a freshly-built structural manifest `new` with a previously-written manifest
     `existing` (tuning-preserving, D-11). Structural per-tile/frame fields (path/frame/size/
@@ -487,6 +537,51 @@ def test_manifest_merge():
     return ok
 
 
+def test_hole_punch():
+    ok = True
+    w = h = 100
+    base = np.zeros((h, w, 4), dtype=np.uint8)
+    base[..., 3] = 0
+    yy, xx = np.mgrid[0:h, 0:w]
+    r2 = (yy - 50) ** 2 + (xx - 50) ** 2
+    # 1. ring (alpha 255, orange) with a grey-filled centre -> centre becomes alpha 0, ring intact
+    a = base.copy()
+    ring = (r2 <= 40 ** 2) & (r2 > 25 ** 2)
+    a[ring] = [200, 100, 40, 255]
+    a[r2 <= 25 ** 2] = [128, 128, 128, 255]
+    out, info = hole_punch(Image.fromarray(a, "RGBA"), None)
+    o = np.array(out)
+    if not info["applied"] or (o[r2 <= 25 ** 2][:, 3] != 0).any() or (o[ring][:, 3] != 255).any():
+        print(f"FAIL hole_punch: ring case {info}", file=sys.stderr)
+        ok = False
+    # 2. fill reaching the border -> no change
+    b = base.copy()
+    b[...] = [128, 128, 128, 255]
+    out, info = hole_punch(Image.fromarray(b, "RGBA"), None)
+    if info["applied"] or (np.array(out)[..., 3] != 255).any():
+        print(f"FAIL hole_punch: border case {info}", file=sys.stderr)
+        ok = False
+    # 3. seed on an opaque subject colour far from the fill tolerance region -> only that colour
+    c = base.copy()
+    c[r2 <= 40 ** 2] = [200, 100, 40, 255]
+    c[r2 <= 8 ** 2] = [30, 30, 200, 255]
+    out, info = hole_punch(Image.fromarray(c, "RGBA"), [(50, 50)])
+    # region = tiny blue dot (<0.5% of pixels is 50px; dot is ~200px so allowed) - ensure the
+    # surrounding orange is untouched; then a seed on a small (<0.5%) patch is rejected.
+    o = np.array(out)
+    if (o[(r2 > 8 ** 2) & (r2 <= 40 ** 2)][:, 3] != 255).any():
+        print("FAIL hole_punch: subject colour altered", file=sys.stderr)
+        ok = False
+    d = base.copy()
+    d[r2 <= 40 ** 2] = [200, 100, 40, 255]
+    d[50:52, 50:52] = [30, 30, 200, 255]   # 4 px patch = 0.04% of the image
+    out, info = hole_punch(Image.fromarray(d, "RGBA"), [(50, 50)])
+    if info["applied"] or (np.array(out)[..., 3][r2 <= 40 ** 2] != 255).any():
+        print(f"FAIL hole_punch: tiny-region case {info}", file=sys.stderr)
+        ok = False
+    return ok
+
+
 def self_test():
     results = [
         ("make_seamless", test_make_seamless()),
@@ -494,6 +589,7 @@ def self_test():
         ("prop mode", test_prop()),
         ("decal mode", test_decal()),
         ("manifest merge", test_manifest_merge()),
+        ("hole_punch", test_hole_punch()),
     ]
     all_ok = True
     for name, ok in results:

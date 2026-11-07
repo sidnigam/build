@@ -68,9 +68,9 @@ Source: PROJECT.md + Research (STACK, FEATURES, ARCHITECTURE, PITFALLS)
 ### CULTURAL — Reverence & Iconography (Phase 5.7, inserted 2026-10-19)
 
 - [x] **CULT-01**: Yama's encounter is framed as a Trial of Dharma in all player-facing text — no hostile/enemy framing of a deity
-- [ ] **CULT-02**: Yama's boss sprite shows traditional iconography (dark/green-hued skin, danda + pasha, buffalo motif) and does not read as Vishnu/Krishna
-- [ ] **CULT-03**: Kumbhakarna carries a club/mace (no trident); Agni portrait has no Vaishnava tilak; Indra holds a classic double-ended vajra
-- [ ] **CULT-04**: Naraka gate reads as an Indian torana/temple gateway; vent-grate hazard skin reads as a carved stone/iron vent
+- [x] **CULT-02**: Yama's boss sprite shows traditional iconography (dark/green-hued skin, danda + pasha, buffalo motif) and does not read as Vishnu/Krishna
+- [x] **CULT-03**: Kumbhakarna carries a club/mace (no trident); Agni portrait has no Vaishnava tilak; Indra holds a classic double-ended vajra
+- [x] **CULT-04**: Naraka gate reads as an Indian torana/temple gateway; vent-grate hazard skin reads as a carved stone/iron vent
 
 ## v2 Requirements (deferred)
 

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Ready to plan
-stopped_at: Completed 05.4-05-PLAN.md
-last_updated: "2026-11-07T03:19:08.373Z"
+stopped_at: Completed 05.7-02-PLAN.md
+last_updated: "2026-11-07T06:04:19.104Z"
 last_activity: 2026-11-07
 progress:
   total_phases: 14
-  completed_phases: 10
+  completed_phases: 11
   total_plans: 57
-  completed_plans: 43
+  completed_plans: 44
 ---
 
 # Project State
@@ -51,6 +51,7 @@ Plan: Not started
 | Phase 02 P03 | 25 | 3 tasks | 10 files |
 | Phase 02 P02 | 35 | 3 tasks | 4 files |
 | Phase 05.4 P05 | 55min | 2 tasks | 13 files |
+| Phase 05.7 P02 | 8h | 4 tasks | 60 files |
 
 ## Accumulated Context
 
@@ -77,6 +78,7 @@ Recent decisions affecting current work:
 - [Phase 05.4]: ENV per-frame rebuild bug fixed (clear() reset _roomKey/_plan); manifest grade now actually applies
 - [Phase 05.4]: D-08b readability measured at GFX low AND medium; floor saturation controlled by grade.floorDesat (all tiers) + floorSat ColorMatrix (medium/high) + grade.floorWash
 - [Phase 05.4]: Side gates drawn as rotated doorways in the west/east walls; skins carry a vis rect for occlusion/culling
+- [Phase 05.7]: Indra vajra portrait NOT SHIPPED after 6/6 Flux failures; old portrait kept and flagged
 
 ### Roadmap Evolution
 
@@ -122,7 +124,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-07T01:10:30.246Z
+Last session: 2026-11-07T06:04:19.100Z
 Last activity: 2026-11-07
-Stopped at: Completed 05.4-05-PLAN.md
+Stopped at: Completed 05.7-02-PLAN.md
 Resume file: None

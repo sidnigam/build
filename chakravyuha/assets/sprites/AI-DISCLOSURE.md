@@ -158,7 +158,7 @@ Vishnu/Krishna iconography) rather than an Agni-specific mark; every other Agni 
 from Vishnu, so this was not treated as a ship blocker — see the `agni-portrait.png`
 provenance entry.
 
-(05.7-02 update: the Agni tilak flag above is RESOLVED, the tilak was removed; see the Phase 05.7 section. The Indra vajra flag remains open: NOT SHIPPED.)
+(05.7-02 update: the Agni tilak flag above is RESOLVED, the tilak was removed; see the Phase 05.7 section. The Indra vajra flag remains open: NOT SHIPPED. 05.7-03 gap closure was also NOT SHIPPED; see the Phase 05.7 section.)
 
 ## Phase 05.7 cultural and iconography corrections
 
@@ -166,14 +166,16 @@ Nine assets were flagged in cultural/iconography review and regenerated in plan 
 
 | Asset | Flag fixed | Result |
 |---|---|---|
-| Yama boss atlas | Blue skin and tall gold crown read as Vishnu/Krishna (CULT-02) | SHIPPED seed 52354 (attempt 4; 4 rejects). Green skin, buffalo-head danda, pasha. Forehead mark removed by deterministic inpaint (`tools/art/retouch_mark.py`). QA-03 caveats: trident-like horn silhouette on the danda, rudraksha beads. |
+| Yama boss atlas | Blue skin and tall gold crown read as Vishnu/Krishna (CULT-02) | SHIPPED seed 52354 (attempt 4; 4 rejects). Green skin, buffalo-head danda, pasha. Forehead mark removed by deterministic inpaint (`tools/art/retouch_mark.py`). QA-03 caveats: trident-like horn silhouette on the danda, rudraksha beads. 05.7-04 gap closure NOT SHIPPED: the code-drawn horn/dome replacement removed the trident silhouette (one upward point) but only produced thin hoop-like horns and a bubble-like dome that did not read as thick buffalo horns; the shipped atlas is unchanged (attempts recorded in `tools/art/prompts.json` `subjects.yama.gap_05_7_04`). |
 | Kumbhakarna boss atlas | Prong staff read as a Shaiva trishula (CULT-03) | SHIPPED seed 52250 (attempt 0). Iron-banded club, no prongs. |
 | Agni portrait | Vaishnava urdhva-pundra tilak (CULT-03) | SHIPPED seed 71150. Three prompt rewrites still painted a forehead mark, so the tilak was removed by deterministic inpaint. |
-| Indra portrait | Vajra read as a cross (CULT-03) | NOT SHIPPED. 6/6 Flux attempts failed (cross, trident, T-rod). The earlier portrait (seed 71251) stays and is still flagged for the human reviewer. |
+| Indra portrait | Vajra read as a cross (CULT-03) | NOT SHIPPED. 6/6 Flux attempts failed (cross, trident, T-rod). The earlier portrait (seed 71251) stays and is still flagged for the human reviewer. 05.7-03 gap closure NOT SHIPPED: no garment repair of the old rod passed acceptance (blotches and ghosting remained), so the portrait is unchanged; the code-drawn vajra itself passed all geometry metrics (see `tools/art/prompts.json` `subjects.indra.gap_05_7_03`). |
 | Naraka gate | Gothic arch and portcullis (CULT-04) | SHIPPED seed 61501. Torana with lotus-panel square posts, transparent doorway. Slight torii-like crossbeam flagged. |
 | Naraka vent_grate | Hubcap-like radial spokes (CULT-04) | SHIPPED seed 61510. Round stone ring with square lattice. Reads somewhat like a manhole cover. |
 | Ranabhoomi chariot_wreck | Gun-carriage read (CULT-04) | SHIPPED seed 63812 (2 rejects). |
 | Ranabhoomi war_drum | Cooking-pot read (CULT-04) | SHIPPED seed 63820. Laced barrel drum. |
 | Ranabhoomi column | No visible diya flame (CULT-04) | SHIPPED seed 63800. Clay diya with one flame. |
 
-Two shipped assets (Agni, Yama) were retouched after generation to remove a painted forehead mark. This is a deterministic cv2 inpaint of a small region, recorded in their `post_processing`.
+Two shipped assets (Agni, Yama) were retouched after generation to remove a painted forehead mark. This is a deterministic cv2 inpaint of a small region, recorded in their `post_processing`. The 05.7-03/04 gap-closure attempts built a code-drawn overlay tool (`tools/art/prop_overlay.py`) and a masked img2img repair tool (`tools/art/guided_inpaint.py`); no overlay shipped in any final asset (Indra and Yama both NOT SHIPPED), so no shipped image contains code-drawn overlay content.
+
+Carried to Phase 7 QA-03 (non-blocking, from 05.7-VERIFICATION): the Naraka gate crossbeam reads slightly torii-like; the Naraka vent reads somewhat like a manhole cover and has a plus-shaped centre glow; the Ranabhoomi column's diya flame is small at game scale. Human cultural sign-off (QA-03) is still pending for every 05.7 asset.

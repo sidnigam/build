@@ -437,3 +437,47 @@ would have used.
   keeps every non-rebuilt tile/frame and all tuning blocks from the existing manifest.
 - **`record_provenance.py --superseded JSON`** records the replaced generation; `--iconography` now also
   applies to boss / env-* kinds (sets `cultural_review: pending` + `iconography_notes`).
+
+## 05.7-03 overlay + guided inpaint tools
+
+Gap closure for CULT-03 (Indra's vajra). A plain Flux prompt never produced a classic vajra, so the
+portrait is repaired and the vajra is **drawn by code** and composited. Run with
+`~/ComfyUI/venv/bin/python`.
+
+### `prop_overlay.py` subcommands
+
+| Subcommand | Purpose |
+|------------|---------|
+| `grid` | crop + labelled coordinate grid (read exact coordinates) |
+| `mask` | union of `--poly` / `--rect`, `--fg-only`, `--dilate`, `--keep-skin` boxes |
+| `fill` | `bg` or Telea fill under a mask (alpha preserved) |
+| `fgmask` / `handmask` | foreground in a box / skin component (fingers to re-layer) |
+| `realpha` | blend a repaired RGB into the original RGBA with the soft mask M and rembg alpha |
+| `vajra` | draw a classic double-ended vajra layer; exit 1 if geometry metrics fail |
+| `horns` | buffalo-horn finial layer (Yama, plan 05.7-04) |
+| `composite` | contact shadow + layer + front-mask restore; `--footprint-out` = every pixel it may change |
+| `recolor` | hue-window recolour inside boxes |
+| `peaks` | count upward points of a silhouette (trident = 3, blunt finial = 1) |
+| `diffcheck` | pixels changed outside the allowed masks (exit 1 if any) |
+| `preview` | multi-height side-by-side review sheet |
+
+`--self-test` prints `prop_overlay self-test: 11/11 PASS`.
+
+### Vajra geometry and metrics
+
+Local frame: u along the axis, v perpendicular, all values fractions of the length L, mirrored at u to -u:
+central ribbed ball, ring, lotus collar, ring, then a 5-prong cage (central prong plus 2 outer and 2 inner
+Bezier prongs per end) that bows outward and closes to a single point. `vajra_metrics` requires
+aspect 3.0-5.0, `center_ratio` <= 0.80 (a crossguard or hilt fails), `tip_ratio_l/r` <= 0.60 over the outer 4%
+of the length (closed points; an open trident-like fan measures about 1.0), mirror IoU l/r and u/d >= 0.97,
+one connected component, widest part at |u| >= 0.25L (a prong cage, not the centre).
+
+### The peaks test
+
+`peaks` takes the topmost foreground y per column, smooths it (window 5) and counts local minima with
+prominence >= 8% of the box height. A trident gives 3, a dome-capped finial gives 1.
+
+### Disclosure rule
+
+Code-drawn overlays are not AI art. Record them in PROVENANCE as
+`procedural_overlay: {tool, ai_generated: false, recipe, metrics}` plus a `post_processing` line.

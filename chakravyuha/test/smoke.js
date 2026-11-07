@@ -7187,6 +7187,99 @@ console.log('\n— environment (05.4) —');
       R('PIXI = __ENV_MOCK_PIXI;');
     }));
   }
+
+  // ---- 05.4-05: shipped manifests, tuning guardrails, env provenance ----
+  const SHIPPED_BIOMES = ['naraka', 'patala', 'ranabhoomi', 'vaitarani'];
+  const shipped = {};
+  for (const b of SHIPPED_BIOMES) {
+    const mp = path.join(envGlobRoot, b, `${b}-env.json`);
+    if (fs.existsSync(mp)) shipped[b] = JSON.parse(fs.readFileSync(mp, 'utf8'));
+  }
+  check('05.4-05: all 4 shipped env manifests exist (' + Object.keys(shipped).join(',') + ')',
+    SHIPPED_BIOMES.every(b => shipped[b]));
+  const strictErrs = [];
+  for (const b of Object.keys(shipped)) {
+    sandbox.__ENV_SHIPPED = shipped[b];
+    const rv = R('ENV.validateManifest(__ENV_SHIPPED, {strict:true})');
+    if (!rv.ok) strictErrs.push(`${b}: ${rv.errors.join('; ')}`);
+  }
+  check('05.4-05: every shipped manifest passes validateManifest(strict)' + (strictErrs.length ? ' — ' + strictErrs.join(' | ') : ''),
+    strictErrs.length === 0);
+  const IN_ARENA_LIGHT_KINDS = ['pools', 'shafts'];   // mist is margin-capped separately (marginAlpha)
+  const tuneErrs = [];
+  for (const b of Object.keys(shipped)) {
+    const m = shipped[b];
+    const g = m.grade || {};
+    if (!(typeof g.floorTint === 'number' && g.floorTint >= 0.3 && g.floorTint <= 0.8)) tuneErrs.push(`${b}: grade.floorTint ${g.floorTint} not in [0.3,0.8]`);
+    if (!(typeof g.floorDarken === 'number' && g.floorDarken >= 0.1 && g.floorDarken <= 0.5)) tuneErrs.push(`${b}: grade.floorDarken ${g.floorDarken} not in [0.1,0.5]`);
+    const L = m.lights || {};
+    for (const k of IN_ARENA_LIGHT_KINDS) {
+      if (L[k] && typeof L[k].alpha === 'number' && L[k].alpha > CFG.LIGHT_MAX_IN_ARENA + 1e-9) tuneErrs.push(`${b}: lights.${k}.alpha ${L[k].alpha} > ${CFG.LIGHT_MAX_IN_ARENA}`);
+    }
+    if (L.mist && typeof L.mist.alpha === 'number' && L.mist.alpha > CFG.LIGHT_MAX_IN_ARENA + 1e-9) tuneErrs.push(`${b}: lights.mist.alpha ${L.mist.alpha} > ${CFG.LIGHT_MAX_IN_ARENA}`);
+    const f = m.floor || {};
+    if (f.macroAlpha != null && !(f.macroAlpha <= 0.5)) tuneErrs.push(`${b}: floor.macroAlpha ${f.macroAlpha} > 0.5`);
+    if (g.floorSat != null && !(g.floorSat > 0 && g.floorSat <= 1)) tuneErrs.push(`${b}: grade.floorSat ${g.floorSat} not in (0,1]`);
+    if (g.floorDesat != null && !(g.floorDesat >= 0 && g.floorDesat <= 0.8)) tuneErrs.push(`${b}: grade.floorDesat ${g.floorDesat} not in [0,0.8]`);
+    if (f.base != null && !(m.tiles && m.tiles[f.base] && m.tiles[f.base].role === 'floor')) tuneErrs.push(`${b}: floor.base '${f.base}' is not a floor tile`);
+  }
+  check('05.4-05: shipped manifest tuning within guardrails (floorTint [0.3,0.8], floorDarken [0.1,0.5], in-arena light alpha <= LIGHT_MAX_IN_ARENA, macroAlpha <= 0.5)'
+    + (tuneErrs.length ? ' — ' + tuneErrs.join(' | ') : ''), tuneErrs.length === 0);
+
+  // layout() with each real manifest: columns scaled to worldH, gates fit their AABB, north props stand
+  // at the wall foot, and every pillar/wall skin carries a visual rect for occlusion/culling.
+  const geomErrs = [];
+  for (const b of Object.keys(shipped)) {
+    const m = shipped[b];
+    const arena = { x: 50, y: 84, w: arenaSizes.combat.w, h: arenaSizes.combat.h };
+    const pad = { top: 200, side: 120, bottom: 110 };
+    sandbox.__ENV_GEOM = { biomeId: b, arena, obstacles: [{ shape: 'circle', x: arena.x + 600, y: arena.y + 500, r: 36 }], hazards: [], seed: 7, manifest: m, pad };
+    const plan = R('ENV.layout(__ENV_GEOM)');
+    const colF = m.frames.column;
+    for (const it of plan.items.filter(x => x.kind === 'column')) {
+      if (Math.abs(it.aabb.h - Math.min(colF.worldH, pad.top - 8)) > 1e-6) geomErrs.push(`${b}: column ${it.id} height ${it.aabb.h} != worldH`);
+      if (Math.abs(it.scale * colF.size[1] - it.aabb.h) > 1e-6) geomErrs.push(`${b}: column ${it.id} sprite scale does not match its AABB`);
+    }
+    for (const it of plan.items.filter(x => x.kind === 'prop' && x.y <= arena.y && x.y >= arena.y - pad.top && x.aabb.x >= arena.x && x.aabb.x + x.aabb.w <= arena.x + arena.w)) {
+      if (it.y < arena.y - 14 - 1e-6 || it.y > arena.y - 2 + 1e-6) geomErrs.push(`${b}: north prop ${it.id} base y ${it.y} outside [arena.y-14, arena.y-2]`);
+    }
+    const ps = plan.items.find(x => x.kind === 'pillar-skin');
+    if (!ps || !ps.vis || !(ps.vis.h > ps.aabb.h)) geomErrs.push(`${b}: pillar skin missing a visual rect taller than its footprint`);
+    sandbox.__ENV_GEOM_G = { doors: [{ x: arena.x + arena.w - 36, y: arena.y + arena.h / 2 }], arena, manifest: m, pad };
+    const gates = R('ENV.gateItems(__ENV_GEOM_G.doors, __ENV_GEOM_G.arena, __ENV_GEOM_G.manifest, __ENV_GEOM_G.pad)');
+    for (const gt of gates) {
+      const gf = m.frames.gate;
+      const depth = gf.size[1] * gt.scale, span = gf.size[0] * gt.scale;
+      if (depth > pad.side + 1e-6) geomErrs.push(`${b}: gate ${gt.id} depth ${depth} exceeds side pad`);
+      if (Math.abs(gt.aabb.w - depth) > 1e-6 || Math.abs(gt.aabb.h - span) > 1e-6) geomErrs.push(`${b}: gate ${gt.id} AABB != rotated sprite extent`);
+      if (rectsOverlap(gt.aabb, arena)) geomErrs.push(`${b}: gate ${gt.id} intersects arena`);
+    }
+  }
+  check('05.4-05: real-manifest geometry (column scale = worldH, north prop bases at wall foot, pillar-skin visual rect, gates fit the side pad)'
+    + (geomErrs.length ? ' — ' + geomErrs.slice(0, 6).join(' | ') : ''), geomErrs.length === 0);
+
+  // occluded() uses the visual rect when present: an actor standing just north of a pillar's
+  // footprint (outside the collision circle, inside the sprite) is occluded.
+  const occItem = { x: 500, y: 516, z: 500, aabb: { x: 470, y: 470, w: 60, h: 60 }, vis: { x: 460, y: 360, w: 80, h: 160 } };
+  sandbox.__ENV_OCC2 = { item: occItem, actor: { x: 500, y: 440, r: 12 } };
+  check('05.4-05: occluded() — actor behind a pillar sprite (north of its footprint) is occluded via the visual rect',
+    R('ENV.occluded(__ENV_OCC2.item, [__ENV_OCC2.actor])') === true);
+
+  // provenance: env-* entries + the env review sheet pointer
+  const provEnv = checkProvenance(path.join(__dirname, '..', 'assets', 'sprites'));
+  check('05.4-05: checkProvenance ok with no mismatched atlas components', provEnv.ok && provEnv.mismatched.length === 0);
+  const provJson = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'assets', 'sprites', 'PROVENANCE.json'), 'utf8'));
+  const envEntries = (provJson.assets || []).filter(a => String(a.kind || '').startsWith('env-'));
+  // env-tile/env-prop are the per-asset records (D-10 required fields); env-atlas entries are
+  // aggregates whose components each carry their own cultural_check/ground_safe.
+  const envAssetEntries = envEntries.filter(a => a.kind === 'env-tile' || a.kind === 'env-prop');
+  const envProvErrs = envAssetEntries.filter(a => !a.cultural_check || typeof a.ground_safe !== 'boolean').map(a => a.filename);
+  check(`05.4-05: every env-tile/env-prop entry (${envAssetEntries.length}) has cultural_check and boolean ground_safe`
+    + (envProvErrs.length ? ' — ' + envProvErrs.join(', ') : ''), envAssetEntries.length > 0 && envProvErrs.length === 0);
+  check('05.4-05: every env-* entry is review_status provisional', envEntries.length > 0 && envEntries.every(a => a.review_status === 'provisional'));
+  const sheets = [].concat(provJson.env_review_sheet || []);
+  check('05.4-05: PROVENANCE env_review_sheet points at existing contact sheet(s)',
+    sheets.length > 0 && sheets.every(s => fs.existsSync(path.join(__dirname, '..', s))));
 }
 
 // ---------------- god presence on boon panel (Phase 05.5) ----------------

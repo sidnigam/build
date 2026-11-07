@@ -2,7 +2,7 @@
 
 ## Summary
 
-All visual assets (sprites, backgrounds) in Chakravyuha are **Pre-Generated** AI content — generated prior to release, shipped with the game, and consumed by players. This satisfies Steam's post-January 2026 Content Survey definition of "Pre-Generated" AI content (as opposed to "Live-Generated" AI content produced at runtime).
+All visual assets (sprites, backgrounds, god portraits, and the Phase 05.4 environment (env) tiles and env prop/architecture atlases) in Chakravyuha are **Pre-Generated** AI content — generated prior to release, shipped with the game, and consumed by players. This satisfies Steam's post-January 2026 Content Survey definition of "Pre-Generated" AI content (as opposed to "Live-Generated" AI content produced at runtime).
 
 ## Generation Details
 
@@ -12,7 +12,9 @@ All visual assets (sprites, backgrounds) in Chakravyuha are **Pre-Generated** AI
   - **img2img** (denoise 0.35) from the approved Abhimanyu reference image, for the 4 player idle frames only.
   - **No ControlNet and no IPAdapter were used for any asset.** (This corrects an earlier draft of this document, which described ControlNet reference-sheet conditioning as part of the workflow; that approach was tried during planning and abandoned — see `.planning/phases/02-asset-pipeline-sprite-system/02-CONTEXT-AMENDMENT.md` D-07a — because it did not hold the character's outfit and proportions consistent across pose changes.)
   - **Boss phase-2 variants are deterministic image post-processing** of each boss's generated base frame (`tools/art/phase2_variant.py`, hue/levels shift + a rim glow composited from the alpha mask) — not a separate generation, and not additional AI content beyond the base frame it is derived from.
+- **Environment art (Phase 05.4, env tiles + env atlases):** txt2img only, fixed and recorded seeds (reserved per-biome ranges: naraka 61000, patala 62000, ranabhoomi 63000, vaitarani 64000), **max 5 attempts per subject** (base seed + 0..4); every rejected env seed and its reason is in `PROVENANCE.json` (32 rejected env attempts across 68 shipped env subjects). Checkpoints, chosen per asset kind (`tools/art/prompts.json` `env_checkpoint` = `sdxl_base` plus the recorded `env_checkpoint_policy` per-kind override): **SDXL 1.0 base** for every cutout kind (51 frames: props, columns, gates, decals, hazard skins) and 4 tiles; **DreamShaper XL alpha2 (xl1.0)** (CreativeML OpenRAIL++-M, license verification recorded in `PROVENANCE.json` `checkpoint_licenses[]`: Civitai version 126688, SHA-256 of the checkpoint file, the license text copy in `tools/art/licenses/openrail++-m.LICENSE.md` and the archived Civitai API response `tools/art/licenses/dreamshaper-xl-civitai-126688.json`) for 13 non-cutout tiles (floor tiles, wall faces, the Vaitarani water tile). Its `adopted: false` flag records that it was rejected as the *global* env default (cutout regressions in the 05.4-01 A/B); it is used only via the per-kind override. Each env entry's `checkpoint` field names the checkpoint actually used. Local ComfyUI only, no ControlNet, no IPAdapter, no img2img.
 - **Post-processing:** rembg (`u2net` model) background removal, alpha despeckling, trim, bottom-aligned resize to the game's sprite sizes (128px enemies, 256px bosses), cover-crop to 1280x720 for biome backgrounds, atlas packing via `free-tex-packer-core` (`tools/pack-atlas.js`).
+- **Env post-processing (`tools/art/finish_env.py`, all deterministic, driven by `tools/art/env_build.py`):** floor/water/wallcap **tiles** are made seamless by a half-roll + feathered centre-weighted cross-blend, then graded to the D-08 tile limits (contrast compression, HSV saturation scale, value scale; the factors are recorded per entry under `grading`); **wall-face strips** are cropped (recorded `crop` box) and made x-seamless the same way; **props, columns, gates and the hazard skin** are rembg cutouts (`u2net`, or `birefnet-general` for thin-detail subjects as recorded per entry), alpha-cleaned, despeckled, trimmed and fit to ≤ 384px (≤ 512px architecture), then given the fixed `env_grade` HSV grade (props sat×0.85/val×0.88, architecture sat×0.8/val×0.82); **decals** get a background-difference alpha key (no rembg) capped at alpha 0.55 and the decal grade (sat×0.7/val×0.8). Finished frames are packed into one atlas per biome (`{biome}-env-atlas.png`) via `tools/pack-atlas.js`.
 - **Provenance record:** every shipped AI asset's prompt, negative prompt, seed, rejected seeds, checkpoint, sampler/scheduler/steps/cfg, and post-processing steps are logged in `assets/sprites/PROVENANCE.json` (schema version 1). A `.gen.json` sidecar with the exact ComfyUI API graph is committed alongside each finished frame for reproducibility.
 
 ## What is NOT AI-generated
@@ -21,10 +23,11 @@ All visual assets (sprites, backgrounds) in Chakravyuha are **Pre-Generated** AI
 - **Weapons** (khanda, gandiva, gada) are code-drawn Pixi Graphics objects, not AI images.
 - **UI ornament** (borders, corner flourishes, boon-card styling, rarity/god-color accents, HUD chrome) is CSS and inline SVG per 02-CONTEXT-AMENDMENT D-16a, not AI-generated. No UI art atlas was produced.
 - **Fonts and Devanagari-accented headings** are not AI-generated.
+- **Environment layout and runtime effects (Phase 05.4)** are code, not AI: `js/environment.js` places every tile, wall, column, gate, prop, decal and obstacle/hazard skin by a seeded deterministic layout; the light pools, dust shafts, mist, screen vignette, wall-top fades, edge ambient occlusion, contact shadows and pit interiors are procedural canvas textures; the fallback walls/pits/water fills used when an atlas frame is missing are procedural Pixi Graphics; water scrolling (river bands and the south river strip) is a code-driven tile offset; all runtime grading (floor wash/desaturation, margin dimming, architecture/prop tints) is code applied over the AI tiles. The env manifests' tuning values (scales, alphas, grades) are hand-tuned data, not AI output.
 
 ## Scope
 
-The complete list of shipped AI Pre-Generated assets, enumerated from `PROVENANCE.json` (13 atlases + 4 backgrounds = 17 files):
+The complete list of shipped AI Pre-Generated assets, enumerated from `PROVENANCE.json`: 13 character/boss atlases + 4 backgrounds + 6 god portraits + 17 env tiles + 4 env atlases = **44 shipped files** (the 4 env atlases pack 51 individually provenance-tracked env frames). `node tools/check-provenance.js` verifies this set.
 
 **Player (1 atlas, idle only):**
 - `player-atlas.png` (Abhimanyu — idle, 4 frames; img2img from the approved reference)
@@ -38,6 +41,14 @@ The complete list of shipped AI Pre-Generated assets, enumerated from `PROVENANC
 **Biome backgrounds (4, 1280x720 each):**
 - `naraka-bg.png`, `patala-bg.png`, `ranabhoomi-bg.png`, `vaitarani-bg.png`
 
+**God portraits (6, Phase 05.5):** see "God portraits (Phase 05.5)" below.
+
+**Environment kits (Phase 05.4; `assets/sprites/env/{biome}/`, 17 tiles + 4 atlases, 51 atlas frames):**
+- **Naraka:** tiles `naraka-floor-a-tile.png`, `naraka-floor-b-tile.png`, `naraka-wallcap-tile.png`, `naraka-wallface-tile.png`; `naraka-env-atlas.png` with 13 frames (column, gate, 7 props: brazier, chain_post, fire_pit, iron_cage, iron_cauldron, ledger_lectern, scroll_pile; 3 decals: ash_drift, ember_seam, scorch; hazard skin vent_grate).
+- **Patala:** tiles `patala-floor-a-tile.png`, `patala-floor-b-tile.png`, `patala-wallcap-tile.png`, `patala-wallface-tile.png`; `patala-env-atlas.png` with 12 frames (column, gate, 6 props: crystal_rocks, fallen_pillar, gem_pile, glow_fungus, pool_basin, treasure_urn; 4 decals: gem_scatter, moss_patch, venom_rim, water_puddle).
+- **Ranabhoomi:** tiles `ranabhoomi-floor-a-tile.png`, `ranabhoomi-floor-b-tile.png`, `ranabhoomi-wallcap-tile.png`, `ranabhoomi-wallface-tile.png`; `ranabhoomi-env-atlas.png` with 14 frames (column, gate, 9 props: arrow_cluster, chariot_wheel, chariot_wreck, conch_stand, dhvaja, fallen_banner, quiver, shield_pile, war_drum; 3 decals: dust_scuff, flat_arrows, ruts).
+- **Vaitarani:** tiles `vaitarani-floor-a-tile.png`, `vaitarani-floor-b-tile.png`, `vaitarani-water-tile.png`, `vaitarani-wallcap-tile.png`, `vaitarani-wallface-tile.png`; `vaitarani-env-atlas.png` with 12 frames (column, gate, 7 props: driftwood, floating_diyas, moored_boat, mooring_post, reeds, rope_coil, stone_marker; 3 decals: algae_patch, stone_cracks, water_puddle).
+
 ## Review Status
 
 All AI-generated assets above are marked `review_status: "provisional"` in `PROVENANCE.json` (`review_sheet` points at `assets/sprites/_review/contact-sheet.png`). The user was away during generation, so per 02-CONTEXT-AMENDMENT D-14a, human review did not block any Phase 2 plan. A future pass should:
@@ -46,9 +57,20 @@ All AI-generated assets above are marked `review_status: "provisional"` in `PROV
 3. Pay particular attention to the Yama depiction (dignified judge-deity, not demonic) and to the open STATE.md design/cultural concern about Yama appearing as a boss encounter at all.
 4. Complete the Phase 7 cultural review (QA-03) before the Steam AI Content Survey is submitted.
 
+**Environment art (Phase 05.4):** every env tile, env frame and env atlas entry is `review_status: "provisional"`. `PROVENANCE.json` `env_review_sheet` points at `assets/sprites/_review/env-contact-sheet.png` (generated by `tools/art/env_contact_sheet.py`): per biome, every tile as a 2x2 repeat (seam check), the wall face as a 3x1 strip, every atlas frame on a checker labelled `key · role · worldH · seed`, and one in-game shot. Env cultural review items for the human reviewer (the D-09 rules each env entry's `cultural_check` was self-reviewed against):
+1. Ground-plane assets (floor tiles, water, decals, the hazard skin) carry `ground_safe: true` only after checking they hold no deity image, idol, face, yantra/deity mandala, Om, swastika, trishula, lotus throne or other sacred symbol, since they are walked on.
+2. Serpent carvings (Patala column/walls) are plain serpent bodies, never multi-hooded divine Nagas.
+3. Banners (Ranabhoomi dhvaja, fallen_banner) are plain/geometric with no emblem.
+4. The conch (shankha) appears only upright on its stand (`conch_stand`, a vertical margin prop), never on the ground.
+5. Diyas appear only on water (`floating_diyas` is restricted to the south river strip) or on lamp pillars/plinths.
+6. No gore, blood, bones, skulls, corpses, pyres or cremation imagery anywhere; no deity figures in any env art.
+Visual flags for review (not cultural violations): the Naraka `vent_grate` reads like a wheel hub; Ranabhoomi `chariot_wreck` can read as a gun carriage and `war_drum` as a cooking pot; `ranabhoomi:column` shows no visible diya flame (see `05.4-03-SUMMARY.md`).
+
 ## Checkpoint License
 
 Checkpoint: `sd_xl_base_1.0.safetensors` (SDXL 1.0 base). License: CreativeML OpenRAIL++-M, which permits commercial redistribution of outputs. Recorded in the `checkpoint_license` field of `PROVENANCE.json` (confirmed in Phase 2 Plan 04, the license gate).
+
+Additional checkpoints are recorded in `checkpoint_licenses[]` (the legacy `checkpoint_license` field is kept for compatibility): **DreamShaper XL alpha2 (xl1.0)**, `dreamshaperXL_alpha2Xl10.safetensors`, CreativeML OpenRAIL++-M, commercial image use allowed per the archived Civitai API flags, confirmed 2026-09-29 (used for the 13 env tiles listed above), and the FLUX.1-schnell stack used for the god portraits (see below).
 
 ## Status
 

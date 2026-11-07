@@ -4120,6 +4120,7 @@
   ],
   "review_sheet": "assets/sprites/_review/contact-sheet.png",
   "review_sheet_gods": "assets/sprites/_review/gods-contact-sheet.png",
+  "env_review_sheet": "assets/sprites/_review/env-contact-sheet.png",
   "checkpoint_licenses": [
     {
       "checkpoint": "SDXL 1.0 base",

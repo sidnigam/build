@@ -2,14 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Paused
-stopped_at: "02-04 paused at task 2/2 — idle frames only (4/4); run/attack/dash blocked on pose-consistency"
-last_updated: "2026-09-25T01:23:06Z"
+status: Ready to execute
+stopped_at: Completed 05.4-05-PLAN.md
+last_updated: "2026-11-07T01:10:30.249Z"
+last_activity: 2026-11-07
 progress:
-  total_phases: 7
-  completed_phases: 1
-  total_plans: 7
-  completed_plans: 4
+  total_phases: 14
+  completed_phases: 10
+  total_plans: 57
+  completed_plans: 43
 ---
 
 # Project State
@@ -19,15 +20,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-17)
 
 **Core value:** Every death makes the next run feel different — god boons, weapon choice, and room layouts create builds players want to talk about.
-**Current focus:** Phase 02 — asset-pipeline-sprite-system
+**Current focus:** Phase 05.4 — epic-inspired-environment-art-upgrade
 
 ## Current Position
 
-Phase: 02 (asset-pipeline-sprite-system) — PAUSED
-Plan: 4 of 6 — PAUSED at task 2 (idle frames 4/4 generated; run/attack/dash blocked on pose-consistency)
-
-- Idle player atlas (assets/sprites/player/player-atlas.{png,json}) is packed, provenance-recorded, and wired into the Pixi runtime via quick-260924-tka (runtime hardened: idle fallback, r-based scale, facing, y-sort, sweep, steady HUD).
-- Art-direction pivot under consideration: a single illustrated pose per actor plus procedural animation (squash/bob/lean/flip), instead of per-pose AI frames.
+Phase: 05.4 (epic-inspired-environment-art-upgrade) — COMPLETE (5/5 plans have SUMMARYs)
+Plan: 5 of 5 (05.4-05 done 2026-11-07)
 
 ## Performance Metrics
 
@@ -52,6 +50,7 @@ Plan: 4 of 6 — PAUSED at task 2 (idle frames 4/4 generated; run/attack/dash bl
 | Phase 02 P01 | 5 | 3 tasks | 6 files |
 | Phase 02 P03 | 25 | 3 tasks | 10 files |
 | Phase 02 P02 | 35 | 3 tasks | 4 files |
+| Phase 05.4 P05 | 55min | 2 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -75,7 +74,9 @@ Recent decisions affecting current work:
 - [Phase 02]: CAMERA.begin() takes no ctx arg — worldContainer transform persists, end() is a no-op
 - [Phase 02]: SPRITES.ready=false until first atlas loads — has(key) stays false until art files land in Plans 04-06
 - [quick-260924-tka]: Sprite runtime hardened — idle fallback, r-based scale with feet anchor, facing flip, y-sort, per-frame mark-and-sweep, HUD on separate un-shaken bridge; game canvas no longer takes a 2D context.
-
+- [Phase 05.4]: ENV per-frame rebuild bug fixed (clear() reset _roomKey/_plan); manifest grade now actually applies
+- [Phase 05.4]: D-08b readability measured at GFX low AND medium; floor saturation controlled by grade.floorDesat (all tiers) + floorSat ColorMatrix (medium/high) + grade.floorWash
+- [Phase 05.4]: Side gates drawn as rotated doorways in the west/east walls; skins carry a vis rect for occlusion/culling
 
 ### Roadmap Evolution
 
@@ -121,7 +122,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-09-25
-Last activity: 2026-10-17 - Phases 5.1, 5.2, 5.3, 5.5 (6/6 god portraits via FLUX.1-schnell), 5.6 (GFX tiers, 2x sprites, dynamic lighting) complete and merged. 5.4: plans 01/02/04 merged + env manifest fix; 05.4-03 (Ranabhoomi/Vaitarani art) generating; 05.4-05 integration pending.
-Stopped at: Phase 5.x execution — see Last activity
+Last session: 2026-11-07T01:10:30.246Z
+Last activity: 2026-11-07
+Stopped at: Completed 05.4-05-PLAN.md
 Resume file: None

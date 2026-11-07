@@ -136,6 +136,6 @@ Source: PROJECT.md + Research (STACK, FEATURES, ARCHITECTURE, PITFALLS)
 | QA-04 | Phase 2 | Complete |
 | QA-05 | Phase 7 | Pending |
 | CULT-01 | Phase 5.7 | Complete (05.7-01) |
-| CULT-02 | Phase 5.7 | Partial (05.7-04 NOT SHIPPED; QA-03) |
-| CULT-03 | Phase 5.7 | Blocked (Indra vajra NOT SHIPPED) |
+| CULT-02 | Phase 5.7 → 7 | Deferred to Phase 7 QA-03 (05.7-04 NOT SHIPPED) |
+| CULT-03 | Phase 5.7 → 7 | Deferred to Phase 7 QA-03 (Indra vajra NOT SHIPPED; Kumbhakarna + Agni done) |
 | CULT-04 | Phase 5.7 | Complete (05.7-02) |

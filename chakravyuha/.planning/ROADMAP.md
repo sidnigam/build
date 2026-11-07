@@ -23,7 +23,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 5.4: Epic-Inspired Environment Art Upgrade** (INSERTED) (completed 2026-11-07, human visual check deferred)
 - [x] **Phase 5.5: God Portraits + Boon Dialogue** (INSERTED)
 - [x] **Phase 5.6: Graphics Polish (Lighting, Bloom, Sprite Quality)** (INSERTED)
-- [ ] **Phase 5.7: Cultural + Iconography Corrections** (INSERTED)
+- [x] **Phase 5.7: Cultural + Iconography Corrections** (INSERTED) (completed 2026-11-07; CULT-02 Yama danda + CULT-03 Indra vajra deferred to Phase 7 QA-03)
 - [ ] **Phase 6: Steam Integration** - Steamworks SDK, 15+ achievements, Cloud saves, validated overlay
 - [ ] **Phase 7: CI/CD + Store Submission + Cultural Review** - Signed CI binaries, store assets, telemetry, AI survey, cultural sign-off, Deck Verified
 
@@ -210,7 +210,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Success Criteria** (what must be TRUE):
   1. Pushing a git tag produces signed Windows + macOS binaries via GitHub Actions automatically
   2. The Steam store page has capsule art, 6+ screenshots, and store/short descriptions ready
-  3. 2-3 cultural reviewers sign off on art and narrative tone BEFORE the store page goes live (hard gate)
+  3. 2-3 cultural reviewers sign off on art and narrative tone BEFORE the store page goes live (hard gate). Carried in from 05.7 (must be resolved or signed off here): Indra portrait vajra (CULT-03; rejected candidate `_raw/gods/indra/indra-0573-candidate-s71270-REJECTED.png`), Yama danda head (CULT-02; trishula-like silhouette, rejected candidate `_raw/bosses/yama/yama-0574-candidate-s52360-REJECTED.png`), Yama rudraksha beads, Naraka gate torii-like crossbeam, vent plus-glow, small Ranabhoomi diya
   4. Anonymous opt-in telemetry records weapon, biome reached, boons taken, and run time on run end
   5. The Steam Deck Verified checklist passes (controller-complete, correct glyphs, ≥9px font at 1280×800, functional default framerate)
 **Plans**: TBD

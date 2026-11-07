@@ -83,6 +83,11 @@ const GAME = {
         if (e.shiftKey) VFX.stress = !VFX.stress;
         else VFX.debug = !VFX.debug;
       }
+      if (k === 'f4') { // dev playtest: god mode (no damage)
+        e.preventDefault();
+        this.godMode = !this.godMode;
+        UI.banner(this.godMode ? 'GOD MODE ON' : 'GOD MODE OFF', '#ffd76a');
+      }
     });
     window.addEventListener('keyup', e => { INPUT.keys[e.key.toLowerCase()] = false; });
 

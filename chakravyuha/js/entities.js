@@ -468,6 +468,7 @@ class Player {
 
   takeDamage(amount, fromX, fromY) {
     if (this.iframes > 0 || this.dashT > 0) return;
+    if (GAME.godMode) return; // dev playtest toggle (F4)
     // lila dodge
     if (this.has('kri_lila') && U.chance(Math.min(this.val('kri_lila'), 40) / 100)) {
       dmgText(this.x, this.y - 24, 'DODGE', '#5c7cff', 14);

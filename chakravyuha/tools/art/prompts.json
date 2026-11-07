@@ -1090,7 +1090,12 @@
         "flux_base_seed": 63800,
         "subject": "a single tall wooden war-camp post, the full height of the post visible top to bottom filling the frame, bronze bands wrapped around the wood, coiled rope wound around the post, near the top a short flat wooden bracket shelf holding a small open clay oil lamp (diya), a shallow terracotta bowl with one small bright orange flame",
         "negative_extra": "bell alone, close-up on bell only, cropped post, no post visible, lantern, glass lantern, hurricane lamp, camping lantern, glass globe, glass shade, modern lamp fixture, roof, pagoda roof, pyramid cap, canopy top, umbrella top, hat-shaped top, candle, candlestick, wax candle, tabletop, close-up",
-        "flux_subject": "A single tall upright wooden war-camp post, its full height visible from the ground to the top, filling the frame vertically: a thick weathered timber post bound with bronze bands and wound with coiled rope. Near the top a short flat wooden bracket shelf holds a small open clay oil lamp, a shallow terracotta diya bowl, with one small bright orange flame rising from its wick and a faint warm glow on the wood. Muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation."
+        "flux_subject": "A single tall upright wooden war-camp post, its full height visible from the ground to the top, filling the frame vertically: a thick weathered timber post bound with bronze bands and wound with coiled rope. Near the top a short flat wooden bracket shelf holds a small open clay oil lamp, a shallow terracotta diya bowl, with one small bright orange flame rising from its wick and a faint warm glow on the wood. Muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation.",
+        "accepted_attempt": 0,
+        "rejected": {},
+        "self_review": "s63800 [flux] attempt 0: tall weathered timber war-camp post, full height visible base to top, two coiled-rope bindings, a short flat bracket shelf near the top holding a small open terracotta diya bowl with ONE clearly visible orange flame, a torn crimson cloth tied on one side. Read raw, finished preview and grid. Does NOT read as a lantern/hurricane lamp (no glass, no housing), street lamp, wax candle, pagoda/roof cap, or a close-up (full-height framing kept). The flame is small at the 120x448 frame but visible and warm.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; open clay diya on a lamp post is allowed by AI-DISCLOSURE env rule 5; no glass/modern fixture.",
+        "iconography": "tall wooden war-camp post, full height; bracket shelf with open clay diya and one visible orange flame; rope bindings; no lantern/glass/candle/pagoda cap"
       },
       "dhvaja": {
         "template": "prop",
@@ -1192,7 +1197,15 @@
         "flux_base_seed": 63810,
         "subject": "a single wrecked ancient Indian two-wheeled war chariot (ratha) overturned on its side in the dust, a box-shaped wooden chariot car with tall carved side panels and a curved front rail, two large spoked wooden wheels on one axle, one wheel broken off and leaning against the car, a short snapped squared wooden yoke pole, a broken flagstaff with a torn plain ochre pennant, bronze fittings, splintered planks",
         "negative_extra": "horse, person, body, blood, gore, intact, upright, pristine, covered wagon, canvas canopy, prairie schooner, Conestoga wagon, enclosed cabin, European cart, medieval cart, four wheels, wagon, cart, farm wagon, two axles, enclosed cabin, covered wagon, cannon, gun carriage, artillery, field gun, gun barrel, cannon barrel, tube, cylinder, trail legs, long pole",
-        "flux_subject": "A single wrecked ancient Indian war chariot (ratha) lying overturned on its side in the dust: a box-shaped wooden chariot car with tall carved side panels and a curved front rail, two large spoked wooden wheels on one axle with one wheel broken off and leaning against the car, a short snapped squared wooden yoke pole, a broken bamboo flagstaff with a torn plain ochre pennant, bronze corner fittings and splintered planks. Muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation."
+        "flux_subject": "A ratha, an ancient Indian war chariot, wrecked in the dust and seen from the side: a compact tall box-shaped wooden chariot car with high carved side walls and a rounded front, tilted over and resting on one big spoked wooden wheel, its second spoked wheel broken off and lying in the dust beside it, splintered planks, and a broken bamboo flagstaff with a torn ochre pennant leaning against the car. Muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation.",
+        "accepted_attempt": 2,
+        "rejected": {
+          "0": "[flux] four-wheeled upright box cart with two long tubes along the bed = gun-carriage/ammunition-wagon read, not overturned",
+          "1": "[flux] long low platform with a thin trailing pole and small rear wheel reads as a field-gun limber/handcart; not a box-shaped ratha car"
+        },
+        "self_review": "s63812 [flux] attempt 2: wrecked ancient wooden war chariot seen from the side: a compact box-shaped car with a carved side panel and high back, tilted on ONE large spoked wooden wheel (second wheel off), a curved front rail, a short snapped squared yoke at the front-right, splintered fragments and a scrap of ochre pennant, dust. Read raw, finished preview and grid. Does NOT read as a gun carriage/cannon (no tube/barrel/trail legs), a four-wheeled farm wagon, or a covered wagon (no canopy). No horses/people/blood/emblem. The pennant is bright saffron-orange in the raw; env_grade mutes it. Flux render is more rendered than the sdxl kit but sits with the wheel/shield props.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; no horses/people/blood/gore; plain pennant; no emblem.",
+        "iconography": "wrecked ratha: box-shaped carved car; spoked wheel; broken yoke; torn plain ochre pennant; no cannon tube/barrel/trail legs; no four-wheel wagon/canopy"
       },
       "fallen_banner": {
         "template": "prop",
@@ -1296,7 +1309,12 @@
         "flux_base_seed": 63820,
         "subject": "a single large barrel-shaped ancient Indian war drum lying horizontally on a low carved wooden cradle stand, stretched hide drumheads at both ends, criss-cross leather lacing cords along the full length of the drum body, two brass bands, two curved wooden drumsticks resting on top",
         "negative_extra": "cooking pot, pot, cauldron, bowl, urn, kettle, vase, jar, tripod, fire, flames, steam, food, lid, handles, open top",
-        "flux_subject": "A single large barrel-shaped ancient Indian war drum lying horizontally on a low carved wooden cradle stand: a long rounded wooden drum body with stretched pale hide drumheads at both ends, tight criss-cross leather lacing cords running the full length of the body from one drumhead to the other, two brass bands around the middle, and two curved wooden drumsticks resting across the top. Muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation."
+        "flux_subject": "A single large barrel-shaped ancient Indian war drum lying horizontally on a low carved wooden cradle stand: a long rounded wooden drum body with stretched pale hide drumheads at both ends, tight criss-cross leather lacing cords running the full length of the body from one drumhead to the other, two brass bands around the middle, and two curved wooden drumsticks resting across the top. Muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation.",
+        "accepted_attempt": 0,
+        "rejected": {},
+        "self_review": "s63820 [flux] attempt 0: large barrel-shaped Indian war drum lying horizontally on a low carved wooden cradle stand, pale hide drumheads at both ends, criss-cross leather lacing cords running the full body length between the heads, two curved wooden drumsticks crossed on top. Read raw, finished preview and grid. Does NOT read as a cooking pot/cauldron/bowl/urn/kettle (closed barrel body, no open top, no tripod, no handles, no steam/food). No sacred symbol on the heads (plain mottled hide). Frame is 384x183 (wide); manifest worldH 56 is unchanged so it renders about 117 px wide.",
+        "cultural_check": "pass: no deity/idol/face/yantra/sacred symbol; drumheads plain.",
+        "iconography": "barrel war drum on cradle stand; hide heads both ends; criss-cross lacing full length; two curved sticks; no pot/cauldron/open top/tripod/handles"
       },
       "conch_stand": {
         "template": "prop",

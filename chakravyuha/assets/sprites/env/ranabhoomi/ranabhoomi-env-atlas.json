@@ -144,34 +144,10 @@
         "y": 0.5
       }
     },
-    "ranabhoomi_chariot_wreck_0.png": {
+    "ranabhoomi_fallen_banner_0.png": {
       "frame": {
         "x": 510,
         "y": 390,
-        "w": 376,
-        "h": 370
-      },
-      "rotated": false,
-      "trimmed": true,
-      "spriteSourceSize": {
-        "x": 4,
-        "y": 4,
-        "w": 376,
-        "h": 370
-      },
-      "sourceSize": {
-        "w": 384,
-        "h": 378
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "ranabhoomi_fallen_banner_0.png": {
-      "frame": {
-        "x": 2,
-        "y": 396,
         "w": 376,
         "h": 366
       },
@@ -192,11 +168,35 @@
         "y": 0.5
       }
     },
+    "ranabhoomi_chariot_wreck_0.png": {
+      "frame": {
+        "x": 2,
+        "y": 396,
+        "w": 376,
+        "h": 308
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 376,
+        "h": 308
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 316
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
     "ranabhoomi_column_0.png": {
       "frame": {
         "x": 382,
         "y": 396,
-        "w": 123,
+        "w": 112,
         "h": 440
       },
       "rotated": false,
@@ -204,12 +204,36 @@
       "spriteSourceSize": {
         "x": 4,
         "y": 4,
-        "w": 123,
+        "w": 112,
         "h": 440
       },
       "sourceSize": {
-        "w": 131,
+        "w": 120,
         "h": 448
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "ranabhoomi_war_drum_0.png": {
+      "frame": {
+        "x": 2,
+        "y": 708,
+        "w": 376,
+        "h": 175
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 376,
+        "h": 175
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 183
       },
       "pivot": {
         "x": 0.5,
@@ -218,8 +242,8 @@
     },
     "ranabhoomi_chariot_wheel_0.png": {
       "frame": {
-        "x": 2,
-        "y": 766,
+        "x": 890,
+        "y": 390,
         "w": 346,
         "h": 376
       },
@@ -240,34 +264,10 @@
         "y": 0.5
       }
     },
-    "ranabhoomi_war_drum_0.png": {
-      "frame": {
-        "x": 890,
-        "y": 390,
-        "w": 344,
-        "h": 376
-      },
-      "rotated": false,
-      "trimmed": true,
-      "spriteSourceSize": {
-        "x": 4,
-        "y": 4,
-        "w": 344,
-        "h": 376
-      },
-      "sourceSize": {
-        "w": 352,
-        "h": 384
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
     "ranabhoomi_arrow_cluster_0.png": {
       "frame": {
-        "x": 509,
-        "y": 764,
+        "x": 498,
+        "y": 760,
         "w": 342,
         "h": 376
       },
@@ -288,34 +288,10 @@
         "y": 0.5
       }
     },
-    "ranabhoomi_dhvaja_0.png": {
-      "frame": {
-        "x": 352,
-        "y": 840,
-        "w": 134,
-        "h": 440
-      },
-      "rotated": false,
-      "trimmed": true,
-      "spriteSourceSize": {
-        "x": 4,
-        "y": 4,
-        "w": 134,
-        "h": 440
-      },
-      "sourceSize": {
-        "w": 142,
-        "h": 448
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
     "ranabhoomi_conch_stand_0.png": {
       "frame": {
-        "x": 2,
-        "y": 1146,
+        "x": 498,
+        "y": 1140,
         "w": 235,
         "h": 376
       },
@@ -335,6 +311,30 @@
         "x": 0.5,
         "y": 0.5
       }
+    },
+    "ranabhoomi_dhvaja_0.png": {
+      "frame": {
+        "x": 2,
+        "y": 1520,
+        "w": 134,
+        "h": 440
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 134,
+        "h": 440
+      },
+      "sourceSize": {
+        "w": 142,
+        "h": 448
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
     }
   },
   "meta": {
@@ -344,7 +344,7 @@
     "format": "RGBA8888",
     "size": {
       "w": 2035,
-      "h": 1524
+      "h": 1962
     },
     "scale": 1
   },

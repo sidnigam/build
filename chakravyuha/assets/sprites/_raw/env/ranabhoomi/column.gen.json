@@ -1,58 +1,65 @@
 {
   "graph": {
-    "4": {
-      "class_type": "CheckpointLoaderSimple",
+    "1": {
+      "class_type": "UnetLoaderGGUF",
       "inputs": {
-        "ckpt_name": "sd_xl_base_1.0.safetensors"
+        "unet_name": "flux1-schnell-Q4_K_S.gguf"
       }
     },
-    "6": {
+    "2": {
+      "class_type": "DualCLIPLoaderGGUF",
+      "inputs": {
+        "clip_name1": "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+        "clip_name2": "clip_l.safetensors",
+        "type": "flux"
+      }
+    },
+    "3": {
       "class_type": "CLIPTextEncode",
       "inputs": {
-        "text": "a single tall wooden war-camp post, the full height of the post visible top to bottom filling the frame, bronze bands wrapped around the wood, coiled rope wound around the post, a small clay oil lamp (diya) with a tiny open flame resting on a short wooden shelf bracket near the top of the post, no glass, no lantern housing, no modern fixture, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
+        "text": "A single tall upright wooden war-camp post, its full height visible from the ground to the top, filling the frame vertically: a thick weathered timber post bound with bronze bands and wound with coiled rope. Near the top a short flat wooden bracket shelf holds a small open clay oil lamp, a shallow terracotta diya bowl, with one small bright orange flame rising from its wick and a faint warm glow on the wood. Muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation. Hades-inspired painterly game prop illustration, three-quarter top-down view, bold clean shapes, rich carved detail, a soft baked cast shadow, the whole object in frame and centered, alone on a flat, even, pale-grey background.",
         "clip": [
-          "4",
-          1
+          "2",
+          0
         ]
       }
     },
-    "7": {
-      "class_type": "CLIPTextEncode",
+    "4": {
+      "class_type": "ConditioningZeroOut",
       "inputs": {
-        "text": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, bell alone, close-up on bell only, cropped post, no post visible, lantern, glass lantern, hurricane lamp, camping lantern, glass globe, glass shade, modern lamp fixture",
-        "clip": [
-          "4",
-          1
+        "conditioning": [
+          "3",
+          0
         ]
       }
     },
     "5": {
-      "class_type": "EmptyLatentImage",
+      "class_type": "EmptySD3LatentImage",
       "inputs": {
         "width": 832,
         "height": 1216,
         "batch_size": 1
       }
     },
-    "3": {
+    "6": {
       "class_type": "KSampler",
       "inputs": {
-        "seed": 63043,
-        "steps": 32,
-        "cfg": 7.0,
-        "sampler_name": "dpmpp_2m",
-        "scheduler": "karras",
+        "seed": 63800,
+        "steps": 4,
+        "cfg": 1.0,
+        "sampler_name": "euler",
+        "scheduler": "simple",
         "denoise": 1.0,
         "model": [
-          "4",
+          "1",
           0
         ],
         "positive": [
-          "6",
+          "3",
           0
         ],
         "negative": [
-          "7",
+          "4",
           0
         ],
         "latent_image": [
@@ -61,16 +68,22 @@
         ]
       }
     },
+    "7": {
+      "class_type": "VAELoader",
+      "inputs": {
+        "vae_name": "ae.safetensors"
+      }
+    },
     "8": {
       "class_type": "VAEDecode",
       "inputs": {
         "samples": [
-          "3",
+          "6",
           0
         ],
         "vae": [
-          "4",
-          2
+          "7",
+          0
         ]
       }
     },
@@ -86,20 +99,29 @@
     }
   },
   "params": {
-    "positive": "a single tall wooden war-camp post, the full height of the post visible top to bottom filling the frame, bronze bands wrapped around the wood, coiled rope wound around the post, a small clay oil lamp (diya) with a tiny open flame resting on a short wooden shelf bracket near the top of the post, no glass, no lantern housing, no modern fixture, single isolated game prop, three-quarter top-down view, painted illustration, cast shadow baked in, bold clean shapes, rich detail, Hades-adjacent painterly style, Indian epic setting, muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation, whole object in frame, centered, plain flat pale grey background, no characters, no text",
-    "negative": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, bell alone, close-up on bell only, cropped post, no post visible, lantern, glass lantern, hurricane lamp, camping lantern, glass globe, glass shade, modern lamp fixture",
-    "seed": 63043,
+    "positive": "A single tall upright wooden war-camp post, its full height visible from the ground to the top, filling the frame vertically: a thick weathered timber post bound with bronze bands and wound with coiled rope. Near the top a short flat wooden bracket shelf holds a small open clay oil lamp, a shallow terracotta diya bowl, with one small bright orange flame rising from its wick and a faint warm glow on the wood. Muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation. Hades-inspired painterly game prop illustration, three-quarter top-down view, bold clean shapes, rich carved detail, a soft baked cast shadow, the whole object in frame and centered, alone on a flat, even, pale-grey background.",
+    "negative": "",
+    "seed": 63800,
     "width": 832,
     "height": 1216,
-    "steps": 32,
-    "cfg": 7.0,
-    "sampler": "dpmpp_2m",
-    "scheduler": "karras",
-    "checkpoint": "sd_xl_base_1.0.safetensors",
-    "checkpoint_label": "sd_xl_base_1.0.safetensors (SDXL 1.0 base, CreativeML OpenRAIL++-M)",
-    "checkpoint_profile": "sdxl_base"
+    "steps": 4,
+    "cfg": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": "flux1-schnell-Q4_K_S.gguf",
+    "checkpoint_label": "flux1-schnell-Q4_K_S.gguf (FLUX.1 [schnell] by Black Forest Labs, GGUF Q4_K_S by city96, Apache-2.0) + t5-v1_1-xxl Q5_K_M GGUF (Apache-2.0) + CLIP-L (MIT) + FLUX ae VAE (Apache-2.0)",
+    "checkpoint_profile": "flux1_schnell_q4ks",
+    "graph_type": "flux_gguf",
+    "text_encoders": [
+      "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+      "clip_l.safetensors"
+    ],
+    "vae": "ae.safetensors",
+    "custom_nodes": {
+      "ComfyUI-GGUF": "6ea2651e7df66d7585f6ffee804b20e92fb38b8a"
+    }
   },
-  "prompt_id": "3f1b496a-af97-44ab-9ccf-9f3e26136ed2",
+  "prompt_id": "0b82c830-fbc9-47cf-988b-e7a68c885bbe",
   "comfyui_version": "0.35.0",
-  "generated_at": "2026-10-19T22:03:13Z"
+  "generated_at": "2026-11-07T05:33:39Z"
 }

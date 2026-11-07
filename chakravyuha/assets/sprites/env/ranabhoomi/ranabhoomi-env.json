@@ -81,7 +81,7 @@
       "frame": "ranabhoomi_chariot_wreck_0.png",
       "size": [
         384,
-        378
+        316
       ],
       "role": "prop",
       "ground_safe": false,
@@ -98,7 +98,7 @@
     "column": {
       "frame": "ranabhoomi_column_0.png",
       "size": [
-        131,
+        120,
         448
       ],
       "role": "column",
@@ -247,8 +247,8 @@
     "war_drum": {
       "frame": "ranabhoomi_war_drum_0.png",
       "size": [
-        352,
-        384
+        384,
+        183
       ],
       "role": "prop",
       "ground_safe": false,

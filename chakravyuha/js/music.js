@@ -1748,8 +1748,11 @@ MUSIC.theory.LEAD_PRESETS = {
     const mix = ctx.createGain(); mix.gain.value = 1;
     const reverbIn = ctx.createGain(); reverbIn.gain.value = 1;
     const convolver = ctx.createConvolver();
-    const irArr = MUSIC.dsp.impulse(this.sr, 2.4, 1);
-    const irBuf = ctx.createBuffer(2, irArr[0].length, this.sr);
+    // ConvolverNode requires its buffer at the context's own sample rate (Chromium throws
+    // NotSupportedError otherwise), so the IR is built at ctx.sampleRate, not the capped render rate.
+    const irSr = ctx.sampleRate;
+    const irArr = MUSIC.dsp.impulse(irSr, 2.4, 1);
+    const irBuf = ctx.createBuffer(2, irArr[0].length, irSr);
     irBuf.getChannelData(0).set(irArr[0]);
     irBuf.getChannelData(1).set(irArr[1]);
     convolver.buffer = irBuf;

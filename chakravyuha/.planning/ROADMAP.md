@@ -186,7 +186,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. CULT-03: Kumbhakarna carries a club/mace (no trident); Agni portrait has no Vaishnava tilak; Indra holds a classic double-ended vajra
   4. CULT-04: Naraka gate reads as an Indian torana/temple gateway and the vent-grate hazard skin as a carved stone/iron vent (no Gothic/modern forms)
   5. Provenance recorded for every regenerated asset; smoke + check-provenance green
-**Plans**: TBD
+**Plans**: 4 plans (2 gap closure)
+- [x] 05.7-01-PLAN.md — Trial of Dharma text reframe + reverence lint (CULT-01)
+- [x] 05.7-02-PLAN.md — Flux regeneration: Yama, Kumbhakarna, Agni, Naraka gate/vent, Ranabhoomi props (CULT-02/03/04; Indra NOT SHIPPED)
+- [ ] 05.7-03-PLAN.md — Gap closure: Indra classic vajra via Flux masked garment repair + code-drawn vajra overlay (CULT-03)
+- [ ] 05.7-04-PLAN.md — Gap closure: Yama blunt buffalo-horn danda finial + beads; sheets, disclosure, REQUIREMENTS consistency (CULT-02, CULT-03)
 
 ### Phase 6: Steam Integration
 **Goal**: The desktop build talks to Steam — achievements unlock and persist, saves sync via Steam Cloud across machines, and the overlay is validated on both Windows and macOS.

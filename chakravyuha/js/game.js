@@ -689,7 +689,10 @@ const GAME = {
     if (hasBg || envOn) {
       if (!envOn) ctx.clearRect(A.x, A.y, A.w, A.h);                                   // undo the outer dim inside the arena
       const floorTint = envOn ? ENV.grade('floorTint', SPRITES.CFG.BG_FLOOR_TINT) : SPRITES.CFG.BG_FLOOR_TINT;
-      ctx.globalAlpha = floorTint; ctx.fillStyle = biome.floor;                        // biome-tinted readability wash
+      // biome-tinted readability wash; with ENV active the manifest may supply a calmer wash colour
+      // (grade.floorWash, 05.4-05) — the DATA biome.floor colours are ~0.55-0.66 HSV-saturated and
+      // were the main source of floor saturation above the D-08b screen limit.
+      ctx.globalAlpha = floorTint; ctx.fillStyle = envOn ? ENV.grade('floorWash', biome.floor) : biome.floor;
       ctx.fillRect(A.x, A.y, A.w, A.h); ctx.globalAlpha = 1;
       const floorDarken = envOn ? ENV.grade('floorDarken', SPRITES.CFG.BG_FLOOR_DARKEN) : SPRITES.CFG.BG_FLOOR_DARKEN;
       ctx.fillStyle = `rgba(0,0,0,${floorDarken})`;                                    // flat-black darken so sprites/telegraphs pop off busy illustrated floors

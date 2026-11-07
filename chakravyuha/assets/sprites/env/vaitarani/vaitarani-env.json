@@ -297,14 +297,15 @@
     }
   },
   "grade": {
-    "floorTint": 0.2,
+    "floorTint": 0.3,
     "floorDarken": 0.2,
     "outerDim": 0.6,
     "vignette": 0.4,
     "propTint": "#d8d0cc",
     "floorDesat": 0.25,
     "floorDesatLuma": 0.2,
-    "floorSat": 0.35,
-    "waterTint": "#b4b4b4"
+    "floorSat": 0.25,
+    "waterTint": "#b4b4b4",
+    "floorWash": "#1c2028"
   }
 }

@@ -273,13 +273,14 @@
     "mist": null
   },
   "grade": {
-    "floorTint": 0.2,
+    "floorTint": 0.3,
     "floorDarken": 0.22,
     "outerDim": 0.6,
     "vignette": 0.4,
     "propTint": "#d8d0cc",
     "floorDesat": 0.5,
     "floorDesatLuma": 0.2,
-    "floorSat": 0.35
+    "floorSat": 0.35,
+    "floorWash": "#161f1d"
   }
 }

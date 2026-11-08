@@ -767,23 +767,8 @@ class Enemy {
       ctx.globalAlpha = 1;
       return;
     }
-    // telegraph
-    if (this.telegraph) {
-      ctx.globalAlpha = 0.5 + 0.3 * Math.sin(GAME.time * 18);
-      ctx.strokeStyle = '#ff4444'; ctx.fillStyle = 'rgba(255,68,68,0.12)'; ctx.lineWidth = 2;
-      if (this.telegraph.type === 'line') {
-        const tg = this.telegraph;
-        ctx.save();
-        ctx.translate(this.x, this.y); ctx.rotate(tg.a);
-        ctx.fillRect(0, -this.r, tg.len, this.r * 2);
-        ctx.strokeRect(0, -this.r, tg.len, this.r * 2);
-        ctx.restore();
-      } else {
-        ctx.beginPath(); ctx.arc(this.x, this.y, this.telegraph.r, 0, U.TAU);
-        ctx.fill(); ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
-    }
+    // telegraph (shared with the sprite path — js/combat.js, 05.7.1-01)
+    drawTelegraph(ctx, this);
 
     // body
     ctx.fillStyle = this.flash > 0 ? '#ffffff' : this.color;
@@ -797,31 +782,8 @@ class Enemy {
     const ex = this.x + Math.cos(a) * this.r * 0.45, ey = this.y + Math.sin(a) * this.r * 0.45;
     ctx.beginPath(); ctx.arc(ex - 3, ey, 2.4, 0, U.TAU); ctx.arc(ex + 3, ey, 2.4, 0, U.TAU); ctx.fill();
 
-    // status pips
-    if (this.burns.length) {
-      ctx.fillStyle = '#ff7040';
-      for (let i = 0; i < this.burns.length; i++) {
-        ctx.beginPath(); ctx.arc(this.x - 8 + i * 8, this.y - this.r - 8, 3, 0, U.TAU); ctx.fill();
-      }
-    }
-    if (this.maya > 0) {
-      ctx.strokeStyle = '#5c7cff'; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.arc(this.x, this.y, this.r + 4, 0, U.TAU); ctx.stroke();
-    }
-    if (this.stun > 0) {
-      ctx.fillStyle = '#ffd34d';
-      ctx.font = '12px Georgia';
-      ctx.fillText('✦', this.x - 4, this.y - this.r - 10);
-    }
-
-    // hp bar for elites/damaged
-    if (this.hp < this.maxhp && !this.boss) {
-      const w = this.r * 2;
-      ctx.fillStyle = 'rgba(0,0,0,0.5)';
-      ctx.fillRect(this.x - w / 2, this.y + this.r + 4, w, 4);
-      ctx.fillStyle = '#ff5566';
-      ctx.fillRect(this.x - w / 2, this.y + this.r + 4, w * U.clamp(this.hp / this.maxhp, 0, 1), 4);
-    }
+    // status pips, maya ring, stun glyph, hp bar (shared with the sprite path — js/combat.js)
+    drawOverlays(ctx, this, this.y - this.r, this.y + this.r);
   }
 }
 
@@ -1394,70 +1356,9 @@ class Boss extends Enemy {
   }
 
   draw(ctx) {
-    // telegraph: grows from 0 to full size over the wind-up (fill-progress cue)
-    if (this.telegraph) {
-      const frac = this.windTotal ? U.clamp(1 - this.t / this.windTotal, 0.08, 1) : 1;
-      const tg = this.telegraph;
-      ctx.globalAlpha = 0.5 + 0.3 * Math.sin(GAME.time * 18);
-      ctx.strokeStyle = '#ff4444'; ctx.fillStyle = 'rgba(255,68,68,0.12)'; ctx.lineWidth = 2;
-      if (tg.type === 'line') {
-        ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(tg.a);
-        const len = tg.len * frac;
-        ctx.fillRect(0, -this.r * 0.8, len, this.r * 1.6);
-        ctx.strokeRect(0, -this.r * 0.8, len, this.r * 1.6);
-        ctx.restore();
-      } else if (tg.type === 'circle') {
-        const r = tg.r * frac;
-        ctx.beginPath(); ctx.arc(this.x, this.y, r, 0, U.TAU); ctx.fill(); ctx.stroke();
-      } else if (tg.type === 'cone') {
-        const r = tg.r * frac;
-        ctx.beginPath(); ctx.moveTo(this.x, this.y);
-        ctx.arc(this.x, this.y, r, tg.a - tg.arc / 2, tg.a + tg.arc / 2);
-        ctx.closePath(); ctx.fill(); ctx.stroke();
-      } else if (tg.type === 'ring') {
-        const r0 = tg.r0, r1 = tg.r1;
-        ctx.lineWidth = Math.max(1, (r1 - r0) * frac);
-        ctx.strokeStyle = 'rgba(255,68,68,0.35)';
-        ctx.beginPath(); ctx.arc(this.x, this.y, (r0 + r1) / 2, 0, U.TAU); ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
-    }
-
-    // world-anchored marks (multi-marker wind-ups: summon points, noose rope, teleport dest)
-    if (this.marks && this.marks.length) {
-      ctx.globalAlpha = 0.5 + 0.3 * Math.sin(GAME.time * 18);
-      ctx.strokeStyle = '#ff4444'; ctx.fillStyle = 'rgba(255,68,68,0.12)'; ctx.lineWidth = 2;
-      for (const m of this.marks) {
-        if (m.type === 'line') {
-          ctx.save(); ctx.translate(m.x, m.y); ctx.rotate(m.a);
-          ctx.fillRect(0, -m.w / 2, m.len, m.w);
-          ctx.strokeRect(0, -m.w / 2, m.len, m.w);
-          ctx.restore();
-        } else if (m.type === 'circle') {
-          ctx.beginPath(); ctx.arc(m.x, m.y, m.r, 0, U.TAU); ctx.fill(); ctx.stroke();
-        } else if (m.type === 'band') {
-          ctx.fillRect(m.x, m.y, m.w, m.h);
-          ctx.strokeRect(m.x, m.y, m.w, m.h);
-        } else if (m.type === 'ringMark') {
-          // expanding shockwave ring (kumbhakarna quake) — stroke only, no fill
-          ctx.save();
-          ctx.lineWidth = m.width;
-          ctx.strokeStyle = 'rgba(255,68,68,0.55)';
-          ctx.beginPath(); ctx.arc(m.x, m.y, m.r, 0, U.TAU); ctx.stroke();
-          ctx.restore();
-        }
-      }
-      ctx.globalAlpha = 1;
-    }
-
-    // noose line (active pull only)
-    if (this.state === 'noose') {
-      const P = GAME.player;
-      ctx.strokeStyle = '#9fb8ff'; ctx.lineWidth = 3;
-      ctx.setLineDash([8, 6]);
-      ctx.beginPath(); ctx.moveTo(this.x, this.y); ctx.lineTo(P.x, P.y); ctx.stroke();
-      ctx.setLineDash([]);
-    }
+    // telegraph (fill-progress), world-anchored marks and the noose rope — shared with the
+    // sprite path (js/combat.js, 05.7.1-01)
+    drawTelegraph(ctx, this);
 
     // aura
     const grad = ctx.createRadialGradient(this.x, this.y, 4, this.x, this.y, this.r * 2.2);
@@ -1484,24 +1385,14 @@ class Boss extends Enemy {
       ctx.stroke();
     }
 
-    if (this.asleep) {
-      ctx.fillStyle = '#fff'; ctx.font = 'bold 22px Georgia';
-      ctx.fillText('z z z', this.x + this.r * 0.5, this.y - this.r - 8);
-    }
-
     // eyes
     const a = U.angle(this.x, this.y, GAME.player.x, GAME.player.y);
     ctx.fillStyle = this.asleep ? 'rgba(0,0,0,0.3)' : '#1a0508';
     const ex = this.x + Math.cos(a) * this.r * 0.4, ey = this.y + Math.sin(a) * this.r * 0.4;
     ctx.beginPath(); ctx.arc(ex - 6, ey, 4, 0, U.TAU); ctx.arc(ex + 6, ey, 4, 0, U.TAU); ctx.fill();
 
-    // burn pips
-    if (this.burns.length) {
-      ctx.fillStyle = '#ff7040';
-      for (let i = 0; i < this.burns.length; i++) {
-        ctx.beginPath(); ctx.arc(this.x - 10 + i * 10, this.y - this.r - 12, 4, 0, U.TAU); ctx.fill();
-      }
-    }
+    // asleep zzz + burn pips (shared with the sprite path — js/combat.js)
+    drawOverlays(ctx, this, this.y - this.r, this.y + this.r);
   }
 }
 

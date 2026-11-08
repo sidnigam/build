@@ -830,8 +830,9 @@ const GAME = {
   /**
    * renderSpriteExtras(ctx, e) — 02-07: gameplay-critical primitives that Enemy.draw/Boss.draw
    * used to paint, restored for the sprite path (drawn UNDER the sprite; anything above the head
-   * uses SPRITES.headY so it is not hidden behind the sprite). Mirrors js/entities.js draw() logic
-   * exactly where noted; js/entities.js itself is never touched (owned by Phase 3/4).
+   * uses SPRITES.headY so it is not hidden behind the sprite). 05.7.1-01: telegraphs, marks and
+   * status overlays now go through the shared drawTelegraph/drawOverlays in js/combat.js, which
+   * Enemy.draw/Boss.draw also call — one renderer, no drifting copies.
    */
   renderSpriteExtras(ctx, e) {
     if (e.spawnT > 0) {
@@ -850,74 +851,13 @@ const GAME = {
     ctx.ellipse(e.x, e.y + e.r * SPRITES.CFG.FEET_OFFSET_R, e.r * 0.9, e.r * 0.32, 0, 0, U.TAU);
     ctx.fill();
 
-    // telegraph (mirrors Enemy.draw / Boss.draw)
-    if (e.telegraph) {
-      const hw = e.boss ? e.r * 0.8 : e.r;
-      ctx.globalAlpha = 0.5 + 0.3 * Math.sin(this.time * 18);
-      ctx.strokeStyle = '#ff4444'; ctx.fillStyle = 'rgba(255,68,68,0.12)'; ctx.lineWidth = 2;
-      if (e.telegraph.type === 'line') {
-        const tg = e.telegraph;
-        ctx.save();
-        ctx.translate(e.x, e.y); ctx.rotate(tg.a);
-        ctx.fillRect(0, -hw, tg.len, hw * 2);
-        ctx.strokeRect(0, -hw, tg.len, hw * 2);
-        ctx.restore();
-      } else {
-        ctx.beginPath(); ctx.arc(e.x, e.y, e.telegraph.r, 0, U.TAU);
-        ctx.fill(); ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
-    }
+    // telegraph + boss marks + noose rope — the SAME renderer as the primitive path
+    // (js/combat.js, 05.7.1-01). This used to be a partial copy that drew only line/circle and
+    // never drew marks, so the shipped sprite path hid summon/teleport/lamp/beam/ledger/noose cues.
+    drawTelegraph(ctx, e);
 
-    // noose (Yama) — mirrors Boss.draw
-    if (e.boss && e.state === 'noose' && this.player) {
-      const P = this.player;
-      ctx.strokeStyle = '#9fb8ff'; ctx.lineWidth = 3;
-      ctx.setLineDash([8, 6]);
-      ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(P.x, P.y); ctx.stroke();
-      ctx.setLineDash([]);
-    }
-
-    // maya ring — drawn at the feet so it reads under a tall sprite (legacy drew it around center)
-    if (e.maya > 0) {
-      ctx.strokeStyle = '#5c7cff'; ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.ellipse(e.x, e.y + e.r, e.r + 4, (e.r + 4) * 0.4, 0, 0, U.TAU);
-      ctx.stroke();
-    }
-
-    const headY = SPRITES.headY(e, e.type);
-
-    // burn pips — same horizontal layout as Enemy.draw/Boss.draw, moved to headY
-    if (e.burns && e.burns.length) {
-      ctx.fillStyle = '#ff7040';
-      const spacing = e.boss ? 10 : 8, rad = e.boss ? 4 : 3, ox = e.boss ? -10 : -8;
-      for (let i = 0; i < e.burns.length; i++) {
-        ctx.beginPath(); ctx.arc(e.x + ox + i * spacing, headY - 8, rad, 0, U.TAU); ctx.fill();
-      }
-    }
-
-    // stun glyph
-    if (e.stun > 0) {
-      ctx.fillStyle = '#ffd34d'; ctx.font = '12px Georgia';
-      ctx.fillText('✦', e.x - 4, headY - 12);
-    }
-
-    // asleep zzz (mirrors Boss.draw)
-    if (e.asleep) {
-      ctx.fillStyle = '#fff'; ctx.font = 'bold 22px Georgia';
-      ctx.fillText('z z z', e.x + e.r * 0.5, headY - 8);
-    }
-
-    // hp bar for damaged non-boss enemies
-    if (!e.boss && e.hp < e.maxhp) {
-      const w = e.r * 2;
-      const y = e.y + e.r * SPRITES.CFG.FEET_OFFSET_R + 4;
-      ctx.fillStyle = 'rgba(0,0,0,0.5)';
-      ctx.fillRect(e.x - w / 2, y, w, 4);
-      ctx.fillStyle = '#ff5566';
-      ctx.fillRect(e.x - w / 2, y, w * U.clamp(e.hp / e.maxhp, 0, 1), 4);
-    }
+    // burn pips, maya ring, stun glyph, asleep zzz, hp bar — anchored to the sprite's head/feet
+    drawOverlays(ctx, e, SPRITES.headY(e, e.type), e.y + e.r * SPRITES.CFG.FEET_OFFSET_R);
 
     ctx.globalAlpha = 1;
     ctx.setLineDash([]);

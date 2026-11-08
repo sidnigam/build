@@ -113,7 +113,7 @@ vm.createContext(sandbox);
 // reproduced and confirmed in isolation before this fix; loading gfx.js here, at the same relative
 // position as index.html, makes every later `typeof GFX` check in vfx.js (D-17's count()/ambient()
 // path, and the PRESETS.* -> GFX.pulse() hooks) actually exercise the real code, not a false pass.
-const files = ['utils.js', 'settings.js', 'renderer.js', 'sprites.js', 'vfx.js', 'gfx.js', 'audio.js', 'music.js', 'data.js', 'meta.js', 'entities.js', 'rooms.js', 'ui.js', 'game.js', 'storage.js', 'gamepad.js', 'glyphs.js', 'focus.js'];
+const files = ['utils.js', 'settings.js', 'renderer.js', 'sprites.js', 'vfx.js', 'gfx.js', 'audio.js', 'music.js', 'data.js', 'meta.js', 'combat.js', 'entities.js', 'rooms.js', 'ui.js', 'game.js', 'storage.js', 'gamepad.js', 'glyphs.js', 'focus.js'];
 for (const f of files) {
   const src = fs.readFileSync(path.join(__dirname, '..', 'js', f), 'utf8');
   vm.runInContext(src, sandbox, { filename: f });

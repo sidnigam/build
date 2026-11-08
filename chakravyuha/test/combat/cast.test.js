@@ -32,7 +32,9 @@ module.exports = function ({ R, check }) {
     // a keeper far behind the player so the room never clears by itself
     keeper(P) { const A = GAME.arena; return __cast.dummy(A.x + 40, A.y + 40); },
     aim(x, y) { INPUT.wx = x; INPUT.wy = y; GAME.player.aim = Math.atan2(y - GAME.player.y, x - GAME.player.x); },
-    run(sec, each) { const n = Math.round(sec * 60); for (let i = 0; i < n; i++) { GAME.update(${DT}); if (each) each(i); } },
+    // mirrors GAME.frame(): GAME.time advances with the sim (the orbit hit cooldown reads it)
+    tick() { GAME.time += ${DT}; GAME.update(${DT}); },
+    run(sec, each) { const n = Math.round(sec * 60); for (let i = 0; i < n; i++) { __cast.tick(); if (each) each(i); } },
     inflight() {
       return GAME.pprojectiles.filter(p => p.lodge && p.t > 0 && !p._lodged).length
         + GAME.orbits.filter(o => o.castAmmo && o.t > 0).length
@@ -165,7 +167,7 @@ module.exports = function ({ R, check }) {
       const t = i / 60;
       INPUT.ax = Math.cos(t * 0.7); INPUT.ay = Math.sin(t * 1.1);
       __cast.aim(P.x + Math.cos(t) * 300, P.y + Math.sin(t) * 300);
-      GAME.update(${DT});
+      __cast.tick();
       const sum = P.castCharges + GAME.lodged.length + __cast.inflight();
       maxSum = Math.max(maxSum, sum);
       if (sum > P.castMax) bad++;
@@ -189,7 +191,7 @@ module.exports = function ({ R, check }) {
       P.tryCast();
       let sawEffect = false;
       for (let i = 0; i < 480; i++) {
-        GAME.update(${DT});
+        __cast.tick();
         out.stun = Math.max(out.stun, e.stun);
         if (GAME.zones.some(z => z.type === 'fire')) out.fire = true;
         const live = GAME.orbits.length + GAME.zones.filter(z => z.type === 'cyclone').length;

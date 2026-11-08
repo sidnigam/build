@@ -427,6 +427,12 @@ const ROOMS = {
   enterRoom(rewardId) {
     const G = GAME;
     G.reward = rewardId;
+    // 05.7.1-03 (D-14): lodged and in-flight astras return before the room is reset
+    if (G.player && G.lodged) {
+      const out = G.castAmmoOut ? G.castAmmoOut() : G.lodged.length;
+      if (out) G.player.castCharges = Math.min(G.player.castMax, G.player.castCharges + out);
+    }
+    G.lodged = [];
     G.enemies = []; G.eprojectiles = []; G.epools = []; G.pprojectiles = [];
     G.pickups = []; G.zones = []; G.orbits = []; G.rings = [];
     G.bolts = []; G.dangerZones = []; G.doors = []; G.hazards = [];

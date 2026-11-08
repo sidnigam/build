@@ -42,6 +42,7 @@ function makeBot() {
     winT: 0, winX: 0, winY: 0, winMove: false, lastMoveA: 0,
     strafeT: 0, strafeA: 0, stuckK: 0,
     doorBest: 1e9, doorNoProgT: 0, doorRef: null,
+    holdT: 0, charges: 0, pickups: 0,      // 05.7.1-03: charged-attack hold timer, lodged-astra walks
   };
   const unit = (x, y) => { const m = Math.hypot(x, y); return m > 1e-6 ? { x: x / m, y: y / m } : { x: 1, y: 0 }; };
 
@@ -214,9 +215,13 @@ function makeBot() {
 
     const living = GAME.enemies.filter(e => !e.dead && e.spawnT <= 0);
     let target = living.find(e => e.boss) || null;
-    if (!target) {
-      let bd = 1e9;
-      for (const e of living) { const d = U.dist(P.x, P.y, e.x, e.y); if (d < bd) { bd = d; target = e; } }
+    let nearestD = 1e9;
+    for (const e of living) { const d = U.dist(P.x, P.y, e.x, e.y); if (d < nearestD) { nearestD = d; if (!target || !target.boss) target = e; } }
+    // 05.7.1-03 (D-14): nearest lodged astra within 600 px, collected when nothing is close
+    let lodge = null;
+    if (GAME.lodged && GAME.lodged.length) {
+      let ld = 600;
+      for (const l of GAME.lodged) { const d = U.dist(P.x, P.y, l.x, l.y); if (d < ld) { ld = d; lodge = l; } }
     }
 
     // ---- dodge ----
@@ -244,8 +249,23 @@ function makeBot() {
       } else {
         const want = w.range * 0.7 + target.r;
         if (d > want) move = steer(P, target.x, target.y, dt);
-        INPUT.lmb = (P.atkCd <= 0 && d < w.range + target.r);  // one-frame pulse, never held
+        // 05.7.1-03 (D-13): crowded -> hold for the charged variant, release when full
+        if (st.holdT > 0) {
+          st.holdT -= dt;
+          INPUT.lmb = st.holdT > 0;
+        } else {
+          let crowd = 0;
+          for (const e of living) if (U.dist(P.x, P.y, e.x, e.y) < 140) crowd++;
+          if (w.charged && crowd >= 3 && P.atkCd <= 0 && !P._lmbPrev) {
+            st.holdT = DATA.KIT.chargeDelay + w.charged.time;
+            st.charges++;
+            INPUT.lmb = true;
+          } else {
+            INPUT.lmb = (P.atkCd <= 0 && d < w.range + target.r && !P._lmbPrev);  // one-frame press
+          }
+        }
       }
+      if (lodge && nearestD >= 200 && st.holdT <= 0) { move = steer(P, lodge.x, lodge.y, dt); st.pickups++; }
       if (P.specialCd <= 0) {
         let near = 0;
         for (const e of living) if (U.dist(P.x, P.y, e.x, e.y) < 160) near++;
@@ -256,6 +276,9 @@ function makeBot() {
         st.lastCastT = st.simT;
       }
       st.doorRef = null;
+    } else if (lodge) {
+      st.holdT = 0;
+      move = steer(P, lodge.x, lodge.y, dt);
     } else if (GAME.state === 'cleared' && GAME.doors.length) {
       const door = GAME.doors[0];
       if (st.doorRef !== door) { st.doorRef = door; st.doorBest = 1e9; st.doorNoProgT = 0; }

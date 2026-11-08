@@ -282,11 +282,8 @@ class Player {
       this.bhaktiT -= dt;
       if (this.bhaktiT <= 0) this.bhaktiReady = true;
     }
-    // cast regen
-    if (this.castCharges < this.castMax) {
-      this.castRegen += dt;
-      if (this.castRegen >= 6) { this.castRegen = 0; this.castCharges++; }
-    }
+    // 05.7.1-03 (D-14): no timed cast regen — astras lodge where they land and are walked over
+    // to recover (GAME.lodged); castRegen stays 0 for compatibility
     // dash regen
     if (this.dashCharges < this.dashMax) {
       this.dashRegen += dt;
@@ -700,23 +697,31 @@ class Player {
     AUDIO.sfx('cast');
     // krishna: orbiting discus instead of projectile
     if (this.has('kri_cast')) {
-      GAME.orbits.push({ angle: this.aim, t: 6, dmg: this.val('kri_cast'), dist: 70, hitCd: {} });
+      GAME.orbits.push({ angle: this.aim, t: 6, dmg: this.val('kri_cast'), dist: 70, hitCd: {}, castAmmo: true });
       return;
     }
     // vayu: roaming cyclone
     if (this.has('vayu_cast')) {
       GAME.zones.push({ x: this.x + Math.cos(this.aim) * 60, y: this.y + Math.sin(this.aim) * 60,
         r: 55, dps: this.val('vayu_cast'), t: 5, type: 'cyclone',
-        vx: Math.cos(this.aim) * 90, vy: Math.sin(this.aim) * 90, tick: 0 });
+        vx: Math.cos(this.aim) * 90, vy: Math.sin(this.aim) * 90, tick: 0, castAmmo: true });
       return;
     }
     const pierce = this.has('dur_cast');
     GAME.pprojectiles.push({
       x: this.x, y: this.y,
       vx: Math.cos(this.aim) * 560, vy: Math.sin(this.aim) * 560,
-      dmg: 42, r: 9, t: 1.6, pierce, src: 'cast', chakra: true,
+      dmg: 42, r: 9, t: 1.6, pierce, src: 'cast', chakra: true, lodge: true,
       color: '#ffd34d', hitSet: new Set(),
     });
+  }
+
+  // 05.7.1-03 (D-14): a recovered (or safety-returned) astra gives its charge back
+  returnCast(n = 1, x, y) {
+    if (!(n > 0)) return;
+    this.castCharges = Math.min(this.castMax, this.castCharges + n);
+    VFX.emit('castGlow', x != null ? x : this.x, y != null ? y : this.y, 0);
+    AUDIO.sfx('punya');
   }
 
   // 05.7.1-02 (D-11): returns true only when the hit lands; opts.status rides only on a landed hit.

@@ -35,6 +35,31 @@ const GAME = {
   enemies: [], eprojectiles: [], epools: [], pprojectiles: [], pickups: [],
   particles: [], texts: [], zones: [], orbits: [], rings: [],
   bolts: [], dangerZones: [], doors: [], pillars: [], hazards: [],
+  lodged: [],                    // 05.7.1-03 (D-14): astras lying where they landed {x, y, t, age}
+
+  // Lodge one astra at (x, y), pushed inside the arena and out of obstacles; returns the entry.
+  lodgeAt(x, y) {
+    const o = { x, y, r: 20 };
+    if (this.arena) clampToArena(o);
+    const l = { x: o.x, y: o.y, t: DATA.KIT.lodgeLife, age: 0 };
+    this.lodged.push(l);
+    return l;
+  },
+
+  // Cast ammo still out of the player's hands: lodged astras plus in-flight casts.
+  castAmmoOut() {
+    let n = this.lodged ? this.lodged.length : 0;
+    for (const p of this.pprojectiles) if (p.lodge && !p._lodged && p.t > 0) n++;
+    for (const o of this.orbits) if (o.castAmmo && !o._lodged && o.t > 0) n++;
+    for (const z of this.zones) if (z.castAmmo && !z._lodged && z.t > 0) n++;
+    return n;
+  },
+
+  // Safety return (room clear, boss defeat, defiance): every lodged astra comes back at once.
+  returnAllLodged() {
+    if (this.lodged.length && this.player) this.player.returnCast(this.lodged.length);
+    this.lodged = [];
+  },
 
   init() {
     this.canvas = document.getElementById('game');
@@ -150,6 +175,7 @@ const GAME = {
     this.runTime = 0; this.kills = 0; this.totalRooms = 0;
     this.bossRewarded = false;
     this.hitstop = 0; this.hitstopCd = 0;
+    this.lodged = [];
     CAMERA.resetFx();
     META.runs++; META.save();
     ROOMS.enterBiome(0);
@@ -164,6 +190,7 @@ const GAME = {
       this.eprojectiles = [];
       this.epools = [];
       STATUS.clear(P);
+      this.returnAllLodged();      // 05.7.1-03: a revive hands every lodged astra back
       burst(P.x, P.y, '#7fdcb7', 30, 320, 0.9, 5);
       this.shake = 14;
       VFX.flash(0x7fdcb7, 0.45, 0.35);
@@ -248,6 +275,7 @@ const GAME = {
     // boss defeat → reward path
     if (this.bossRef && this.bossRef.dead && !this.bossRewarded) {
       this.bossRewarded = true;
+      this.returnAllLodged();
       this.state = 'cleared';
       const wasLast = this.biomeIdx >= DATA.BIOMES.length - 1;
       ROOMS.onBossDefeated();
@@ -265,6 +293,7 @@ const GAME = {
         this.waveDelay += dt;
         if (this.waveDelay > DATA.WAVES.waveDelay) { this.waveDelay = 0; ROOMS.spawnWave(this.waves.shift()); }
       } else if (this.waves.length === 0 && queued === 0 && alive === 0) {
+        this.returnAllLodged();    // 05.7.1-03 (D-14): safety return on room clear
         this.state = 'cleared';
         ROOMS.onRoomClear();
       }
@@ -308,6 +337,16 @@ const GAME = {
         }
       }
     }
+    // 05.7.1-03 (D-14): a cast astra that ends (range, wall or non-pierce hit) lodges where it stops
+    for (const p of this.pprojectiles) {
+      if (!p.lodge || p.t > 0 || p._lodged) continue;
+      p._lodged = true;
+      const l = this.lodgeAt(p.x, p.y);
+      if (this.player.has('agni_cast') && p.hitSet.size === 0) {
+        this.zones.push({ x: l.x, y: l.y, r: 48, dps: this.player.val('agni_cast'),
+          t: 4, type: 'fire', vx: 0, vy: 0, tick: 0 });
+      }
+    }
     this.pprojectiles = this.pprojectiles.filter(p => p.t > 0);
 
     // enemy projectiles (05.7.1-02: data-driven families, js/combat.js) + ground pools
@@ -340,6 +379,7 @@ const GAME = {
           if (!e.dead && U.dist(z.x, z.y, e.x, e.y) < z.r + e.r)
             hitEnemy(e, z.dps * 0.5, 'zone');
       }
+      if (z.castAmmo && z.t <= 0 && !z._lodged) { z._lodged = true; this.lodgeAt(z.x, z.y); }
     }
     this.zones = this.zones.filter(z => z.t > 0);
 
@@ -358,6 +398,7 @@ const GAME = {
           hitEnemy(e, o.dmg, 'cast');
         }
       }
+      if (o.castAmmo && o.t <= 0 && !o._lodged) { o._lodged = true; this.lodgeAt(P.x, P.y); }
     }
     this.orbits = this.orbits.filter(o => o.t > 0);
 
@@ -383,6 +424,21 @@ const GAME = {
       }
     }
     this.pickups = this.pickups.filter(p => p.t > 0);
+
+    // 05.7.1-03 (D-14): lodged astras — magnet, walk-over pickup, 8 s safety return. A cast that
+    // lodges after the room is already cleared comes straight back (same as the clear return).
+    if (this.state === 'cleared' && this.lodged.length) this.returnAllLodged();
+    for (const l of this.lodged) {
+      l.age += dt;
+      if (l.age >= l.t) { P.returnCast(1); l.done = true; continue; }
+      const d = U.dist(l.x, l.y, P.x, P.y);
+      if (d < DATA.KIT.magnetR && d > 0.001) {
+        const a = U.angle(l.x, l.y, P.x, P.y), step = Math.min(d, DATA.KIT.magnetPull * dt);
+        l.x += Math.cos(a) * step; l.y += Math.sin(a) * step;
+      }
+      if (U.dist(l.x, l.y, P.x, P.y) < P.r + DATA.KIT.pickupR) { P.returnCast(1, l.x, l.y); l.done = true; }
+    }
+    if (this.lodged.length) this.lodged = this.lodged.filter(l => !l.done);
 
     // doors
     if (this.state === 'cleared') {
@@ -924,6 +980,28 @@ const GAME = {
   },
 
   renderEffects(ctx) {
+    // 05.7.1-03: lodged astras — a slowly spinning gold chakra, fading over its last 2 s
+    for (const l of this.lodged) {
+      if (!CAMERA.visible(l.x, l.y, 16)) continue;
+      const left = l.t - l.age;
+      ctx.globalAlpha = left < 2 ? Math.max(0.15, left / 2) * (0.7 + 0.3 * Math.sin(this.time * 10)) : 1;
+      ctx.fillStyle = '#ffd34d';
+      ctx.save();
+      ctx.translate(l.x, l.y);
+      ctx.rotate(this.time * 2);
+      ctx.beginPath();
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * U.TAU;
+        ctx.lineTo(Math.cos(a) * 10, Math.sin(a) * 10);
+        ctx.lineTo(Math.cos(a + 0.4) * 5, Math.sin(a + 0.4) * 5);
+      }
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+      ctx.strokeStyle = 'rgba(255,211,77,0.45)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(l.x, l.y, 14, 0, U.TAU); ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
     // orbits
     for (const o of this.orbits) {
       if (!CAMERA.visible(o.x, o.y, 14)) continue;
@@ -1231,10 +1309,18 @@ const GAME = {
       const on = i < P.dashCharges;
       this._hudDiamond(ctx, bx + 8 + i * 22, by + 36, 6, on, '#7fdcb7', 'rgba(255,211,77,0.65)');
     }
-    // cast pips — 8-petal lotus rosette, filled when charged, outline-only when empty
+    // cast pips — 8-petal lotus rosette, filled when charged, outline-only when empty.
+    // 05.7.1-03: a lodged astra's pip is a bright gold outline with a centre dot (walk over it).
+    const nLodged = this.lodged.length;
     for (let i = 0; i < P.castMax; i++) {
       const on = i < P.castCharges;
-      this._hudLotus(ctx, bx + 8 + P.dashMax * 22 + 20 + i * 22, by + 36, 8, on, on ? '#ffd34d' : 'rgba(255,211,77,0.35)');
+      const lodged = !on && i < P.castCharges + nLodged;
+      const px = bx + 8 + P.dashMax * 22 + 20 + i * 22;
+      this._hudLotus(ctx, px, by + 36, 8, on, on || lodged ? '#ffd34d' : 'rgba(255,211,77,0.35)');
+      if (lodged) {
+        ctx.fillStyle = '#ffd34d';
+        ctx.beginPath(); ctx.arc(px, by + 36, 2, 0, U.TAU); ctx.fill();
+      }
     }
     // special cooldown — gold-bordered, gold fill when ready
     const sw = 70;
@@ -1413,6 +1499,8 @@ const GAME = {
     if (this.state === 'cleared') {
       for (const d of this.doors) items.push({ x: d.x, y: d.y, kind: 'door', color: d.reward.color, sym: d.reward.sym });
     }
+    // 05.7.1-03: off-view lodged astras (plan 08 gives the kind its own glyph)
+    for (const l of this.lodged) items.push({ x: l.x, y: l.y, kind: 'astra', color: '#ffd34d', sym: '◎' });
     return items;
   },
 

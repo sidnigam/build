@@ -197,5 +197,253 @@ module.exports = function ({ R, check, fs, path, root }) {
   check('GAME.update calls ENEMY_AI.tick(dt) right before the enemy update loop',
     /ENEMY_AI\.tick\(dt\);[^\n]*\n\s*for \(const e of this\.enemies\) if \(!e\.dead\) e\.update\(dt\);/.test(gsrc));
 
-  R(`U.unseed()`);
+  // ================= Part 2: the retrofitted Enemy AI =================
+  const esrc = fs.readFileSync(path.join(root, 'js', 'entities.js'), 'utf8');
+
+  // ---- static scan: damage only through hurtPlayer()/fire() inside class Enemy ----
+  function stripMethodBody(text, name) {
+    const idx = text.indexOf(name + '(');
+    if (idx === -1) return text;
+    const braceStart = text.indexOf('{', idx);
+    let depth = 0, i = braceStart;
+    for (; i < text.length; i++) {
+      if (text[i] === '{') depth++;
+      else if (text[i] === '}') { depth--; if (depth === 0) { i++; break; } }
+    }
+    return text.slice(0, idx) + text.slice(i);
+  }
+  {
+    const s = esrc.indexOf('class Enemy');
+    const e = esrc.indexOf('// ---------------- BOSS telegraph invariant', s);
+    const body = s >= 0 && e > s ? esrc.slice(s, e) : '';
+    const hasHelpers = /\n  hurtPlayer\(/.test(body) && /\n  fire\(/.test(body);
+    let stripped = stripMethodBody(body, 'hurtPlayer');
+    stripped = stripMethodBody(stripped, 'fire');
+    check('class Enemy defines hurtPlayer() and fire() helpers', hasHelpers);
+    check('class Enemy: takeDamage( only appears inside hurtPlayer()', body.length > 0 && !/takeDamage\(/.test(stripped));
+    check('class Enemy: enemyShot( only appears inside fire()', body.length > 0 && !/enemyShot\(/.test(stripped));
+    const steers = (esrc.match(/ENEMY_AI\.steer\(this, dt\)/g) || []).length;
+    check(`Enemy AI cases move via ENEMY_AI.steer(this, dt) (${steers} >= 6)`, steers >= 6);
+    check('no hard-coded 0.6 s enemy spawn grace remains (entities.js / game.js)',
+      !/this\.spawnT = 0\.6/.test(esrc) && !/spawnT \/ 0\.6/.test(esrc) &&
+      !/spawnT \/ 0\.6/.test(fs.readFileSync(path.join(root, 'js', 'game.js'), 'utf8')));
+    check('both spawn-mandala draws use DATA.WAVES.spawnGrace',
+      /this\.spawnT \/ DATA\.WAVES\.spawnGrace/.test(esrc) &&
+      /e\.spawnT \/ DATA\.WAVES\.spawnGrace/.test(fs.readFileSync(path.join(root, 'js', 'game.js'), 'utf8')));
+  }
+
+  // ---- data: roles, families, spawn tunables ----
+  const dt = R(`(() => {
+    const want = { preta: 'melee', rakshasa: 'melee', archer: 'ranged', naga: 'ranged', vetala: 'melee',
+      bhuta: 'heavy', daitya: 'heavy', yatudhana: 'support' };
+    const roles = Object.keys(want).every(k => DATA.ENEMIES[k] && DATA.ENEMIES[k].role === want[k]);
+    return { roles, fams: DATA.ENEMIES.archer.fam === 'needle' && DATA.ENEMIES.naga.fam === 'venom',
+      grace: DATA.WAVES.spawnGrace === 0.45, delay: JSON.stringify(DATA.WAVES.engageDelay) === '[0.2,0.8]',
+      spritesDur: SPRITES.CFG.SPAWN_DUR === DATA.WAVES.spawnGrace };
+  })()`);
+  check('DATA.ENEMIES roles: preta/rakshasa/vetala melee, archer/naga ranged, bhuta/daitya heavy, yatudhana support', dt.roles);
+  check("DATA.ENEMIES: archer fam 'needle', naga fam 'venom'", dt.fams);
+  check('DATA.WAVES.spawnGrace 0.45 and engageDelay [0.2, 0.8]', dt.grace && dt.delay);
+  check('SPRITES.CFG.SPAWN_DUR mirrors DATA.WAVES.spawnGrace (sprite-path fade matches the grace)', dt.spritesDur);
+
+  const sp = R(`(() => {
+    if (!DATA.WAVES.engageDelay) return { grace: false, t: false };
+    const P = __ai.boot(0); let grace = true, t = true;
+    for (let i = 0; i < 200; i++) {
+      const e = new Enemy(U.choice(Object.keys(DATA.ENEMIES)), P.x + 300, P.y, 1);
+      if (e.spawnT !== DATA.WAVES.spawnGrace) grace = false;
+      if (e.t < DATA.WAVES.engageDelay[0] || e.t > DATA.WAVES.engageDelay[1]) t = false;
+    }
+    return { grace, t };
+  })()`);
+  check('new enemies: spawnT === DATA.WAVES.spawnGrace', sp.grace);
+  check('new enemies: initial t lies in DATA.WAVES.engageDelay', sp.t);
+
+  // helper for the AI sims
+  R(`__ai.spawn = function (type, dx, dy) {
+    const P = GAME.player; const e = new Enemy(type, P.x + dx, P.y + dy, 1);
+    e.spawnT = 0; GAME.enemies.push(e); return e;
+  };
+  __ai.hold = function (P, x, y) { P.x = x; P.y = y; P.kx = 0; P.ky = 0; if (P.st) { P.st.kx = 0; P.st.ky = 0; } };`);
+
+  // ---- projectile families ----
+  const fam = R(`(() => {
+    const P = __ai.boot(0); U.seed(11); ENEMY_TG.clear();
+    const hx = P.x, hy = P.y;
+    const a = __ai.spawn('archer', 300, 0); a.t = 0;
+    let shots = [];
+    for (let f = 0; f < 180 && !shots.length; f++) { __ai.hold(P, hx, hy); GAME.update(${DT}); shots = GAME.eprojectiles.slice(); }
+    const needle = shots.length === 1 && shots[0].fam === 'needle' &&
+      Math.abs(Math.hypot(shots[0].vx, shots[0].vy) - DATA.ENEMIES.archer.projSpeed) < 1e-6;
+    __ai.boot(1); U.seed(12); ENEMY_TG.clear();
+    const P2 = GAME.player, nx = P2.x, ny = P2.y;
+    const n = __ai.spawn('naga', 300, 0); n.t = 0;
+    shots = [];
+    for (let f = 0; f < 180 && !shots.length; f++) { __ai.hold(P2, nx, ny); GAME.update(${DT}); shots = GAME.eprojectiles.slice(); }
+    let venom = shots.length === 3 && shots.every(s => s.fam === 'venom');
+    if (venom) {
+      const ang = shots.map(s => Math.atan2(s.vy, s.vx)).sort((x, y) => x - y);
+      venom = Math.abs(U.angDiff(ang[0], ang[1]) - 0.3) < 1e-6 && Math.abs(U.angDiff(ang[1], ang[2]) - 0.3) < 1e-6;
+    }
+    // bhuta death ring stays bolt
+    __ai.boot(2); GAME.eprojectiles = [];
+    const b = __ai.spawn('bhuta', 200, 0);
+    killEnemy(b);
+    const ring = GAME.eprojectiles.length === 8 && GAME.eprojectiles.every(p => p.fam === 'bolt');
+    return { needle, venom, ring, f0: shots.length };
+  })()`);
+  check('archers fire a needle at def.projSpeed', fam.needle);
+  check('nagas spit 3 venom projectiles at ±0.3 rad', fam.venom);
+  check('the bhuta death ring stays bolt (8 shots)', fam.ring);
+
+  // ---- telegraph before every shot (aim state) ----
+  const aim = R(`(() => {
+    const P = __ai.boot(0); U.seed(13); ENEMY_TG.clear();
+    const hx = P.x, hy = P.y;
+    const a = __ai.spawn('archer', 300, 0); a.t = 0;
+    let sawAim = false, sawLine = false, firedAt = -1;
+    for (let f = 0; f < 180; f++) {
+      __ai.hold(P, hx, hy); GAME.update(${DT});
+      if (a.state === 'aim') { sawAim = true; if (a.telegraph && a.telegraph.type === 'line') sawLine = true; }
+      if (firedAt < 0 && GAME.eprojectiles.length) firedAt = f;
+    }
+    const w = ENEMY_TG.windLog.find(x => x.type === 'archer');
+    return { sawAim, sawLine, firedAt, wind: w ? w.wind : 0, viol: ENEMY_TG.violations.slice() };
+  })()`);
+  check(`archer winds up (aim state + line telegraph) before firing (wind ${aim.wind.toFixed(3)} s >= 0.30)`,
+    aim.sawAim && aim.sawLine && aim.firedAt > 0 && aim.wind >= 0.30 - 1e-6 && aim.viol.length === 0);
+
+  // ---- contact bite ----
+  const bite = R(`(() => {
+    const P = __ai.boot(0); U.seed(14); ENEMY_TG.clear();
+    const hx = P.x, hy = P.y;
+    P.iframes = 0;
+    const e = __ai.spawn('preta', 22, 0); e.atkT = 0;
+    const hp0 = P.hp;
+    let sawBite = false, circleOk = false, hitFrame = -1, biteFrame = -1;
+    for (let f = 0; f < 60; f++) {
+      __ai.hold(P, hx, hy); P.iframes = 0;
+      GAME.update(${DT});
+      if (e.state === 'bite') {
+        sawBite = true; if (biteFrame < 0) biteFrame = f;
+        if (e.telegraph && e.telegraph.type === 'circle' && e.telegraph.r === e.r + 8) circleOk = true;
+      }
+      if (hitFrame < 0 && P.hp < hp0) hitFrame = f;
+    }
+    const w = ENEMY_TG.windLog.find(x => x.kind === 'bite');
+    // 6 pretas in contact: at most pool('bite') in the bite state at once
+    __ai.boot(0); U.seed(15); ENEMY_TG.clear();
+    const P2 = GAME.player, x2 = P2.x, y2 = P2.y;
+    const ps = [];
+    for (let i = 0; i < 6; i++) { const a = i / 6 * U.TAU; const q = __ai.spawn('preta', Math.cos(a) * 24, Math.sin(a) * 24); q.atkT = 0; ps.push(q); }
+    let maxBite = 0;
+    for (let f = 0; f < 300; f++) {
+      __ai.hold(P2, x2, y2); P2.iframes = 0; GAME.update(${DT});
+      maxBite = Math.max(maxBite, ps.filter(q => q.state === 'bite').length);
+    }
+    return { sawBite, circleOk, hitFrame, biteFrame, wind: w ? w.wind : 0, maxBite, pool: ENEMY_AI.pool('bite'),
+      viol: ENEMY_TG.violations.slice() };
+  })()`);
+  check('chase contact goes through a bite state with a circle telegraph r + 8', bite.sawBite && bite.circleOk);
+  check(`the bite lands only after its >= 0.2 s tell (bite frame ${bite.biteFrame}, hit frame ${bite.hitFrame}, wind ${bite.wind.toFixed(3)})`,
+    bite.hitFrame > bite.biteFrame && bite.wind >= 0.2 - 1e-6);
+  check(`bites need a bite token: max ${bite.maxBite} biting at once (pool ${bite.pool})`, bite.maxBite > 0 && bite.maxBite <= bite.pool);
+  check('bite sims log no ENEMY_TG violations' + (bite.viol.length ? ' — ' + bite.viol.slice(0, 5).join(', ') : ''), bite.viol.length === 0);
+
+  // ---- tokens under load: 10 rakshasas ----
+  const load = R(`(() => {
+    const P = __ai.boot(0); U.seed(16); ENEMY_TG.clear();
+    const hx = P.x, hy = P.y;
+    const rs = [];
+    for (let i = 0; i < 10; i++) { const a = i / 10 * U.TAU; rs.push(__ai.spawn('rakshasa', Math.cos(a) * 200, Math.sin(a) * 200)); }
+    let maxAtk = 0, lunges = 0;
+    const pool = ENEMY_AI.pool('melee');
+    for (let f = 0; f < 20 * 60; f++) {
+      __ai.hold(P, hx, hy); GAME.update(${DT});
+      const n = rs.filter(e => e.state === 'wind' || e.state === 'lunge').length;
+      maxAtk = Math.max(maxAtk, n);
+      lunges += rs.filter(e => e.state === 'lunge').length ? 1 : 0;
+    }
+    return { maxAtk, pool, lunges, viol: ENEMY_TG.violations.slice() };
+  })()`);
+  check(`tokens under load: 10 rakshasas, at most ${load.maxAtk} winding/lunging at once (pool ${load.pool}), and they do attack`,
+    load.maxAtk <= load.pool && load.lunges > 0);
+  check('token load sim logs no ENEMY_TG violations', load.viol.length === 0);
+
+  // ---- ranged band ----
+  const band = R(`(() => {
+    const P = __ai.boot(0); U.seed(17); ENEMY_TG.clear();
+    const A = GAME.arena; const hx = A.x + A.w / 2, hy = A.y + A.h / 2;
+    __ai.hold(P, hx, hy);
+    const as = [0, 2.4, -2.4].map(a => __ai.spawn('archer', Math.cos(a) * 500, Math.sin(a) * 500));
+    const B = ENEMY_AI.CFG.RANGED_BAND;
+    let inB = 0, n = 0;
+    for (let f = 0; f < 8 * 60; f++) {
+      __ai.hold(P, hx, hy); GAME.update(${DT});
+      if (f >= 3 * 60) for (const a of as) { const d = U.dist(a.x, a.y, hx, hy); n++; if (d >= B[0] - 40 && d <= B[1] + 60) inB++; }
+    }
+    const fires = ENEMY_TG.fireLog.filter(x => x.type === 'archer');
+    return { frac: inB / n, fires: fires.length, allIn: fires.every(x => x.inView) };
+  })()`);
+  check(`ranged band: 3 archers spend ${(band.frac * 100).toFixed(1)}% of frames in [band0 - 40, band1 + 60] (>= 80%)`, band.frac >= 0.8);
+  check(`ranged band: archers fire (${band.fires}) only from inside the view band`, band.fires > 0 && band.allIn);
+
+  // ---- stun freezes a wind-up; death releases the token ----
+  const sf = R(`(() => {
+    const P = __ai.boot(0); U.seed(18); ENEMY_TG.clear();
+    const hx = P.x, hy = P.y;
+    const e = __ai.spawn('rakshasa', 90, 0); e.t = 0;
+    let f = 0;
+    while (e.state !== 'wind' && f++ < 120) { __ai.hold(P, hx, hy); GAME.update(${DT}); }
+    const inWind = e.state === 'wind';
+    const w0 = e.windT; e.stun = 0.5;
+    for (let i = 0; i < 20; i++) { __ai.hold(P, hx, hy); GAME.update(${DT}); }
+    const frozen = e.state === 'wind' && Math.abs(e.windT - w0) < 1e-12;
+    const held = e.tokenCat === 'melee';
+    killEnemy(e);
+    return { inWind, frozen, held, released: ENEMY_AI.holding('melee') === 0 && e.tokenCat === null };
+  })()`);
+  check('a stun mid-wind freezes the wind timer (state and windT unchanged)', sf.inWind && sf.frozen);
+  check('killEnemy releases the attack token', sf.held && sf.released);
+
+  // ---- 60 s room sims per biome: the invariant ----
+  for (let b = 0; b < 4; b++) {
+    const r = R(`(() => {
+      GAME.godMode = false; INPUT.ax = 0; INPUT.ay = 0; INPUT.lmb = false; INPUT.keys = {};
+      U.seed(${100 + b}); ENEMY_TG.clear();
+      GAME.startRun(); ROOMS.enterBiome(${b}); GAME.roomIdx = 1; ROOMS.enterRoom('mudra');
+      const P = GAME.player; P.maxhp = 1e9; P.hp = 1e9;
+      // the biome's full roster is present from the start (one of each, 300-500 px out)
+      for (const id of DATA.BIOMES[${b}].enemies) {
+        const a = U.rand(U.TAU), d = U.rand(300, 500);
+        const e = new Enemy(id, P.x + Math.cos(a) * d, P.y + Math.sin(a) * d, GAME.biome.scale);
+        clampToArena(e); GAME.enemies.push(e);
+      }
+      const types = new Set(); let maxAlive = 0;
+      for (let f = 0; f < 60 * 60; f++) {
+        // every 3 s one living enemy falls so the room's waves keep cycling
+        if (f % 180 === 179) { const live = GAME.enemies.filter(e => !e.dead && !e.boss); if (live.length > 4) killEnemy(U.choice(live)); }
+        // the player strolls a slow loop so slots, cuts and bands all get exercised
+        const t = f / 60;
+        INPUT.ax = Math.cos(t * 0.7); INPUT.ay = Math.sin(t * 0.7);
+        if (P.hp < 1e8) P.hp = 1e9;
+        GAME.update(${DT});
+        for (const e of GAME.enemies) if (!e.dead) types.add(e.type);
+        maxAlive = Math.max(maxAlive, GAME.enemies.filter(e => !e.dead).length);
+      }
+      INPUT.ax = 0; INPUT.ay = 0;
+      const short = ENEMY_TG.windLog.filter(w => !(w.wind >= (ENEMY_TG.MIN[w.kind] || 0) - 1e-6));
+      const kinds = [...new Set(ENEMY_TG.windLog.map(w => w.kind))];
+      const ranged = ENEMY_TG.fireLog.filter(x => x.type === 'archer' || x.type === 'naga');
+      return { viol: ENEMY_TG.violations.slice(0, 8), nViol: ENEMY_TG.violations.length, short: short.length,
+        logs: ENEMY_TG.windLog.length, kinds, types: [...types], maxAlive,
+        rangedFires: ranged.length, rangedIn: ranged.every(x => x.inView), state: GAME.state };
+    })()`);
+    check(`biome ${b} 60 s sim: zero ENEMY_TG violations (${r.logs} armed attacks, kinds ${r.kinds.join('/')}, roster ${r.types.join('/')})`
+      + (r.nViol ? ' — ' + r.viol.join(', ') : ''), r.nViol === 0 && r.logs > 0);
+    check(`biome ${b} 60 s sim: every windLog entry meets ENEMY_TG.MIN (${r.short} short)`, r.short === 0);
+    check(`biome ${b} 60 s sim: archer/naga shots (${r.rangedFires}) all fired from inside the view band`, r.rangedIn);
+  }
+
+  R(`INPUT.ax = 0; INPUT.ay = 0; U.unseed()`);
 };

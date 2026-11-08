@@ -288,4 +288,278 @@ module.exports = function ({ R, check }) {
     check('VFX preset ' + n + ' exists and spawns particles (' + p.full + ')', p.has && p.full > 0);
     check('VFX preset ' + n + ' spawns no more under reducedParticles (' + p.red + ' <= ' + p.full + ')', p.has && p.red <= p.full);
   }
+
+  // =================== Task 2: press/hold machine, charged variants, bow, pad parity ===================
+  const hasMachine = R(`typeof Player.prototype.releaseCharged === 'function'`);
+  check('Player.releaseCharged exists', hasMachine);
+  if (!hasMachine) return;
+
+  // ---- tap string ----
+  const tap = R(`(() => {
+    const P = __kit.boot('khanda');
+    __kit.dummy(P, 60, 0);
+    const idx = [];
+    for (let i = 0; i < 3; i++) {
+      INPUT.lmb = true; P.update(${DT}); idx.push(P.comboIdx); INPUT.lmb = false;
+      __kit.step(P, DATA.WEAPONS.khanda.rate + 0.02);
+    }
+    return { idx, kind: P.chargeKind, charge: P.charge };
+  })()`);
+  check('melee tap presses spaced by rate produce the full string (comboIdx ' + JSON.stringify(tap.idx) + ')', JSON.stringify(tap.idx) === '[1,2,3]');
+  check('melee taps never start a charge', tap.kind === null && tap.charge === 0);
+
+  // ---- hold: no auto-repeat, charge after delay, release fires once ----
+  const hold = R(`(() => {
+    const P = __kit.boot('khanda');
+    const e = __kit.dummy(P, 60, 0);
+    const rec = __kit.record();
+    try {
+      const out = {};
+      INPUT.lmb = true; P.update(${DT});
+      out.firstSwing = P.comboIdx === 1;
+      let k = 0; while (P.holdT < DATA.KIT.chargeDelay - 1e-9 && k++ < 120) { out.preKind = P.chargeKind; P.update(${DT}); }
+      out.kindAtDelay = P.chargeKind;
+      out.noRepeat = P.comboIdx === 1;
+      __kit.step(P, 0.2);
+      out.noRepeatLater = P.comboIdx === 1;
+      out.charge = P.charge;
+      out.wantCharge = Math.min(1, (P.holdT - DATA.KIT.chargeDelay) / DATA.WEAPONS.khanda.charged.time);
+      rec.log.length = 0;
+      INPUT.lmb = false; P.update(${DT});
+      out.chargedHits = rec.log.filter(c => c.opts.charged).length;
+      out.kindAfter = P.chargeKind; out.chargeAfter = P.charge;
+      P.update(${DT}); P.update(${DT});
+      out.extra = rec.log.filter(c => c.opts.charged).length;
+      // short hold: below 0.35 charge fires nothing extra
+      P.atkCd = 0; P.comboT = 0; P.comboIdx = 0;
+      __kit.step(P, 0.3);
+      INPUT.lmb = true; P.update(${DT});
+      while (P.holdT < DATA.KIT.chargeDelay + 0.05) P.update(${DT});
+      out.shortCharge = P.charge;
+      rec.log.length = 0;
+      INPUT.lmb = false; P.update(${DT});
+      out.shortHits = rec.log.filter(c => c.opts.charged).length;
+      return out;
+    } finally { rec.restore(); }
+  })()`);
+  check('melee hold: swing #1 fires on the press edge', hold.firstSwing);
+  check('melee hold: no auto-repeat while held', hold.noRepeat && hold.noRepeatLater);
+  check('melee hold: chargeKind is set once holdT reaches chargeDelay 0.28 (' + hold.kindAtDelay + ')', hold.kindAtDelay === 'thrust' && (hold.preKind === null || hold.preKind === undefined));
+  check('melee hold: charge fills over charged.time (' + hold.charge.toFixed(3) + ' ~ ' + hold.wantCharge.toFixed(3) + ')', Math.abs(hold.charge - hold.wantCharge) < 0.04);
+  check('melee release with charge >= 0.35 fires the charged variant once', hold.chargedHits === 1 && hold.extra === 1 && hold.kindAfter === null && hold.chargeAfter === 0);
+  check('melee release below 0.35 charge fires nothing extra (charge ' + hold.shortCharge.toFixed(3) + ')', hold.shortCharge < 0.35 && hold.shortHits === 0);
+
+  // ---- khanda thrust geometry ----
+  const th = R(`(() => {
+    const P = __kit.boot('khanda');
+    const w = DATA.WEAPONS.khanda, ch = w.charged;
+    const inA = __kit.dummy(P, 60, 0);
+    const inB = __kit.dummy(P, 200, 0, false);
+    const offAcross = __kit.dummy(P, 120, ch.width / 2 + 21 + 8, false);
+    const beyond = __kit.dummy(P, ch.len + 40, 0, false);
+    const behind = __kit.dummy(P, -50, 0, false);
+    INPUT.wx = P.x + 300; INPUT.wy = P.y;
+    P.update(${DT});
+    const rec = __kit.record();
+    try {
+      P.releaseCharged(0.8);
+      const by = e => rec.log.filter(c => c.e === e);
+      const a = by(inA), b = by(inB);
+      return {
+        a: a.length, b: b.length, off: by(offAcross).length, beyond: by(beyond).length, behind: by(behind).length,
+        base: a.length ? a[0].base : null, want: w.combo[2] * ch.mult * 0.8,
+        opts: a.length ? (a[0].opts.finisher === true && a[0].opts.charged === true) : false,
+        low: (() => { rec.log.length = 0; P.releaseCharged(0.36); const l = by(inA); return l.length ? l[0].base : null; })(),
+        wantLow: w.combo[2] * ch.mult * 0.5,
+      };
+    } finally { rec.restore(); }
+  })()`);
+  check('khanda thrust pierces every enemy inside the 220 x 34 rectangle', th.a === 1 && th.b === 1);
+  check('khanda thrust misses enemies outside the rectangle (across/beyond/behind)', th.off === 0 && th.beyond === 0 && th.behind === 0);
+  check('khanda thrust damage = combo[2] * 2.2 * max(0.5, charge) {finisher, charged}', th.base === th.want && th.opts && th.low === th.wantLow);
+
+  // ---- gada smash ----
+  const sm = R(`(() => {
+    const P = __kit.boot('gada');
+    const w = DATA.WEAPONS.gada, ch = w.charged;
+    const e = __kit.dummy(P, 150, 0);
+    const far = __kit.dummy(P, 0, ch.radius + 40, false);
+    P.update(${DT});
+    const rec = __kit.record(), vfx = __kit.recordVfx();
+    const punch = CAMERA.punch; let punched = 0;
+    CAMERA.punch = function () { punched++; return punch.apply(this, arguments); };
+    try {
+      P.releaseCharged(1);
+      const h = rec.log.filter(c => c.e === e);
+      return {
+        n: h.length, base: h.length ? h[0].base : null, want: w.combo[0] * ch.mult,
+        opts: h.length ? (h[0].opts.finisher === true && h[0].opts.charged === true) : false,
+        stun: e.stun, far: rec.log.filter(c => c.e === far).length, punched, flash: vfx.names.includes('chargeFlash'),
+      };
+    } finally { rec.restore(); vfx.restore(); CAMERA.punch = punch; }
+  })()`);
+  check('gada smash hits inside 170 px for combo[0] * 2.5 * max(0.5, charge) {finisher, charged}', sm.n === 1 && sm.base === sm.want && sm.opts);
+  check('gada smash misses enemies beyond its radius', sm.far === 0);
+  check('gada smash stuns non-boss enemies 0.6 (' + sm.stun + ')', Math.abs(sm.stun - 0.6) < 1e-9);
+  check('gada smash calls CAMERA.punch and emits chargeFlash', sm.punched >= 1 && sm.flash);
+
+  // ---- buffered press ----
+  const buf = R(`(() => {
+    const P = __kit.boot('khanda');
+    __kit.dummy(P, 60, 0);
+    const out = {};
+    INPUT.lmb = true; P.update(${DT}); INPUT.lmb = false; P.update(${DT});
+    // recovery left ~0.1 s: press now, it should swing when atkCd reaches 0
+    while (P.atkCd > 0.1) P.update(${DT});
+    INPUT.lmb = true; P.update(${DT}); INPUT.lmb = false;
+    out.buffered = P.bufT > 0 && P.comboIdx === 1;
+    let n = 0; while (P.comboIdx === 1 && n++ < 30) P.update(${DT});
+    out.swungAfter = P.comboIdx === 2; out.frames = n;
+    // a press with more than 0.15 s of recovery left expires before atkCd reaches 0
+    P.atkCd = 0.3;
+    INPUT.lmb = true; P.update(${DT}); INPUT.lmb = false;
+    __kit.step(P, 0.35);
+    out.expired = P.comboIdx === 2;
+    return out;
+  })()`);
+  check('a press during recovery is buffered', buf.buffered);
+  check('the buffered press swings when atkCd reaches 0 (' + buf.frames + ' frames)', buf.swungAfter && buf.frames <= 7);
+  check('a buffered press expires after 0.15 s', buf.expired);
+
+  // ---- gandiva perfect release ----
+  const pf = R(`(() => {
+    const out = {};
+    const run = (lateFrames, flashOn) => {
+      const P = __kit.boot('gandiva');
+      __kit.dummy(P, 300, 0);
+      SETTINGS.set('screenFlash', flashOn);
+      const vfx = __kit.recordVfx();
+      const fl = VFX.flash; let flashes = 0;
+      VFX.flash = function () { flashes++; return fl.apply(this, arguments); };
+      try {
+        INPUT.lmb = true;
+        let n = 0; while (P.charge < 1 && n++ < 120) P.update(${DT});
+        for (let i = 0; i < lateFrames; i++) P.update(${DT});
+        const before = GAME.pprojectiles.length;
+        flashes = 0; vfx.names.length = 0;
+        INPUT.lmb = false; P.update(${DT});
+        const s = GAME.pprojectiles.slice(before);
+        return { n: s.length, s: s[0], flashes, cf: vfx.names.includes('chargeFlash'), fullAt: P.fullAt };
+      } finally { vfx.restore(); VFX.flash = fl; }
+    };
+    const prev = SETTINGS.get('screenFlash');
+    try {
+      const w = DATA.WEAPONS.gandiva;
+      const p = run(2, true), late = run(12, true), noFl = run(2, false);
+      out.perfect = p.n === 1 && Math.abs(p.s.dmg - w.dmgMax * w.charged.mult) < 1e-9 && p.s.pierce === true
+        && p.s.kb === w.charged.kb && p.s.color === '#fff4b0' && !!p.s.opts && p.s.opts.finisher === true;
+      out.cf = p.cf; out.flashOn = p.flashes; out.flashOff = noFl.flashes; out.noFlCf = noFl.cf;
+      out.late = late.n === 1 && Math.abs(late.s.dmg - w.dmgMax) < 1e-9 && !late.s.kb && late.s.pierce === true;
+      out.reset = p.fullAt === -1 && late.fullAt === -1;
+    } finally { SETTINGS.set('screenFlash', prev); }
+    return out;
+  })()`);
+  check('gandiva release within 0.12 s of full draw is a perfect shot (x1.5, pierce, kb 300, #fff4b0, {finisher})', pf.perfect);
+  check('gandiva perfect shot emits chargeFlash', pf.cf && pf.noFlCf);
+  check('gandiva perfect shot flashes only when screenFlash is on (' + pf.flashOn + '/' + pf.flashOff + ')', pf.flashOn >= 1 && pf.flashOff === 0);
+  check('gandiva late release is a normal full shot', pf.late);
+  check('gandiva fullAt resets after each release', pf.reset);
+
+  // ---- gandiva quick-shot finisher ----
+  const qs = R(`(() => {
+    const P = __kit.boot('gandiva');
+    __kit.dummy(P, 300, 0);
+    const counts = [], fin = [];
+    for (let i = 0; i < 4; i++) {
+      INPUT.lmb = true; __kit.step(P, 0.15);
+      const before = GAME.pprojectiles.length;
+      INPUT.lmb = false; P.update(${DT});
+      const s = GAME.pprojectiles.slice(before);
+      counts.push(s.length); fin.push(s.every(a => a.opts && a.opts.finisher === true));
+      if (i === 2) {
+        const angs = s.map(a => Math.atan2(a.vy, a.vx) - P.aim).sort((a, b) => a - b);
+        globalThis.__qsAngs = angs;
+      }
+      __kit.step(P, DATA.WEAPONS.gandiva.rate + 0.02);
+    }
+    const out = { counts, fin, angs: globalThis.__qsAngs, q: P.quickShots };
+    // slow cadence: a gap longer than the window restarts the count
+    P.quickShots = 0;
+    for (let i = 0; i < 3; i++) {
+      INPUT.lmb = true; __kit.step(P, 0.15);
+      const before = GAME.pprojectiles.length;
+      INPUT.lmb = false; P.update(${DT});
+      out.slowLast = GAME.pprojectiles.length - before;
+      __kit.step(P, 1.0);
+    }
+    return out;
+  })()`);
+  check('gandiva: the third quick shot fires 3 arrows (' + JSON.stringify(qs.counts) + ')', JSON.stringify(qs.counts) === '[1,1,3,1]');
+  check('gandiva quick-shot finisher arrows carry {finisher:true} at aim +/-0.12', qs.fin[2] && !qs.fin[0] && !!qs.angs && Math.abs(qs.angs[0] + 0.12) < 1e-6 && Math.abs(qs.angs[1]) < 1e-6 && Math.abs(qs.angs[2] - 0.12) < 1e-6);
+  check('gandiva quick-shot counter resets after the finisher', qs.q === 1);
+  check('gandiva quick shots slower than 0.9 s apart never finish', qs.slowLast === 1);
+
+  // ---- pad parity ----
+  const pad = R(`(() => {
+    const out = {};
+    const saved = { device: INPUT.device, lmb: INPUT.lmb, ax: INPUT.ax, ay: INPUT.ay, wx: INPUT.wx, wy: INPUT.wy,
+      prev: PAD._prevPressed, idx: PAD.state.index, aim: PAD._aimAng, nav: globalThis.navigator };
+    const padB = JSON.stringify(PAD.bindings), kbB = JSON.stringify(INPUT.bindings);
+    const gp = { id: 'Xbox Wireless Controller (STANDARD GAMEPAD)', mapping: 'standard', connected: true, axes: [0, 0, 0, 0],
+      buttons: Array.from({ length: 18 }, () => ({ pressed: false, value: 0 })) };
+    const btn = (b, on) => { gp.buttons[PAD.CFG.BTN[b]] = { pressed: on, value: on ? 1 : 0 }; };
+    const frames = Math.round((DATA.KIT.chargeDelay + DATA.WEAPONS.gada.charged.time * 0.6) * 60);
+    const kbm = () => {
+      const P = __kit.boot('gada'); __kit.dummy(P, 120, 0);
+      const rec = __kit.record();
+      try {
+        INPUT.lmb = true; for (let i = 0; i < frames; i++) P.update(${DT});
+        const charge = P.charge; INPUT.lmb = false; P.update(${DT});
+        const c = rec.log.filter(x => x.opts.charged);
+        return { charge, base: c.length ? c[0].base : null };
+      } finally { rec.restore(); }
+    };
+    try {
+      const k = kbm();
+      globalThis.navigator = { getGamepads: () => [gp] };
+      PAD._prevPressed = {}; PAD.state.index = -1; PAD._aimAng = null;
+      const P = __kit.boot('gada'); const e = __kit.dummy(P, 120, 0);
+      INPUT.device = 'pad'; PAD.poll();
+      const rec = __kit.record();
+      let pc = 0, pbase = null;
+      try {
+        btn('A', true);
+        for (let i = 0; i < frames; i++) { PAD.poll(); P.update(${DT}); }
+        pc = P.charge;
+        btn('A', false); PAD.poll(); P.update(${DT});
+        const c = rec.log.filter(x => x.opts.charged); pbase = c.length ? c[0].base : null;
+      } finally { rec.restore(); }
+      out.kbm = k; out.pad = { charge: pc, base: pbase };
+      // pad dash (B) then a pad attack press inside the window -> dashStrike
+      const P2 = __kit.boot('khanda'); __kit.dummy(P2, 200, 0);
+      INPUT.device = 'pad'; PAD._prevPressed = {}; PAD.poll();
+      let ds = 0; const orig = P2.dashStrike;
+      P2.dashStrike = function () { ds++; return orig.apply(this, arguments); };
+      btn('B', true); PAD.poll(); out.dashed = P2.dashT > 0; btn('B', false);
+      let n = 0; while (P2.dashT > 0 && n++ < 60) { PAD.poll(); P2.update(${DT}); }
+      PAD.poll(); P2.update(${DT}); P2.update(${DT});
+      btn('A', true); PAD.poll(); P2.update(${DT});
+      btn('A', false); PAD.poll(); P2.update(${DT});
+      out.padDashStrike = ds;
+      out.bindingsSame = JSON.stringify(PAD.bindings) === padB && JSON.stringify(INPUT.bindings) === kbB;
+    } finally {
+      if (saved.nav === undefined) delete globalThis.navigator; else globalThis.navigator = saved.nav;
+      INPUT.device = saved.device; INPUT.lmb = saved.lmb; INPUT.ax = saved.ax; INPUT.ay = saved.ay;
+      INPUT.wx = saved.wx; INPUT.wy = saved.wy;
+      PAD._prevPressed = saved.prev; PAD.state.index = saved.idx; PAD._aimAng = saved.aim;
+    }
+    return out;
+  })()`);
+  check('pad hold charges like kbm (charge ' + pad.pad.charge.toFixed(3) + ' vs ' + pad.kbm.charge.toFixed(3) + ')', Math.abs(pad.pad.charge - pad.kbm.charge) < 1e-9 && pad.kbm.charge > 0.35);
+  check('pad release fires the same charged variant as kbm (' + pad.pad.base + ' vs ' + pad.kbm.base + ')', pad.kbm.base !== null && pad.pad.base === pad.kbm.base);
+  check('pad dash (B) then pad attack inside 0.2 s triggers dashStrike()', pad.dashed && pad.padDashStrike === 1);
+  check('PAD.bindings / INPUT.bindings unchanged by the kit', pad.bindingsSame);
+
+  const rm = R(`JSON.stringify([PAD.VFX_RUMBLE.dashStrike, PAD.VFX_RUMBLE.chargeFlash, PAD.VFX_RUMBLE.finisherRing])`);
+  check('PAD.VFX_RUMBLE maps dashStrike->hit, chargeFlash->crit, finisherRing->crit', rm === '["hit","crit","crit"]');
 };

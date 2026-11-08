@@ -32,7 +32,7 @@ const GAME = {
   shopSeenThisBiome: false, nooseT: 0, prePause: null,
 
   // world arrays
-  enemies: [], eprojectiles: [], pprojectiles: [], pickups: [],
+  enemies: [], eprojectiles: [], epools: [], pprojectiles: [], pickups: [],
   particles: [], texts: [], zones: [], orbits: [], rings: [],
   bolts: [], dangerZones: [], doors: [], pillars: [], hazards: [],
 
@@ -162,6 +162,7 @@ const GAME = {
       P.hp = Math.round(P.maxhp * 0.5);
       P.iframes = 2;
       this.eprojectiles = [];
+      this.epools = [];
       STATUS.clear(P);
       burst(P.x, P.y, '#7fdcb7', 30, 320, 0.9, 5);
       this.shake = 14;
@@ -305,18 +306,8 @@ const GAME = {
     }
     this.pprojectiles = this.pprojectiles.filter(p => p.t > 0);
 
-    // enemy projectiles
-    for (const p of this.eprojectiles) {
-      p.x += p.vx * dt; p.y += p.vy * dt; p.t -= dt;
-      const A = this.arena;
-      if (p.x < A.x || p.x > A.x + A.w || p.y < A.y || p.y > A.y + A.h) p.t = 0;
-      if (ROOMS.blocksProjectile(p)) p.t = 0;
-      if (p.t > 0 && U.dist(p.x, p.y, P.x, P.y) < P.r + p.r) {
-        P.takeDamage(p.dmg);
-        p.t = 0;
-      }
-    }
-    this.eprojectiles = this.eprojectiles.filter(p => p.t > 0);
+    // enemy projectiles (05.7.1-02: data-driven families, js/combat.js) + ground pools
+    PROJ.updateAll(dt);
 
     // zones (fire pools, cyclones)
     for (const z of this.zones) {
@@ -754,6 +745,8 @@ const GAME = {
       ctx.beginPath(); ctx.arc(dz.x, dz.y, dz.r, 0, U.TAU); ctx.fill(); ctx.stroke();
       ctx.beginPath(); ctx.arc(dz.x, dz.y, dz.r * U.clamp(dz.frac, 0, 1), 0, U.TAU); ctx.stroke();
     }
+    // 05.7.1-02: mortar landing circles, ring pre-pulses, lingering pools (ground layer)
+    PROJ.drawGround(ctx);
 
     // zones
     for (const z of this.zones) {
@@ -962,13 +955,7 @@ const GAME = {
         ctx.stroke();
       }
     }
-    for (const p of this.eprojectiles) {
-      if (!CAMERA.visible(p.x, p.y, p.r + 16)) continue;
-      ctx.fillStyle = p.color;
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, U.TAU); ctx.fill();
-      ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, U.TAU); ctx.stroke();
-    }
+    PROJ.drawAll(ctx);
 
     // lightning bolts
     for (const b of this.bolts) {

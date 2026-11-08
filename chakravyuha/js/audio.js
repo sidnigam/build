@@ -155,6 +155,16 @@ const AUDIO = {
       // 05.7.1-02: player statuses
       case 'stun':     this.tone({ freq: 880, end: 220, dur: 0.25, type: 'square', vol: 0.14 }); break;
       case 'root':     this.tone({ freq: 200, end: 120, dur: 0.2, type: 'triangle', vol: 0.1 }); break;
+      case 'poison':   this.noise({ dur: 0.1, vol: 0.06, freq: 900 }); break;
+      // 05.7.1-02: enemy projectile families (spawns are rate-limited in PROJ._sfx)
+      case 'needle':   this.noise({ dur: 0.04, vol: 0.06, freq: 5200 }); break;
+      case 'orb':      this.tone({ freq: 140, end: 90, dur: 0.25, type: 'sine', vol: 0.12 }); break;
+      case 'wisp':     this.tone({ freq: 600, end: 900, dur: 0.18, type: 'triangle', vol: 0.07 }); break;
+      case 'bomb':     this.noise({ dur: 0.25, vol: 0.14, freq: 600 }); break;
+      case 'beam':     this.tone({ freq: 1800, end: 300, dur: 0.3, type: 'sawtooth', vol: 0.1 }); break;
+      case 'mortar':   this.tone({ freq: 90, end: 40, dur: 0.35, type: 'square', vol: 0.14 }); break;
+      case 'chakram':  this.tone({ freq: 1200, end: 1500, dur: 0.12, type: 'triangle', vol: 0.08 }); break;
+      case 'ring':     this.tone({ freq: 260, end: 520, dur: 0.3, type: 'sine', vol: 0.12 }); break;
     }
   },
 

@@ -153,8 +153,10 @@ function killEnemy(e) {
   }
 }
 
-function enemyShot(x, y, vx, vy, dmg, color, r = 6) {
-  GAME.eprojectiles.push({ x, y, vx, vy, dmg, color, r, t: 4 });
+// 05.7.1-02: routed through PROJ. Family 'bolt' (the default) is today's generic bullet,
+// bit-identical; other families use their data radius unless extra.r is given.
+function enemyShot(x, y, vx, vy, dmg, color, r = 6, fam = 'bolt', extra) {
+  return PROJ.spawn(fam, { x, y, vx, vy, dmg, color, r: fam === 'bolt' ? r : undefined, extra });
 }
 
 // ---------------- PLAYER ----------------
@@ -312,7 +314,7 @@ class Player {
       // trishula step: destroy projectiles
       if (this.has('dur_dash')) {
         for (const p of GAME.eprojectiles) {
-          if (U.dist(this.x, this.y, p.x, p.y) < 34) { p.t = 0; burst(p.x, p.y, '#e84a8a', 5, 100, 0.25); }
+          if (PROJ.destroyable(p) && U.dist(this.x, this.y, p.x, p.y) < 34) { p.t = 0; burst(p.x, p.y, '#e84a8a', 5, 100, 0.25); }
         }
       }
     } else if (!stunned && !rooted) {
@@ -531,6 +533,7 @@ class Player {
     dmg = Math.max(1, Math.round(dmg));
     this.hp -= dmg;
     dmgText(this.x, this.y - 24, dmg, (DATA.STATUS[type] || {}).color || '#ff5566', 13);
+    AUDIO.sfx(type === 'poison' ? 'poison' : 'burn');
     if (this.hp <= 0) GAME.onPlayerDeath();
   }
 
@@ -909,10 +912,11 @@ class Boss extends Enemy {
     if (!this.armed) BOSS_TG.violations.push(this.type + ':' + this.state);
     GAME.player.takeDamage(amount);
   }
-  shoot(vx, vy, dmg, r = 7, x = this.x, y = this.y) {
+  shoot(vx, vy, dmg, r = 7, x = this.x, y = this.y, fam = 'bolt', extra) {
     if (!this.armed) BOSS_TG.violations.push(this.type + ':' + this.state);
-    enemyShot(x, y, vx, vy, dmg, this.color, r);
+    const p = enemyShot(x, y, vx, vy, dmg, this.color, r, fam, extra ? Object.assign({ owner: this }, extra) : (fam === 'bolt' ? undefined : { owner: this }));
     this.dmgCalls = (this.dmgCalls || 0) + 1;
+    return p;
   }
 
   // ---- move lifecycle (D-07, D-09) ----

@@ -513,6 +513,43 @@ VFX.PRESETS.phase = function (x, y, a, color) {
   if (typeof GFX !== 'undefined') GFX.pulse(x, y, 'phase', color);
 };
 
+// ---------------- enemy projectile presets (05.7.1-02, D-09) ----------------
+// Trails are emitted every other frame by PROJ.updateAll; burst counts go through this.count().
+VFX.PRESETS.ptrail = function (x, y, a, color) {
+  const back = (a || 0) + Math.PI, spd = U.rand(10, 30);
+  this.spawn(x, y, Math.cos(back) * spd, Math.sin(back) * spd, 0.25, 3, 1, color || '#ffffff', 0, false, 0.9, 0, 1, false);
+};
+
+VFX.PRESETS.pglow = function (x, y, a, color) {
+  this.spawn(x + U.rand(-2, 2), y + U.rand(-2, 2), 0, 0, 0.35, 8, 2, color || '#ffffff', 3, true, 0.9, 0, 1, false);
+};
+
+VFX.PRESETS.phit = function (x, y, a, color) {
+  const n = this.count(6), col = color || '#ffffff';
+  for (let i = 0; i < n; i++) {
+    const ang = U.rand(U.TAU), spd = U.rand(120, 280), life = U.rand(0.12, 0.22);
+    this.spawn(x, y, Math.cos(ang) * spd, Math.sin(ang) * spd, life, 3, 1, col, 1, true, 0.88, 0, 1, false);
+  }
+};
+
+VFX.PRESETS.pblast = function (x, y, a, color) {
+  const n = this.count(12), col = color || '#ffffff';
+  for (let i = 0; i < n; i++) {
+    const ang = (i / n) * U.TAU + U.rand(-0.2, 0.2), spd = U.rand(140, 300), life = U.rand(0.3, 0.55);
+    this.spawn(x, y, Math.cos(ang) * spd, Math.sin(ang) * spd, life, 4, 1, col, 2, true, 0.92, -40, 1, false);
+  }
+  this.spawn(x, y, 0, 0, 0.12, 18, 4, col, 0, true, 0.9, 0, 1, false);
+  if (typeof GFX !== 'undefined') GFX.pulse(x, y, 'hit');
+};
+
+VFX.PRESETS.pbeam = function (x, y, a, color) {
+  const n = this.count(8), col = color || '#ffffff';
+  for (let i = 0; i < n; i++) {
+    const ang = (a || 0) + U.rand(-0.3, 0.3), spd = U.rand(160, 340), life = U.rand(0.12, 0.25);
+    this.spawn(x, y, Math.cos(ang) * spd, Math.sin(ang) * spd, life, 3, 1, col, 1, true, 0.88, 0, 1, false);
+  }
+};
+
 // ---------------- biome ambient particles (VFX-05, D-16) ----------------
 // Note on tuning: velocities/lives below are deliberately gentler than a literal reading
 // of the design doc's per-biome descriptions (e.g. "vy -30..-70") would suggest — sustained

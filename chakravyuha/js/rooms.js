@@ -427,7 +427,7 @@ const ROOMS = {
   enterRoom(rewardId) {
     const G = GAME;
     G.reward = rewardId;
-    G.enemies = []; G.eprojectiles = []; G.pprojectiles = [];
+    G.enemies = []; G.eprojectiles = []; G.epools = []; G.pprojectiles = [];
     G.pickups = []; G.zones = []; G.orbits = []; G.rings = [];
     G.bolts = []; G.dangerZones = []; G.doors = []; G.hazards = [];
     G.nooseT = 0; G.bossRewarded = false;

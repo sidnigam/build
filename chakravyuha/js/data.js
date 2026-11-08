@@ -220,6 +220,25 @@ DATA.STATUS = {
   pull:   { decay: 0.0001, color: '#9fb8ff' },
 };
 
+// ---------- ENEMY PROJECTILE FAMILIES (Phase 05.7.1, D-09) ----------
+// behavior: code in PROJ.BEHAVIORS (js/combat.js). draw: PROJ.DRAW key. Colours full #rrggbb.
+// destroyable:false = survives Durga's dur_dash. status: applied only when the hit lands (D-11).
+DATA.PROJECTILES = {
+  bolt:    { behavior: 'straight', draw: 'bolt',    r: 6,  speed: 360, life: 4,   color: '#ffffff', trail: null,     hitFx: null,     sfx: null,      destroyable: true },
+  needle:  { behavior: 'straight', draw: 'needle',  r: 3,  speed: 560, life: 2.2, color: '#e8f0ff', trail: 'ptrail', hitFx: 'phit',   sfx: 'needle',  destroyable: true },
+  orb:     { behavior: 'straight', draw: 'orb',     r: 18, speed: 140, life: 6,   color: '#ff9a3c', trail: 'pglow',  hitFx: 'pblast', sfx: 'orb',     destroyable: false, status: { type: 'knock', force: 420 } },
+  wisp:    { behavior: 'homing',   draw: 'wisp',    r: 7,  speed: 170, life: 3.5, color: '#b48aff', trail: 'pglow',  hitFx: 'phit',   sfx: 'wisp',    destroyable: true,  turn: 2.0, perShooterCap: 6, status: { type: 'slow', f: 0.6, dur: 1.5 } },
+  bomb:    { behavior: 'bomb',     draw: 'bomb',    r: 10, speed: 220, life: 3,   color: '#ffcf5c', trail: 'ptrail', hitFx: 'pblast', sfx: 'bomb',    destroyable: true,  travel: 0.7, fuse: 0.8, splits: 6, splitFam: 'needle', splitDmg: 0.6 },
+  beam:    { behavior: 'beam',     draw: 'beam',    r: 9,  speed: 0,   life: 1.3, color: '#ffe7a0', trail: null,     hitFx: 'pbeam',  sfx: 'beam',    destroyable: false, tell: 0.8, active: 0.25, len: 900, width: 18 },
+  mortar:  { behavior: 'mortar',   draw: 'mortar',  r: 70, speed: 0,   life: 1.2, color: '#ff7a2a', trail: null,     hitFx: 'pblast', sfx: 'mortar',  destroyable: false, flight: 1.0 },
+  chakram: { behavior: 'chakram',  draw: 'chakram', r: 9,  speed: 420, life: 3,   color: '#d0d8e8', trail: 'ptrail', hitFx: 'phit',   sfx: 'chakram', destroyable: true,  out: 0.6, back: 480 },
+  ring:    { behavior: 'ring',     draw: 'ring',    r: 20, speed: 260, life: 2.2, color: '#9fb8ff', trail: null,     hitFx: 'phit',   sfx: 'ring',    destroyable: false, maxR: 520, width: 18, prePulse: 0.4, status: { type: 'knock', force: 360 } },
+  venom:   { behavior: 'straight', draw: 'venom',   r: 8,  speed: 260, life: 3.5, color: '#7dff5a', trail: 'ptrail', hitFx: 'phit',   sfx: 'orb',     destroyable: true,  status: { type: 'poison', dps: 3, dur: 4 } },
+  ember:   { behavior: 'straight', draw: 'ember',   r: 7,  speed: 300, life: 3.5, color: '#ff6a2a', trail: 'pglow',  hitFx: 'phit',   sfx: 'orb',     destroyable: true,  status: { type: 'burn', dps: 4, dur: 3 } },
+  coil:    { behavior: 'straight', draw: 'coil',    r: 9,  speed: 240, life: 3.5, color: '#c08a4a', trail: 'ptrail', hitFx: 'phit',   sfx: 'root',    destroyable: true,  status: { type: 'root', dur: 1.0 } },
+  thunder: { behavior: 'straight', draw: 'thunder', r: 6,  speed: 420, life: 3,   color: '#fff27a', trail: 'ptrail', hitFx: 'phit',   sfx: 'stun',    destroyable: true,  status: { type: 'stun', dur: 0.4 } },
+};
+
 // ---------- BOSSES ----------
 DATA.BOSSES = {
   tataka: {

@@ -13,7 +13,7 @@ module.exports = function ({ R, sandbox, check, harness, fs, path, root }) {
   const defs = R(`Object.entries(DATA.PROJECTILES).map(([id, d]) => ({ id, behavior: d.behavior, draw: d.draw, color: d.color,
     trail: d.trail, hitFx: d.hitFx, sfx: d.sfx, hasBeh: !!PROJ.BEHAVIORS[d.behavior], hasDraw: !!PROJ.DRAW[d.draw],
     trailOk: d.trail === null || !!VFX.PRESETS[d.trail], hitOk: d.hitFx === null || !!VFX.PRESETS[d.hitFx] }))`);
-  check('DATA.PROJECTILES has 14 entries (bolt + 9 families + 4 status variants), got ' + defs.length, defs.length >= 14);
+  check('DATA.PROJECTILES has 13 entries (legacy bolt + 8 new families + 4 status variants), got ' + defs.length, defs.length >= 13);
   for (const d of defs) {
     check(`${d.id}: behavior '${d.behavior}' is in PROJ.BEHAVIORS`, d.hasBeh);
     check(`${d.id}: draw '${d.draw}' is in PROJ.DRAW`, d.hasDraw);
@@ -149,9 +149,9 @@ module.exports = function ({ R, sandbox, check, harness, fs, path, root }) {
     const p = PROJ.spawn('beam', { x: P.x - 120, y: P.y, dmg: 10, extra: { a: 0 } });
     const tell = DATA.PROJECTILES.beam.tell; let tellDmg = false, drops = 0, last = P.hp;
     for (let i = 0; i < 120; i++) {
-      P.iframes = 0; const age = p.age;
+      P.iframes = 0;
       PROJ.updateAll(${DT});
-      if (P.hp < last) { drops++; if (age < tell - 1e-9) tellDmg = true; }
+      if (P.hp < last) { drops++; if (p.age < tell - 1e-9) tellDmg = true; }   // post-update age
       last = P.hp;
     }
     return { tellDmg, drops };

@@ -75,6 +75,7 @@ Recent decisions affecting current work:
 - [Phase 02]: CAMERA.begin() takes no ctx arg — worldContainer transform persists, end() is a no-op
 - [Phase 02]: SPRITES.ready=false until first atlas loads — has(key) stays false until art files land in Plans 04-06
 - [quick-260924-tka]: Sprite runtime hardened — idle fallback, r-based scale with feet anchor, facing flip, y-sort, per-frame mark-and-sweep, HUD on separate un-shaken bridge; game canvas no longer takes a 2D context.
+- [05.7.4 style choice, 2026-11-08]: User picked style 1 (Hades-like painterly cel-shaded) + style 5 (Indian folk/miniature ornament) from the style board (698f13d). Direction: painterly rendering with miniature-art ornamental borders/motifs, a cooler and more vibrant per-biome palette (no red-on-red floors), and an ornamental border as the arena edge (pairs with 05.7.3 room shapes). Next: refinement round (hybrid, Naraka + Patala, palette variants).
 - [Phase 05.4]: ENV per-frame rebuild bug fixed (clear() reset _roomKey/_plan); manifest grade now actually applies
 - [Phase 05.4]: D-08b readability measured at GFX low AND medium; floor saturation controlled by grade.floorDesat (all tiers) + floorSat ColorMatrix (medium/high) + grade.floorWash
 - [Phase 05.4]: Side gates drawn as rotated doorways in the west/east walls; skins carry a vis rect for occlusion/culling

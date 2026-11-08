@@ -211,7 +211,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   7. Difficulty: higher pressure and damage, mixed wave compositions, plus an opt-in Heat-style difficulty modifier system. Base difficulty is noticeably harder than today
   8. Boss variety: boss move order is randomized within each phase, there are new patterns and fewer permanent safe spots, and every attack keeps a fair telegraph (Phase 4 invariant)
   9. Gods remain allies only; `node test/smoke.js` stays green, with new headless balance/AI tests
-**Plans**: 11 plans (9 waves; wave 7 runs 07 + 08 + 11 in parallel; 10 has a human playtest checkpoint)
+**Plans**: 12 plans (11 waves; wave 7 runs 07 + 12 (art) in parallel; 08 runs after 07; 11 has a human playtest checkpoint)
 - [ ] 05.7.1-01-PLAN.md — Foundation: COMBAT-01..19 registered, seeded U, test harness + combat suite, bot balance sim + pre-tuning baseline, shared telegraph renderer (sprite-path fix)
 - [ ] 05.7.1-02-PLAN.md — Player statuses (STATUS, hit-landed contract, DoT, stun DR) + data-driven projectile families (PROJ, cap, pattern planner)
 - [ ] 05.7.1-03-PLAN.md — Player kit: dash-strike, dash-cancel, hold/charged variants, finishers, lodged-astra cast, faster tempo, pad parity
@@ -220,9 +220,10 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] 05.7.1-06-PLAN.md — 4 mini-bosses (MiniBoss extends Boss, pattern moves, enrage) + room/door/reward flow; 4/5/5/3 biome rooms
 - [ ] 05.7.1-07-PLAN.md — Boss variety: no-repeat weighted picks, distance bands, anti-camp, chains; +2 moves per boss
 - [ ] 05.7.1-08-PLAN.md — Camera: 1.3x base + context zoom, threat/astra indicators, rewritten rest-identity tests, readability re-check
-- [ ] 05.7.1-09-PLAN.md — Vows of Tapas (Heat) + META persistence + hub panel; F4 god mode gated to dev builds
-- [ ] 05.7.1-10-PLAN.md — Balance pass via the sim (bands vs baseline), perf check, human playtest checkpoint
-- [ ] 05.7.1-11-PLAN.md — Art: 8 enemy + 4 mini-boss sprites in the 1+5 direction via Flux, provenance (no gameplay dependents)
+- [ ] 05.7.1-09-PLAN.md — Vows of Tapas (Heat) gameplay: DATA.HEAT, HEAT module, META persistence, all 12 vows wired into runs, Punya scaling + best Heat
+- [ ] 05.7.1-10-PLAN.md — Vows of Tapas hub panel with pad navigation; F4 god mode gated to dev builds
+- [ ] 05.7.1-11-PLAN.md — Balance pass via the sim (bands vs baseline), perf check, human playtest checkpoint
+- [ ] 05.7.1-12-PLAN.md — Art: 8 enemy + 4 mini-boss sprites in the 1+5 direction via Flux, provenance (no gameplay dependents)
 
 ### Phase 05.7.2: Thrilling adaptive combat and boss theme (procedural score upgrade) (INSERTED)
 

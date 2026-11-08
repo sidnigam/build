@@ -77,7 +77,7 @@ Source: PROJECT.md + Research (STACK, FEATURES, ARCHITECTURE, PITFALLS)
 - [x] **COMBAT-01**: Faster pace: player ~+15% speed, snappier recovery, faster enemy engage, overlapping waves under `maxAlive`, 45-75 s combat rooms, 25-35 min full run
 - [ ] **COMBAT-02**: Base zoom ~1.3x, context zoom (boss/large out, rest/shop in), punch composes on top, clamp/bridge correct at every zoom, off-view threats indicated
 - [ ] **COMBAT-03**: 8 new regular enemy types (2 per biome), distinct roles, non-deity
-- [ ] **COMBAT-04**: Smarter AI for all enemies: slots/surround, ranged spacing and repositioning, attack tokens, timing variance inside telegraphs, escape-route cutting, on-screen firing preference
+- [x] **COMBAT-04**: Smarter AI for all enemies: slots/surround, ranged spacing and repositioning, attack tokens, timing variance inside telegraphs, escape-route cutting, on-screen firing preference
 - [ ] **COMBAT-05**: Elite modifiers (1-2 visible: aura, tint, tag) on the `eliteShare` curve, raised
 - [ ] **COMBAT-06**: 4 mini-bosses (one per biome, fixed mid-biome room, symbol door, guaranteed boon+ reward, own moveset, ≥0.4 s telegraphs, enrage)
 - [x] **COMBAT-07**: 8-10 data-driven projectile families (`DATA.PROJECTILES`), each with shape, colour, trail, hit VFX, SFX
@@ -164,7 +164,7 @@ Source: PROJECT.md + Research (STACK, FEATURES, ARCHITECTURE, PITFALLS)
 | COMBAT-01 | Phase 5.7.1 | Complete |
 | COMBAT-02 | Phase 5.7.1 | Pending |
 | COMBAT-03 | Phase 5.7.1 | Pending |
-| COMBAT-04 | Phase 5.7.1 | Pending |
+| COMBAT-04 | Phase 5.7.1 | Complete |
 | COMBAT-05 | Phase 5.7.1 | Pending |
 | COMBAT-06 | Phase 5.7.1 | Pending |
 | COMBAT-07 | Phase 5.7.1 | Complete |

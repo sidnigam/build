@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Ready to execute
-stopped_at: Completed 05.7.1-03-PLAN.md
-last_updated: "2026-11-08T23:34:58.314Z"
+stopped_at: Completed 05.7.1-04-PLAN.md
+last_updated: "2026-11-08T23:53:02.664Z"
 last_activity: 2026-11-08
 progress:
   total_phases: 18
   completed_phases: 11
   total_plans: 71
-  completed_plans: 49
+  completed_plans: 50
 ---
 
 # Project State
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-06-17)
 ## Current Position
 
 Phase: 05.7.1 (hades-style-combat-depth-smarter-enemies-player-kit-difficulty-curve-boss-variety-tighter-arenas) — EXECUTING
-Plan: 4 of 12
+Plan: 5 of 12
 
 ## Performance Metrics
 
@@ -55,6 +55,7 @@ Plan: 4 of 12
 | Phase 05.7.1 P01 | 29min | 3 tasks | 14 files |
 | Phase 05.7.1 P02 | 15min | 2 tasks | 9 files |
 | Phase 05.7.1 P03 | 17min | 3 tasks | 9 files |
+| Phase 05.7.1 P04 | 14min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -89,6 +90,8 @@ Recent decisions affecting current work:
 - [Phase 05.7.1]: Enemy projectiles are data-driven (DATA.PROJECTILES + PROJ in js/combat.js); legacy 'bolt' keeps today's shape and no-source takeDamage call so the balance baseline stays bit-identical
 - [Phase 05.7.1]: Player kit is data-driven (DATA.KIT + weapon dashStrike/charged/finisher); all kit damage goes through hitEnemy src 'attack' so attack boons apply; holding attack no longer auto-swings (charges after 0.28 s) - flag for plan-11 playtest
 - [Phase 05.7.1]: Cast is a lodged-astra model: no regen; ammo invariant castCharges + lodged + in-flight <= castMax; returns on 8 s, room clear, boss defeat, room change (incl. in-flight) and defiance revive; balance --expect-baseline no longer applies from 05.7.1-03
+- [Phase 05.7.1]: Enemy AI coordinated by ENEMY_AI (js/ai.js): attack tokens per category (melee 2/ranged 2/heavy 1/support 1/bite 4, +biome, Heat hook), slot rings with escape cut, ranged bands pulled inside a pure viewBand; tick() reclaims tokens from non-attacking/removed holders
+- [Phase 05.7.1]: Enemy damage only via Enemy.hurtPlayer/fire behind windUp->armAttack (ENEMY_TG MIN melee/ranged .30, status .40, stun .50, beam .70, bite .20); chase/tank contact is a 0.2 s bite tell; spawn grace 0.45 s, engage delay 0.2-0.8 s
 
 ### Roadmap Evolution
 
@@ -135,7 +138,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-08T23:34:58.310Z
+Last session: 2026-11-08T23:53:02.660Z
 Last activity: 2026-11-08
-Stopped at: Completed 05.7.1-03-PLAN.md
+Stopped at: Completed 05.7.1-04-PLAN.md
 Resume file: None

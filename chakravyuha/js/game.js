@@ -269,6 +269,7 @@ const GAME = {
     if (P.dashT > 0) VFX.emit('dash', P.x, P.y, P.dashDir);
 
     // enemies
+    ENEMY_AI.tick(dt);   // 05.7.1-04: slots, tokens, separation before the enemies move
     for (const e of this.enemies) if (!e.dead) e.update(dt);
     this.updateHazards(dt);
 

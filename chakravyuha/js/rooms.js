@@ -438,6 +438,7 @@ const ROOMS = {
     G.bolts = []; G.dangerZones = []; G.doors = []; G.hazards = [];
     G.nooseT = 0; G.bossRewarded = false;
     G.spawnQueue = []; G.lastWaveSize = 0; G.dripT = 0; G.waveDelay = 0;
+    ENEMY_AI.reset();   // 05.7.1-04: tokens and slots never carry across rooms
 
     // D-02: size the arena for this room kind BEFORE the player is placed.
     const kind = rewardId === 'boss' ? 'boss' : (rewardId === 'sarovar' || rewardId === 'kubera') ? 'rest' : 'combat';

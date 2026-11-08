@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Ready to execute
-stopped_at: Completed 05.7.1-02-PLAN.md
-last_updated: "2026-11-08T15:59:53.998Z"
+stopped_at: Completed 05.7.1-03-PLAN.md
+last_updated: "2026-11-08T23:34:58.314Z"
 last_activity: 2026-11-08
 progress:
   total_phases: 18
   completed_phases: 11
   total_plans: 71
-  completed_plans: 48
+  completed_plans: 49
 ---
 
 # Project State
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-06-17)
 ## Current Position
 
 Phase: 05.7.1 (hades-style-combat-depth-smarter-enemies-player-kit-difficulty-curve-boss-variety-tighter-arenas) — EXECUTING
-Plan: 3 of 12
+Plan: 4 of 12
 
 ## Performance Metrics
 
@@ -54,6 +54,7 @@ Plan: 3 of 12
 | Phase 05.7 P02 | 8h | 4 tasks | 60 files |
 | Phase 05.7.1 P01 | 29min | 3 tasks | 14 files |
 | Phase 05.7.1 P02 | 15min | 2 tasks | 9 files |
+| Phase 05.7.1 P03 | 17min | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -86,6 +87,8 @@ Recent decisions affecting current work:
 - [Phase 05.7.1]: Telegraphs/marks/status overlays render through js/combat.js drawTelegraph/drawOverlays on both primitive and sprite paths
 - [Phase 05.7.1]: Player.takeDamage returns true only on a landed hit; statuses (STATUS in js/combat.js) ride only on landed hits; DoT uses tickDamage (no i-frames); stun DR uses a status-local clock (P.st.clock)
 - [Phase 05.7.1]: Enemy projectiles are data-driven (DATA.PROJECTILES + PROJ in js/combat.js); legacy 'bolt' keeps today's shape and no-source takeDamage call so the balance baseline stays bit-identical
+- [Phase 05.7.1]: Player kit is data-driven (DATA.KIT + weapon dashStrike/charged/finisher); all kit damage goes through hitEnemy src 'attack' so attack boons apply; holding attack no longer auto-swings (charges after 0.28 s) - flag for plan-11 playtest
+- [Phase 05.7.1]: Cast is a lodged-astra model: no regen; ammo invariant castCharges + lodged + in-flight <= castMax; returns on 8 s, room clear, boss defeat, room change (incl. in-flight) and defiance revive; balance --expect-baseline no longer applies from 05.7.1-03
 
 ### Roadmap Evolution
 
@@ -132,7 +135,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-08T15:59:53.994Z
+Last session: 2026-11-08T23:34:58.310Z
 Last activity: 2026-11-08
-Stopped at: Completed 05.7.1-02-PLAN.md
+Stopped at: Completed 05.7.1-03-PLAN.md
 Resume file: None

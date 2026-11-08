@@ -504,6 +504,7 @@ module.exports = function ({ R, check }) {
     const out = {};
     const saved = { device: INPUT.device, lmb: INPUT.lmb, ax: INPUT.ax, ay: INPUT.ay, wx: INPUT.wx, wy: INPUT.wy,
       prev: PAD._prevPressed, idx: PAD.state.index, aim: PAD._aimAng, nav: globalThis.navigator };
+    if (!PAD.bindings) PAD.loadBindings();      // lazily loaded on the first poll
     const padB = JSON.stringify(PAD.bindings), kbB = JSON.stringify(INPUT.bindings);
     const gp = { id: 'Xbox Wireless Controller (STANDARD GAMEPAD)', mapping: 'standard', connected: true, axes: [0, 0, 0, 0],
       buttons: Array.from({ length: 18 }, () => ({ pressed: false, value: 0 })) };

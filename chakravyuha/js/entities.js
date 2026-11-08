@@ -339,13 +339,14 @@ class Player {
     clampToArena(this);
 
     // attacking (a stun cancels any bow draw)
-    const press = !!I.lmb && !this._lmbPrev;
+    // 05.7.1-03 (D-13/D-16): press/hold edges from INPUT.lmb — the pad writes the same field each
+    // poll, so keyboard/mouse and controller share one state machine
+    const press = !!I.lmb && !this._lmbPrev, release = !I.lmb && this._lmbPrev;
     this._lmbPrev = !!I.lmb;
-    if (stunned) { this.charging = false; this.charge = 0; }
-    else if (this.weapon.type === 'bow') this.updateBow(dt, I, press);
+    if (stunned) { this.charging = false; this.charge = 0; this.chargeKind = null; this.holdT = 0; this.bufT = 0; this.fullAt = -1; }
+    else if (this.weapon.type === 'bow') this.updateBow(dt, I, press, release);
     else if (this.leapT > 0) { /* mid-hop: the slam lands on its own */ }
-    else if (press && this.inDashStrikeWindow()) this.dashStrike();
-    else if (I.lmb && this.atkCd <= 0) this.meleeAttack();
+    else this.updateMelee(dt, I, press, release);
 
     for (const tr of this.trail) tr.t -= dt;
     this.trail = this.trail.filter(t => t.t > 0);
@@ -389,6 +390,78 @@ class Player {
     let r = this.weapon.rate;
     if (this.has('vayu_attack')) r /= 1 + this.val('vayu_attack') / 100;
     return r;
+  }
+
+  // Melee press/hold machine: a press swings (or dash-strikes, or buffers during recovery);
+  // holding past DATA.KIT.chargeDelay charges the weapon's heavy variant, fired on release.
+  // Holding no longer auto-repeats swings (RESEARCH Pitfall 8).
+  updateMelee(dt, I, press, release) {
+    if (press) {
+      this.holdT = 0;
+      if (this.inDashStrikeWindow()) this.dashStrike();
+      else if (this.atkCd <= 0) this.meleeAttack();
+      else this.bufT = DATA.KIT.attackBuffer;
+    }
+    if (I.lmb) {
+      this.holdT += dt;
+      const ch = this.weapon.charged;
+      if (ch && !this.chargeKind && this.holdT >= DATA.KIT.chargeDelay) { this.chargeKind = ch.kind; this.charge = 0; this.charging = true; }
+      if (this.chargeKind) {
+        const was = this.charge;
+        this.charge = Math.min(1, this.charge + dt / ch.time);
+        if (was < 1 && this.charge >= 1) VFX.emit('chargeReady', this.x, this.y, 0);
+      }
+    }
+    if (release) {
+      if (this.chargeKind && this.charge >= 0.35) this.releaseCharged(this.charge);
+      this.chargeKind = null; this.charging = false; this.charge = 0; this.holdT = 0;
+    }
+    U.cool(this, 'bufT', dt);
+    if (this.bufT > 0 && this.atkCd <= 0 && !this.chargeKind) { this.bufT = 0; this.meleeAttack(); }
+  }
+
+  // Charged heavy variants (D-13): Khanda piercing thrust, Gada wind-up smash.
+  releaseCharged(c) {
+    if (STATUS.stunned(this)) return;
+    const w = this.weapon, ch = w.charged;
+    if (!ch) return;
+    const k = Math.max(0.5, c);
+    this.atkCd = this.attackRate();
+    const a = this.aim, ux = Math.cos(a), uy = Math.sin(a);
+    if (ch.kind === 'thrust') {
+      const dmg = w.combo[2] * ch.mult * k, kb = this.meleeKnockback(1.6);
+      for (const e of GAME.enemies.slice()) {
+        if (e.dead) continue;
+        const rx = e.x - this.x, ry = e.y - this.y;
+        const along = rx * ux + ry * uy, across = -rx * uy + ry * ux;
+        if (along >= 0 && along <= ch.len && Math.abs(across) < ch.width / 2 + e.r) {
+          hitEnemy(e, dmg, 'attack', { finisher: true, charged: true });
+          if (!e.boss && !e.dead) { e.kx += ux * kb; e.ky += uy * kb; }
+        }
+      }
+      this.swing = { a, t: 0.16, range: ch.len, arc: 0.3 };
+      VFX.emit('dashStrike', this.x, this.y, a);
+      CAMERA.kick(ux * 5, uy * 5);
+      AUDIO.sfx('swing');
+    } else if (ch.kind === 'smash') {
+      const dmg = w.combo[0] * ch.mult * k;
+      for (const e of GAME.enemies.slice()) {
+        if (e.dead) continue;
+        if (U.dist(this.x, this.y, e.x, e.y) < ch.radius + e.r) {
+          hitEnemy(e, dmg, 'attack', { finisher: true, charged: true });
+          if (!e.boss && !e.dead) {
+            e.stun = Math.max(e.stun, ch.stun);
+            const ka = U.angle(this.x, this.y, e.x, e.y);
+            e.kx += Math.cos(ka) * 360; e.ky += Math.sin(ka) * 360;
+          }
+        }
+      }
+      GAME.rings.push({ x: this.x, y: this.y, r: ch.radius, t: 0.3, color: '#ffcf5c' });
+      GAME.shake = Math.max(GAME.shake, 8);
+      CAMERA.punch(this.x, this.y, 0.04, 0.22);
+      VFX.emit('chargeFlash', this.x, this.y, 0);
+      AUDIO.sfx('special');
+    }
   }
 
   meleeKnockback(mult = 1) {
@@ -547,20 +620,40 @@ class Player {
     if (this._noDraw) { if (!I.lmb) this._noDraw = false; return; }
     if (I.lmb && this.atkCd <= 0) {
       this.charging = true;
+      const was = this.charge;
       this.charge = Math.min(1, this.charge + dt / w.chargeTime);
+      if (was < 1 && this.charge >= 1) { this.fullAt = this.simT; VFX.emit('chargeReady', this.x, this.y, 0); }
     } else if (this.charging) {
       // release
       const c = this.charge;
-      this.charging = false; this.charge = 0;
+      // D-13 power shot: releasing within DATA.KIT.perfectWindow of reaching full draw
+      const perfect = this.fullAt >= 0 && this.simT - this.fullAt <= DATA.KIT.perfectWindow;
+      this.charging = false; this.charge = 0; this.fullAt = -1;
       this.atkCd = this.attackRate();
-      const dmg = U.lerp(w.dmgMin, w.dmgMax, c);
-      GAME.pprojectiles.push({
-        x: this.x, y: this.y,
-        vx: Math.cos(this.aim) * w.projSpeed * (0.8 + 0.4 * c),
-        vy: Math.sin(this.aim) * w.projSpeed * (0.8 + 0.4 * c),
-        dmg, r: 5, t: 2, pierce: c >= 0.98, src: 'attack',
-        color: c >= 0.98 ? '#ffd34d' : '#ffffff', hitSet: new Set(),
-      });
+      const spd = w.projSpeed * (0.8 + 0.4 * c);
+      const arrow = (a, dmg, extra) => {
+        GAME.pprojectiles.push(Object.assign({
+          x: this.x, y: this.y, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
+          dmg, r: 5, t: 2, pierce: c >= 0.98, src: 'attack',
+          color: c >= 0.98 ? '#ffd34d' : '#ffffff', hitSet: new Set(),
+        }, extra));
+      };
+      let dmg = U.lerp(w.dmgMin, w.dmgMax, c);
+      const ch = w.charged, fin = w.finisher;
+      if (perfect && ch) {
+        arrow(this.aim, dmg * ch.mult, { pierce: true, kb: ch.kb, color: '#fff4b0', opts: { finisher: true } });
+        VFX.emit('chargeFlash', this.x, this.y, this.aim);
+        if (typeof SETTINGS === 'undefined' || SETTINGS.get('screenFlash') !== false) VFX.flash(0xffd34d, 0.18, 0.12);
+      } else if (fin && c < fin.maxCharge) {
+        // D-13 finisher: the third quick shot in a rapid string splits into a fan
+        this.quickShots = (this.simT - this.lastQuickT <= fin.window) ? this.quickShots + 1 : 1;
+        this.lastQuickT = this.simT;
+        if (this.quickShots >= fin.every) {
+          for (let i = 0; i < fin.count; i++) arrow(this.aim + (i - (fin.count - 1) / 2) * fin.spread, dmg, { opts: { finisher: true } });
+          this.quickShots = 0;
+          VFX.emit('finisherRing', this.x, this.y, this.aim, '#aef0ff');
+        } else arrow(this.aim, dmg);
+      } else arrow(this.aim, dmg);
       AUDIO.sfx('bow');
     }
   }
@@ -709,8 +802,15 @@ class Player {
       ctx.globalAlpha = 1;
     }
 
+    // 05.7.1-03: melee charge ring (fills 0 -> TAU, gold when full)
+    if (this.chargeKind) {
+      ctx.strokeStyle = this.charge >= 1 ? '#ffd34d' : 'rgba(255,211,77,0.6)';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(this.x, this.y, this.r + 10, -Math.PI / 2, -Math.PI / 2 + U.TAU * this.charge); ctx.stroke();
+    }
+
     // bow draw indicator
-    if (this.charging) {
+    if (this.charging && !this.chargeKind) {
       ctx.strokeStyle = this.charge >= 0.98 ? '#ffd34d' : 'rgba(255,255,255,0.5)';
       ctx.lineWidth = 2;
       ctx.beginPath();

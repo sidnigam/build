@@ -439,7 +439,8 @@ const PAD = {
     heavy: { duration: 320, weak: 0.8,  strong: 1.0, tier: 3 },
     test:  { duration: 500, weak: 0.6,  strong: 0.9, tier: 3 },
   },
-  VFX_RUMBLE: { hit: 'hit', crit: 'crit', death: 'kill', hurt: 'hurt', phase: 'heavy', bossDeath: 'heavy' },
+  VFX_RUMBLE: { hit: 'hit', crit: 'crit', death: 'kill', hurt: 'hurt', phase: 'heavy', bossDeath: 'heavy',
+    dashStrike: 'hit', chargeFlash: 'crit', finisherRing: 'crit' },   // 05.7.1-03 kit hit feel
 
   _lastRumble: null,
   _rumbleActive: null,

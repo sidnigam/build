@@ -888,8 +888,15 @@ const GAME = {
       ctx.globalAlpha = 1;
     }
 
+    // 05.7.1-03: melee charge ring (mirrors Player.draw)
+    if (P.chargeKind) {
+      ctx.strokeStyle = P.charge >= 1 ? '#ffd34d' : 'rgba(255,211,77,0.6)';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(P.x, P.y, P.r + 10, -Math.PI / 2, -Math.PI / 2 + U.TAU * P.charge); ctx.stroke();
+    }
+
     // bow charge line (mirrors Player.draw)
-    if (P.charging) {
+    if (P.charging && !P.chargeKind) {
       ctx.strokeStyle = P.charge >= 0.98 ? '#ffd34d' : 'rgba(255,255,255,0.5)';
       ctx.lineWidth = 2;
       ctx.beginPath();

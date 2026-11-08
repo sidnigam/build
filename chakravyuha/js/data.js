@@ -208,6 +208,18 @@ DATA.WAVES = {
   engageRange: 640, eliteCost: 3,
 };
 
+// ---------- PLAYER STATUSES (Phase 05.7.1, D-10/D-11) ----------
+// Colours are full #rrggbb (alpha suffixes are appended by renderers).
+DATA.STATUS = {
+  stun:   { max: 0.6, immunity: 1.2, drWindow: 4, drFactor: 0.5, immuneSlowF: 0.7, color: '#ffd34d', icon: '✦', name: 'Stunned' },
+  slow:   { color: '#7fb8ff', icon: '≋', name: 'Slowed' },
+  root:   { max: 1.5, color: '#c08a4a', icon: '⌘', name: 'Rooted' },
+  burn:   { maxStacks: 3, tick: 0.5, color: '#ff7040', icon: '♨', name: 'Burning' },
+  poison: { maxStacks: 5, tick: 0.5, color: '#7dff5a', icon: '❖', name: 'Poisoned' },
+  knock:  { decay: 0.0001, color: '#ffffff' },
+  pull:   { decay: 0.0001, color: '#9fb8ff' },
+};
+
 // ---------- BOSSES ----------
 DATA.BOSSES = {
   tataka: {

@@ -441,6 +441,7 @@ const ROOMS = {
     P.x = G.arena.x + 90;
     P.y = G.arena.y + G.arena.h / 2;
     P.iframes = Math.max(P.iframes, 0.8);
+    if (P.st) STATUS.clear(P);   // 05.7.1-02: statuses never carry across rooms
     if (typeof CAMERA !== 'undefined') CAMERA.snap();   // D-08: room changes never swoop
 
     if (rewardId === 'boss') {

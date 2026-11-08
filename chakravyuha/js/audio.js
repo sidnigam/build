@@ -152,6 +152,9 @@ const AUDIO = {
       case 'burn':     this.noise({ dur: 0.12, vol: 0.07, freq: 1800 }); break;
       case 'shock':    this.tone({ freq: 2400, end: 400, dur: 0.07, type: 'sawtooth', vol: 0.09 }); break;
       case 'click':    this.tone({ freq: 800, dur: 0.04, type: 'sine', vol: 0.08 }); break;
+      // 05.7.1-02: player statuses
+      case 'stun':     this.tone({ freq: 880, end: 220, dur: 0.25, type: 'square', vol: 0.14 }); break;
+      case 'root':     this.tone({ freq: 200, end: 120, dur: 0.2, type: 'triangle', vol: 0.1 }); break;
     }
   },
 

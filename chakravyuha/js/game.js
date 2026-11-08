@@ -162,6 +162,7 @@ const GAME = {
       P.hp = Math.round(P.maxhp * 0.5);
       P.iframes = 2;
       this.eprojectiles = [];
+      STATUS.clear(P);
       burst(P.x, P.y, '#7fdcb7', 30, 320, 0.9, 5);
       this.shake = 14;
       VFX.flash(0x7fdcb7, 0.45, 0.35);
@@ -910,6 +911,9 @@ const GAME = {
       ctx.globalAlpha = 1;
     }
 
+    // 05.7.1-02: status reads, same renderer as Player.draw
+    drawPlayerStatus(ctx, P, SPRITES.headY(P, 'player'), P.y + P.r * SPRITES.CFG.FEET_OFFSET_R);
+
     ctx.globalAlpha = 1;
     ctx.setLineDash([]);
     ctx.textAlign = 'left';
@@ -1196,6 +1200,32 @@ const GAME = {
       ctx.fillStyle = '#7fdcb7';
       ctx.font = '14px Georgia';
       ctx.fillText('✿', bx + bw + 12 + i * 18, by + 15);
+    }
+
+    // 05.7.1-02: status row — on the HP-bar line, right of the lotuses (below the bar is taken by
+    // the dash/cast pips, the special bar and the glyph legend). Icon + remaining-time bar + stacks.
+    if (typeof STATUS !== 'undefined' && P.st) {
+      let sx0 = bx + bw + 16 + P.defiance * 18;
+      for (const a of STATUS.active(P)) {
+        const D = DATA.STATUS[a.type] || {};
+        this._hudPanel(ctx, sx0, by - 4, 22, 22, 4);
+        ctx.fillStyle = D.color || '#ffffff';
+        ctx.font = 'bold 14px Georgia';
+        ctx.textAlign = 'center';
+        ctx.fillText(D.icon || '?', sx0 + 11, by + 11);
+        ctx.fillStyle = 'rgba(255,255,255,0.15)';
+        ctx.fillRect(sx0 + 3, by + 14, 16, 2);
+        ctx.fillStyle = D.color || '#ffffff';
+        ctx.fillRect(sx0 + 3, by + 14, 16 * U.clamp(a.max > 0 ? a.t / a.max : 0, 0, 1), 2);
+        if (a.stacks >= 2) {
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 9px Georgia';
+          ctx.textAlign = 'right';
+          ctx.fillText(String(a.stacks), sx0 + 21, by + 17);
+        }
+        ctx.textAlign = 'left';
+        sx0 += 26;
+      }
     }
 
     // dash pips — gold-outlined diamonds, teal fill when charged

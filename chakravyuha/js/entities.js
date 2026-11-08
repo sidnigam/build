@@ -189,6 +189,7 @@ class Player {
 
     // environmental hazards
     this.hazardSlowT = 0; this.hazardSlowF = 1;
+    STATUS.init(this);           // 05.7.1-02: player statuses (P.st)
 
     // boons: slot -> {def, rarity} ; passives: array
     this.slots = {};             // attack/special/dash/cast
@@ -246,7 +247,8 @@ class Player {
   moveSpeed() {
     let s = this.speed;
     if (this.has('vayu_speed')) s *= 1 + this.val('vayu_speed') / 100;
-    if (this.hazardSlowT > 0) s *= this.hazardSlowF;
+    // venom pool and status slow do not double-multiply: the stronger (smaller) factor wins
+    s *= Math.min(this.hazardSlowT > 0 ? this.hazardSlowF : 1, STATUS.slowFactor(this));
     return s;
   }
 
@@ -280,6 +282,8 @@ class Player {
       this.dashRegen += dt;
       if (this.dashRegen >= this.dashCooldown()) { this.dashRegen = 0; this.dashCharges++; }
     }
+    STATUS.update(this, dt);
+    const stunned = STATUS.stunned(this), rooted = STATUS.rooted(this);
 
     // movement
     let dx = 0, dy = 0;
@@ -311,15 +315,16 @@ class Player {
           if (U.dist(this.x, this.y, p.x, p.y) < 34) { p.t = 0; burst(p.x, p.y, '#e84a8a', 5, 100, 0.25); }
         }
       }
-    } else {
+    } else if (!stunned && !rooted) {
       this.x += dx * this.moveSpeed() * dt;
       this.y += dy * this.moveSpeed() * dt;
     }
 
     clampToArena(this);
 
-    // attacking
-    if (this.weapon.type === 'bow') this.updateBow(dt, I);
+    // attacking (a stun cancels any bow draw)
+    if (stunned) { this.charging = false; this.charge = 0; }
+    else if (this.weapon.type === 'bow') this.updateBow(dt, I);
     else if (I.lmb && this.atkCd <= 0) this.meleeAttack();
 
     for (const tr of this.trail) tr.t -= dt;
@@ -327,8 +332,10 @@ class Player {
   }
 
   tryDash(dx, dy) {
+    if (STATUS.stunned(this)) return;
     if (this.dashCharges <= 0 || this.dashT > 0) return;
     this.dashCharges--;
+    this.st.rootT = 0;           // dashing breaks a root
     this.dashT = 0.16;
     let iv = 0.32;
     if (this.has('dur_dash')) iv *= 1 + this.val('dur_dash') / 100;
@@ -361,6 +368,7 @@ class Player {
   }
 
   meleeAttack() {
+    if (STATUS.stunned(this)) return;
     const w = this.weapon;
     this.atkCd = this.attackRate();
     this.comboT = 0.9;
@@ -387,6 +395,7 @@ class Player {
   }
 
   updateBow(dt, I) {
+    if (STATUS.stunned(this)) return;
     const w = this.weapon;
     if (I.lmb && this.atkCd <= 0) {
       this.charging = true;
@@ -409,6 +418,7 @@ class Player {
   }
 
   trySpecial() {
+    if (STATUS.stunned(this)) return;
     if (this.specialCd > 0) return;
     const w = this.weapon, sp = w.special;
     this.specialCd = sp.cd;
@@ -442,6 +452,7 @@ class Player {
   }
 
   tryCast() {
+    if (STATUS.stunned(this)) return;
     if (this.castCharges <= 0) return;
     this.castCharges--;
     AUDIO.sfx('cast');
@@ -466,14 +477,15 @@ class Player {
     });
   }
 
-  takeDamage(amount, fromX, fromY) {
-    if (this.iframes > 0 || this.dashT > 0) return;
-    if (GAME.godMode) return; // dev playtest toggle (F4)
+  // 05.7.1-02 (D-11): returns true only when the hit lands; opts.status rides only on a landed hit.
+  takeDamage(amount, fromX, fromY, opts) {
+    if (this.iframes > 0 || this.dashT > 0) return false;
+    if (GAME.godMode) return false; // dev playtest toggle (F4)
     // lila dodge
     if (this.has('kri_lila') && U.chance(Math.min(this.val('kri_lila'), 40) / 100)) {
       dmgText(this.x, this.y - 24, 'DODGE', '#5c7cff', 14);
       AUDIO.sfx('shield');
-      return;
+      return false;
     }
     let dmg = amount;
     if (this.has('dur_kavacha')) dmg *= 1 - Math.min(this.val('dur_kavacha'), 40) / 100;
@@ -505,6 +517,20 @@ class Player {
         burst(this.x, this.y, '#ff7040', 14, 200, 0.4);
       }
     }
+    if (opts && opts.status) STATUS.apply(this, opts.status, fromX, fromY);
+    if (this.hp <= 0) GAME.onPlayerDeath();
+    return true;
+  }
+
+  // 05.7.1-02 (RESEARCH Pitfall 2): burn/poison ticks — no i-frames, hitstop, flash, shake or kick,
+  // so a poisoned player can still be hit.
+  tickDamage(amount, type) {
+    if (GAME.godMode || this.hp <= 0) return;
+    let dmg = amount;
+    if (this.has('dur_kavacha')) dmg *= 1 - Math.min(this.val('dur_kavacha'), 40) / 100;
+    dmg = Math.max(1, Math.round(dmg));
+    this.hp -= dmg;
+    dmgText(this.x, this.y - 24, dmg, (DATA.STATUS[type] || {}).color || '#ff5566', 13);
     if (this.hp <= 0) GAME.onPlayerDeath();
   }
 
@@ -571,6 +597,9 @@ class Player {
       ctx.beginPath(); ctx.arc(this.x, this.y, this.r + 6, 0, U.TAU); ctx.stroke();
       ctx.globalAlpha = 1;
     }
+
+    // 05.7.1-02: status reads (stun stars, root/slow rings, burn ring, poison pips)
+    drawPlayerStatus(ctx, this, this.y - this.r, this.y + this.r);
   }
 }
 

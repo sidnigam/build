@@ -8018,6 +8018,8 @@ console.log('\n— Phase 05.7.1: combat suite + balance sim —');
   const out = r => ((r.stdout || '') + (r.stderr || '')).split('\n').filter(l => /FAIL/.test(l)).slice(0, 6).join(' | ');
   const c = cp.spawnSync(process.execPath, [path.join(__dirname, 'combat.js')], { encoding: 'utf8', timeout: 240000 });
   check('test/combat.js suite green' + (c.status !== 0 ? ' — ' + out(c) : ''), c.status === 0);
+  const b = cp.spawnSync(process.execPath, [path.join(__dirname, 'balance.js'), '--quick'], { encoding: 'utf8', timeout: 240000 });
+  check('test/balance.js --quick green (deterministic, baseline present)' + (b.status !== 0 ? ' — ' + out(b) : ''), b.status === 0);
 }
 
 Promise.all(pendingAsyncChecks).then(() => {

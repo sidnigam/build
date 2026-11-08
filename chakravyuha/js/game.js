@@ -284,7 +284,11 @@ const GAME = {
         if (e.dead || p.hitSet.has(e) || e.spawnT > 0) continue;
         if (U.dist(p.x, p.y, e.x, e.y) < e.r + p.r) {
           p.hitSet.add(e);
-          hitEnemy(e, p.dmg, p.src);
+          hitEnemy(e, p.dmg, p.src, p.opts);
+          if (p.kb && !e.boss && !e.dead) {         // 05.7.1-03: gandiva perfect-release knockback
+            const ka = Math.atan2(p.vy, p.vx);
+            e.kx += Math.cos(ka) * p.kb; e.ky += Math.sin(ka) * p.kb;
+          }
           if (p.chakra && this.player.has('agni_cast')) {
             this.zones.push({ x: p.x, y: p.y, r: 48, dps: this.player.val('agni_cast'),
               t: 4, type: 'fire', vx: 0, vy: 0, tick: 0 });

@@ -160,21 +160,42 @@ DATA.WEAPONS = {
   khanda: {
     id: 'khanda', name: 'Khanda of the Kuru Prince', sym: '⚔️', unlock: 0,
     blurb: 'The straight blade Abhimanyu carried into the Chakravyuha. Swift three-stroke combos.',
-    type: 'melee', combo: [20, 20, 38], arc: 1.9, range: 78, rate: 0.27, knockback: 160,
-    special: { name: 'Bhairava Whirl', dmg: 35, radius: 110, cd: 4, desc: 'Spin, striking all nearby foes.' },
+    type: 'melee', combo: [20, 20, 38], arc: 1.9, range: 78, rate: 0.23, knockback: 160,
+    special: { name: 'Bhairava Whirl', dmg: 35, radius: 110, cd: 3, desc: 'Spin, striking all nearby foes.' },
+    // 05.7.1-03 (D-12..D-13): kit variants
+    dashStrike: { kind: 'lunge', lunge: 90, arc: 1.4, range: 92, mult: 1.5 },
+    charged: { kind: 'thrust', time: 0.45, len: 220, width: 34, mult: 2.2 },
+    finisher: { arc: 2.6, ring: 70 },
   },
   gandiva: {
     id: 'gandiva', name: 'Gandiva, the Celestial Bow', sym: '🏹', unlock: 120,
     blurb: "Arjuna's bow, gifted by Varuna. Hold to draw; a full draw pierces everything in line.",
-    type: 'bow', dmgMin: 14, dmgMax: 55, chargeTime: 0.7, projSpeed: 780, rate: 0.18,
-    special: { name: 'Arrow Storm', dmg: 14, count: 7, cd: 5, desc: 'Loose a fan of seven arrows.' },
+    type: 'bow', dmgMin: 14, dmgMax: 55, chargeTime: 0.7, projSpeed: 780, rate: 0.16,
+    special: { name: 'Arrow Storm', dmg: 14, count: 7, cd: 3.5, desc: 'Loose a fan of seven arrows.' },
+    dashStrike: { kind: 'volley', count: 3, spread: 0.18, draw: 0.6, mult: 1.2, life: 0.45 },
+    charged: { kind: 'power', mult: 1.5, kb: 300 },
+    finisher: { every: 3, window: 0.9, count: 3, spread: 0.12, maxCharge: 0.5 },
   },
   gada: {
     id: 'gada', name: 'Gada of Bhima', sym: '🔨', unlock: 300,
     blurb: "The mace of the strongest Pandava — Abhimanyu's uncle. Slow, devastating arcs.",
-    type: 'melee', combo: [48, 48], arc: 2.4, range: 92, rate: 0.55, knockback: 340,
-    special: { name: 'Earthshatter Slam', dmg: 60, radius: 150, cd: 6, stun: 0.8, desc: 'Slam the ground, stunning all around you.' },
+    type: 'melee', combo: [48, 48], arc: 2.4, range: 92, rate: 0.47, knockback: 340,
+    special: { name: 'Earthshatter Slam', dmg: 60, radius: 150, cd: 4.5, stun: 0.8, desc: 'Slam the ground, stunning all around you.' },
+    dashStrike: { kind: 'leap', hop: 0.18, maxDist: 110, radius: 120, mult: 1.6, stun: 0.3 },
+    charged: { kind: 'smash', time: 0.7, radius: 170, mult: 2.5, stun: 0.6 },
+    finisher: { shock: 60, mult: 0.5 },
   },
+};
+
+// ---------- PLAYER KIT (Phase 05.7.1, D-02/D-12..D-14) — tunable ----------
+DATA.KIT = {
+  speed: 305,                 // D-02: ~+15% over 265
+  dashCd: 1.5,                // dash recharge (was 2.2)
+  dashStrikeWindow: 0.2,      // D-12: attack within this long after a dash ends
+  chargeDelay: 0.28,          // D-13: hold this long after a swing to start charging (Pitfall 8)
+  perfectWindow: 0.12,        // Gandiva perfect-release window after full draw
+  attackBuffer: 0.15,         // a press during recovery is buffered this long
+  lodgeLife: 8, pickupR: 18, magnetR: 90, magnetPull: 520,   // D-14 lodged astra
 };
 
 // ---------- ENEMIES ----------

@@ -550,6 +550,43 @@ VFX.PRESETS.pbeam = function (x, y, a, color) {
   }
 };
 
+// ---------------- player kit presets (05.7.1-03, D-15) ----------------
+// Hit feel for dash-strikes, finishers and charged attacks; counts go through this.count().
+VFX.PRESETS.dashStrike = function (x, y, a) {
+  const n = this.count(10), ang0 = a || 0;
+  for (let i = 0; i < n; i++) {
+    const ang = ang0 + U.rand(-0.25, 0.25), spd = U.rand(260, 520), life = U.rand(0.12, 0.22);
+    this.spawn(x, y, Math.cos(ang) * spd, Math.sin(ang) * spd, life, 3, 1, '#fff4b0', 1, true, 0.86, 0, 1, false);
+  }
+};
+
+VFX.PRESETS.finisherRing = function (x, y, a, color) {
+  const n = this.count(16), col = color || '#fff4b0';
+  for (let i = 0; i < n; i++) {
+    const ang = (i / n) * U.TAU, spd = U.rand(140, 220), life = U.rand(0.18, 0.28);
+    this.spawn(x + Math.cos(ang) * 60, y + Math.sin(ang) * 60, Math.cos(ang) * spd, Math.sin(ang) * spd,
+      life, 3, 1, col, 1, true, 0.88, 0, 1, false);
+  }
+};
+
+VFX.PRESETS.chargeFlash = function (x, y, a) {
+  const n = this.count(14);
+  for (let i = 0; i < n; i++) {
+    const ang = U.rand(U.TAU), spd = U.rand(160, 360), life = U.rand(0.15, 0.3);
+    this.spawn(x, y, Math.cos(ang) * spd, Math.sin(ang) * spd, life, 3, 1, '#ffd34d', 1, true, 0.88, 0, 1, false);
+  }
+  this.spawn(x, y, 0, 0, 0.12, 22, 4, '#ffd34d', 0, true, 0.9, 0, 1, false);
+  if (typeof GFX !== 'undefined') GFX.pulse(x, y, 'crit');
+};
+
+VFX.PRESETS.chargeReady = function (x, y) {
+  const n = this.count(6);
+  for (let i = 0; i < n; i++) {
+    const ang = (i / n) * U.TAU, spd = U.rand(60, 110);
+    this.spawn(x, y, Math.cos(ang) * spd, Math.sin(ang) * spd, 0.18, 2.5, 1, '#ffd34d', 0, true, 0.9, 0, 1, false);
+  }
+};
+
 // ---------------- biome ambient particles (VFX-05, D-16) ----------------
 // Note on tuning: velocities/lives below are deliberately gentler than a literal reading
 // of the design doc's per-biome descriptions (e.g. "vy -30..-70") would suggest — sustained

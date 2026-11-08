@@ -92,6 +92,7 @@ function hitEnemy(e, base, src = 'attack', opts = {}) {
   if (!e.dead && src !== 'burn') {
     if (e.boss && (crit || src === 'special' || opts.finisher || dmg >= e.maxhp * 0.08)) VFX.hitstop(6);
     else if (opts.finisher) VFX.hitstop(3);
+    else if (opts.dashStrike) VFX.hitstop(2);   // 05.7.1-03 (D-15): dash-strike weight via the existing hook
   }
   if (opts.finisher) CAMERA.kick(Math.cos(hitAngle) * 4, Math.sin(hitAngle) * 4);
 
@@ -166,7 +167,7 @@ class Player {
     this.x = 0; this.y = 0; this.r = 13;
     this.maxhp = 100 + META.bonusHp();
     this.hp = this.maxhp;
-    this.speed = 265 * META.bonusSpeed();
+    this.speed = DATA.KIT.speed * META.bonusSpeed();   // 05.7.1-03 (D-02): faster base tempo
     this.aim = 0;
 
     // dash
@@ -184,6 +185,12 @@ class Player {
     this.castCharges = 2; this.castMax = 2; this.castRegen = 0;
     this.swing = null;           // visual arc {a, t}
     this.bhaktiT = 0; this.bhaktiReady = false;
+
+    // 05.7.1-03 kit state (D-12..D-14): dash-strike window, gada hop, press/hold machine
+    this.sinceDash = 99; this.dashStrikeUsed = true; this.leapT = 0;
+    this.leapFrom = null; this.leapTo = null; this._noDraw = false;
+    this.holdT = 0; this.chargeKind = null; this.fullAt = -1; this.bufT = 0; this._lmbPrev = false;
+    this.quickShots = 0; this.lastQuickT = -9; this.simT = 0;
 
     // duo boons
     this.pavanaT = 0;            // duo_pavanaputra: post-dash damage window
@@ -255,13 +262,14 @@ class Player {
   }
 
   dashCooldown() {
-    let cd = 2.2;
+    let cd = DATA.KIT.dashCd;
     if (this.has('vayu_gust')) cd *= 1 - (this.val('vayu_gust') - 1) * 0.2;
     return Math.max(0.8, cd);
   }
 
   update(dt) {
     const I = INPUT;
+    this.simT += dt;
     this.aim = Math.atan2(I.wy - this.y, I.wx - this.x);
 
     // timers
@@ -297,7 +305,10 @@ class Player {
       dx = kb.dx; dy = kb.dy;
     }
 
-    if (this.dashT > 0) {
+    const wasDashing = this.dashT > 0;
+    if (this.leapT > 0) {
+      this._advanceLeap(dt);       // gada dash-strike hop: no normal movement while airborne
+    } else if (this.dashT > 0) {
       this.dashT -= dt;
       this.x += Math.cos(this.dashDir) * 760 * dt;
       this.y += Math.sin(this.dashDir) * 760 * dt;
@@ -321,12 +332,19 @@ class Player {
       this.x += dx * this.moveSpeed() * dt;
       this.y += dy * this.moveSpeed() * dt;
     }
+    // D-12: dash-strike window opens on the frame the dash ends (advanced here, so hitstop freezes it)
+    if (wasDashing && this.dashT <= 0) this.sinceDash = 0;
+    else if (this.dashT <= 0) this.sinceDash += dt;
 
     clampToArena(this);
 
     // attacking (a stun cancels any bow draw)
+    const press = !!I.lmb && !this._lmbPrev;
+    this._lmbPrev = !!I.lmb;
     if (stunned) { this.charging = false; this.charge = 0; }
-    else if (this.weapon.type === 'bow') this.updateBow(dt, I);
+    else if (this.weapon.type === 'bow') this.updateBow(dt, I, press);
+    else if (this.leapT > 0) { /* mid-hop: the slam lands on its own */ }
+    else if (press && this.inDashStrikeWindow()) this.dashStrike();
     else if (I.lmb && this.atkCd <= 0) this.meleeAttack();
 
     for (const tr of this.trail) tr.t -= dt;
@@ -338,6 +356,10 @@ class Player {
     if (this.dashCharges <= 0 || this.dashT > 0) return;
     this.dashCharges--;
     this.st.rootT = 0;           // dashing breaks a root
+    // D-13 dash-cancel: recovery and any charge end now; comboIdx/comboT survive so the string continues
+    this.atkCd = 0; this.charging = false; this.charge = 0; this.chargeKind = null; this.holdT = 0;
+    this.bufT = 0; this.fullAt = -1; this.leapT = 0;
+    this.dashStrikeUsed = false;  // D-12: this dash opens a fresh dash-strike window
     this.dashT = 0.16;
     let iv = 0.32;
     if (this.has('dur_dash')) iv *= 1 + this.val('dur_dash') / 100;
@@ -369,6 +391,13 @@ class Player {
     return r;
   }
 
+  meleeKnockback(mult = 1) {
+    let kb = this.weapon.knockback * mult;
+    if (this.has('han_attack')) kb *= 1.5;
+    if (this.pavanaT > 0 && this.has('duo_pavanaputra')) kb *= 2;
+    return kb;
+  }
+
   meleeAttack() {
     if (STATUS.stunned(this)) return;
     const w = this.weapon;
@@ -377,15 +406,18 @@ class Player {
     const dmg = w.combo[this.comboIdx % w.combo.length];
     const isFinisher = (this.comboIdx % w.combo.length) === w.combo.length - 1;
     this.comboIdx++;
-    this.swing = { a: this.aim, t: 0.12, range: w.range, arc: w.arc };
+    // 05.7.1-03 (D-13): per-weapon finisher — Khanda cross-cut (wider arc + ring), Gada shockwave
+    const fin = isFinisher ? w.finisher : null;
+    const arc = fin && fin.arc ? fin.arc : w.arc;
+    this.swing = { a: this.aim, t: 0.12, range: w.range, arc };
     AUDIO.sfx('swing');
-    let kb = w.knockback * (isFinisher ? 1.6 : 1);
-    if (this.has('han_attack')) kb *= 1.5;
-    if (this.pavanaT > 0 && this.has('duo_pavanaputra')) kb *= 2;
+    const kb = this.meleeKnockback(isFinisher ? 1.6 : 1);
+    const struck = new Set();
     for (const e of GAME.enemies) {
       if (e.dead) continue;
       const d = U.dist(this.x, this.y, e.x, e.y);
-      if (d < w.range + e.r && Math.abs(U.angDiff(this.aim, U.angle(this.x, this.y, e.x, e.y))) < w.arc / 2) {
+      if (d < w.range + e.r && Math.abs(U.angDiff(this.aim, U.angle(this.x, this.y, e.x, e.y))) < arc / 2) {
+        struck.add(e);
         hitEnemy(e, dmg, 'attack', isFinisher ? { finisher: true } : undefined);
         if (!e.boss) {
           const a = U.angle(this.x, this.y, e.x, e.y);
@@ -393,12 +425,126 @@ class Player {
         }
       }
     }
+    if (fin && fin.arc) {
+      VFX.emit('finisherRing', this.x, this.y, this.aim, '#fff4b0');
+      if (fin.ring) GAME.rings.push({ x: this.x, y: this.y, r: fin.ring, t: 0.2, color: '#fff4b0' });
+    }
+    if (fin && fin.shock) {
+      const reach = w.range + fin.shock;
+      for (const e of GAME.enemies.slice()) {
+        if (e.dead || struck.has(e)) continue;
+        if (U.dist(this.x, this.y, e.x, e.y) < reach + e.r) {
+          hitEnemy(e, dmg * fin.mult, 'attack', { finisher: true });
+          if (!e.boss && !e.dead) {
+            const a = U.angle(this.x, this.y, e.x, e.y);
+            e.kx += Math.cos(a) * kb * 0.5; e.ky += Math.sin(a) * kb * 0.5;
+          }
+        }
+      }
+      GAME.rings.push({ x: this.x, y: this.y, r: reach, t: 0.25, color: '#ffcf5c' });
+      VFX.emit('finisherRing', this.x, this.y, this.aim, '#ffcf5c');
+    }
     if (isFinisher) GAME.shake = Math.max(GAME.shake, 3);
   }
 
-  updateBow(dt, I) {
+  // ---- 05.7.1-03 (D-12): dash-strike ----
+  inDashStrikeWindow() {
+    return !this.dashStrikeUsed && !!this.weapon.dashStrike
+      && (this.dashT > 0 || this.sinceDash < DATA.KIT.dashStrikeWindow);
+  }
+
+  dashStrike() {
+    if (STATUS.stunned(this)) return;
+    const w = this.weapon, ds = w.dashStrike;
+    if (!ds) return;
+    this.dashStrikeUsed = true;
+    this.atkCd = this.attackRate();
+    this.comboT = 0.9;
+    const a = this.aim, I = INPUT;
+    const td = U.dist(this.x, this.y, I.wx, I.wy);
+    if (ds.kind === 'lunge') {
+      const step = Number.isFinite(td) ? Math.min(ds.lunge, td) : ds.lunge;
+      this.x += Math.cos(a) * step; this.y += Math.sin(a) * step;
+      clampToArena(this);
+      this.trail.push({ x: this.x, y: this.y, t: 0.25 });
+      const kb = this.meleeKnockback(1);
+      for (const e of GAME.enemies) {
+        if (e.dead) continue;
+        const d = U.dist(this.x, this.y, e.x, e.y);
+        if (d < ds.range + e.r && Math.abs(U.angDiff(a, U.angle(this.x, this.y, e.x, e.y))) < ds.arc / 2) {
+          hitEnemy(e, w.combo[0] * ds.mult, 'attack', { dashStrike: true });
+          if (!e.boss) {
+            const ka = U.angle(this.x, this.y, e.x, e.y);
+            e.kx += Math.cos(ka) * kb; e.ky += Math.sin(ka) * kb;
+          }
+        }
+      }
+      this.swing = { a, t: 0.12, range: ds.range, arc: ds.arc };
+      VFX.emit('dashStrike', this.x, this.y, a);
+      AUDIO.sfx('swing');
+    } else if (ds.kind === 'volley') {
+      const dmg = U.lerp(w.dmgMin, w.dmgMax, ds.draw) * ds.mult;
+      for (let i = 0; i < ds.count; i++) {
+        const aa = a + (i - (ds.count - 1) / 2) * ds.spread;
+        GAME.pprojectiles.push({
+          x: this.x, y: this.y, vx: Math.cos(aa) * w.projSpeed, vy: Math.sin(aa) * w.projSpeed,
+          dmg, r: 5, t: ds.life, pierce: false, src: 'attack', opts: { dashStrike: true },
+          color: '#aef0ff', hitSet: new Set(),
+        });
+      }
+      this.charging = false; this.charge = 0;
+      VFX.emit('dashStrike', this.x, this.y, a);
+      AUDIO.sfx('bow');
+    } else if (ds.kind === 'leap') {
+      const dist = Number.isFinite(td) ? Math.min(ds.maxDist, td) : ds.maxDist;
+      const to = { x: this.x + Math.cos(a) * dist, y: this.y + Math.sin(a) * dist, r: this.r };
+      clampToArena(to);
+      this.leapFrom = { x: this.x, y: this.y };
+      this.leapTo = { x: to.x, y: to.y };
+      this.leapT = ds.hop;
+      this.dashT = 0;             // the hop replaces what is left of the dash
+      AUDIO.sfx('swing');
+    }
+  }
+
+  _advanceLeap(dt) {
+    const ds = this.weapon.dashStrike;
+    this.leapT = Math.max(0, this.leapT - dt);
+    const k = ds && ds.hop > 0 ? 1 - this.leapT / ds.hop : 1;
+    this.x = U.lerp(this.leapFrom.x, this.leapTo.x, k);
+    this.y = U.lerp(this.leapFrom.y, this.leapTo.y, k);
+    this.trail.push({ x: this.x, y: this.y, t: 0.25 });
+    if (this.leapT <= 0) this._gadaSlam();
+  }
+
+  _gadaSlam() {
+    const w = this.weapon, ds = w.dashStrike;
+    if (!ds) return;
+    GAME.rings.push({ x: this.x, y: this.y, r: ds.radius, t: 0.25, color: '#ffcf5c' });
+    VFX.emit('finisherRing', this.x, this.y, this.aim, '#ffcf5c');
+    GAME.shake = Math.max(GAME.shake, 6);
+    for (const e of GAME.enemies.slice()) {
+      if (e.dead) continue;
+      if (U.dist(this.x, this.y, e.x, e.y) < ds.radius + e.r) {
+        hitEnemy(e, w.combo[0] * ds.mult, 'attack', { dashStrike: true });
+        if (!e.boss && !e.dead) {
+          e.stun = Math.max(e.stun, ds.stun);
+          const a = U.angle(this.x, this.y, e.x, e.y);
+          e.kx += Math.cos(a) * 300; e.ky += Math.sin(a) * 300;
+        }
+      }
+    }
+    CAMERA.punch(this.x, this.y, 0.03, 0.18);
+    AUDIO.sfx('special');
+  }
+
+  updateBow(dt, I, press) {
     if (STATUS.stunned(this)) return;
     const w = this.weapon;
+    // D-12: a press inside the dash window looses the point-blank volley instead of drawing;
+    // the draw stays suppressed until the button is released
+    if (press && this.inDashStrikeWindow()) { this.dashStrike(); this._noDraw = true; return; }
+    if (this._noDraw) { if (!I.lmb) this._noDraw = false; return; }
     if (I.lmb && this.atkCd <= 0) {
       this.charging = true;
       this.charge = Math.min(1, this.charge + dt / w.chargeTime);
@@ -424,6 +570,7 @@ class Player {
     if (this.specialCd > 0) return;
     const w = this.weapon, sp = w.special;
     this.specialCd = sp.cd;
+    this.comboT = Math.max(this.comboT, 0.6);   // D-13: specials weave into the string (comboIdx kept)
     AUDIO.sfx('special');
     if (w.id === 'gandiva') {
       for (let i = 0; i < sp.count; i++) {

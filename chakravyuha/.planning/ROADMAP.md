@@ -212,7 +212,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   8. Boss variety: boss move order is randomized within each phase, there are new patterns and fewer permanent safe spots, and every attack keeps a fair telegraph (Phase 4 invariant)
   9. Gods remain allies only; `node test/smoke.js` stays green, with new headless balance/AI tests
 **Plans**: 12 plans (11 waves; wave 7 runs 07 + 12 (art) in parallel; 08 runs after 07; 11 has a human playtest checkpoint)
-- [ ] 05.7.1-01-PLAN.md — Foundation: COMBAT-01..19 registered, seeded U, test harness + combat suite, bot balance sim + pre-tuning baseline, shared telegraph renderer (sprite-path fix)
+- [x] 05.7.1-01-PLAN.md — Foundation: COMBAT-01..19 registered, seeded U, test harness + combat suite, bot balance sim + pre-tuning baseline, shared telegraph renderer (sprite-path fix)
 - [ ] 05.7.1-02-PLAN.md — Player statuses (STATUS, hit-landed contract, DoT, stun DR) + data-driven projectile families (PROJ, cap, pattern planner)
 - [ ] 05.7.1-03-PLAN.md — Player kit: dash-strike, dash-cancel, hold/charged variants, finishers, lodged-astra cast, faster tempo, pad parity
 - [ ] 05.7.1-04-PLAN.md — Enemy AI: slots, attack tokens, range bands, view-band firing, ENEMY_TG telegraph invariant for the existing 8

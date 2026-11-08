@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Ready to execute
-stopped_at: Phase 05.7.1 context gathered
-last_updated: "2026-11-08T13:26:05.551Z"
-last_activity: 2026-11-07
+stopped_at: Completed 05.7.1-01-PLAN.md
+last_updated: "2026-11-08T15:40:25.764Z"
+last_activity: 2026-11-08
 progress:
   total_phases: 18
   completed_phases: 11
-  total_plans: 59
-  completed_plans: 46
+  total_plans: 71
+  completed_plans: 47
 ---
 
 # Project State
@@ -20,12 +20,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-17)
 
 **Core value:** Every death makes the next run feel different — god boons, weapon choice, and room layouts create builds players want to talk about.
-**Current focus:** Phase 06 — steam-integration (planned; execution gated on G-1 playtest approval)
+**Current focus:** Phase 05.7.1 — hades-style-combat-depth-smarter-enemies-player-kit-difficulty-curve-boss-variety-tighter-arenas
 
 ## Current Position
 
-Phase: 06 (steam-integration) — 4 plans, not started. 05.7 complete with CULT-02/03 deferred to Phase 7 QA-03 (user decision 2026-11-07)
-Plan: 0 of 4 — awaiting G-1 playtest-approved gate
+Phase: 05.7.1 (hades-style-combat-depth-smarter-enemies-player-kit-difficulty-curve-boss-variety-tighter-arenas) — EXECUTING
+Plan: 2 of 12
 
 ## Performance Metrics
 
@@ -52,6 +52,7 @@ Plan: 0 of 4 — awaiting G-1 playtest-approved gate
 | Phase 02 P02 | 35 | 3 tasks | 4 files |
 | Phase 05.4 P05 | 55min | 2 tasks | 13 files |
 | Phase 05.7 P02 | 8h | 4 tasks | 60 files |
+| Phase 05.7.1 P01 | 29min | 3 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,8 @@ Recent decisions affecting current work:
 - [Phase 05.4]: D-08b readability measured at GFX low AND medium; floor saturation controlled by grade.floorDesat (all tiers) + floorSat ColorMatrix (medium/high) + grade.floorWash
 - [Phase 05.4]: Side gates drawn as rotated doorways in the west/east walls; skins carry a vis rect for occlusion/culling
 - [Phase 05.7]: Indra vajra portrait NOT SHIPPED after 6/6 Flux failures; old portrait kept and flagged
+- [Phase 05.7.1]: Balance bot uses grid-BFS navigation around GAME.pillars; baseline fixture captured at e39854c (khanda, zero meta, dt 1/60): full median biome 2, room 12.55 s, 85.5 dmg/min, 30/30 dead
+- [Phase 05.7.1]: Telegraphs/marks/status overlays render through js/combat.js drawTelegraph/drawOverlays on both primitive and sprite paths
 
 ### Roadmap Evolution
 
@@ -126,7 +129,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-08T13:26:05.522Z
-Last activity: 2026-11-07
-Stopped at: Phase 05.7.1 context gathered
-Resume file: .planning/phases/05.7.1-hades-style-combat-depth-smarter-enemies-player-kit-difficulty-curve-boss-variety-tighter-arenas/05.7.1-CONTEXT.md
+Last session: 2026-11-08T15:40:25.760Z
+Last activity: 2026-11-08
+Stopped at: Completed 05.7.1-01-PLAN.md
+Resume file: None

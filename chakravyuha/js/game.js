@@ -892,7 +892,7 @@ const GAME = {
   renderSpriteExtras(ctx, e) {
     if (e.spawnT > 0) {
       // spawn-in mandala (mirrors Enemy.draw)
-      const p = 1 - e.spawnT / 0.6;
+      const p = 1 - e.spawnT / DATA.WAVES.spawnGrace;
       ctx.globalAlpha = p;
       ctx.strokeStyle = e.color; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(e.x, e.y, e.r * (2 - p), 0, U.TAU * p); ctx.stroke();

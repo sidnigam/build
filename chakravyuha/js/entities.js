@@ -127,6 +127,7 @@ function chainLightning(from, dmg, jumps) {
 function killEnemy(e) {
   if (e.dead) return;
   e.dead = true;
+  ENEMY_AI.releaseToken(e);   // 05.7.1-04: a dying attacker hands its attack token back
   // 05.7-01 (D-04): Yama's HP reaching 0 is the Trial being passed, not a kill — he is not a
   // foe. e.dead / every game-logic consequence below this point is unchanged; only the
   // presentation (VFX preset, flash colour, sfx, and the kills stat) branches.
@@ -874,16 +875,54 @@ class Enemy {
     this.flash = 0; this.stun = 0; this.maya = 0; this.slowT = 0; this.slowF = 1;
     this.burns = [];
     this.kx = 0; this.ky = 0;        // knockback velocity
-    this.state = 'idle'; this.t = U.rand(0.3, 1.2);
-    this.spawnT = 0.6;               // spawn-in grace
+    // 05.7.1-04 (D-02): faster engage — shorter spawn grace and first-attack timer (DATA.WAVES)
+    this.state = 'idle'; this.t = U.rand(DATA.WAVES.engageDelay[0], DATA.WAVES.engageDelay[1]);
+    this.spawnT = DATA.WAVES.spawnGrace;   // spawn-in grace
     this.telegraph = null;
     this.atkT = 0;
+    // 05.7.1-04 (D-11): enemy telegraph invariant state (ENEMY_TG) + ENEMY_AI coordination
+    this.windKind = null; this.windT = 0; this.windTotal = 0; this.armedAtk = false;
+    this.slotT = 0; this.tokenCat = null;
   }
 
   curSpeed() {
     let s = this.spd;
     if (this.slowT > 0) s *= this.slowF;
     return s;
+  }
+
+  // ---- telegraph invariant helpers (05.7.1-04, mirror Boss.strike/hurtPlayer/shoot) ----
+  // Every damaging enemy attack goes through these two. Using them unarmed logs a violation.
+  hurtPlayer(amount, opts) {
+    if (!this.armedAtk) ENEMY_TG.violations.push(this.type + ':unarmedHit');
+    return GAME.player.takeDamage(amount, this.x, this.y, opts);
+  }
+  fire(fam, vx, vy, dmg, extra) {
+    if (!this.armedAtk) ENEMY_TG.violations.push(this.type + ':unarmedFire');
+    ENEMY_TG.fireLog.push({ type: this.type, inView: ENEMY_AI.inViewBand(this.x, this.y, GAME.player) });
+    if (ENEMY_TG.fireLog.length > 500) ENEMY_TG.fireLog.shift();
+    // non-bolt families keep their own data colour so each family reads distinctly (D-09)
+    return enemyShot(this.x, this.y, vx, vy, dmg, fam === 'bolt' ? this.color : undefined, 6, fam,
+      Object.assign({ owner: this }, extra));
+  }
+  // Start a wind-up of `kind` (ENEMY_TG.MIN key) lasting `secs`; windT accrues in update().
+  windUp(kind, secs, telegraph) {
+    this.windKind = kind; this.windT = 0; this.windTotal = secs; this.t = secs;
+    this.armedAtk = false;
+    this.telegraph = telegraph || null;
+  }
+  // The wind-up is over: log it, flag a short one, and arm the attack.
+  armAttack() {
+    ENEMY_TG.log(ENEMY_TG.windLog, { type: this.type, kind: this.windKind, wind: this.windT });
+    if (this.windT < (ENEMY_TG.MIN[this.windKind] || 0) - 1e-6) ENEMY_TG.violations.push(this.type + ':short:' + this.windKind);
+    this.armedAtk = true;
+    this.telegraph = null;
+  }
+  // The attack resolved (or was aborted): disarm and hand the token back.
+  endAttack() {
+    this.armedAtk = false; this.windKind = null;
+    this.telegraph = null;
+    ENEMY_AI.releaseToken(this);
   }
 
   update(dt) {
@@ -904,7 +943,9 @@ class Enemy {
     this.x += this.kx * dt; this.y += this.ky * dt;
     this.kx *= Math.pow(0.0001, dt); this.ky *= Math.pow(0.0001, dt);
 
+    // a stun freezes everything, including a wind-up in progress (windT does not accrue)
     if (this.stun > 0) { clampToArena(this); return; }
+    if (this.windKind && !this.armedAtk) this.windT += dt;
 
     this.t -= dt;
     const dToP = U.dist(this.x, this.y, P.x, P.y);
@@ -912,36 +953,49 @@ class Enemy {
 
     switch (this.def.ai) {
       case 'chase':
-        this.x += Math.cos(aToP) * this.curSpeed() * dt;
-        this.y += Math.sin(aToP) * this.curSpeed() * dt;
+        if (this.state === 'bite') { this.biteStep(P); break; }
+        ENEMY_AI.steer(this, dt);
         this.touchAttack(dToP, dt);
         break;
 
       case 'lunge':
         if (this.state === 'idle') {
-          this.x += Math.cos(aToP) * this.curSpeed() * dt;
-          this.y += Math.sin(aToP) * this.curSpeed() * dt;
-          if (dToP < 130 && this.t <= 0) { this.state = 'wind'; this.t = 0.45; this.lungeA = aToP; }
+          ENEMY_AI.steer(this, dt);
+          if (dToP < 130 && this.t <= 0 && ENEMY_AI.requestToken(this, 'melee')) {
+            this.state = 'wind'; this.lungeA = aToP;
+            this.windUp('melee', ENEMY_AI.windTime('melee', 0.45), { type: 'line', a: this.lungeA, len: 150 });
+          }
         } else if (this.state === 'wind') {
-          this.telegraph = { type: 'line', a: this.lungeA, len: 150 };
-          if (this.t <= 0) { this.state = 'lunge'; this.t = 0.22; this.telegraph = null; AUDIO.sfx('swing'); }
+          if (this.t <= 0) { this.armAttack(); this.state = 'lunge'; this.t = 0.22; AUDIO.sfx('swing'); }
         } else if (this.state === 'lunge') {
           this.x += Math.cos(this.lungeA) * 560 * dt;
           this.y += Math.sin(this.lungeA) * 560 * dt;
           this.touchAttack(U.dist(this.x, this.y, P.x, P.y), dt, this.dmg);
-          if (this.t <= 0) { this.state = 'idle'; this.t = U.rand(1.2, 2); }
+          if (this.t <= 0) { this.endAttack(); this.state = 'idle'; this.t = U.rand(1.2, 2); }
         }
         break;
 
       case 'shoot': {
-        // keep mid range (Phase 05.1, WAVE-04): fairness in large arenas — only fire within engageRange
+        // hold the ranged band (ENEMY_AI); fire only within engageRange (Phase 05.1, WAVE-04) and
+        // from inside the player's view band (D-18), after an aim tell that tracks the player
         const ER = DATA.WAVES.engageRange;
-        if (dToP < 200) { this.x -= Math.cos(aToP) * this.curSpeed() * dt; this.y -= Math.sin(aToP) * this.curSpeed() * dt; }
-        else if (dToP > 330) { this.x += Math.cos(aToP) * this.curSpeed() * dt; this.y += Math.sin(aToP) * this.curSpeed() * dt; }
+        if (this.state === 'aim') {
+          if (this.telegraph) this.telegraph.a = aToP;
+          if (this.t <= 0) {
+            if (!ENEMY_AI.inViewBand(this.x, this.y, P)) { this.endAttack(); this.state = 'idle'; this.t = 0.3; break; }
+            this.aimA = aToP;
+            this.armAttack();
+            const ps = this.def.projSpeed;
+            this.fire(this.def.fam || 'bolt', Math.cos(this.aimA) * ps, Math.sin(this.aimA) * ps, this.dmg);
+            this.endAttack(); this.state = 'idle'; this.t = U.rand(1.6, 2.6);
+          }
+          break;
+        }
+        ENEMY_AI.steer(this, dt);
         if (this.t <= 0) {
-          if (dToP <= ER) {
-            enemyShot(this.x, this.y, Math.cos(aToP) * this.def.projSpeed, Math.sin(aToP) * this.def.projSpeed, this.dmg, this.color);
-            this.t = U.rand(1.6, 2.6);
+          if (dToP <= ER && ENEMY_AI.inViewBand(this.x, this.y, P) && ENEMY_AI.requestToken(this, 'ranged')) {
+            this.state = 'aim'; this.aimA = aToP;
+            this.windUp('ranged', ENEMY_AI.windTime('ranged', 0.35), { type: 'line', a: this.aimA, len: 180 });
           } else this.t = 0.3;
         }
         break;
@@ -949,13 +1003,24 @@ class Enemy {
 
       case 'spread': {
         const ER = DATA.WAVES.engageRange;
-        if (dToP < 170) { this.x -= Math.cos(aToP) * this.curSpeed() * dt; this.y -= Math.sin(aToP) * this.curSpeed() * dt; }
-        else if (dToP > 360) { this.x += Math.cos(aToP) * this.curSpeed() * dt; this.y += Math.sin(aToP) * this.curSpeed() * dt; }
-        if (this.t <= 0) {
-          if (dToP <= ER) {
+        if (this.state === 'aim') {
+          if (this.telegraph) this.telegraph.a = aToP;
+          if (this.t <= 0) {
+            if (!ENEMY_AI.inViewBand(this.x, this.y, P)) { this.endAttack(); this.state = 'idle'; this.t = 0.3; break; }
+            this.aimA = aToP;
+            this.armAttack();
+            const ps = this.def.projSpeed;
             for (const off of [-0.3, 0, 0.3])
-              enemyShot(this.x, this.y, Math.cos(aToP + off) * this.def.projSpeed, Math.sin(aToP + off) * this.def.projSpeed, this.dmg, this.color);
-            this.t = U.rand(2, 3.2);
+              this.fire(this.def.fam || 'bolt', Math.cos(this.aimA + off) * ps, Math.sin(this.aimA + off) * ps, this.dmg);
+            this.endAttack(); this.state = 'idle'; this.t = U.rand(2, 3.2);
+          }
+          break;
+        }
+        ENEMY_AI.steer(this, dt);
+        if (this.t <= 0) {
+          if (dToP <= ER && ENEMY_AI.inViewBand(this.x, this.y, P) && ENEMY_AI.requestToken(this, 'ranged')) {
+            this.state = 'aim'; this.aimA = aToP;
+            this.windUp('status', ENEMY_AI.windTime('status', 0.45), { type: 'cone', a: this.aimA, arc: 0.7, r: 160 });
           } else this.t = 0.3;
         }
         break;
@@ -963,40 +1028,43 @@ class Enemy {
 
       case 'teleport':
         if (this.state === 'idle') {
-          if (this.t <= 0) {
-            // vanish, reappear near player
+          if (this.t <= 0 && ENEMY_AI.requestToken(this, 'melee')) {
+            // vanish, reappear near the player — ahead of it when it is running (escape cut)
             burst(this.x, this.y, this.color, 10, 140, 0.4);
-            const a = U.rand(U.TAU);
+            const pv = ENEMY_AI.pv;
+            const a = Math.hypot(pv.x, pv.y) > 60 ? Math.atan2(pv.y, pv.x) + U.rand(-0.8, 0.8) : U.rand(U.TAU);
             this.x = U.clamp(P.x + Math.cos(a) * 90, GAME.arena.x + 20, GAME.arena.x + GAME.arena.w - 20);
             this.y = U.clamp(P.y + Math.sin(a) * 90, GAME.arena.y + 20, GAME.arena.y + GAME.arena.h - 20);
             burst(this.x, this.y, this.color, 10, 140, 0.4);
-            this.state = 'strike'; this.t = 0.5;
+            this.state = 'strike';
+            this.windUp('melee', ENEMY_AI.windTime('melee', 0.5), { type: 'circle', r: 46 });
           }
         } else {
-          this.telegraph = { type: 'circle', r: 46 };
           if (this.t <= 0) {
-            this.telegraph = null;
-            if (U.dist(this.x, this.y, P.x, P.y) < 60) { P.takeDamage(this.dmg); P.meleeRetaliate(this); }
+            this.armAttack();
+            if (U.dist(this.x, this.y, P.x, P.y) < 60) { this.hurtPlayer(this.dmg); P.meleeRetaliate(this); }
             GAME.rings.push({ x: this.x, y: this.y, r: 46, t: 0.2, color: this.color });
+            this.endAttack();
             this.state = 'idle'; this.t = U.rand(1.8, 2.8);
           }
         }
         break;
 
       case 'tank':
-        this.x += Math.cos(aToP) * this.curSpeed() * dt;
-        this.y += Math.sin(aToP) * this.curSpeed() * dt;
+        if (this.state === 'bite') { this.biteStep(P); break; }
+        ENEMY_AI.steer(this, dt);
         this.touchAttack(dToP, dt);
         break;
 
       case 'charge':
         if (this.state === 'idle') {
-          this.x += Math.cos(aToP) * this.curSpeed() * dt;
-          this.y += Math.sin(aToP) * this.curSpeed() * dt;
-          if (this.t <= 0 && dToP < 420) { this.state = 'wind'; this.t = 0.7; this.lungeA = aToP; }
+          ENEMY_AI.steer(this, dt);
+          if (this.t <= 0 && dToP < 420 && ENEMY_AI.requestToken(this, 'heavy')) {
+            this.state = 'wind'; this.lungeA = aToP;
+            this.windUp('melee', ENEMY_AI.windTime('melee', 0.7), { type: 'line', a: this.lungeA, len: 420 });
+          }
         } else if (this.state === 'wind') {
-          this.telegraph = { type: 'line', a: this.lungeA, len: 420 };
-          if (this.t <= 0) { this.state = 'charge'; this.t = 0.7; this.telegraph = null; GAME.shake = Math.max(GAME.shake, 3); }
+          if (this.t <= 0) { this.armAttack(); this.state = 'charge'; this.t = 0.7; GAME.shake = Math.max(GAME.shake, 3); }
         } else if (this.state === 'charge') {
           this.x += Math.cos(this.lungeA) * 640 * dt;
           this.y += Math.sin(this.lungeA) * 640 * dt;
@@ -1005,16 +1073,15 @@ class Enemy {
           const A = GAME.arena;
           if (this.x < A.x + this.r || this.x > A.x + A.w - this.r ||
               this.y < A.y + this.r || this.y > A.y + A.h - this.r) this.t = 0;
-          if (this.t <= 0) { this.state = 'idle'; this.t = U.rand(1.5, 2.5); }
+          if (this.t <= 0) { this.endAttack(); this.state = 'idle'; this.t = U.rand(1.5, 2.5); }
         }
         break;
 
       case 'summon': {
-        // drift away from the player, summon pretas (Phase 05.1, WAVE-04: approach when far,
-        // and never push the room over the alive cap)
+        // hold the support band (ENEMY_AI, 260-560 px), summon pretas (Phase 05.1, WAVE-04: approach
+        // when far, and never push the room over the alive cap). Non-damaging: no token.
         const ER = DATA.WAVES.engageRange;
-        if (dToP < 260) { this.x -= Math.cos(aToP) * this.curSpeed() * dt; this.y -= Math.sin(aToP) * this.curSpeed() * dt; }
-        else if (dToP > 560) { this.x += Math.cos(aToP) * this.curSpeed() * dt; this.y += Math.sin(aToP) * this.curSpeed() * dt; }
+        ENEMY_AI.steer(this, dt);
         if (this.t <= 0) {
           const livingPretas = GAME.enemies.filter(e => !e.dead && e.type === 'preta').length;
           if (dToP <= ER + 200 && livingPretas < 5 && ROOMS.aliveCount() < DATA.WAVES.maxAlive) {
@@ -1032,19 +1099,42 @@ class Enemy {
     this.atkT = Math.max(0, this.atkT - dt);
   }
 
+  // Contact damage. While a lunge/charge is active (armed) a touch hits at once; otherwise a
+  // touch starts a 0.2 s "bite" tell (ENEMY_TG.MIN.bite) that needs a bite token.
   touchAttack(dToP, dt, dmg = this.dmg) {
     const P = GAME.player;
-    if (dToP < this.r + P.r + 4 && this.atkT <= 0) {
-      P.takeDamage(dmg);
-      P.meleeRetaliate(this);
-      this.atkT = 0.8;
+    const inReach = dToP < this.r + P.r + 4;
+    if (this.armedAtk) {
+      if (inReach && this.atkT <= 0) {
+        this.hurtPlayer(dmg);
+        P.meleeRetaliate(this);
+        this.atkT = 0.8;
+      }
+      return;
     }
+    if (inReach && this.atkT <= 0 && this.state !== 'bite' && ENEMY_AI.requestToken(this, 'bite')) {
+      this.state = 'bite'; this.biteDmg = dmg;
+      this.windUp('bite', ENEMY_AI.windTime('bite', 0.2), { type: 'circle', r: this.r + 8 });
+    }
+  }
+
+  // The bite tell: hold position, then snap shut on whoever is still in reach.
+  biteStep(P) {
+    if (this.t > 0) return;
+    this.armAttack();
+    if (U.dist(this.x, this.y, P.x, P.y) < this.r + P.r + 10) {
+      this.hurtPlayer(this.biteDmg != null ? this.biteDmg : this.dmg);
+      P.meleeRetaliate(this);
+    }
+    this.atkT = 0.8;
+    this.endAttack();
+    this.state = 'idle';
   }
 
   draw(ctx) {
     if (this.spawnT > 0) {
       // spawn-in mandala
-      const p = 1 - this.spawnT / 0.6;
+      const p = 1 - this.spawnT / DATA.WAVES.spawnGrace;
       ctx.globalAlpha = p;
       ctx.strokeStyle = this.color; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(this.x, this.y, this.r * (2 - p), 0, U.TAU * p); ctx.stroke();

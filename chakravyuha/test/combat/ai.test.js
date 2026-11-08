@@ -282,8 +282,8 @@ module.exports = function ({ R, check, fs, path, root }) {
     for (let f = 0; f < 180 && !shots.length; f++) { __ai.hold(P2, nx, ny); GAME.update(${DT}); shots = GAME.eprojectiles.slice(); }
     let venom = shots.length === 3 && shots.every(s => s.fam === 'venom');
     if (venom) {
-      const ang = shots.map(s => Math.atan2(s.vy, s.vx)).sort((x, y) => x - y);
-      venom = Math.abs(U.angDiff(ang[0], ang[1]) - 0.3) < 1e-6 && Math.abs(U.angDiff(ang[1], ang[2]) - 0.3) < 1e-6;
+      const off = shots.map(s => U.angDiff(n.aimA, Math.atan2(s.vy, s.vx))).sort((x, y) => x - y);
+      venom = Math.abs(off[0] + 0.3) < 1e-6 && Math.abs(off[1]) < 1e-6 && Math.abs(off[2] - 0.3) < 1e-6;
     }
     // bhuta death ring stays bolt
     __ai.boot(2); GAME.eprojectiles = [];
@@ -423,9 +423,10 @@ module.exports = function ({ R, check, fs, path, root }) {
       for (let f = 0; f < 60 * 60; f++) {
         // every 3 s one living enemy falls so the room's waves keep cycling
         if (f % 180 === 179) { const live = GAME.enemies.filter(e => !e.dead && !e.boss); if (live.length > 4) killEnemy(U.choice(live)); }
-        // the player strolls a slow loop so slots, cuts and bands all get exercised
-        const t = f / 60;
-        INPUT.ax = Math.cos(t * 0.7); INPUT.ay = Math.sin(t * 0.7);
+        // the player alternates a 0.8 s run (rotating heading) with a 1.6 s stand, so slots,
+        // escape cuts, bands and every attack get exercised
+        const t = f / 60, ph = t % 2.4;
+        INPUT.ax = ph < 0.8 ? Math.cos(t * 0.9) : 0; INPUT.ay = ph < 0.8 ? Math.sin(t * 0.9) : 0;
         if (P.hp < 1e8) P.hp = 1e9;
         GAME.update(${DT});
         for (const e of GAME.enemies) if (!e.dead) types.add(e.type);

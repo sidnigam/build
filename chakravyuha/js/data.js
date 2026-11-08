@@ -200,22 +200,24 @@ DATA.KIT = {
 
 // ---------- ENEMIES ----------
 // ai: chase | lunge | shoot | spread | teleport | tank | charge | summon
+// role (05.7.1-04, ENEMY_AI): melee | heavy use the melee slot ring, ranged | support the ranged
+// ring; fam: projectile family the shooter fires (DATA.PROJECTILES)
 DATA.ENEMIES = {
-  preta:     { id: 'preta', name: 'Preta', ai: 'chase', hp: 26, spd: 165, r: 11, dmg: 8,
+  preta:     { id: 'preta', role: 'melee', name: 'Preta', ai: 'chase', hp: 26, spd: 165, r: 11, dmg: 8,
                color: '#9ce0c8', cost: 1 },
-  rakshasa:  { id: 'rakshasa', name: 'Rakshasa Blade', ai: 'lunge', hp: 62, spd: 112, r: 15, dmg: 14,
+  rakshasa:  { id: 'rakshasa', role: 'melee', name: 'Rakshasa Blade', ai: 'lunge', hp: 62, spd: 112, r: 15, dmg: 14,
                color: '#ff7058', cost: 2 },
-  archer:    { id: 'archer', name: 'Asura Archer', ai: 'shoot', hp: 40, spd: 95, r: 13, dmg: 10,
-               color: '#d8b35c', cost: 2, projSpeed: 360 },
-  naga:      { id: 'naga', name: 'Naga Spitter', ai: 'spread', hp: 55, spd: 85, r: 14, dmg: 9,
-               color: '#3fe09f', cost: 2, projSpeed: 300 },
-  vetala:    { id: 'vetala', name: 'Vetala', ai: 'teleport', hp: 50, spd: 0, r: 13, dmg: 13,
+  archer:    { id: 'archer', role: 'ranged', name: 'Asura Archer', ai: 'shoot', hp: 40, spd: 95, r: 13, dmg: 10,
+               color: '#d8b35c', cost: 2, projSpeed: 360, fam: 'needle' },
+  naga:      { id: 'naga', role: 'ranged', name: 'Naga Spitter', ai: 'spread', hp: 55, spd: 85, r: 14, dmg: 9,
+               color: '#3fe09f', cost: 2, projSpeed: 300, fam: 'venom' },
+  vetala:    { id: 'vetala', role: 'melee', name: 'Vetala', ai: 'teleport', hp: 50, spd: 0, r: 13, dmg: 13,
                color: '#b48aff', cost: 3 },
-  bhuta:     { id: 'bhuta', name: 'Bhuta Husk', ai: 'tank', hp: 135, spd: 55, r: 21, dmg: 16,
+  bhuta:     { id: 'bhuta', role: 'heavy', name: 'Bhuta Husk', ai: 'tank', hp: 135, spd: 55, r: 21, dmg: 16,
                color: '#8a93b8', cost: 3 },
-  daitya:    { id: 'daitya', name: 'Daitya Brute', ai: 'charge', hp: 115, spd: 80, r: 19, dmg: 18,
+  daitya:    { id: 'daitya', role: 'heavy', name: 'Daitya Brute', ai: 'charge', hp: 115, spd: 80, r: 19, dmg: 18,
                color: '#e0a23c', cost: 4 },
-  yatudhana: { id: 'yatudhana', name: 'Yatudhana Conjurer', ai: 'summon', hp: 72, spd: 75, r: 14, dmg: 8,
+  yatudhana: { id: 'yatudhana', role: 'support', name: 'Yatudhana Conjurer', ai: 'summon', hp: 72, spd: 75, r: 14, dmg: 8,
                color: '#ff9ad5', cost: 4 },
 };
 
@@ -227,6 +229,8 @@ DATA.WAVES = {
   waveDelay: 0.7, dripEvery: 0.35, dripBatch: 3,
   spawnMin: 360, spawnMax: 950, packSize: [3, 6], packJitter: 70,
   engageRange: 640, eliteCost: 3,
+  spawnGrace: 0.45,                      // 05.7.1-04 (D-02): spawn-in grace (was 0.6)
+  engageDelay: [0.2, 0.8],               // first attack timer range after spawning (was 0.3-1.2)
 };
 
 // ---------- PLAYER STATUSES (Phase 05.7.1, D-10/D-11) ----------

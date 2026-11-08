@@ -341,7 +341,7 @@ const SPRITES = {
     HIT_SQUASH: 0.12,            // tunable: hit-flash squash fraction
     FLASH_MAX: 0.85,             // tunable: max white-flash blend amount (0..1)
     PLAYER_HURT_DUR: 0.25,       // tunable: player hurtT duration used to ramp flash down
-    SPAWN_DUR: 0.6,              // tunable: spawn fade/scale-in duration, mirrors legacy spawnT
+    SPAWN_DUR: 0.45,             // tunable: spawn fade/scale-in duration, mirrors DATA.WAVES.spawnGrace (05.7.1-04)
     SPAWN_MIN_SCALE: 0.6,        // tunable: sprite scale at the start of spawn-in
     DEATH_DUR: 0.3,              // tunable: death shrink/fade duration
     PHASE_FLASH_DUR: 0.3,        // tunable: boss phase-transition white flash duration

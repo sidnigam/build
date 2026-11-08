@@ -72,6 +72,28 @@ Source: PROJECT.md + Research (STACK, FEATURES, ARCHITECTURE, PITFALLS)
 - [ ] **CULT-03**: Kumbhakarna carries a club/mace (no trident); Agni portrait has no Vaishnava tilak; Indra holds a classic double-ended vajra
 - [x] **CULT-04**: Naraka gate reads as an Indian torana/temple gateway; vent-grate hazard skin reads as a carved stone/iron vent
 
+### COMBAT — Hades-style combat depth (Phase 5.7.1, inserted 2026-11-08)
+
+- [ ] **COMBAT-01**: Faster pace: player ~+15% speed, snappier recovery, faster enemy engage, overlapping waves under `maxAlive`, 45-75 s combat rooms, 25-35 min full run
+- [ ] **COMBAT-02**: Base zoom ~1.3x, context zoom (boss/large out, rest/shop in), punch composes on top, clamp/bridge correct at every zoom, off-view threats indicated
+- [ ] **COMBAT-03**: 8 new regular enemy types (2 per biome), distinct roles, non-deity
+- [ ] **COMBAT-04**: Smarter AI for all enemies: slots/surround, ranged spacing and repositioning, attack tokens, timing variance inside telegraphs, escape-route cutting, on-screen firing preference
+- [ ] **COMBAT-05**: Elite modifiers (1-2 visible: aura, tint, tag) on the `eliteShare` curve, raised
+- [ ] **COMBAT-06**: 4 mini-bosses (one per biome, fixed mid-biome room, symbol door, guaranteed boon+ reward, own moveset, ≥0.4 s telegraphs, enrage)
+- [ ] **COMBAT-07**: 8-10 data-driven projectile families (`DATA.PROJECTILES`), each with shape, colour, trail, hit VFX, SFX
+- [ ] **COMBAT-08**: Player statuses: stun (DR + immunity), slow/root (dash breaks root), burn/poison DoT, knockback/pull; each with pip/icon, tint, particles, HUD read; respects accessibility toggles; dash i-frames avoid them
+- [ ] **COMBAT-09**: Dash-strike per weapon inside a ~0.2 s window; boons apply
+- [ ] **COMBAT-10**: Dash cancels recovery; hold/charged variant per weapon; distinct finishers; no branching trees
+- [ ] **COMBAT-11**: Hades cast: lodged astra, ammo 2, walk-over pickup, auto-return safety; all cast boons keep working; shorter special cooldowns, weavable
+- [ ] **COMBAT-12**: Hit feel tuned through Phase 3 hooks only (hitstop weights, punch, kick, flash, VFX presets)
+- [ ] **COMBAT-13**: Controller parity for every new input, including rebinding
+- [ ] **COMBAT-14**: 8 enemy + 4 mini-boss sprites in the 1+5 direction via the Flux pipeline; provenance complete
+- [ ] **COMBAT-15**: Hades-like base difficulty, verified by a headless balance sim against a recorded baseline
+- [ ] **COMBAT-16**: Opt-in Heat system ("Vows of Tapas"): unlocks after first clear, per-modifier ranks, Punya scaling, best Heat per weapon, persisted via META/STORE
+- [ ] **COMBAT-17**: Boss move selection: weighted random, strict no-immediate-repeat, 2-3 move chains, distance bands and anti-camping, faster phase-2 chains; telegraph invariant intact
+- [ ] **COMBAT-18**: +2 new moves per boss using new projectile families and statuses; Yama moves framed as judgments
+- [ ] **COMBAT-19**: Smoke stays green; new headless balance and AI tests; reverence lint covers new strings
+
 ## v2 Requirements (deferred)
 
 - Nintendo Switch port — requires Nintendo dev license, separate native build; plan after Steam ships
@@ -139,3 +161,22 @@ Source: PROJECT.md + Research (STACK, FEATURES, ARCHITECTURE, PITFALLS)
 | CULT-02 | Phase 5.7 → 7 | Deferred to Phase 7 QA-03 (05.7-04 NOT SHIPPED) |
 | CULT-03 | Phase 5.7 → 7 | Deferred to Phase 7 QA-03 (Indra vajra NOT SHIPPED; Kumbhakarna + Agni done) |
 | CULT-04 | Phase 5.7 | Complete (05.7-02) |
+| COMBAT-01 | Phase 5.7.1 | Pending |
+| COMBAT-02 | Phase 5.7.1 | Pending |
+| COMBAT-03 | Phase 5.7.1 | Pending |
+| COMBAT-04 | Phase 5.7.1 | Pending |
+| COMBAT-05 | Phase 5.7.1 | Pending |
+| COMBAT-06 | Phase 5.7.1 | Pending |
+| COMBAT-07 | Phase 5.7.1 | Pending |
+| COMBAT-08 | Phase 5.7.1 | Pending |
+| COMBAT-09 | Phase 5.7.1 | Pending |
+| COMBAT-10 | Phase 5.7.1 | Pending |
+| COMBAT-11 | Phase 5.7.1 | Pending |
+| COMBAT-12 | Phase 5.7.1 | Pending |
+| COMBAT-13 | Phase 5.7.1 | Pending |
+| COMBAT-14 | Phase 5.7.1 | Pending |
+| COMBAT-15 | Phase 5.7.1 | Pending |
+| COMBAT-16 | Phase 5.7.1 | Pending |
+| COMBAT-17 | Phase 5.7.1 | Pending |
+| COMBAT-18 | Phase 5.7.1 | Pending |
+| COMBAT-19 | Phase 5.7.1 | Pending |

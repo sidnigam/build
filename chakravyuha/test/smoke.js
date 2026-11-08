@@ -8012,6 +8012,14 @@ globalThis.__bossDoorResults = { errors: [], doors: [], visible: [], badColors: 
     + (br.badColors.length ? ' — ' + br.badColors.join(', ') : ''), br.badColors.length === 0);
 }
 
+console.log('\n— Phase 05.7.1: combat suite + balance sim —');
+{
+  const cp = require('child_process');
+  const out = r => ((r.stdout || '') + (r.stderr || '')).split('\n').filter(l => /FAIL/.test(l)).slice(0, 6).join(' | ');
+  const c = cp.spawnSync(process.execPath, [path.join(__dirname, 'combat.js')], { encoding: 'utf8', timeout: 240000 });
+  check('test/combat.js suite green' + (c.status !== 0 ? ' — ' + out(c) : ''), c.status === 0);
+}
+
 Promise.all(pendingAsyncChecks).then(() => {
   console.log(failures === 0 ? '\nALL SMOKE TESTS PASSED' : `\n${failures} FAILURE(S)`);
   process.exit(failures ? 1 : 0);

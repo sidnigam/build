@@ -199,7 +199,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 ### Phase 05.7.1: Hades-style combat depth: smarter enemies, player kit, difficulty curve, boss variety, tighter arenas (INSERTED)
 
 **Goal:** Combat feels fast, exciting, dangerous and unpredictable like Hades. Smarter and more varied enemies, mini-bosses, distinct projectiles and hit effects, a deeper player kit, a steeper difficulty curve and varied bosses replace today's easy, samey fights. A closer camera raises immersion. Source: user playtests 2026-11-07 (rounds 1 and 2).
-**Requirements**: TBD (derive in discuss-phase)
+**Requirements**: COMBAT-01, COMBAT-02, COMBAT-03, COMBAT-04, COMBAT-05, COMBAT-06, COMBAT-07, COMBAT-08, COMBAT-09, COMBAT-10, COMBAT-11, COMBAT-12, COMBAT-13, COMBAT-14, COMBAT-15, COMBAT-16, COMBAT-17, COMBAT-18, COMBAT-19
 **Depends on:** Phase 05.7
 **Success Criteria** (what must be TRUE):
   1. Pace: faster player and enemy tempo, shorter downtime between waves and quicker room clears, so the game feels fast-paced and exciting

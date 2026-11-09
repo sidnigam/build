@@ -13,6 +13,13 @@
 //   node test/balance.js --write-baseline [--force]   capture quick + full into the fixture
 //   node test/balance.js --expect-baseline  quick seeds must equal fixture.quick.seeds exactly
 //   node test/balance.js --report <path>    write per-seed metrics + aggregate JSON
+//   node test/balance.js --assert-bands     05.7.1-11 (D-01/D-03) tuning bands vs the plan-01 fixture:
+//     quick, zero meta, khanda: dmg/min >= 1.5x fixture.quick, median combat room in [45, 75] s
+//     --full, zero meta: median biome in {1, 2} (every weapon); khanda also dmg/min >= 1.5x
+//       fixture.full and median combat room in [45, 75] s
+//     --meta max: at least one victory; WARN (not fail) when the median victory run is outside
+//       [1500, 2100] s (25-35 min sanity check; bot skill skews it)
+//   Prints `BANDS FAIL <name> value=... target=...` per failed band (exit 1), else `BANDS OK`.
 // ============================================================
 'use strict';
 const fs = require('fs');
@@ -427,6 +434,45 @@ function firstDiff(a, b) {
   return null;
 }
 
+// ---------------- 05.7.1-11: tuning bands (D-01/D-03) ----------------
+// Bot skill is not human skill, so the difficulty band is relative to the pre-tuning fixture
+// (never regenerated here); the room-time and biome bands are absolute pace targets.
+const BANDS = {
+  dmgRatio: 1.5,              // dmg taken / min >= 1.5x the plan-01 baseline
+  roomS: [45, 75],            // median combat room (COMBAT-01)
+  biome: [1, 2],              // zero-meta bot usually dies in biome 1-2
+  runS: [1500, 2100],         // max-meta victory run 25-35 min (WARN only)
+};
+function assertBands(res, { full, meta, weapon }) {
+  const fails = [], warns = [], A = res.aggregate, f = readFixture();
+  const band = (name, value, ok, target) => { if (!ok) fails.push(`BANDS FAIL ${name} value=${value} target=${target}`); else console.log(`  ok  band ${name} value=${value} target=${target}`); };
+  if (meta === 'max') {
+    const wins = Object.values(res.seeds).filter(m => m.outcome === 'victory');
+    band('maxMetaVictory', wins.length, wins.length >= 1, '>=1 victory');
+    for (const m of wins) console.log(`BANDS victory seed=${m.seed} runTimeS=${m.runTimeS}`);
+    if (wins.length) {
+      const med = r3(median(wins.map(m => m.runTimeS)));
+      if (med < BANDS.runS[0] || med > BANDS.runS[1]) warns.push(`BANDS WARN victoryRunS value=${med} target=[${BANDS.runS}]`);
+      else console.log(`  ok  band victoryRunS value=${med} target=[${BANDS.runS}]`);
+    }
+  } else {
+    if (full) band('medianBiomeReached', A.medianBiomeReached, A.medianBiomeReached >= BANDS.biome[0] && A.medianBiomeReached <= BANDS.biome[1], `[${BANDS.biome}]`);
+    if (weapon === 'khanda') {
+      const ref = f && (full ? f.full : f.quick);
+      if (!ref) fails.push('BANDS FAIL fixture value=missing target=test/fixtures/balance-baseline.json');
+      else {
+        const want = r3(BANDS.dmgRatio * ref.aggregate.meanDmgTakenPerMin);
+        band('dmgTakenPerMin', A.meanDmgTakenPerMin, A.meanDmgTakenPerMin >= want, `>=${want} (${BANDS.dmgRatio}x ${ref.aggregate.meanDmgTakenPerMin})`);
+      }
+      band('medianCombatRoomS', A.medianCombatRoomS, A.medianCombatRoomS >= BANDS.roomS[0] && A.medianCombatRoomS <= BANDS.roomS[1], `[${BANDS.roomS}]`);
+    } else console.log(`  info  band ${weapon}: dmg/min ${A.meanDmgTakenPerMin}, room ${A.medianCombatRoomS}s (dmg/room bands are khanda-only)`);
+  }
+  for (const w of warns) console.log(w);
+  for (const l of fails) console.error(l);
+  console.log(fails.length ? 'BANDS FAILED' : 'BANDS OK');
+  return fails.length ? 1 : 0;
+}
+
 // ---------------- main ----------------
 const t0 = Date.now();
 let exit = 0;
@@ -478,6 +524,7 @@ if (flag('--write-baseline')) {
     if (fixtureOk(f)) console.log('  ok  balance: baseline fixture present (quick seeds 1-3, full >= 30 seeds)');
     else { console.error('FAIL  balance: test/fixtures/balance-baseline.json missing or malformed'); exit = 1; }
   }
+  if (flag('--assert-bands')) exit = assertBands(res, { full, meta: META_MODE, weapon: WEAPON }) || exit;
 }
 
 const rp = opt('--report', null);

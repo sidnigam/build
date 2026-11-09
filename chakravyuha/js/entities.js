@@ -1525,6 +1525,25 @@ const BOSS_MOVE_DEFS = {
   roar:        { wind: 0.8, active: 0.3,  dmg: true, band: 'mid', area: false },  // kumbhakarna
   ledger:      { wind: 1.0, active: 0.3,  dmg: true, band: 'any', area: true },  // yama opener — "The Ledger is Opened"
   danda:       { wind: 0.8, active: 0.25, dmg: true, band: 'close', area: false },  // yama — "Danda of Judgment"
+  // ---- Phase 05.7.1 (D-22): +2 moves per boss on the new projectile families/statuses.
+  // Generic `pattern` moves (Boss._runPattern); a pattern `status` overrides the family default,
+  // so drumStun's ring never also knocks back. Comments only — no new player-facing strings. ----
+  thornVolley: { wind: 0.5, active: 0.7, dmg: true, band: 'mid', area: false,
+                 pattern: { fam: 'needle', aim: 'player', count: 5, spread: 0.8, volleys: 3, volleyGap: 0.22 } },          // tataka
+  rootSnare:   { wind: 0.9, active: 0.3, dmg: true, band: 'any', area: true,
+                 pattern: { fam: 'mortar', aim: 'around', count: 4, radius: 150, status: { type: 'root', dur: 1.0 }, extra: { flight: 0.9 } } }, // tataka
+  lampWisps:   { wind: 0.6, active: 0.4, dmg: true, band: 'any', area: true,
+                 pattern: { fam: 'wisp', aim: 'radial', count: 4 } },                                                       // ahiravana
+  serpentRing: { wind: 0.6, active: 0.3, dmg: true, band: 'any', area: true,
+                 pattern: { fam: 'ring', aim: 'self', gapArc: 0.8, status: { type: 'poison', dps: 3, dur: 4 } } },          // ahiravana
+  boulderOrbs: { wind: 0.6, active: 0.4, dmg: true, band: 'mid', area: false,
+                 pattern: { fam: 'orb', aim: 'player', count: 3, spread: 0.6 } },                                           // kumbhakarna
+  drumStun:    { wind: 0.6, active: 0.3, dmg: true, band: 'close', area: true,
+                 pattern: { fam: 'ring', aim: 'self', gapArc: 0.7, status: { type: 'stun', dur: 0.4 } } },                  // kumbhakarna: war-drum
+  pasha:       { wind: 0.6, active: 0.4, dmg: true, band: 'far', area: false,
+                 pattern: { fam: 'coil', aim: 'player', count: 1, status: [{ type: 'root', dur: 0.8 }, { type: 'pull', force: 260 }] } }, // yama: "The Pasha Binds" (a judgment)
+  scales:      { wind: 0.8, active: 0.8, dmg: true, band: 'any', area: true,
+                 pattern: { fam: 'beam', aim: 'line', count: 2, spread: 0.9, volleys: 2, volleyGap: 0.45, tell: 0.1 } },   // yama: "The Scales Are Weighed" (a judgment)
 };
 
 // [id, weight, overrides?] per phase. The first phase-2 entry flagged {opener:true} always
@@ -1532,20 +1551,20 @@ const BOSS_MOVE_DEFS = {
 // counts) is applied in Boss.update via this.phase, unchanged from before Phase 4.
 const BOSS_MOVESETS = {
   tataka: {
-    1: [['chase',3],['radial',2],['charge',2],['summon',1]],
-    2: [['leap',2,{opener:true}],['maw',2],['chase',3],['radial',2],['charge',2],['summon',1]],
+    1: [['chase',3],['radial',2],['charge',2],['summon',1],['thornVolley',2]],
+    2: [['leap',2,{opener:true}],['maw',2],['chase',3],['radial',2],['charge',2],['summon',1],['thornVolley',2],['rootSnare',2]],
   },
   ahiravana: {
-    1: [['teleport',3],['spiral',3],['radial',2],['summon',2]],
-    2: [['lamps',2,{opener:true}],['crossBeams',2],['teleport',3],['spiral',2],['radial',1],['summon',1]],
+    1: [['teleport',3],['spiral',3],['radial',2],['summon',2],['lampWisps',2]],
+    2: [['lamps',2,{opener:true}],['crossBeams',2],['teleport',3],['spiral',2],['radial',1],['summon',1],['lampWisps',2],['serpentRing',2]],
   },
   kumbhakarna: {
-    1: [['chase',3,{active:2.4}],['slam',3],['charge',2,{wind:0.7}],['radial',1]],
-    2: [['quake',2,{opener:true}],['roar',2],['chase',2,{active:2.0}],['slam',3],['charge',2,{wind:0.7}]],
+    1: [['chase',3,{active:2.4}],['slam',3],['charge',2,{wind:0.7}],['radial',1],['boulderOrbs',2]],
+    2: [['quake',2,{opener:true}],['roar',2],['chase',2,{active:2.0}],['slam',3],['charge',2,{wind:0.7}],['boulderOrbs',2],['drumStun',2]],
   },
   yama: {
-    1: [['noose',2],['spiral',3,{active:2.0}],['slam',2],['charge',2],['summon',1]],
-    2: [['ledger',2,{opener:true}],['danda',2],['noose',2],['spiral',2,{active:2.0}],['slam',1],['summon',1]],
+    1: [['noose',2],['spiral',3,{active:2.0}],['slam',2],['charge',2],['summon',1],['pasha',2]],
+    2: [['ledger',2,{opener:true}],['danda',2],['noose',2],['spiral',2,{active:2.0}],['slam',1],['summon',1],['pasha',2],['scales',2]],
   },
 };
 

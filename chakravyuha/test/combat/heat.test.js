@@ -280,5 +280,174 @@ module.exports = function ({ R, check, section, fs, path, root }) {
   const sa = R(`__hv.volley(1, { storms: 2 }, 'naga')`), sn = R(`__hv.volley(1, {}, 'naga')`);
   check(`storms 2: spread shooters loose 3 + 2 (${sn.n} -> ${sa.n})`, sn.n === 3 && sa.n === 5);
 
+  // ================= run-level vows (Task 3) =================
+  section('heat: waves and elites');
+  const wv = R(`(() => {
+    const mean = () => { let n = 0; for (let i = 0; i < 50; i++) n += ROOMS.planRoom(DATA.BIOMES[0], 1).reduce((s, w) => s + w.length, 0); return n / 50; };
+    const shares = () => { const out = []; const orig = ROOMS.composeWave; ROOMS.composeWave = function (b, bi, o) { out.push(o.eliteShare); return orig.apply(this, arguments); };
+      try { ROOMS.planRoom(DATA.BIOMES[2], DATA.BIOMES[2].rooms); ROOMS.planRoom(DATA.BIOMES[0], 1); } finally { ROOMS.composeWave = orig; } return [out[0], out[out.length - 1]]; };
+    const mods = () => [0, 1, 2, 3].map(bi => ROOMS.rollEliteMods(bi).length);
+    const o = {};
+    __hv.run(1, {}); o.nMean = mean(); o.nShare = shares(); o.nMods = mods();
+    __hv.run(1, { multitude: 3 }); o.hMean = mean();
+    __hv.run(1, { champions: 2 }); o.cShare = shares(); o.cMods = mods();
+    __hv.run(1, { champions: 1 }); o.c1Mods = mods();
+    __hv.run(0, { multitude: 3, champions: 2 }); o.lMean = mean(); o.lShare = shares(); o.lMods = mods();
+    o.raw = [ROOMS.waveParams(DATA.BIOMES[2], DATA.BIOMES[2].rooms).eliteShare, ROOMS.waveParams(DATA.BIOMES[0], 1).eliteShare];
+    return o;
+  })()`);
+  check(`multitude 3: mean units per room ${wv.hMean.toFixed(2)} >= 1.4 × neutral ${wv.nMean.toFixed(2)}`, wv.hMean >= 1.4 * wv.nMean);
+  check(`champions 2: eliteShare × 1.5 capped at 0.8 (${J(wv.raw)} -> ${J(wv.cShare)})`,
+    near(wv.cShare[0], Math.min(0.8, wv.raw[0] * 1.5)) && near(wv.cShare[1], Math.min(0.8, wv.raw[1] * 1.5)) && J(wv.nShare) === J(wv.raw));
+  check(`champions 2: one more elite mark, cap 3 (${J(wv.nMods)} -> ${J(wv.cMods)}); champions 1 unchanged (${J(wv.c1Mods)})`,
+    J(wv.nMods) === J([1, 1, 2, 2]) && J(wv.cMods) === J([2, 2, 3, 3]) && J(wv.c1Mods) === J(wv.nMods));
+  check(`locked multitude/champions change nothing (${wv.lMean.toFixed(2)}, ${J(wv.lShare)}, ${J(wv.lMods)})`,
+    J(wv.lShare) === J(wv.raw) && J(wv.lMods) === J(wv.nMods) && wv.lMean < 1.2 * wv.nMean);
+
+  section('heat: doors, shop and boons');
+  const dr = R(`(() => {
+    const count = () => { GAME.roomIdx = 1; GAME.shopSeenThisBiome = true; GAME.player.hp = 1; let n = 0;
+      for (let i = 0; i < 200; i++) if (ROOMS.doorOptions().some(o => o.id === 'sarovar')) n++; return n; };
+    __hv.run(1, { austerity: 1 }); const h = count();
+    __hv.run(1, {}); const n = count();
+    __hv.run(0, { austerity: 1 }); const l = count();
+    return { h, n, l };
+  })()`);
+  check(`austerity: no Sacred Pool in 200 door rolls at 1 hp (${dr.h}; neutral ${dr.n}, locked ${dr.l})`, dr.h === 0 && dr.n > 0 && dr.l > 0);
+
+  const sh = R(`(() => {
+    const shop = () => {
+      const P = __hv.room(); P.mudra = 100000;
+      UI.openShop();
+      const cards = document.getElementById('shop-cards').children.slice();
+      const shown = cards.map(c => +((c.innerHTML.match(/¤ (\\d+)/) || [])[1]));
+      const m0 = P.mudra; cards[0].onclick(); const paid = m0 - P.mudra;
+      UI.hideAll(); GAME.state = 'combat';
+      return { shown, paid };
+    };
+    U.seed(77); __hv.run(1, { scarcity: 2 }); U.seed(55); const h = shop();
+    U.seed(77); __hv.run(1, {}); U.seed(55); const n = shop();
+    U.seed(77); __hv.run(0, { scarcity: 2 }); U.seed(55); const l = shop();
+    return { h, n, l };
+  })()`);
+  check(`scarcity 2: shop cards show round(cost × 1.8) (${J(sh.n.shown)} -> ${J(sh.h.shown)})`,
+    sh.h.shown.length === sh.n.shown.length && sh.h.shown.every((c, i) => c === Math.round(sh.n.shown[i] * 1.8)));
+  check(`scarcity 2: buying charges the shown price (${sh.h.paid} = ${sh.h.shown[0]}; neutral ${sh.n.paid})`, sh.h.paid === sh.h.shown[0] && sh.n.paid === sh.n.shown[0]);
+  check(`locked scarcity: neutral prices (${J(sh.l.shown)})`, J(sh.l.shown) === J(sh.n.shown));
+
+  const bo = R(`(() => {
+    const offer = () => { __hv.room(); UI.offerBoon(); const n = document.getElementById('boon-cards').children.length; UI.hideAll(); GAME.state = 'combat'; return n; };
+    __hv.run(1, { restraint: 2 }); const h2 = offer();
+    __hv.run(1, { restraint: 1 }); const h1 = offer();
+    __hv.run(1, {}); const n = offer();
+    __hv.run(0, { restraint: 2 }); const l = offer();
+    return { h2, h1, n, l, choices: META.boonChoices() };
+  })()`);
+  check(`restraint: boon offers show max(1, ${bo.choices} − r) cards (r1 ${bo.h1}, r2 ${bo.h2}; neutral ${bo.n}, locked ${bo.l})`,
+    bo.n === bo.choices && bo.h1 === Math.max(1, bo.choices - 1) && bo.h2 === Math.max(1, bo.choices - 2) && bo.l === bo.choices);
+
+  section('heat: healing');
+  const hl = R(`(() => {
+    const heals = () => {
+      const o = {};
+      let P = __hv.room(); P.maxhp = 200; P.hp = 1; ROOMS.enterRoom('sarovar'); o.sarovar = P.hp - 1;
+      P = __hv.room(); P.maxhp = 200; P.hp = 1; GAME.reward = 'maxhp'; ROOMS.onRoomClear(); o.maxhp = P.hp - 1;
+      P = __hv.room(); P.maxhp = 200; P.hp = 1; GAME.biomeIdx = 0; GAME.biome = DATA.BIOMES[0]; ROOMS.onBossDefeated(); o.boss = P.hp - 1;
+      P = __hv.room(); P.maxhp = 200; P.hp = 1; UI.applyShopItem('heal'); o.shopHeal = P.hp - 1;
+      P = __hv.room(); P.maxhp = 200; P.hp = 1; UI.applyShopItem('maxhp'); o.shopMax = P.hp - 1;
+      UI.hideAll();
+      return o;
+    };
+    __hv.run(1, { thirst: 3 }); const h = heals();
+    __hv.run(1, {}); const n = heals();
+    __hv.run(0, { thirst: 3 }); const l = heals();
+    return { h, n, l };
+  })()`);
+  const q = v => Math.round(v * 0.25);
+  check(`thirst 3: Sacred Pool heals round(round(maxhp × 0.35) × 0.25) (${hl.n.sarovar} -> ${hl.h.sarovar})`, hl.n.sarovar === 70 && hl.h.sarovar === q(70));
+  check(`thirst 3: max-life reward heal ${hl.n.maxhp} -> ${hl.h.maxhp}, post-boss heal ${hl.n.boss} -> ${hl.h.boss}`,
+    hl.n.maxhp === 25 && hl.h.maxhp === q(25) && hl.n.boss === 50 && hl.h.boss === q(50));
+  check(`thirst 3: shop heals scale too (heal ${hl.n.shopHeal} -> ${hl.h.shopHeal}, max life ${hl.n.shopMax} -> ${hl.h.shopMax})`,
+    hl.n.shopHeal === 70 && hl.h.shopHeal === q(70) && hl.n.shopMax === 25 && hl.h.shopMax === q(25));
+  check(`locked thirst heals in full (${J(hl.l)})`, J(hl.l) === J(hl.n));
+
+  section('heat: chamber timer');
+  const tm = R(`(() => {
+    const o = {};
+    __hv.run(1, { hourglass: 1 });
+    ROOMS.enterRoom('mudra'); o.combat = [GAME.roomTimer, GAME.roomTimerOn];
+    ROOMS.enterRoom('sarovar'); o.sarovar = [GAME.roomTimer, GAME.roomTimerOn];
+    ROOMS.enterRoom('kubera'); o.kubera = [GAME.roomTimer, GAME.roomTimerOn]; UI.hideAll();
+    ROOMS.enterRoom('miniboss'); o.mini = [GAME.roomTimer, GAME.roomTimerOn];
+    ROOMS.enterRoom('boss'); o.boss = [GAME.roomTimer, GAME.roomTimerOn];
+    __hv.run(1, { hourglass: 2 }); ROOMS.enterRoom('mudra'); o.combat2 = GAME.roomTimer;
+    __hv.run(0, { hourglass: 2 }); ROOMS.enterRoom('mudra'); o.locked = [GAME.roomTimer, GAME.roomTimerOn];
+    __hv.run(1, {}); ROOMS.enterRoom('mudra'); o.neutral = [GAME.roomTimer, GAME.roomTimerOn];
+
+    // expiry: 5 damage every 1 s until the room clears
+    __hv.run(1, { hourglass: 1 });
+    ROOMS.enterRoom('mudra');
+    const P = GAME.player; P.maxhp = 1e6; P.hp = 1e6; GAME.godMode = false;
+    for (const e of GAME.enemies) { e.x = GAME.arena.x + 20; e.y = GAME.arena.y + 20; e.stun = 1e9; e.spawnT = 0; }
+    GAME.spawnQueue = [];
+    const freeze = () => { for (const e of GAME.enemies) { e.stun = 1e9; e.x = GAME.arena.x + 20; e.y = GAME.arena.y + 20; } GAME.eprojectiles = []; GAME.epools = []; GAME.hazards = []; P.x = GAME.arena.x + GAME.arena.w - 60; P.y = GAME.arena.y + GAME.arena.h - 60; };
+    GAME.roomTimer = 0.5;
+    let hp0 = P.hp;
+    for (let i = 0; i < 31; i++) { freeze(); GAME.hitstop = 0; GAME.update(1 / 60); }   // ~0.5 s: timer expires, no damage yet
+    o.atExpiry = [GAME.roomTimer, hp0 - P.hp];
+    hp0 = P.hp;
+    for (let i = 0; i < 186; i++) { freeze(); GAME.hitstop = 0; GAME.update(1 / 60); }  // 3.1 s overdue
+    o.overdue = hp0 - P.hp;
+    return o;
+  })()`);
+  check(`hourglass 1: combat room starts at 120 s (${J(tm.combat)}); hourglass 2 -> ${tm.combat2} s`, J(tm.combat) === J([120, true]) && tm.combat2 === 90);
+  check(`hourglass: no timer in Sacred Pool, shop, mini-boss or boss rooms (${J([tm.sarovar, tm.kubera, tm.mini, tm.boss])})`,
+    [tm.sarovar, tm.kubera, tm.mini, tm.boss].every(t => t[0] === 0 && t[1] === false));
+  check(`no timer when neutral or locked (${J(tm.neutral)}, ${J(tm.locked)})`, J(tm.neutral) === J([0, false]) && J(tm.locked) === J([0, false]));
+  check(`timer runs out without damage (${J(tm.atExpiry)}), then wounds 5 per second (${tm.overdue} in 3.1 s)`, tm.atExpiry[0] === 0 && tm.atExpiry[1] === 0 && tm.overdue === 15);
+
+  const hud = R(`(() => {
+    __hv.run(1, { hourglass: 1 }); ROOMS.enterRoom('mudra'); GAME.roomTimer = 75.4;
+    const ops = []; const ctx = new Proxy({}, { get(t, p) { if (p === 'measureText') return () => ({ width: 0 }); if (p === 'createLinearGradient' || p === 'createRadialGradient') return () => ({ addColorStop() {} }); if (p in t) return t[p]; return function () { ops.push({ op: p, a: Array.from(arguments), fill: t.fillStyle, font: t.font }); }; }, set(t, p, v) { t[p] = v; return true; } });
+    GAME.renderHUD(ctx);
+    const on = ops.filter(o => o.op === 'fillText' && o.a[0] === '1:16').map(o => o.fill + ' ' + o.font);
+    GAME.roomTimer = 9.2; ops.length = 0; GAME.renderHUD(ctx);
+    const low = ops.filter(o => o.op === 'fillText' && o.a[0] === '0:10').map(o => o.fill);
+    GAME.roomTimerOn = false; ops.length = 0; GAME.renderHUD(ctx);
+    const off = ops.filter(o => o.op === 'fillText' && /^\\d:\\d\\d$/.test(o.a[0]) && o.font && o.font.includes('16px')).length;
+    return { on, low, off };
+  })()`);
+  check(`HUD draws the chamber timer as m:ss in white (${J(hud.on)})`, hud.on.length === 1 && /#ffffff/i.test(hud.on[0]) && /bold 16px Georgia/.test(hud.on[0]));
+  check(`HUD timer turns red under 15 s (${J(hud.low)}) and hides when off (${hud.off})`, hud.low.length === 1 && /#ff5566/i.test(hud.low[0]) && hud.off === 0);
+
+  section('heat: punya');
+  const pn = R(`(() => {
+    const door = () => { const P = __hv.room(); META.punya = 0; GAME.reward = 'punya'; U.seed(4242); ROOMS.onRoomClear(); return META.punya; };
+    const boss = () => { __hv.room(); GAME.biomeIdx = 1; GAME.biome = DATA.BIOMES[1]; META.punya = 0; ROOMS.onBossDefeated(); return META.punya; };
+    const win = () => { __hv.room(); META.punya = 0; META.bestHeat = {}; GAME.onVictory(); return META.punya; };
+    const sel = { pain: 5, endurance: 2, multitude: 3 };   // Heat 10 -> × 1.5
+    const o = {};
+    __hv.run(1, sel); o.hTotal = GAME.heatTotal; o.h = [door(), boss(), win()]; o.best = META.bestHeat.khanda;
+    o.again = (() => { __hv.room(); META.punya = 0; GAME.onVictory(); return META.punya; })();
+    __hv.run(1, {}); o.n = [door(), boss(), win()]; o.nBest = 'khanda' in META.bestHeat;
+    __hv.run(0, sel); o.l = [door(), boss(), win()];
+    return o;
+  })()`);
+  check(`Heat ${pn.hTotal}: punya door ${pn.n[0]} -> ${pn.h[0]} and boss trophy ${pn.n[1]} -> ${pn.h[1]} scale × 1.5`,
+    pn.hTotal === 10 && pn.h[0] === Math.round(pn.n[0] * 1.5) && pn.n[1] === 40 && pn.h[1] === 60);
+  check(`victory pays HEAT.punya(50) + the one-time bounty (${pn.n[2]} -> ${pn.h[2]} = 75 + 70; best ${pn.best})`,
+    pn.n[2] === 50 && pn.h[2] === 75 + 70 && pn.best === 10 && pn.nBest === false);
+  check(`a repeat victory at the same Heat pays no bounty (${pn.again})`, pn.again === 75);
+  check(`locked Heat pays neutral punya (${J(pn.l)})`, J(pn.l) === J(pn.n));
+
+  // the neutral run is untouched: the quick balance sim is still deterministic
+  section('heat: neutral balance sim');
+  const cp = require('child_process');
+  const bal = () => { const r = cp.spawnSync(process.execPath, [path.join(root, 'test', 'balance.js'), '--quick'], { encoding: 'utf8' });
+    return { status: r.status, out: (r.stdout || '').split('\n').filter(l => !/^balance: [\d.]+s$/.test(l)).join('\n') }; };
+  const b1 = bal(), b2 = bal();
+  check(`balance --quick passes twice (exit ${b1.status}/${b2.status})`, b1.status === 0 && b2.status === 0 && /BALANCE OK/.test(b1.out));
+  check('balance --quick stdout is identical across two runs (neutral Heat is deterministic)', b1.out === b2.out && b1.out.length > 100);
+
   R(`META.wipe(); __hm.restore(__hm0)`);
 };

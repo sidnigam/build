@@ -374,25 +374,33 @@
     },
     "javelineer": {
       "kind": "enemy",
-      "subject": "Full-length figure from head to feet: a lean danava javelin thrower in bronze scale armour and a crested bronze helmet, a long barbed javelin raised over the shoulder ready to throw, sand-gold and dark bronze colours. Exactly two arms, a simple bronze helmet with only the plain grey backdrop directly behind it.",
+      "subject": "Full-length figure from head to feet, three-quarter front pose: a lean danava asura javelin thrower with dark charcoal-grey skin, small white tusks and pointed ears, a dented bronze scale cuirass over a dark maroon-brown wrap skirt, a low rounded bronze skullcap helmet hugging his head. His right hand grips a long barbed javelin drawn back above his shoulder ready to throw, his left arm stretched forward to aim. Sand-gold and dark bronze armour. Exactly two arms, the plain grey backdrop directly behind the helmet.",
       "palette": "sand-gold and dark bronze",
       "out_size": 256,
       "base_seed": 75040,
       "checkpoint_profile": "flux1_schnell_q4ks",
       "flux_style": "style_1x5_positive_flux",
       "flux_base_seed": 75040,
-      "flux_subject": "Full-length figure from head to feet: a lean danava javelin thrower in bronze scale armour and a crested bronze helmet, a long barbed javelin raised over the shoulder ready to throw, sand-gold and dark bronze colours. Exactly two arms, a simple bronze helmet with only the plain grey backdrop directly behind it."
+      "flux_subject": "Full-length figure from head to feet, three-quarter front pose: a lean danava asura javelin thrower with dark charcoal-grey skin, small white tusks and pointed ears, a dented bronze scale cuirass over a dark maroon-brown wrap skirt, a low rounded bronze skullcap helmet hugging his head. His right hand grips a long barbed javelin drawn back above his shoulder ready to throw, his left arm stretched forward to aim. Sand-gold and dark bronze armour. Exactly two arms, the plain grey backdrop directly behind the helmet.",
+      "rejected": {
+        "0": "[flux] reads as a Greek hoplite (Corinthian crested helmet, greaves) and a plain human rather than a danava; weak 1+5 ornament -> subject rewritten (asura features, ancient Indian cuirass/dhoti/helmet, throwing pose)",
+        "1": "[flux] CULTURAL: blue skin + yellow dhoti + tall gold crown-like helmet with a radiating halo-like arch read as Vishnu/Krishna iconography -> subject rewritten (charcoal-grey skin, maroon-brown wrap, low skullcap helmet)"
+      }
     },
     "bannerman": {
       "kind": "enemy",
-      "subject": "Full-length figure from head to feet: a burly tusked asura standard-bearer in battle-worn bronze armour, both hands gripping a tall war-banner pole with a plain tattered crimson-and-gold pennant, a small drum at the hip. Exactly two arms, a bare head with only the plain grey backdrop directly behind it.",
+      "subject": "Full-length figure from head to feet, three-quarter front pose: a burly horned and tusked asura standard-bearer in battle-worn bronze armour, holding a tall war-banner pole upright beside his body with both fists wrapped around the wooden pole. A plain tattered crimson cloth pennant is tied by cords to the very top of the pole and hangs down along it, attached to the pole. A small drum at the hip. Exactly two arms with two complete hands, a bare head with only the plain grey backdrop directly behind it.",
       "palette": "amber, crimson and bronze",
       "out_size": 256,
       "base_seed": 75050,
       "checkpoint_profile": "flux1_schnell_q4ks",
       "flux_style": "style_1x5_positive_flux",
       "flux_base_seed": 75050,
-      "flux_subject": "Full-length figure from head to feet: a burly tusked asura standard-bearer in battle-worn bronze armour, both hands gripping a tall war-banner pole with a plain tattered crimson-and-gold pennant, a small drum at the hip. Exactly two arms, a bare head with only the plain grey backdrop directly behind it."
+      "flux_subject": "Full-length figure from head to feet, three-quarter front pose: a burly horned and tusked asura standard-bearer in battle-worn bronze armour, holding a tall war-banner pole upright beside his body with both fists wrapped around the wooden pole. A plain tattered crimson cloth pennant is tied by cords to the very top of the pole and hangs down along it, attached to the pole. A small drum at the hip. Exactly two arms with two complete hands, a bare head with only the plain grey backdrop directly behind it.",
+      "rejected": {
+        "0": "[flux] left forearm ends in a ragged stump with no hand (HX3 broken/maimed limb); banner held one-handed -> subject rewritten (both fists clearly wrapped around the pole)",
+        "1": "[flux] crimson pennant floats in the air detached from the pole top (HX3 floating prop); otherwise good (horned tusked asura, both hands on the pole) -> subject rewritten (pennant tied by cords to the pole top, hanging along it); least-bad fallback"
+      }
     },
     "brahmarakshasa": {
       "kind": "enemy",
@@ -404,7 +412,10 @@
       "flux_style": "style_1x5_positive_flux",
       "flux_base_seed": 75060,
       "flux_subject": "Full-length figure from head to feet: a gaunt restless scholar-ghost, pale blue-grey translucent skin, tattered plain white cloth, holding a cracked palm-leaf manuscript, wisps of pale blue spirit fire around the hands, sorrowful hollow eyes, a smooth bare forehead. Exactly two arms, a bare head with only the plain grey backdrop directly behind it.",
-      "cultural_flag": "QA-03"
+      "cultural_flag": "QA-03",
+      "accepted_attempt": 0,
+      "rejected": {},
+      "rejected_reasons": []
     },
     "jalarakshasa": {
       "kind": "enemy",

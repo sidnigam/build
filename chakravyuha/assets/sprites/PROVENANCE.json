@@ -4289,7 +4289,56 @@
       "recorded_date": "2026-11-08",
       "review_status": "provisional",
       "review_note": "provisional \u2014 awaiting human art review",
-      "self_review": "05.7.1-12 pishacha, Flux schnell seed 75000 (attempt 0, shipped first try), style_1x5_positive_flux. Raw and finished idle Read at 256 and at game scale (scale_preview vs preta). (a) hunched ash-grey/ochre ghoul, amber eyes, long claws, tattered dark loincloth, crouched; (b) whole figure; (c) one character; (d) a tiny signature-like scribble beside the raised hand in the raw is a detached island removed by the cutout despeckle - none in the finished frame; (e) exactly two attached arms, two legs; H2/H4 no gore, no skulls; H3 modest; H6 no text/glyph in the shipped frame; HX5 no halo/frame/border; ground shadow removed by the matte. Style: painterly with ink outline, lighter on miniature ornament than the style board (gold bangles/belt only); outline weight matches preta at game scale. Dark body on the Naraka floor stays readable through the baked outline and glowing eyes."
+      "self_review": "05.7.1-12 pishacha, Flux schnell seed 75000 (attempt 0, shipped first try), style_1x5_positive_flux. Raw and finished idle Read at 256 and at game scale (scale_preview vs preta). (a) hunched ash-grey/ochre ghoul, amber eyes, long claws, tattered dark loincloth, crouched; (b) whole figure; (c) one character; (d) a tiny signature-like scribble beside the raised hand in the raw is a detached island removed by the cutout despeckle - none in the finished frame; (e) exactly two attached arms, two legs; H2/H4 no gore, no skulls; H3 modest; H6 no text/glyph in the shipped frame; HX5 no halo/frame/border; ground shadow removed by the matte. Style: painterly with ink outline, lighter on miniature ornament than the style board (gold bangles/belt only); outline weight matches preta at game scale. Dark body on the Naraka floor stays readable through the baked outline and glowing eyes.",
+      "cultural_review": "pending \u2014 human cultural reviewer (QA-03)",
+      "iconography_notes": "two arms; bare bald head; no halo, no crown, no forehead marks, no sacred thread, no weapon; chain necklace and plain bangles only",
+      "cultural_check": "pending QA-03 (flagged): pishacha = flesh-eating spirit of Indian folklore, a standard antagonist class; reads as a non-deity ghoul, no divine iconography"
+    },
+    {
+      "filename": "kumbhipaka-atlas.png",
+      "path": "assets/sprites/enemies/kumbhipaka-atlas.png",
+      "actor": "kumbhipaka",
+      "kind": "enemy",
+      "animations": {
+        "idle": 1
+      },
+      "tool": "ComfyUI (local)",
+      "checkpoint": "flux1-schnell-Q4_K_S.gguf (FLUX.1 [schnell] by Black Forest Labs, GGUF Q4_K_S by city96, Apache-2.0) + t5-v1_1-xxl Q5_K_M GGUF (Apache-2.0) + CLIP-L (MIT) + FLUX ae VAE (Apache-2.0)",
+      "method": "txt2img",
+      "sampler": "euler",
+      "scheduler": "simple",
+      "steps": 4,
+      "cfg": 1.0,
+      "width": 896,
+      "height": 1152,
+      "seed": 75011,
+      "prompt": "Full-length figure from head to feet, facing the viewer in a three-quarter front pose: a stocky horned asura stoker of the underworld cauldrons, soot-black skin with ember-orange glowing cracks, a smooth bare dark forehead, iron arm-bands on both arms. His right fist grips a short iron chain, and the chain holds a smoking round clay fire-pot that hangs against his right thigh; his left hand is a clenched fist at his side. Exactly two arms, short curved horns on a bare head with only the plain grey backdrop directly behind it. Hades-style painterly cel-shaded game character art with bold dark ink outlines, hand-painted textures, saturated vivid colours and strong coloured rim lighting, with Indian miniature-painting ornament: fine gold-leaf detail and flat patterned colour fields on the clothing and armour, crisp black contour lines. Three-quarter top-down game sprite view, a single character, the entire figure visible from head to feet, standing on a plain flat light-grey background that fills the rest of the image.",
+      "negative_prompt": "",
+      "rejected_seeds": [
+        75010
+      ],
+      "rejected_count": 1,
+      "post_processing": [
+        "rembg birefnet-general background removal",
+        "alpha despeckle + trim",
+        "bottom-aligned LANCZOS fit to 256x256 (margin 9)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 5 px, #140b08 a=235, 0.6px feather, under sprite",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
+      ],
+      "raw_image": "assets/sprites/_gen/enemies/kumbhipaka/kumbhipaka_s75011.png",
+      "gen_sidecar": "assets/sprites/_raw/enemies/kumbhipaka/kumbhipaka.gen.json",
+      "generated_date": "2026-11-09",
+      "recorded_date": "2026-11-08",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "05.7.1-12 kumbhipaka, Flux schnell seed 75011 (attempt 1; attempt 0 seed 75010 rejected, subject rewritten with positive anchors), style_1x5_positive_flux. Raw and finished idle Read at 256 and at game scale (scale_preview vs bhuta). (a) stocky horned asura stoker, soot-black skin with ember-orange cracks, iron arm-bands, flaming clay fire-pot at the belt and a small clay pot hanging from a chain in his left fist, a loose chain in the right fist; (b) whole figure; (c) one character; (d) no text; (e) exactly two attached arms; HX3/HX4 every prop is attached or held and survives the birefnet cutout; H2/H4 no gore/skulls; H3 modest; H6 no glyphs (chest ember swirls are abstract crack patterns); HX5 no halo/frame/border; forehead bare. Style: painterly, dark-ink outline, gold-leaf shoulder ornament; outline weight matches bhuta. Dark figure on the dark Naraka floor reads through the bright fire-pot and gold horns.",
+      "cultural_review": "pending \u2014 human cultural reviewer (QA-03)",
+      "iconography_notes": "two arms; curved horns on a bare head; smooth bare forehead (no tilak/third eye); no halo, no crown, no trishula, no sacred thread; clay fire-pots + iron chain only",
+      "cultural_check": "pending QA-03: Kumbhipaka is the name of a Naraka (hell) in the Puranas, used here for a stoker of that hell, not a deity; reads as a non-deity asura",
+      "rejected_reasons": {
+        "75010": "[flux] fire-pot floats detached from the figure (HX3); orange dot on the forehead reads as a tilak/third-eye mark (cultural guard); side profile shows one arm -> subject rewritten (pot hangs from chain in fist, smooth bare forehead, three-quarter front pose)"
+      }
     }
   ],
   "review_sheet": "assets/sprites/_review/contact-sheet.png",

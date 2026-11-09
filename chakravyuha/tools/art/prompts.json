@@ -322,25 +322,35 @@
     },
     "kumbhipaka": {
       "kind": "enemy",
-      "subject": "Full-length figure from head to feet: a stocky horned asura stoker of the underworld cauldrons, soot-black skin with ember-orange glow, iron arm-bands, carrying a smoking clay fire-pot on a short chain in one hand. Exactly two arms, short curved horns on a bare head with only the plain grey backdrop directly behind it.",
+      "subject": "Full-length figure from head to feet, facing the viewer in a three-quarter front pose: a stocky horned asura stoker of the underworld cauldrons, soot-black skin with ember-orange glowing cracks, a smooth bare dark forehead, iron arm-bands on both arms. His right fist grips a short iron chain, and the chain holds a smoking round clay fire-pot that hangs against his right thigh; his left hand is a clenched fist at his side. Exactly two arms, short curved horns on a bare head with only the plain grey backdrop directly behind it.",
       "palette": "soot-black and ember-orange",
       "out_size": 256,
       "base_seed": 75010,
       "checkpoint_profile": "flux1_schnell_q4ks",
       "flux_style": "style_1x5_positive_flux",
       "flux_base_seed": 75010,
-      "flux_subject": "Full-length figure from head to feet: a stocky horned asura stoker of the underworld cauldrons, soot-black skin with ember-orange glow, iron arm-bands, carrying a smoking clay fire-pot on a short chain in one hand. Exactly two arms, short curved horns on a bare head with only the plain grey backdrop directly behind it."
+      "flux_subject": "Full-length figure from head to feet, facing the viewer in a three-quarter front pose: a stocky horned asura stoker of the underworld cauldrons, soot-black skin with ember-orange glowing cracks, a smooth bare dark forehead, iron arm-bands on both arms. His right fist grips a short iron chain, and the chain holds a smoking round clay fire-pot that hangs against his right thigh; his left hand is a clenched fist at his side. Exactly two arms, short curved horns on a bare head with only the plain grey backdrop directly behind it.",
+      "rejected": {
+        "0": "[flux] fire-pot floats detached from the figure (HX3); orange dot on the forehead reads as a tilak/third-eye mark (cultural guard); side profile shows one arm -> subject rewritten (pot hangs from chain in fist, smooth bare forehead, three-quarter front pose)"
+      },
+      "accepted_attempt": 1,
+      "rejected_reasons": [
+        "[flux] fire-pot floats detached from the figure (HX3); orange dot on the forehead reads as a tilak/third-eye mark (cultural guard); side profile shows one arm -> subject rewritten (pot hangs from chain in fist, smooth bare forehead, three-quarter front pose)"
+      ]
     },
     "nagaguard": {
       "kind": "enemy",
-      "subject": "Full-length figure from head to feet: a naga warrior with a human upper body and one long coiled green serpent tail instead of legs, green scale armour, a single small cobra-hood crest at the back of the head, holding a tall oval bronze shield and a short spear. Exactly two arms, a single human head under one small hood, the plain grey backdrop directly behind it.",
+      "subject": "Full-length figure, facing the viewer in a three-quarter front pose: a naga warrior whose body below the waist is one thick green serpent tail coiled in a loop on the ground beneath him, a muscular human torso and arms in green scale armour, a human face, and a single small green cobra hood spreading at the back of his neck. His left arm bears a tall oval bronze shield held in front of his body; his right hand holds one short bronze-tipped spear upright. Exactly two arms, one head, the plain grey backdrop directly behind it.",
       "palette": "jade green and bronze",
       "out_size": 256,
       "base_seed": 75020,
       "checkpoint_profile": "flux1_schnell_q4ks",
       "flux_style": "style_1x5_positive_flux",
       "flux_base_seed": 75020,
-      "flux_subject": "Full-length figure from head to feet: a naga warrior with a human upper body and one long coiled green serpent tail instead of legs, green scale armour, a single small cobra-hood crest at the back of the head, holding a tall oval bronze shield and a short spear. Exactly two arms, a single human head under one small hood, the plain grey backdrop directly behind it."
+      "flux_subject": "Full-length figure, facing the viewer in a three-quarter front pose: a naga warrior whose body below the waist is one thick green serpent tail coiled in a loop on the ground beneath him, a muscular human torso and arms in green scale armour, a human face, and a single small green cobra hood spreading at the back of his neck. His left arm bears a tall oval bronze shield held in front of his body; his right hand holds one short bronze-tipped spear upright. Exactly two arms, one head, the plain grey backdrop directly behind it.",
+      "rejected": {
+        "0": "[flux] back view; human legs plus a tail (tail must replace legs); second staff in the left hand (extra prop); round shield; cloth cowl instead of the small cobra hood -> subject rewritten (front pose, tail-below-waist, one spear, oval shield)"
+      }
     },
     "mayavi": {
       "kind": "enemy",

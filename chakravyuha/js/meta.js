@@ -18,8 +18,11 @@ const META = {
   bestTime: 0,            // fastest winning run, seconds
   codexSeen: false,
   dialogue: {},           // god dialogue memory (Phase 05.5, managed by DIALOGUE.mem)
+  heat: {},               // Vows of Tapas selection, vow id -> rank (Phase 05.7.1-09, HEAT)
+  bestHeat: {},           // highest Heat cleared per weapon id (one-time bounty, HEAT.onVictory)
 
   load() {
+    const plainObj = o => (o && typeof o === 'object' && !Array.isArray(o)) ? o : {};
     try {
       const s = STORE.get(this.KEY, null);
       if (s) {
@@ -34,7 +37,9 @@ const META = {
           bestBiome: s.bestBiome | 0,
           bestTime: s.bestTime || 0,
           codexSeen: !!s.codexSeen,
-          dialogue: (s.dialogue && typeof s.dialogue === 'object' && !Array.isArray(s.dialogue)) ? s.dialogue : {},
+          dialogue: plainObj(s.dialogue),
+          heat: plainObj(s.heat),
+          bestHeat: plainObj(s.bestHeat),
         });
       }
     } catch (e) { /* corrupted save: start fresh */ }
@@ -48,6 +53,7 @@ const META = {
         lastWeapon: this.lastWeapon, deaths: this.deaths, wins: this.wins,
         runs: this.runs, bestBiome: this.bestBiome, bestTime: this.bestTime,
         codexSeen: this.codexSeen, dialogue: this.dialogue,
+        heat: this.heat, bestHeat: this.bestHeat,
       });
     } catch (e) { /* storage unavailable; play session-only */ }
   },
@@ -92,7 +98,7 @@ const META = {
     Object.assign(this, {
       punya: 0, upgrades: {}, weapons: ['khanda'], lastWeapon: 'khanda',
       deaths: 0, wins: 0, runs: 0, bestBiome: 0, bestTime: 0, codexSeen: false,
-      dialogue: {},
+      dialogue: {}, heat: {}, bestHeat: {},
     });
   },
 };

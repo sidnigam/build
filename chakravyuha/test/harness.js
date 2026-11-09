@@ -15,7 +15,7 @@ const ROOT = path.join(__dirname, '..');
 
 // Same list and order as test/smoke.js `files` (guarded by test/combat/harness.test.js).
 // Later plans append new files in index.html order.
-const GAME_FILES = ['utils.js', 'settings.js', 'renderer.js', 'sprites.js', 'vfx.js', 'gfx.js', 'audio.js', 'music.js', 'data.js', 'meta.js', 'combat.js', 'ai.js', 'entities.js', 'minibosses.js', 'rooms.js', 'ui.js', 'game.js', 'storage.js', 'gamepad.js', 'glyphs.js', 'focus.js'];
+const GAME_FILES = ['utils.js', 'settings.js', 'renderer.js', 'sprites.js', 'vfx.js', 'gfx.js', 'audio.js', 'music.js', 'data.js', 'meta.js', 'heat.js', 'combat.js', 'ai.js', 'entities.js', 'minibosses.js', 'rooms.js', 'ui.js', 'game.js', 'storage.js', 'gamepad.js', 'glyphs.js', 'focus.js'];
 
 // ---------------- DOM stubs (verbatim from smoke.js) ----------------
 class ClassList {

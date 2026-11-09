@@ -550,6 +550,27 @@ DATA.META = [
     lore: 'A larger share of the divine portion.' },
 ];
 
+// ---------- VOWS OF TAPAS (Heat, Phase 05.7.1 D-04) — tunable. No deity names in any string. ----------
+// Tapas: austerity that earns merit. Opt-in after the first full clear (unlockWins). Each rank adds
+// heat[rank - 1] Heat; total Heat scales every Punya gain and pays a one-time bounty per weapon.
+DATA.HEAT = {
+  unlockWins: 1, punyaPerHeat: 0.05, bountyBase: 20, bountyPerHeat: 5,
+  vows: [
+    { id: 'pain',      name: 'Vow of Pain',          ranks: 5, heat: [1, 1, 1, 1, 1], desc: r => `Foes strike ${r * 20}% harder.` },
+    { id: 'endurance', name: 'Vow of Endurance',     ranks: 2, heat: [1, 1],          desc: r => `Foes have ${r * 15}% more life.` },
+    { id: 'multitude', name: 'Vow of the Multitude', ranks: 3, heat: [1, 1, 1],       desc: r => `Each chamber brings ${r * 20}% more foes.` },
+    { id: 'haste',     name: 'Vow of Haste',         ranks: 2, heat: [3, 3],          desc: r => `Foes move and recover ${r * 15}% faster. Their warnings stay as long.` },
+    { id: 'champions', name: 'Vow of Champions',     ranks: 2, heat: [2, 2],          desc: r => r === 1 ? 'Elite foes appear half again as often.' : 'Elite foes appear half again as often and carry one more mark.' },
+    { id: 'wardens',   name: 'Vow of the Wardens',   ranks: 3, heat: [1, 2, 2],       desc: r => ['Wardens and Champions know one more technique from the start.', 'Wardens and Champions also chain their techniques faster.', 'Wardens and Champions also grow fierce sooner.'][r - 1] },
+    { id: 'thirst',    name: 'Vow of Thirst',        ranks: 3, heat: [1, 1, 1],       desc: r => `All healing is reduced by ${r * 25}%.` },
+    { id: 'austerity', name: 'Vow of Austerity',     ranks: 1, heat: [2],             desc: () => 'Sacred Pools no longer appear.' },
+    { id: 'storms',    name: 'Vow of Storms',        ranks: 2, heat: [2, 2],          desc: r => `Foes loose ${r} more projectile${r > 1 ? 's' : ''} per volley, and projectiles fly ${r * 15}% faster.` },
+    { id: 'scarcity',  name: 'Vow of Scarcity',      ranks: 2, heat: [1, 1],          desc: r => `Wares in the shop cost ${r * 40}% more.` },
+    { id: 'restraint', name: 'Vow of Restraint',     ranks: 2, heat: [2, 3],          desc: r => `Boon offerings show ${r} fewer choice${r > 1 ? 's' : ''}.` },
+    { id: 'hourglass', name: 'Vow of the Hourglass', ranks: 2, heat: [2, 3],          desc: r => `Clear each chamber within ${r === 1 ? 120 : 90} seconds, or the delay wounds you.` },
+  ],
+};
+
 // ---------- CODEX : the Pothi (palm-leaf book) ----------
 DATA.CODEX = [
   { t: 'The Chakravyuha', s: 'Mahabharata',

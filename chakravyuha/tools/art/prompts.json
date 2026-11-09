@@ -385,7 +385,12 @@
       "rejected": {
         "0": "[flux] reads as a Greek hoplite (Corinthian crested helmet, greaves) and a plain human rather than a danava; weak 1+5 ornament -> subject rewritten (asura features, ancient Indian cuirass/dhoti/helmet, throwing pose)",
         "1": "[flux] CULTURAL: blue skin + yellow dhoti + tall gold crown-like helmet with a radiating halo-like arch read as Vishnu/Krishna iconography -> subject rewritten (charcoal-grey skin, maroon-brown wrap, low skullcap helmet)"
-      }
+      },
+      "accepted_attempt": 2,
+      "rejected_reasons": [
+        "[flux] reads as a Greek hoplite (Corinthian crested helmet, greaves) and a plain human rather than a danava; weak 1+5 ornament -> subject rewritten (asura features, ancient Indian cuirass/dhoti/helmet, throwing pose)",
+        "[flux] CULTURAL: blue skin + yellow dhoti + tall gold crown-like helmet with a radiating halo-like arch read as Vishnu/Krishna iconography -> subject rewritten (charcoal-grey skin, maroon-brown wrap, low skullcap helmet)"
+      ]
     },
     "bannerman": {
       "kind": "enemy",

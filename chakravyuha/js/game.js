@@ -213,10 +213,13 @@ const GAME = {
 
   onVictory() {
     this.state = 'victory';
-    const bonus = 50;
+    const bonus = HEAT.punya(50);   // 05.7.1-09: Heat scales every Punya gain
     this.player.punyaRun += bonus;
     META.punya += bonus;
     META.wins++;
+    // 05.7.1-09: first clear at a new highest Heat for this weapon pays a one-time bounty
+    const bounty = HEAT.onVictory(this.player.weapon.id);
+    if (bounty) UI.banner(`+${bounty} PUNYA — VOW HONOURED`, '#c77dff');
     if (!META.bestTime || this.runTime < META.bestTime) META.bestTime = this.runTime;
     META.save();
     AUDIO.stopDrone();
@@ -291,6 +294,14 @@ const GAME = {
     // previous one is mostly cleared), overflow spawns drip in from a queue under the alive cap,
     // and the room only clears once there is nothing alive, queued, or left to spawn.
     if (this.state === 'combat' && !this.bossRef) {
+      // 05.7.1-09 (Vow of the Hourglass): the chamber timer counts down, then wounds 5 per second
+      if (this.roomTimerOn) {
+        if (this.roomTimer > 0) this.roomTimer = Math.max(0, this.roomTimer - dt);
+        else {
+          this.timerTick = (this.timerTick || 0) + dt;
+          if (this.timerTick >= 1) { this.timerTick -= 1; this.player.tickDamage(5, 'burn'); }
+        }
+      }
       ROOMS.drainQueue(dt);
       const alive = ROOMS.aliveCount();
       const queued = this.spawnQueue.length;
@@ -299,6 +310,7 @@ const GAME = {
         if (this.waveDelay > DATA.WAVES.waveDelay) { this.waveDelay = 0; ROOMS.spawnWave(this.waves.shift()); }
       } else if (this.waves.length === 0 && queued === 0 && alive === 0) {
         this.returnAllLodged();    // 05.7.1-03 (D-14): safety return on room clear
+        this.roomTimerOn = false;  // 05.7.1-09: the chamber timer stops on clear
         this.state = 'cleared';
         ROOMS.onRoomClear();
       }
@@ -1430,6 +1442,14 @@ const GAME = {
     ctx.fillStyle = 'rgba(255,255,255,0.5)';
     ctx.font = '12px Georgia';
     ctx.fillText(`${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`, this.W / 2, devBiome ? 72 : 52);
+    // 05.7.1-09 (Vow of the Hourglass): chamber countdown under the run clock (the biome title
+    // owns the y 20-32 band), red in the last 15 s
+    if (this.roomTimerOn) {
+      const rt = Math.ceil(this.roomTimer || 0);
+      ctx.fillStyle = (this.roomTimer || 0) < 15 ? '#ff5566' : '#ffffff';
+      ctx.font = 'bold 16px Georgia';
+      ctx.fillText(`${Math.floor(rt / 60)}:${String(rt % 60).padStart(2, '0')}`, this.W / 2, devBiome ? 92 : 72);
+    }
     ctx.textAlign = 'left';
 
     // boon icons (left column) — gold hairline frame per icon, god color fill kept

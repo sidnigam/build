@@ -130,9 +130,11 @@ const UI = {
       return;
     }
     const g = DATA.GODS[god];
-    const pool = U.shuffle(this.offerableBoons(god)).slice(0, META.boonChoices());
+    // 05.7.1-09 (Vow of Restraint): fewer choices, never fewer than one
+    const nChoices = Math.max(1, META.boonChoices() - ((GAME.heat && GAME.heat.boonChoicesMinus) || 0));
+    const pool = U.shuffle(this.offerableBoons(god)).slice(0, nChoices);
     const duo = GAME.player.duoOfferFor(god);
-    if (duo) { if (pool.length >= META.boonChoices()) pool.pop(); pool.unshift(duo); }
+    if (duo) { if (pool.length >= nChoices) pool.pop(); pool.unshift(duo); }
     GAME.state = 'choosing';
     this.el('boon-god').style.cssText = '--god:' + g.color;
     this.el('boon-god').innerHTML =
@@ -496,16 +498,17 @@ const UI = {
     const cards = this.el('shop-cards');
     cards.innerHTML = '';
     for (const item of stock) {
-      const afford = P.mudra >= item.cost;
+      const cost = this.shopCost(item);
+      const afford = P.mudra >= cost;
       const card = document.createElement('div');
       card.className = 'card shop-card' + (afford ? '' : ' disabled');
       card.style.cssText = '--god:#ffcf5c';
       card.innerHTML = `<div class="card-name">${item.name}</div>
         <div class="card-desc">${item.desc}</div>
-        <div class="card-cost">¤ ${item.cost}</div>`;
+        <div class="card-cost">¤ ${cost}</div>`;
       card.onclick = () => {
-        if (P.mudra < item.cost) { AUDIO.sfx('deny'); return; }
-        P.mudra -= item.cost;
+        if (P.mudra < cost) { AUDIO.sfx('deny'); return; }
+        P.mudra -= cost;
         AUDIO.sfx('buy');
         this.applyShopItem(item.id);
         stock.splice(stock.indexOf(item), 1);
@@ -516,17 +519,20 @@ const UI = {
     }
   },
 
+  // 05.7.1-09 (Vow of Scarcity): displayed and charged price
+  shopCost(item) { return Math.round(item.cost * ((GAME.heat && GAME.heat.shopMul) || 1)); },
+
   applyShopItem(id) {
     const P = GAME.player;
     switch (id) {
       case 'heal': {
-        const heal = Math.round(P.maxhp * 0.35);
+        const heal = HEAT.heal(Math.round(P.maxhp * 0.35));   // 05.7.1-09: Vow of Thirst
         P.hp = Math.min(P.maxhp, P.hp + heal);
         dmgText(P.x, P.y - 30, '+' + heal, '#7fdcb7', 20);
         AUDIO.sfx('heal'); break;
       }
       case 'maxhp':
-        P.maxhp += 25; P.hp = Math.min(P.maxhp, P.hp + 25);
+        P.maxhp += 25; P.hp = Math.min(P.maxhp, P.hp + HEAT.heal(25));
         AUDIO.sfx('heal'); break;
       case 'boon':
         this.hide('shop');

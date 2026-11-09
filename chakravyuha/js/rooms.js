@@ -210,7 +210,9 @@ const ROOMS = {
   // 05.7.1-05 (D-07): `DATA.WAVES.eliteMods[bi]` distinct DATA.ELITE_MODS keys for an elite in
   // biome index bi (1 in biomes 0-1, 2 in biomes 2-3).
   rollEliteMods(bi) {
-    const n = (DATA.WAVES.eliteMods && DATA.WAVES.eliteMods[bi]) || 1;
+    let n = (DATA.WAVES.eliteMods && DATA.WAVES.eliteMods[bi]) || 1;
+    const bonus = (GAME.heat && GAME.heat.eliteModBonus) || 0;   // 05.7.1-09: Vow of Champions rank 2
+    if (bonus) n = Math.min(3, n + bonus);
     return U.shuffle(Object.keys(DATA.ELITE_MODS)).slice(0, n);
   },
 
@@ -310,7 +312,12 @@ const ROOMS = {
   // roomIdx is 1-based. Returns an array of unit lists (one per wave).
   planRoom(biome, roomIdx) {
     const p = this.waveParams(biome, roomIdx);
-    return Array.from({ length: p.nWaves }, () => this.composeWave(p.perWave, biome, p));
+    // 05.7.1-09: Vow of the Multitude scales the wave budget; Vow of Champions the elite share
+    const H = GAME.heat || {};
+    const budget = p.perWave * (H.budget || 1);
+    const em = H.eliteShareMul || 1;
+    if (em !== 1) p.eliteShare = Math.min(0.8, p.eliteShare * em);
+    return Array.from({ length: p.nWaves }, () => this.composeWave(budget, biome, p));
   },
 
   planWaves() {
@@ -430,7 +437,7 @@ const ROOMS = {
     pool.push({ ...R.punya, w: R.punya.w });
     pool.push({ ...R.maxhp, w: R.maxhp.w });
     if (P.allBoons().some(b => b.rarity < 2)) pool.push({ ...R.amrit, w: R.amrit.w });
-    if (P.hp < P.maxhp * 0.8) pool.push({ ...R.sarovar, w: R.sarovar.w + 6 });
+    if (P.hp < P.maxhp * 0.8 && !(GAME.heat && GAME.heat.noSarovar)) pool.push({ ...R.sarovar, w: R.sarovar.w + 6 });   // 05.7.1-09: Vow of Austerity
     if (!GAME.shopSeenThisBiome && GAME.roomIdx >= 1) pool.push({ ...R.kubera, w: R.kubera.w });
 
     while (opts.length < 2 && pool.length) {
@@ -456,6 +463,7 @@ const ROOMS = {
     G.bolts = []; G.dangerZones = []; G.doors = []; G.hazards = [];
     G.nooseT = 0; G.bossRewarded = false; G.miniRef = null;
     G.spawnQueue = []; G.lastWaveSize = 0; G.dripT = 0; G.waveDelay = 0;
+    G.roomTimer = 0; G.roomTimerOn = false; G.timerTick = 0;   // 05.7.1-09: chamber timer (plain combat rooms only)
     ENEMY_AI.reset();   // 05.7.1-04: tokens and slots never carry across rooms
 
     // D-02: size the arena for this room kind BEFORE the player is placed.
@@ -505,7 +513,7 @@ const ROOMS = {
     if (rewardId === 'sarovar') {
       this.buildArena(false);
       G.waves = [];
-      const heal = Math.round(P.maxhp * 0.35);
+      const heal = HEAT.heal(Math.round(P.maxhp * 0.35));   // 05.7.1-09: Vow of Thirst
       P.hp = Math.min(P.maxhp, P.hp + heal);
       dmgText(P.x, P.y - 30, '+' + heal, '#7fdcb7', 20);
       AUDIO.sfx('heal');
@@ -529,6 +537,9 @@ const ROOMS = {
     this.spawnHazards();
     G.waves = this.planWaves();
     this.spawnWave(G.waves.shift());
+    // 05.7.1-09 (Vow of the Hourglass): plain combat rooms only
+    G.roomTimer = (G.heat && G.heat.roomTimer) || 0;
+    G.roomTimerOn = G.roomTimer > 0;
     G.state = 'combat';
   },
 
@@ -546,14 +557,14 @@ const ROOMS = {
         break;
       }
       case 'punya': {
-        const amt = U.randInt(6, 12);
+        const amt = HEAT.punya(U.randInt(6, 12));   // 05.7.1-09: Heat scales Punya
         P.punyaRun += amt; META.punya += amt; META.save();
         AUDIO.sfx('punya');
         UI.banner(`+${amt} PUNYA`, '#c77dff');
         break;
       }
       case 'maxhp':
-        P.maxhp += 10; P.hp = Math.min(P.maxhp, P.hp + 25);
+        P.maxhp += 10; P.hp = Math.min(P.maxhp, P.hp + HEAT.heal(25));
         AUDIO.sfx('heal');
         UI.banner('+10 MAX LIFE', '#ff6b81');
         break;
@@ -585,7 +596,7 @@ const ROOMS = {
     const G = GAME, P = G.player;
     const isLast = G.biomeIdx >= DATA.BIOMES.length - 1;
     // punya trophy
-    const amt = 25 + G.biomeIdx * 15;
+    const amt = HEAT.punya(25 + G.biomeIdx * 15);   // 05.7.1-09: Heat scales Punya
     P.punyaRun += amt; META.punya += amt; META.save();
     AUDIO.sfx('punya');
 
@@ -596,7 +607,7 @@ const ROOMS = {
 
     UI.banner(`+${amt} PUNYA — THE WAY OPENS`, '#c77dff');
     // heal between biomes, like the well between Hades regions
-    const heal = Math.round(P.maxhp * 0.25);
+    const heal = HEAT.heal(Math.round(P.maxhp * 0.25));   // 05.7.1-09: Vow of Thirst
     P.hp = Math.min(P.maxhp, P.hp + heal);
 
     // color must be full #rrggbb: renderBackground appends a 2-digit alpha ('cc'/'00') for the door

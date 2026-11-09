@@ -233,4 +233,101 @@ module.exports = function ({ R, sandbox, check, section, harness, fs, path, root
       }
     }
   }
+
+  // ================= Task 2: room flow, door, reward, HUD, room counts =================
+  section('minibosses: biome room counts and mini-boss slots');
+  const bio = R(`DATA.BIOMES.map(b => ({ id: b.id, rooms: b.rooms, miniRoom: b.miniRoom, mini: b.mini }))`);
+  check(`room counts are [4, 5, 5, 3] (${J(bio.map(b => b.rooms))})`, J(bio.map(b => b.rooms)) === J([4, 5, 5, 3]));
+  check(`miniRoom slots are [3, 3, 3, 2] (${J(bio.map(b => b.miniRoom))})`, J(bio.map(b => b.miniRoom)) === J([3, 3, 3, 2]));
+  check(`biome minis are subahu/mahiravana/alambusha/maricha (${J(bio.map(b => b.mini))})`,
+    J(bio.map(b => b.mini)) === J(['subahu', 'mahiravana', 'alambusha', 'maricha']));
+  check('every miniRoom < rooms and every biome.mini is a DATA.MINIBOSSES entry of that biome',
+    bio.every(b => b.miniRoom < b.rooms) && R(`DATA.BIOMES.every(b => DATA.MINIBOSSES[b.mini] && DATA.MINIBOSSES[b.mini].biome === b.id)`));
+  const rw = R(`DATA.REWARDS.miniboss`);
+  check(`DATA.REWARDS.miniboss: sym '⚔', #ff9a3c, w 0 (${J(rw)})`, rw && rw.id === 'miniboss' && rw.sym === '⚔' && rw.color === '#ff9a3c' && rw.w === 0
+    && /^#[0-9a-f]{6}$/i.test(rw.color));
+
+  section('minibosses: door, room entry and reward');
+  R(`globalThis.__flow = {
+    toMiniDoor(bi) {
+      GAME.startRun();
+      GAME.biomeIdx = bi; GAME.biome = DATA.BIOMES[bi];
+      GAME.roomIdx = GAME.biome.miniRoom - 1;
+      GAME.enemies = []; GAME.waves = []; GAME.spawnQueue = [];
+      return ROOMS.doorOptions();
+    },
+  };`);
+  for (let bi = 0; bi < bio.length; bi++) {
+    const b = bio[bi];
+    const door = R(`(() => { const o = __flow.toMiniDoor(${bi}); return { n: o.length, isMini: o[0] === DATA.REWARDS.miniboss }; })()`);
+    check(`${b.id}: after room ${b.miniRoom - 1} the only door is the mini-boss door`, door.n === 1 && door.isMini);
+    const after = R(`(() => { GAME.roomIdx = GAME.biome.miniRoom; const o = ROOMS.doorOptions(); return o.map(x => x.id); })()`);
+    check(`${b.id}: after the mini-boss room the doors are ordinary (${after.join(',')})`, after.length >= 1 && !after.includes('miniboss'));
+
+    const ent = R(`(() => {
+      const intros = []; const oi = UI.bossIntro; UI.bossIntro = function (d) { intros.push(d); return oi.apply(this, arguments); };
+      const rIdx = GAME.roomIdx = GAME.biome.miniRoom - 1;
+      try { ROOMS.enterRoom('miniboss'); } finally { UI.bossIntro = oi; }
+      const M = GAME.miniRef;
+      return { kind: GAME.arenaKind, pillars: GAME.pillars.length, hazards: GAME.hazards.length, isMini: M instanceof MiniBoss,
+        type: M && M.type, boss: GAME.bossRef === null, roomIdx: GAME.roomIdx, was: rIdx, intro: intros.length === 1 && intros[0] === M.bossDef,
+        state: GAME.state, waves: GAME.waves.length, label: GAME.roomLabel(), enemies: GAME.enemies.length };
+    })()`);
+    check(`${b.id}: enterRoom('miniboss') builds an open boss-size arena with no hazards (${ent.kind}, ${ent.pillars} pillars, ${ent.hazards} hazards)`,
+      ent.kind === 'boss' && ent.pillars === 0 && ent.hazards === 0);
+    check(`${b.id}: GAME.miniRef is a MiniBoss '${b.mini}' and GAME.bossRef stays null (${ent.type})`, ent.isMini && ent.type === b.mini && ent.boss);
+    check(`${b.id}: roomIdx incremented (${ent.was} -> ${ent.roomIdx}), combat state, no waves, one enemy`, ent.roomIdx === ent.was + 1 && ent.state === 'combat' && ent.waves === 0 && ent.enemies === 1);
+    check(`${b.id}: UI.bossIntro shown with the mini-boss def`, ent.intro);
+    check(`${b.id}: roomLabel() is 'THE CHAMPION' while the mini-boss lives (${ent.label})`, ent.label === 'THE CHAMPION');
+
+    const clr = R(`(() => {
+      const banners = []; const ob = UI.banner; UI.banner = function (t) { banners.push(t); return ob.apply(this, arguments); };
+      try {
+        const M = GAME.miniRef, P = GAME.player;
+        const bi0 = GAME.biomeIdx, mud0 = P.mudra;
+        hitEnemy(M, 1e7, 'attack');
+        const coins = GAME.pickups.length;
+        GAME.pickups = [];
+        let f = 0;
+        while (f++ < 30 && GAME.state === 'combat') { GAME.hitstop = 0; GAME.update(1 / 60); }
+        const cards = document.getElementById('boon-cards').children.map(c => c.className);
+        return { dead: M.dead, state: GAME.state, bi: GAME.biomeIdx === bi0, mudra: P.mudra - mud0, cards, banners, coins,
+          boss: GAME.bossRef === null, doors: GAME.doors.length, label: GAME.roomLabel() };
+      } finally { UI.banner = ob; }
+    })()`);
+    check(`${b.id}: killing the mini-boss clears the room (state ${clr.state}) without advancing the biome`,
+      clr.dead && (clr.state === 'choosing' || clr.state === 'cleared') && clr.bi && clr.boss);
+    check(`${b.id}: reward grants exactly 60 mudra (${clr.mudra})`, clr.mudra === 60);
+    check(`${b.id}: reward banner shown`, clr.banners.some(t => /CHAMPION FALLS/.test(t)));
+    const rare = clr.cards.length > 0 && clr.cards.every(c => /rarity-[12]\b/.test(c));
+    check(`${b.id}: boon offer has only Rare+ cards (${clr.cards.map(c => (c.match(/rarity-\d/) || ['?'])[0]).join(',')})`, rare);
+    check(`${b.id}: mini-boss drops 4-6 coins (${clr.coins})`, clr.coins >= 4 && clr.coins <= 6);
+    check(`${b.id}: doors open after the mini-boss reward (${clr.doors})`, clr.doors >= 1);
+    check(`${b.id}: roomLabel() falls back to the chamber label once the champion falls`, /^Chamber /.test(clr.label));
+  }
+
+  section('minibosses: HUD bar and resets');
+  {
+    const hudSetup = R(`(() => {
+      GAME.startRun(); GAME.biomeIdx = 0; GAME.biome = DATA.BIOMES[0]; GAME.roomIdx = 2;
+      ROOMS.enterRoom('miniboss'); GAME.miniRef.hp = GAME.miniRef.maxhp * 0.5;
+      return { name: GAME.miniRef.bossDef.name + ' — ' + GAME.miniRef.bossDef.sub, W: GAME.W };
+    })()`);
+    const rec = harness.recordingCtx();
+    sandbox.__rec = rec.ctx;
+    R('GAME.renderHUD(__rec)');
+    const label = rec.ops.find(o => o.op === 'fillText' && o.args[0] === hudSetup.name);
+    check(`renderHUD draws the mini-boss name line '${hudSetup.name}'`, !!label);
+    const bars = rec.ops.filter(o => o.op === 'fillRect' && o.fill === R('GAME.miniRef.color'));
+    check(`renderHUD draws the mini-boss hp bar in its colour, <= 360 px wide (${bars.map(b => b.args[2]).join(',')})`,
+      bars.length >= 1 && bars.every(b => b.args[2] <= 360) && bars.some(b => Math.abs(b.args[2] - 180) < 1e-6));
+    const wide = rec.ops.filter(o => o.op === 'fillRect' && o.args[2] >= 520);
+    check('renderHUD does not draw the 520 px boss bar during a mini-boss fight', wide.length === 0);
+    const k = R(`(() => { const e = new Boss('tataka', 300, 300); GAME.pickups = []; killEnemy(e); return GAME.pickups.length; })()`);
+    check(`killEnemy on a biome boss still drops 8-12 coins (${k})`, k >= 8 && k <= 12);
+    const reset = R(`(() => { ROOMS.enterRoom('mudra'); return GAME.miniRef; })()`);
+    check('entering any other room resets GAME.miniRef to null', reset === null);
+    const boss = R(`(() => { GAME.startRun(); GAME.roomIdx = GAME.biome.rooms; ROOMS.enterRoom('boss'); return { b: !!GAME.bossRef, m: GAME.miniRef }; })()`);
+    check('the biome boss room uses bossRef and leaves miniRef null', boss.b && boss.m === null);
+  }
 };

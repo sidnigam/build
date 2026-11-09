@@ -315,7 +315,10 @@
       "flux_style": "style_1x5_positive_flux",
       "flux_base_seed": 75000,
       "flux_subject": "Full-length figure from head to feet: a pishacha, a small hunched flesh-eating ghoul of Indian folklore, wiry ash-grey and ochre skin, sunken glowing amber eyes, long clawed fingers, a tattered dark loincloth, crouched ready to pounce. Exactly two arms, a bare head with only the plain grey backdrop directly behind it.",
-      "cultural_flag": "QA-03"
+      "cultural_flag": "QA-03",
+      "accepted_attempt": 0,
+      "rejected": {},
+      "rejected_reasons": []
     },
     "kumbhipaka": {
       "kind": "enemy",

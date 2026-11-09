@@ -207,40 +207,40 @@ DATA.KIT = {
 // role (05.7.1-04, ENEMY_AI): melee | heavy use the melee slot ring, ranged | support the ranged
 // ring; fam: projectile family the shooter fires (DATA.PROJECTILES)
 DATA.ENEMIES = {
-  preta:     { id: 'preta', role: 'melee', name: 'Preta', ai: 'chase', hp: 26, spd: 165, r: 11, dmg: 8,
+  preta:     { id: 'preta', role: 'melee', name: 'Preta', ai: 'chase', hp: 26, spd: 165, r: 11, dmg: 12,
                color: '#9ce0c8', cost: 1 },
-  rakshasa:  { id: 'rakshasa', role: 'melee', name: 'Rakshasa Blade', ai: 'lunge', hp: 62, spd: 112, r: 15, dmg: 14,
+  rakshasa:  { id: 'rakshasa', role: 'melee', name: 'Rakshasa Blade', ai: 'lunge', hp: 62, spd: 112, r: 15, dmg: 21,
                color: '#ff7058', cost: 2 },
-  archer:    { id: 'archer', role: 'ranged', name: 'Asura Archer', ai: 'shoot', hp: 40, spd: 95, r: 13, dmg: 10,
+  archer:    { id: 'archer', role: 'ranged', name: 'Asura Archer', ai: 'shoot', hp: 40, spd: 95, r: 13, dmg: 15,
                color: '#d8b35c', cost: 2, projSpeed: 360, fam: 'needle' },
-  naga:      { id: 'naga', role: 'ranged', name: 'Naga Spitter', ai: 'spread', hp: 55, spd: 85, r: 14, dmg: 9,
+  naga:      { id: 'naga', role: 'ranged', name: 'Naga Spitter', ai: 'spread', hp: 55, spd: 85, r: 14, dmg: 14,
                color: '#3fe09f', cost: 2, projSpeed: 300, fam: 'venom' },
-  vetala:    { id: 'vetala', role: 'melee', name: 'Vetala', ai: 'teleport', hp: 50, spd: 0, r: 13, dmg: 13,
+  vetala:    { id: 'vetala', role: 'melee', name: 'Vetala', ai: 'teleport', hp: 50, spd: 0, r: 13, dmg: 20,
                color: '#b48aff', cost: 3 },
-  bhuta:     { id: 'bhuta', role: 'heavy', name: 'Bhuta Husk', ai: 'tank', hp: 135, spd: 55, r: 21, dmg: 16,
+  bhuta:     { id: 'bhuta', role: 'heavy', name: 'Bhuta Husk', ai: 'tank', hp: 135, spd: 55, r: 21, dmg: 24,
                color: '#8a93b8', cost: 3 },
-  daitya:    { id: 'daitya', role: 'heavy', name: 'Daitya Brute', ai: 'charge', hp: 115, spd: 80, r: 19, dmg: 18,
+  daitya:    { id: 'daitya', role: 'heavy', name: 'Daitya Brute', ai: 'charge', hp: 115, spd: 80, r: 19, dmg: 27,
                color: '#e0a23c', cost: 4 },
-  yatudhana: { id: 'yatudhana', role: 'support', name: 'Yatudhana Conjurer', ai: 'summon', hp: 72, spd: 75, r: 14, dmg: 8,
+  yatudhana: { id: 'yatudhana', role: 'support', name: 'Yatudhana Conjurer', ai: 'summon', hp: 72, spd: 75, r: 14, dmg: 12,
                color: '#ff9ad5', cost: 4 },
   // ---- 05.7.1-05 (D-05): 2 signature enemies per biome (start values; plan 11 tunes) ----
-  pishacha:   { id: 'pishacha', name: 'Pishacha Swarm', ai: 'swarm', role: 'melee', hp: 14, spd: 210, r: 9, dmg: 6,
+  pishacha:   { id: 'pishacha', name: 'Pishacha Swarm', ai: 'swarm', role: 'melee', hp: 14, spd: 210, r: 9, dmg: 9,
                 color: '#d9a066', cost: 0.5, pack: 5 },
-  kumbhipaka: { id: 'kumbhipaka', name: 'Kumbhipaka Stoker', ai: 'mortar', role: 'ranged', hp: 70, spd: 70, r: 16, dmg: 14,
+  kumbhipaka: { id: 'kumbhipaka', name: 'Kumbhipaka Stoker', ai: 'mortar', role: 'ranged', hp: 70, spd: 70, r: 16, dmg: 21,
                 color: '#ff8a3c', cost: 3, band: [300, 480], pool: { status: { type: 'burn', dps: 4, dur: 2 }, r: 50, dur: 3 } },
-  nagaguard:  { id: 'nagaguard', name: 'Naga Shield-Guard', ai: 'shield', role: 'melee', hp: 110, spd: 95, r: 17, dmg: 15,
+  nagaguard:  { id: 'nagaguard', name: 'Naga Shield-Guard', ai: 'shield', role: 'melee', hp: 110, spd: 95, r: 17, dmg: 23,
                 color: '#2fbf8f', cost: 3, guard: 80, guardArc: 1.05, guardReduce: 0.85 },
-  mayavi:     { id: 'mayavi', name: 'Mayavi Weaver', ai: 'trapper', role: 'support', hp: 60, spd: 85, r: 14, dmg: 9,
+  mayavi:     { id: 'mayavi', name: 'Mayavi Weaver', ai: 'trapper', role: 'support', hp: 60, spd: 85, r: 14, dmg: 14,
                 color: '#b07dff', cost: 3, band: [280, 420] },
   // longRange: its slot sits mid-band without the view-band pull, so most of its shots are
   // long shots (+LONG_TELL_BONUS, longShot flag); slotBack: extra px behind its ranged slot
-  javelineer:     { id: 'javelineer', name: 'Danava Javelineer', ai: 'sniper', role: 'ranged', hp: 55, spd: 80, r: 14, dmg: 22,
+  javelineer:     { id: 'javelineer', name: 'Danava Javelineer', ai: 'sniper', role: 'ranged', hp: 55, spd: 80, r: 14, dmg: 33,
                     color: '#e8c070', cost: 3, band: [420, 600], longRange: true },
   bannerman:      { id: 'bannerman', name: 'Asura Standard-Bearer', ai: 'buffer', role: 'support', hp: 90, spd: 75, r: 16, dmg: 0,
                     color: '#ffb347', cost: 3, band: [300, 500], slotBack: 60, aura: { r: 240, dmg: 1.2, spd: 1.15 } },
-  brahmarakshasa: { id: 'brahmarakshasa', name: 'Brahmarakshasa', ai: 'healer', role: 'support', hp: 85, spd: 70, r: 15, dmg: 12,
+  brahmarakshasa: { id: 'brahmarakshasa', name: 'Brahmarakshasa', ai: 'healer', role: 'support', hp: 85, spd: 70, r: 15, dmg: 18,
                     color: '#c8d4ff', cost: 4, band: [280, 440], heal: { every: 4, r: 260, frac: 0.2 } },
-  jalarakshasa:   { id: 'jalarakshasa', name: 'Jala-Rakshasa', ai: 'burrow', role: 'melee', hp: 95, spd: 120, r: 16, dmg: 16,
+  jalarakshasa:   { id: 'jalarakshasa', name: 'Jala-Rakshasa', ai: 'burrow', role: 'melee', hp: 95, spd: 120, r: 16, dmg: 24,
                     color: '#5a8fd0', cost: 3, dive: 2.5 },
 };
 
@@ -248,8 +248,8 @@ DATA.ENEMIES = {
 DATA.WAVES = {
   maxAlive: 26,                          // tunable: perf + readability cap on simultaneous living enemies
   weak: { hp: 0.5, dmg: 0.6, cost: 0.5 },// fodder multipliers; a weak unit costs half its budget
-  nextWaveAt: 0.3,                       // next wave when alive <= ceil(lastWaveSize * nextWaveAt)
-  waveDelay: 0.7, dripEvery: 0.35, dripBatch: 3,
+  nextWaveAt: 0.5,                       // next wave when alive <= ceil(lastWaveSize * nextWaveAt)
+  waveDelay: 0.35, dripEvery: 0.35, dripBatch: 3,
   spawnMin: 360, spawnMax: 950, packSize: [3, 6], packJitter: 70,
   engageRange: 640, eliteCost: 3,
   spawnGrace: 0.45,                      // 05.7.1-04 (D-02): spawn-in grace (was 0.6)
@@ -368,28 +368,28 @@ DATA.BIOMES = [
     bg: '#160a0e', floor: '#241016', accent: '#ff5533', wall: '#3d1a20',
     enemies: ['preta', 'rakshasa', 'archer', 'pishacha', 'kumbhipaka'], boss: 'tataka', hazard: 'fireVent',
     scale: 1.0, budget: [4, 9], droneHz: 110,
-    waves: { count: [3, 3], perWave: [4, 9], fodder: ['preta', 'pishacha'], fodderShare: [0.85, 0.35], eliteShare: [0.1, 0.35] },
+    waves: { count: [3, 3], perWave: [5, 12], fodder: ['preta', 'pishacha'], fodderShare: [0.5, 0.35], eliteShare: [0.1, 0.35] },
   },
   {
     id: 'patala', name: 'PATALA', sub: 'Realm of the Serpent Kings', rooms: 5, miniRoom: 3, mini: 'mahiravana',
     bg: '#061412', floor: '#0b201c', accent: '#2ee6a8', wall: '#143830',
     enemies: ['naga', 'vetala', 'archer', 'rakshasa', 'nagaguard', 'mayavi'], boss: 'ahiravana', hazard: 'venomPool',
     scale: 1.35, budget: [7, 12], droneHz: 98,
-    waves: { count: [3, 4], perWave: [6, 11], fodder: ['preta', 'rakshasa'], fodderShare: [0.7, 0.3], eliteShare: [0.15, 0.5] },
+    waves: { count: [3, 4], perWave: [8, 14], fodder: ['preta', 'rakshasa'], fodderShare: [0.7, 0.3], eliteShare: [0.15, 0.5] },
   },
   {
     id: 'ranabhoomi', name: 'RANABHOOMI', sub: 'Field of the Fallen Warriors', rooms: 5, miniRoom: 3, mini: 'alambusha',
     bg: '#171107', floor: '#241b0d', accent: '#ffcf5c', wall: '#403018',
     enemies: ['daitya', 'bhuta', 'yatudhana', 'vetala', 'javelineer', 'bannerman'], boss: 'kumbhakarna', hazard: 'arrowVolley',
     scale: 1.8, budget: [9, 15], droneHz: 123,
-    waves: { count: [3, 4], perWave: [8, 14], fodder: ['preta', 'rakshasa'], fodderShare: [0.6, 0.25], eliteShare: [0.25, 0.6] },
+    waves: { count: [3, 4], perWave: [10, 18], fodder: ['preta', 'rakshasa'], fodderShare: [0.6, 0.25], eliteShare: [0.25, 0.6] },
   },
   {
     id: 'vaitarani', name: 'VAITARANI', sub: 'The River Between Worlds', rooms: 3, miniRoom: 2, mini: 'maricha',
     bg: '#0a0e16', floor: '#121828', accent: '#9fb8ff', wall: '#222c4a',
     enemies: ['preta', 'rakshasa', 'naga', 'vetala', 'bhuta', 'daitya', 'brahmarakshasa', 'jalarakshasa'], boss: 'yama', hazard: 'riverCurrent',
     scale: 2.1, budget: [12, 16], droneHz: 82,
-    waves: { count: [4, 4], perWave: [10, 15], fodder: ['preta'], fodderShare: [0.45, 0.25], eliteShare: [0.35, 0.5] },
+    waves: { count: [4, 4], perWave: [13, 20], fodder: ['preta'], fodderShare: [0.45, 0.25], eliteShare: [0.35, 0.5] },
   },
 ];
 

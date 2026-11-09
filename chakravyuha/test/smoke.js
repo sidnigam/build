@@ -3725,17 +3725,22 @@ try {
   const farX = GAME.arena.x + GAME.arena.w - 40, farY = GAME.arena.y + 40;
   const unitsB = [{ id: 'preta', weak: false }];
 
-  // Case A: leaving 3 alive (<= ceil(10*0.3)=3) should spawn wave B after waveDelay
+  // 05.7.1-11: retuned (old: nextWaveAt 0.3 -> threshold 3, cases 3 / 5 alive); the cases now
+  // derive from the threshold (nextWaveAt 0.5 -> ceil(10*0.5) = 5): A = threshold, B = threshold + 1
+  GAME.lastWaveSize = 10;
+  const thr = ROOMS.nextWaveThreshold();
+  __overlapResults.thr = thr;
+  // Case A: leaving thr alive (<= ceil(10*nextWaveAt)) should spawn wave B after waveDelay
   GAME.enemies = [];
-  for (let i = 0; i < 3; i++) { const e = new Enemy('preta', farX, farY, 1); e.spawnT = 0; GAME.enemies.push(e); }
+  for (let i = 0; i < thr; i++) { const e = new Enemy('preta', farX, farY, 1); e.spawnT = 0; GAME.enemies.push(e); }
   GAME.spawnQueue = []; GAME.lastWaveSize = 10; GAME.waveDelay = 0; GAME.waves = [unitsB];
   const beforeCountA = GAME.enemies.length;
   for (let f = 0; f < 60; f++) GAME.update(1 / 60);
   __overlapResults.triggeredWhenBelowThreshold = GAME.enemies.length > beforeCountA;
 
-  // Case B: leaving 5 alive (> 3) should NOT spawn wave B
+  // Case B: leaving thr + 1 alive (> thr) should NOT spawn wave B
   GAME.enemies = [];
-  for (let i = 0; i < 5; i++) { const e = new Enemy('preta', farX, farY, 1); e.spawnT = 0; GAME.enemies.push(e); }
+  for (let i = 0; i < thr + 1; i++) { const e = new Enemy('preta', farX, farY, 1); e.spawnT = 0; GAME.enemies.push(e); }
   GAME.spawnQueue = []; GAME.lastWaveSize = 10; GAME.waveDelay = 0; GAME.waves = [unitsB];
   const beforeCountB = GAME.enemies.length;
   for (let f = 0; f < 60; f++) GAME.update(1 / 60);
@@ -3743,7 +3748,7 @@ try {
 } catch (e) { __overlapResults.error = e.stack.split('\\n').slice(0, 3).join(' | '); }
 `, sandbox);
 const overlapR = vm.runInContext('__overlapResults', sandbox);
-check('overlapping waves: next wave spawns once alive <= nextWaveThreshold, not before'
+check(`overlapping waves: next wave spawns once alive <= nextWaveThreshold (${overlapR.thr} of 10), not before`
   + (overlapR.error ? ' — ' + overlapR.error : ''),
   !overlapR.error && overlapR.triggeredWhenBelowThreshold && overlapR.notTriggeredWhenAboveThreshold);
 
@@ -8157,8 +8162,10 @@ console.log('\n— Phase 05.7.1: combat suite + balance sim —');
   const out = r => ((r.stdout || '') + (r.stderr || '')).split('\n').filter(l => /FAIL/.test(l)).slice(0, 6).join(' | ');
   const c = cp.spawnSync(process.execPath, [path.join(__dirname, 'combat.js')], { encoding: 'utf8', timeout: 240000 });
   check('test/combat.js suite green' + (c.status !== 0 ? ' — ' + out(c) : ''), c.status === 0);
-  const b = cp.spawnSync(process.execPath, [path.join(__dirname, 'balance.js'), '--quick'], { encoding: 'utf8', timeout: 240000 });
-  check('test/balance.js --quick green (deterministic, baseline present)' + (b.status !== 0 ? ' — ' + out(b) : ''), b.status === 0);
+  // 05.7.1-11: the quick sim now also gates the D-01 tuning bands (dmg/min vs the plan-01 fixture)
+  const b = cp.spawnSync(process.execPath, [path.join(__dirname, 'balance.js'), '--quick', '--assert-bands'], { encoding: 'utf8', timeout: 240000 });
+  check('test/balance.js --quick --assert-bands green (deterministic, baseline present, BANDS OK)' + (b.status !== 0 ? ' — ' + out(b) : ''),
+    b.status === 0 && /BANDS OK/.test(b.stdout || ''));
 }
 
 Promise.all(pendingAsyncChecks).then(() => {

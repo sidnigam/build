@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Ready to execute
-stopped_at: Completed 05.7.1-04-PLAN.md
-last_updated: "2026-11-08T23:53:02.664Z"
-last_activity: 2026-11-08
+stopped_at: Completed 05.7.1-05-PLAN.md
+last_updated: "2026-11-09T00:16:50.219Z"
+last_activity: 2026-11-09
 progress:
   total_phases: 18
   completed_phases: 11
   total_plans: 71
-  completed_plans: 50
+  completed_plans: 51
 ---
 
 # Project State
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-06-17)
 ## Current Position
 
 Phase: 05.7.1 (hades-style-combat-depth-smarter-enemies-player-kit-difficulty-curve-boss-variety-tighter-arenas) — EXECUTING
-Plan: 5 of 12
+Plan: 6 of 12
 
 ## Performance Metrics
 
@@ -56,6 +56,7 @@ Plan: 5 of 12
 | Phase 05.7.1 P02 | 15min | 2 tasks | 9 files |
 | Phase 05.7.1 P03 | 17min | 3 tasks | 9 files |
 | Phase 05.7.1 P04 | 14min | 2 tasks | 10 files |
+| Phase 05.7.1 P05 | 20min | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -92,6 +93,9 @@ Recent decisions affecting current work:
 - [Phase 05.7.1]: Cast is a lodged-astra model: no regen; ammo invariant castCharges + lodged + in-flight <= castMax; returns on 8 s, room clear, boss defeat, room change (incl. in-flight) and defiance revive; balance --expect-baseline no longer applies from 05.7.1-03
 - [Phase 05.7.1]: Enemy AI coordinated by ENEMY_AI (js/ai.js): attack tokens per category (melee 2/ranged 2/heavy 1/support 1/bite 4, +biome, Heat hook), slot rings with escape cut, ranged bands pulled inside a pure viewBand; tick() reclaims tokens from non-attacking/removed holders
 - [Phase 05.7.1]: Enemy damage only via Enemy.hurtPlayer/fire behind windUp->armAttack (ENEMY_TG MIN melee/ranged .30, status .40, stun .50, beam .70, bite .20); chase/tank contact is a 0.2 s bite tell; spawn grace 0.45 s, engage delay 0.2-0.8 s
+- [Phase 05.7.1]: Elites = any biome type at cost x DATA.WAVES.eliteMult (1.8) with eliteMods [1,1,2,2] DATA.ELITE_MODS; eliteShare is the tuning knob (naraka [.1,.35], patala [.15,.5], ranabhoomi [.25,.6], vaitarani [.35,.5])
+- [Phase 05.7.1]: 8 new enemies (pishacha, kumbhipaka, nagaguard, mayavi, javelineer, bannerman, brahmarakshasa, jalarakshasa) on ENEMY_AI/ENEMY_TG; long shots from outside the view band get +0.3 s tell and e.longShot; def.band/longRange/slotBack/pack drive positioning and composition
+- [Phase 05.7.1]: hitEnemy reduction order: submerged -> shield-guard arc -> elite shield -> elite armor; knockback via canKnock(e); buffs (rallied, bannerSpd) recomputed each ENEMY_AI.tick
 
 ### Roadmap Evolution
 
@@ -138,7 +142,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-08T23:53:02.660Z
-Last activity: 2026-11-08
-Stopped at: Completed 05.7.1-04-PLAN.md
+Last session: 2026-11-09T00:16:50.215Z
+Last activity: 2026-11-09
+Stopped at: Completed 05.7.1-05-PLAN.md
 Resume file: None

@@ -216,7 +216,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] 05.7.1-02-PLAN.md — Player statuses (STATUS, hit-landed contract, DoT, stun DR) + data-driven projectile families (PROJ, cap, pattern planner)
 - [x] 05.7.1-03-PLAN.md — Player kit: dash-strike, dash-cancel, hold/charged variants, finishers, lodged-astra cast, faster tempo, pad parity
 - [x] 05.7.1-04-PLAN.md — Enemy AI: slots, attack tokens, range bands, view-band firing, ENEMY_TG telegraph invariant for the existing 8
-- [ ] 05.7.1-05-PLAN.md — Elite modifiers + working elite budget; 8 new signature enemies (2 per biome)
+- [x] 05.7.1-05-PLAN.md — Elite modifiers + working elite budget; 8 new signature enemies (2 per biome)
 - [ ] 05.7.1-06-PLAN.md — 4 mini-bosses (MiniBoss extends Boss, pattern moves, enrage) + room/door/reward flow; 4/5/5/3 biome rooms
 - [ ] 05.7.1-07-PLAN.md — Boss variety: no-repeat weighted picks, distance bands, anti-camp, chains; +2 moves per boss
 - [ ] 05.7.1-08-PLAN.md — Camera: 1.3x base + context zoom, threat/astra indicators, rewritten rest-identity tests, readability re-check

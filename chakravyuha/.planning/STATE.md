@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Ready to execute
-stopped_at: Completed 05.7.1-05-PLAN.md
-last_updated: "2026-11-09T00:16:50.219Z"
+stopped_at: Completed 05.7.1-06-PLAN.md
+last_updated: "2026-11-09T00:35:08.489Z"
 last_activity: 2026-11-09
 progress:
   total_phases: 18
   completed_phases: 11
   total_plans: 71
-  completed_plans: 51
+  completed_plans: 52
 ---
 
 # Project State
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-06-17)
 ## Current Position
 
 Phase: 05.7.1 (hades-style-combat-depth-smarter-enemies-player-kit-difficulty-curve-boss-variety-tighter-arenas) — EXECUTING
-Plan: 6 of 12
+Plan: 7 of 12
 
 ## Performance Metrics
 
@@ -57,6 +57,7 @@ Plan: 6 of 12
 | Phase 05.7.1 P03 | 17min | 3 tasks | 9 files |
 | Phase 05.7.1 P04 | 14min | 2 tasks | 10 files |
 | Phase 05.7.1 P05 | 20min | 3 tasks | 9 files |
+| Phase 05.7.1 P06 | 14min | 2 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,9 @@ Recent decisions affecting current work:
 - [Phase 05.7.1]: Elites = any biome type at cost x DATA.WAVES.eliteMult (1.8) with eliteMods [1,1,2,2] DATA.ELITE_MODS; eliteShare is the tuning knob (naraka [.1,.35], patala [.15,.5], ranabhoomi [.25,.6], vaitarani [.35,.5])
 - [Phase 05.7.1]: 8 new enemies (pishacha, kumbhipaka, nagaguard, mayavi, javelineer, bannerman, brahmarakshasa, jalarakshasa) on ENEMY_AI/ENEMY_TG; long shots from outside the view band get +0.3 s tell and e.longShot; def.band/longRange/slotBack/pack drive positioning and composition
 - [Phase 05.7.1]: hitEnemy reduction order: submerged -> shield-guard arc -> elite shield -> elite armor; knockback via canKnock(e); buffs (rallied, bannerSpd) recomputed each ENEMY_AI.tick
+- [Phase 05.7.1]: Mini-bosses = MiniBoss extends Boss (js/minibosses.js) over overridable Boss hooks (moveTable/moveDefBase/phaseAt/phaseTitle/custom*); generic def.pattern moves fire through PROJ.planPattern + guarded Boss.shoot; enrage at 40%
+- [Phase 05.7.1]: Mini-boss lives on GAME.miniRef, never GAME.bossRef; fixed mid-biome room (miniRoom 3/3/3/2 of 4/5/5/3 rooms) behind a single miniboss door; reward +60 mudra and UI.offerBoon(undefined, {minRarity: 1})
+- [Phase 05.7.1]: 05.7.2 hand-off: MUSIC.logic.snapshot excludes e.boss units, so a mini-boss room reads as calm until the score maps GAME.miniRef
 
 ### Roadmap Evolution
 
@@ -142,7 +146,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-09T00:16:50.215Z
+Last session: 2026-11-09T00:35:08.485Z
 Last activity: 2026-11-09
-Stopped at: Completed 05.7.1-05-PLAN.md
+Stopped at: Completed 05.7.1-06-PLAN.md
 Resume file: None

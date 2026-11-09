@@ -79,7 +79,7 @@ Source: PROJECT.md + Research (STACK, FEATURES, ARCHITECTURE, PITFALLS)
 - [x] **COMBAT-03**: 8 new regular enemy types (2 per biome), distinct roles, non-deity
 - [x] **COMBAT-04**: Smarter AI for all enemies: slots/surround, ranged spacing and repositioning, attack tokens, timing variance inside telegraphs, escape-route cutting, on-screen firing preference
 - [x] **COMBAT-05**: Elite modifiers (1-2 visible: aura, tint, tag) on the `eliteShare` curve, raised
-- [ ] **COMBAT-06**: 4 mini-bosses (one per biome, fixed mid-biome room, symbol door, guaranteed boon+ reward, own moveset, ≥0.4 s telegraphs, enrage)
+- [x] **COMBAT-06**: 4 mini-bosses (one per biome, fixed mid-biome room, symbol door, guaranteed boon+ reward, own moveset, ≥0.4 s telegraphs, enrage)
 - [x] **COMBAT-07**: 8-10 data-driven projectile families (`DATA.PROJECTILES`), each with shape, colour, trail, hit VFX, SFX
 - [x] **COMBAT-08**: Player statuses: stun (DR + immunity), slow/root (dash breaks root), burn/poison DoT, knockback/pull; each with pip/icon, tint, particles, HUD read; respects accessibility toggles; dash i-frames avoid them
 - [x] **COMBAT-09**: Dash-strike per weapon inside a ~0.2 s window; boons apply
@@ -166,7 +166,7 @@ Source: PROJECT.md + Research (STACK, FEATURES, ARCHITECTURE, PITFALLS)
 | COMBAT-03 | Phase 5.7.1 | Complete |
 | COMBAT-04 | Phase 5.7.1 | Complete |
 | COMBAT-05 | Phase 5.7.1 | Complete |
-| COMBAT-06 | Phase 5.7.1 | Pending |
+| COMBAT-06 | Phase 5.7.1 | Complete |
 | COMBAT-07 | Phase 5.7.1 | Complete |
 | COMBAT-08 | Phase 5.7.1 | Complete |
 | COMBAT-09 | Phase 5.7.1 | Complete |

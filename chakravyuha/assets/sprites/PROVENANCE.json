@@ -4339,6 +4339,47 @@
       "rejected_reasons": {
         "75010": "[flux] fire-pot floats detached from the figure (HX3); orange dot on the forehead reads as a tilak/third-eye mark (cultural guard); side profile shows one arm -> subject rewritten (pot hangs from chain in fist, smooth bare forehead, three-quarter front pose)"
       }
+    },
+    {
+      "filename": "mayavi-atlas.png",
+      "path": "assets/sprites/enemies/mayavi-atlas.png",
+      "actor": "mayavi",
+      "kind": "enemy",
+      "animations": {
+        "idle": 1
+      },
+      "tool": "ComfyUI (local)",
+      "checkpoint": "flux1-schnell-Q4_K_S.gguf (FLUX.1 [schnell] by Black Forest Labs, GGUF Q4_K_S by city96, Apache-2.0) + t5-v1_1-xxl Q5_K_M GGUF (Apache-2.0) + CLIP-L (MIT) + FLUX ae VAE (Apache-2.0)",
+      "method": "txt2img",
+      "sampler": "euler",
+      "scheduler": "simple",
+      "steps": 4,
+      "cfg": 1.0,
+      "width": 896,
+      "height": 1152,
+      "seed": 75030,
+      "prompt": "Full-length figure from head to feet: a rakshasi sorceress-weaver, slender, violet and indigo robes, wild dark hair, glowing violet threads spun between her two hands like a web. Exactly two arms, a bare head with only the plain grey backdrop directly behind it. Hades-style painterly cel-shaded game character art with bold dark ink outlines, hand-painted textures, saturated vivid colours and strong coloured rim lighting, with Indian miniature-painting ornament: fine gold-leaf detail and flat patterned colour fields on the clothing and armour, crisp black contour lines. Three-quarter top-down game sprite view, a single character, the entire figure visible from head to feet, standing on a plain flat light-grey background that fills the rest of the image.",
+      "negative_prompt": "",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "rembg birefnet-general background removal",
+        "alpha despeckle + trim",
+        "bottom-aligned LANCZOS fit to 256x256 (margin 6)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 2 px, #140b08 a=235, 0.6px feather, under sprite",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
+      ],
+      "raw_image": "assets/sprites/_gen/enemies/mayavi/mayavi_s75030.png",
+      "gen_sidecar": "assets/sprites/_raw/enemies/mayavi/mayavi.gen.json",
+      "generated_date": "2026-11-09",
+      "recorded_date": "2026-11-08",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "05.7.1-12 mayavi, Flux schnell seed 75030 (attempt 0, shipped first try), style_1x5_positive_flux. Raw and finished idle Read at 256 and at game scale (scale_preview vs vetala). (a) slender horned rakshasi sorceress-weaver, violet/indigo robes with patterned miniature-style colour-field panels, wild dark hair, glowing violet threads spun between her open hands; (b) whole figure; (c) one character; (d) no text; (e) exactly two attached arms; H2/H4 no gore; H3 modest (full robe); H6 no glyphs (chest medallion is a generic petal pattern, no sacred symbol); HX5 no halo/frame/border; small horns mark her as a rakshasi. Finish tuning: outline 5 px merged the hair wisps into a dark blob (as with tataka in 05.6-03), so ACTOR_TABLE outline is 2 px for mayavi; curls stay individual. Strongest 1+5 style match so far (cel-shaded, patterned fields, gold detail).",
+      "cultural_review": "pending \u2014 human cultural reviewer (QA-03)",
+      "iconography_notes": "two arms; small curved horns; bare forehead; no halo, no crown, no third eye, no sacred thread, no weapon; generic petal-pattern gold medallion",
+      "cultural_check": "pending QA-03: rakshasi sorceress (Mayavi = 'illusion-wielder'), a non-deity antagonist; no divine iconography"
     }
   ],
   "review_sheet": "assets/sprites/_review/contact-sheet.png",

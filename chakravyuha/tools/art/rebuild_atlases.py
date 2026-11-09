@@ -99,7 +99,7 @@ ACTOR_TABLE = [
     {"key": "pishacha", "kind": "enemy", "r": 9, "size_old": 128, "size_new": 256, "outline": 5, "phase2": None, "src_only": True},
     {"key": "kumbhipaka", "kind": "enemy", "r": 16, "size_old": 128, "size_new": 256, "outline": 5, "phase2": None, "src_only": True},
     {"key": "nagaguard", "kind": "enemy", "r": 17, "size_old": 128, "size_new": 256, "outline": 5, "phase2": None, "src_only": True},
-    {"key": "mayavi", "kind": "enemy", "r": 14, "size_old": 128, "size_new": 256, "outline": 5, "phase2": None, "src_only": True},
+    {"key": "mayavi", "kind": "enemy", "r": 14, "size_old": 128, "size_new": 256, "outline": 2, "phase2": None, "src_only": True},
     {"key": "javelineer", "kind": "enemy", "r": 14, "size_old": 128, "size_new": 256, "outline": 5, "phase2": None, "src_only": True},
     {"key": "bannerman", "kind": "enemy", "r": 16, "size_old": 128, "size_new": 256, "outline": 5, "phase2": None, "src_only": True},
     {"key": "brahmarakshasa", "kind": "enemy", "r": 15, "size_old": 128, "size_new": 256, "outline": 5, "phase2": None, "src_only": True},

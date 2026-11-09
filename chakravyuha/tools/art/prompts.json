@@ -340,16 +340,17 @@
     },
     "nagaguard": {
       "kind": "enemy",
-      "subject": "Full-length figure, facing the viewer in a three-quarter front pose: a naga warrior whose body below the waist is one thick green serpent tail coiled in a loop on the ground beneath him, a muscular human torso and arms in green scale armour, a human face, and a single small green cobra hood spreading at the back of his neck. His left arm bears a tall oval bronze shield held in front of his body; his right hand holds one short bronze-tipped spear upright. Exactly two arms, one head, the plain grey backdrop directly behind it.",
+      "subject": "Full-length figure, facing the viewer in a three-quarter front pose: a naga serpent-man shaped like a merman, his muscular human torso joins at the hips directly into one thick green snake body that rises upright from big coiled snake loops resting on the ground, green scale armour on his chest, a human face, and a single small green cobra hood at the back of his neck. His left arm bears a tall narrow leaf-shaped bronze shield as tall as his torso; his right hand holds one short bronze-tipped spear upright. Exactly two arms, one head, the plain grey backdrop directly behind it.",
       "palette": "jade green and bronze",
       "out_size": 256,
       "base_seed": 75020,
       "checkpoint_profile": "flux1_schnell_q4ks",
       "flux_style": "style_1x5_positive_flux",
       "flux_base_seed": 75020,
-      "flux_subject": "Full-length figure, facing the viewer in a three-quarter front pose: a naga warrior whose body below the waist is one thick green serpent tail coiled in a loop on the ground beneath him, a muscular human torso and arms in green scale armour, a human face, and a single small green cobra hood spreading at the back of his neck. His left arm bears a tall oval bronze shield held in front of his body; his right hand holds one short bronze-tipped spear upright. Exactly two arms, one head, the plain grey backdrop directly behind it.",
+      "flux_subject": "Full-length figure, facing the viewer in a three-quarter front pose: a naga serpent-man shaped like a merman, his muscular human torso joins at the hips directly into one thick green snake body that rises upright from big coiled snake loops resting on the ground, green scale armour on his chest, a human face, and a single small green cobra hood at the back of his neck. His left arm bears a tall narrow leaf-shaped bronze shield as tall as his torso; his right hand holds one short bronze-tipped spear upright. Exactly two arms, one head, the plain grey backdrop directly behind it.",
       "rejected": {
-        "0": "[flux] back view; human legs plus a tail (tail must replace legs); second staff in the left hand (extra prop); round shield; cloth cowl instead of the small cobra hood -> subject rewritten (front pose, tail-below-waist, one spear, oval shield)"
+        "0": "[flux] back view; human legs plus a tail (tail must replace legs); second staff in the left hand (extra prop); round shield; cloth cowl instead of the small cobra hood -> subject rewritten (front pose, tail-below-waist, one spear, oval shield)",
+        "1": "[flux] human legs again beside the serpent tail (same root cause as attempt 0: tail must replace legs); round shield; otherwise front pose, one spear, single scaled hood -> subject rewritten (merman anchor, torso joins snake body at the hips, leaf-shaped tall shield); least-bad fallback"
       }
     },
     "mayavi": {
@@ -361,7 +362,10 @@
       "checkpoint_profile": "flux1_schnell_q4ks",
       "flux_style": "style_1x5_positive_flux",
       "flux_base_seed": 75030,
-      "flux_subject": "Full-length figure from head to feet: a rakshasi sorceress-weaver, slender, violet and indigo robes, wild dark hair, glowing violet threads spun between her two hands like a web. Exactly two arms, a bare head with only the plain grey backdrop directly behind it."
+      "flux_subject": "Full-length figure from head to feet: a rakshasi sorceress-weaver, slender, violet and indigo robes, wild dark hair, glowing violet threads spun between her two hands like a web. Exactly two arms, a bare head with only the plain grey backdrop directly behind it.",
+      "accepted_attempt": 0,
+      "rejected": {},
+      "rejected_reasons": []
     },
     "javelineer": {
       "kind": "enemy",

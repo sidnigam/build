@@ -460,16 +460,19 @@
     },
     "mahiravana": {
       "kind": "boss",
-      "subject": "Full-length figure from head to feet: a rakshasa sorcerer of the underworld, sea-green skin, dark jade robes, a jewelled serpent-scale mantle, holding a tall staff topped with a burning oil lamp, sharp fangs. Exactly two arms, a bare head with only the plain grey backdrop directly behind it.",
+      "subject": "Full-length figure from head to feet, three-quarter front pose: a rakshasa sorcerer of the underworld, sea-green skin, curved dark horns, sharp fangs, a smooth bare forehead, dark jade robes with gold patterned borders and a jewelled serpent-scale mantle over the shoulders. His right hand holds a tall plain wooden staff whose top is a single round clay oil-lamp bowl with one burning flame; his left hand hangs open at his side. Exactly two arms and two hands, the plain grey backdrop directly behind the head.",
       "palette": "sea-green and dark jade",
       "out_size": 384,
       "base_seed": 75110,
       "checkpoint_profile": "flux1_schnell_q4ks",
       "flux_style": "style_1x5_positive_flux",
       "flux_base_seed": 75110,
-      "flux_subject": "Full-length figure from head to feet: a rakshasa sorcerer of the underworld, sea-green skin, dark jade robes, a jewelled serpent-scale mantle, holding a tall staff topped with a burning oil lamp, sharp fangs. Exactly two arms, a bare head with only the plain grey backdrop directly behind it.",
+      "flux_subject": "Full-length figure from head to feet, three-quarter front pose: a rakshasa sorcerer of the underworld, sea-green skin, curved dark horns, sharp fangs, a smooth bare forehead, dark jade robes with gold patterned borders and a jewelled serpent-scale mantle over the shoulders. His right hand holds a tall plain wooden staff whose top is a single round clay oil-lamp bowl with one burning flame; his left hand hangs open at his side. Exactly two arms and two hands, the plain grey backdrop directly behind the head.",
       "phase2_mode": "ember",
-      "cultural_flag": "QA-03"
+      "cultural_flag": "QA-03",
+      "rejected": {
+        "0": "[flux] three hands (two stacked on the staff + one at the side, HX3); CULTURAL: lamp-top crescent prongs around the flame form a trishula-like three-point silhouette, plus a jewel point on the forehead plate -> subject rewritten (single round clay lamp bowl, one hand on the staff, smooth bare forehead)"
+      }
     },
     "alambusha": {
       "kind": "boss",
@@ -482,7 +485,10 @@
       "flux_base_seed": 75120,
       "flux_subject": "Full-length figure from head to feet: a towering tusked rakshasa warrior, dark bronze skin, heavy dented war armour, holding a long spear, a war drum strapped to his back, fierce scowl. Exactly two arms, a bare head with only the plain grey backdrop directly behind it.",
       "phase2_mode": "ember",
-      "cultural_flag": "QA-03"
+      "cultural_flag": "QA-03",
+      "accepted_attempt": 0,
+      "rejected": {},
+      "rejected_reasons": []
     },
     "maricha": {
       "kind": "boss",

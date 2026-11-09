@@ -1,0 +1,71 @@
+{
+  "frames": {
+    "alambusha_phase2_0.png": {
+      "frame": {
+        "x": 8,
+        "y": 8,
+        "w": 291,
+        "h": 384
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 46,
+        "y": 0,
+        "w": 291,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "alambusha_idle_0.png": {
+      "frame": {
+        "x": 8,
+        "y": 408,
+        "w": 219,
+        "h": 378
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 82,
+        "y": 3,
+        "w": 219,
+        "h": 378
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  },
+  "meta": {
+    "app": "http://github.com/odrick/free-tex-packer-core",
+    "version": "0.3.8",
+    "image": "alambusha-atlas.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 307,
+      "h": 794
+    },
+    "scale": 1
+  },
+  "animations": {
+    "idle": [
+      "alambusha_idle_0.png"
+    ],
+    "phase2": [
+      "alambusha_phase2_0.png"
+    ]
+  }
+}

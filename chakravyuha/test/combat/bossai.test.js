@@ -327,4 +327,168 @@ module.exports = function ({ R, check, section }) {
       r.cur === r.opener && r.chainLeft === 0);
   }
   check('GAME.heat is undefined in a fresh run (Heat hook inert until plan 09)', R(`(GAME.startRun(), GAME.heat === undefined)`));
+
+  // ================= Task 2: +2 new moves per boss (D-22) =================
+  section('bossai: new boss moves — data and tables');
+  const NEW = { tataka: ['thornVolley', 'rootSnare'], ahiravana: ['lampWisps', 'serpentRing'],
+    kumbhakarna: ['boulderOrbs', 'drumStun'], yama: ['pasha', 'scales'] };
+  const OLD_P2 = { tataka: ['leap', 'maw', 'chase', 'radial', 'charge', 'summon'],
+    ahiravana: ['lamps', 'crossBeams', 'teleport', 'spiral', 'radial', 'summon'],
+    kumbhakarna: ['quake', 'roar', 'chase', 'slam', 'charge'],
+    yama: ['ledger', 'danda', 'noose', 'spiral', 'slam', 'summon'] };
+  const FAM = { thornVolley: 'needle', rootSnare: 'mortar', lampWisps: 'wisp', serpentRing: 'ring',
+    boulderOrbs: 'orb', drumStun: 'ring', pasha: 'coil', scales: 'beam' };
+  {
+    const defs = R(`(() => { const o = {}; for (const k of ${J(Object.keys(FAM))}) o[k] = BOSS_MOVE_DEFS[k] || null; return o; })()`);
+    for (const k of Object.keys(FAM)) {
+      const d = defs[k];
+      check(`BOSS_MOVE_DEFS.${k}: dmg, wind >= ${k === 'drumStun' ? 0.6 : 0.4}, pattern fam '${FAM[k]}', band/area tags`,
+        !!d && d.dmg === true && d.wind >= (k === 'drumStun' ? 0.6 : 0.4) && !!d.pattern && d.pattern.fam === FAM[k]
+        && ['close', 'mid', 'far', 'any'].includes(d.band) && typeof d.area === 'boolean');
+    }
+    const tbl = R(`(() => { const o = {}; for (const b of Object.keys(BOSS_MOVESETS)) o[b] = { 1: BOSS_MOVESETS[b][1].map(m => m[0]), 2: BOSS_MOVESETS[b][2].map(m => m[0]), op: (BOSS_MOVESETS[b][2].find(m => m[2] && m[2].opener) || [])[0] }; return o; })()`);
+    for (const b of Object.keys(NEW)) {
+      const t = tbl[b];
+      const in1 = NEW[b].filter(k => t[1].includes(k));
+      check(`${b} phase 1 has exactly one new move (${in1.join(',')})`, in1.length === 1);
+      check(`${b} phase 2 has both new moves and every earlier phase-2 move (${t[2].join(',')})`,
+        NEW[b].every(k => t[2].includes(k)) && OLD_P2[b].every(k => t[2].includes(k)));
+      check(`${b} phase-2 opener unchanged (${t.op})`, t.op === OLD_P2[b][0] && t[2][0] === OLD_P2[b][0]);
+      const only2 = t[2].filter(k => !t[1].includes(k));
+      check(`${b} phase 2 keeps >= 2 moves absent from phase 1 (${only2.join(',')})`, only2.length >= 2);
+    }
+  }
+
+  // force one move to completion (per-move harness style) and report what it fired
+  R(`__ba.force = function (bossId, phase, moveId, opts) {
+    opts = opts || {};
+    const B = __ba.room(bossId);
+    const P = GAME.player;
+    for (const e of GAME.enemies) if (e !== B) e.dead = true;
+    if (phase === 2) { B.phase = 2; B.hp = B.maxhp * 0.45; }
+    P.x = B.x - (opts.dist || 260); P.y = B.y;
+    const shots = []; let frame = 0; const frames = new Set();
+    const orig = B.shoot;
+    B.shoot = function () { const ex = arguments[7] || {}; shots.push({ fam: arguments[6] || 'bolt', status: ex.status || null }); frames.add(frame); return orig.apply(this, arguments); };
+    const v0 = BOSS_TG.violations.length;
+    B.startMove(moveId);
+    const marks = (B.marks || []).length;
+    while (frame++ < 600 && B.state !== 'rest') {
+      for (const e of GAME.enemies) if (e !== B) e.dead = true;
+      P.iframes = 99; GAME.hitstop = 0; GAME.update(1 / 60);
+    }
+    B.shoot = orig;
+    const projs = GAME.eprojectiles.filter(p => p.owner === B).map(p => ({ fam: p.fam, status: p.status, gapArc: p.gapArc || 0 }));
+    return { shots, volleys: frames.size, marks, projs, state: B.state, viol: BOSS_TG.violations.slice(v0) };
+  };`);
+
+  section('bossai: new boss moves — forced');
+  const st = (s, type) => s && (Array.isArray(s) ? s.some(x => x.type === type) : s.type === type);
+  const allViol = [];
+  {
+    const r = R(`__ba.force('tataka', 1, 'thornVolley')`); allViol.push(...r.viol);
+    const n = r.shots.filter(s => s.fam === 'needle').length;
+    check(`thornVolley: needle fans in 3 volleys (${n} needles over ${r.volleys} volleys, ${r.marks} marks)`,
+      r.shots.length > 0 && n === r.shots.length && r.volleys === 3 && n === 15 && r.marks > 0 && r.state === 'rest');
+    const r2 = R(`__ba.force('tataka', 2, 'thornVolley')`); allViol.push(...r2.viol);
+    check(`thornVolley phase 2: +1 needle per volley, capped at 6 (${r2.shots.length} over ${r2.volleys})`, r2.shots.length === 18 && r2.volleys === 3);
+  }
+  {
+    const r = R(`__ba.force('tataka', 2, 'rootSnare')`); allViol.push(...r.viol);
+    check(`rootSnare: mortars carrying a root status (${r.shots.length} shots, ${r.marks} marks)`,
+      r.shots.length >= 4 && r.shots.every(s => s.fam === 'mortar' && st(s.status, 'root')) && r.marks >= 4);
+  }
+  {
+    const r = R(`__ba.force('ahiravana', 1, 'lampWisps')`); allViol.push(...r.viol);
+    check(`lampWisps: radial wisps (${r.shots.length})`, r.shots.length === 4 && r.shots.every(s => s.fam === 'wisp'));
+  }
+  {
+    const r = R(`__ba.force('ahiravana', 2, 'serpentRing')`); allViol.push(...r.viol);
+    const ring = r.projs.find(p => p.fam === 'ring');
+    check(`serpentRing: a ring with poison and a dash gap (${J(ring)})`,
+      r.shots.length === 1 && r.shots[0].fam === 'ring' && st(r.shots[0].status, 'poison') && !!ring && ring.gapArc > 0);
+  }
+  {
+    const r = R(`__ba.force('kumbhakarna', 1, 'boulderOrbs')`); allViol.push(...r.viol);
+    check(`boulderOrbs: orbs (${r.shots.length})`, r.shots.length === 3 && r.shots.every(s => s.fam === 'orb'));
+  }
+  {
+    const r = R(`__ba.force('kumbhakarna', 2, 'drumStun')`); allViol.push(...r.viol);
+    check(`drumStun: a ring carrying stun and no knock (${J(r.shots[0] && r.shots[0].status)})`,
+      r.shots.length === 1 && r.shots[0].fam === 'ring' && st(r.shots[0].status, 'stun') && !st(r.shots[0].status, 'knock'));
+  }
+  {
+    const r = R(`__ba.force('yama', 1, 'pasha')`); allViol.push(...r.viol);
+    check(`pasha (The Pasha Binds): a coil carrying root + pull (${J(r.shots.map(s => s.status))})`,
+      r.shots.length >= 1 && r.shots.every(s => s.fam === 'coil' && st(s.status, 'root') && st(s.status, 'pull')));
+  }
+  {
+    const r = R(`__ba.force('yama', 2, 'scales')`); allViol.push(...r.viol);
+    check(`scales (The Scales Are Weighed): two beams per volley across 2 volleys (${r.shots.length} over ${r.volleys})`,
+      r.shots.length === 4 && r.volleys === 2 && r.shots.every(s => s.fam === 'beam'));
+  }
+
+  // drumStun lands on a standing (non-dashing) player: short stun, no knock from that hit
+  {
+    const r = R(`(() => {
+      const B = __ba.room('kumbhakarna'); const P = GAME.player;
+      B.phase = 2; B.hp = B.maxhp * 0.45;
+      P.x = B.x - 160; P.y = B.y;
+      const v0 = BOSS_TG.violations.length;
+      let hit = null;
+      const orig = P.takeDamage;
+      P.takeDamage = function (amt, fx, fy, o) {
+        const k0 = [this.st ? this.st.kx : 0, this.st ? this.st.ky : 0];
+        const landed = orig.call(this, amt, fx, fy, o);
+        if (landed && !hit && o && o.status) hit = { stunT: this.st.stunT, dk: Math.hypot(this.st.kx - k0[0], this.st.ky - k0[1]), status: o.status };
+        return landed;
+      };
+      B.startMove('drumStun');
+      let f = 0;
+      while (f++ < 400 && !hit) {
+        for (const e of GAME.enemies) if (e !== B) e.dead = true;
+        const ring = GAME.eprojectiles.find(p => p.owner === B && p.fam === 'ring');
+        if (ring) { const a = ring.gapA + Math.PI; P.x = B.x + Math.cos(a) * 160; P.y = B.y + Math.sin(a) * 160; }
+        P.iframes = 0; P.dashT = 0; GAME.hitstop = 0;
+        GAME.update(1 / 60);
+        if (B.state === 'rest') B.t = 99;
+      }
+      P.takeDamage = orig;
+      return { hit, viol: BOSS_TG.violations.slice(v0) };
+    })()`);
+    allViol.push(...r.viol);
+    check(`drumStun lands: 0 < stunT <= 0.6 and no knock velocity (${J(r.hit)})`,
+      !!r.hit && r.hit.stunT > 0 && r.hit.stunT <= 0.6 && r.hit.dk < 1e-6);
+  }
+  // pasha lands: rooted and pulled toward Yama
+  {
+    const r = R(`(() => {
+      const B = __ba.room('yama'); const P = GAME.player;
+      P.x = B.x - 300; P.y = B.y;
+      const v0 = BOSS_TG.violations.length;
+      let hit = null;
+      const orig = P.takeDamage;
+      P.takeDamage = function (amt, fx, fy, o) {
+        const k0 = [this.st ? this.st.kx : 0, this.st ? this.st.ky : 0];
+        const landed = orig.call(this, amt, fx, fy, o);
+        if (landed && !hit && o && o.status) hit = { rootT: this.st.rootT, dkx: this.st.kx - k0[0], bx: B.x - this.x };
+        return landed;
+      };
+      B.startMove('pasha');
+      let f = 0;
+      while (f++ < 400 && !hit) {
+        for (const e of GAME.enemies) if (e !== B) e.dead = true;
+        P.x = B.x - 300; P.y = B.y;
+        P.iframes = 0; P.dashT = 0; GAME.hitstop = 0;
+        GAME.update(1 / 60);
+        if (B.state === 'rest') B.t = 99;
+      }
+      P.takeDamage = orig;
+      return { hit, viol: BOSS_TG.violations.slice(v0) };
+    })()`);
+    allViol.push(...r.viol);
+    check(`pasha lands: rooted and pulled toward Yama (${J(r.hit)})`,
+      !!r.hit && r.hit.rootT > 0 && Math.sign(r.hit.dkx) === Math.sign(r.hit.bx) && r.hit.dkx !== 0);
+  }
+  check(`new boss moves: zero BOSS_TG violations (${allViol.length})` + (allViol.length ? ' — ' + allViol.slice(0, 5).join(', ') : ''), allViol.length === 0);
 };

@@ -219,4 +219,69 @@ module.exports = function ({ check, section, harness, fs, path, root }) {
   const bad = corpus.filter(t => lintA1.test(t) || lintA2.test(t) || deityName.test(t));
   check(`#vows markup copy found (${lines.length} lines: ${J(lines)})`, lines.length >= 3 && lines.includes('VOWS OF TAPAS') && lines.includes('RETURN'));
   check(`no deity names or hostile framing in the panel copy or rendered cards${bad.length ? ' — ' + J(bad.slice(0, 4)) : ''}`, bad.length === 0);
+
+  // ---------------- F4 god mode gated to dev builds (Task 2) ----------------
+  section('heatui: F4 god mode is dev-only');
+  const hasDev = R(`typeof GAME.devMode === 'function'`);
+  check('GAME.devMode() exists', hasDev);
+  if (hasDev) {
+    const dm = R(`(() => {
+      const had = { loc: 'location' in globalThis, locV: globalThis.location, nat: 'chakraNative' in window, natV: window.chakraNative };
+      const o = {};
+      try {
+        delete globalThis.location; delete window.chakraNative; o.none = GAME.devMode();
+        globalThis.location = { search: '' }; o.empty = GAME.devMode();
+        globalThis.location = { search: '?dev=1' }; o.dev1 = GAME.devMode();
+        globalThis.location = { search: '?x=1&dev=1' }; o.dev1b = GAME.devMode();
+        globalThis.location = { search: '?dev=1&x=2' }; o.dev1c = GAME.devMode();
+        globalThis.location = { search: '?dev=10' }; o.dev10 = GAME.devMode();
+        globalThis.location = { search: '?nodev=1' }; o.nodev = GAME.devMode();
+        globalThis.location = { search: '' };
+        window.chakraNative = { isDesktop: true, isDev: true }; o.natDev = GAME.devMode();
+        window.chakraNative = { isDesktop: true, isDev: false }; o.natRel = GAME.devMode();
+        window.chakraNative = { isDesktop: true }; o.natNone = GAME.devMode();
+        delete window.chakraNative;
+
+        // F4 through the real keydown listener
+        const kd = (__winLs.keydown || [])[0];
+        o.hasListener = typeof kd === 'function';
+        const f4 = () => kd({ key: 'F4', shiftKey: false, preventDefault() {} });
+        INPUT.keys = {};
+        GAME.godMode = false;
+        globalThis.location = { search: '' }; f4(); o.relToggled = GAME.godMode;
+        window.chakraNative = { isDesktop: true, isDev: false }; f4(); o.relNatToggled = GAME.godMode;
+        delete window.chakraNative;
+        globalThis.location = { search: '?dev=1' }; f4(); o.devOn = GAME.godMode; f4(); o.devOff = GAME.godMode;
+        globalThis.location = { search: '' };
+        window.chakraNative = { isDesktop: true, isDev: true }; f4(); o.natOn = GAME.godMode;
+        delete window.chakraNative;
+        GAME.godMode = true; o.direct = GAME.godMode === true;
+      } finally {
+        GAME.godMode = false; INPUT.keys = {};
+        if (had.loc) globalThis.location = had.locV; else delete globalThis.location;
+        if (had.nat) window.chakraNative = had.natV; else delete window.chakraNative;
+      }
+      return o;
+    })()`);
+    check(`devMode false with no dev flag (${dm.none}, ${dm.empty})`, dm.none === false && dm.empty === false);
+    check(`devMode true for ?dev=1, ?x=1&dev=1 and ?dev=1&x=2 (${dm.dev1}, ${dm.dev1b}, ${dm.dev1c})`, dm.dev1 === true && dm.dev1b === true && dm.dev1c === true);
+    check(`devMode false for ?dev=10 and ?nodev=1 (${dm.dev10}, ${dm.nodev})`, dm.dev10 === false && dm.nodev === false);
+    check(`devMode follows chakraNative.isDev (true ${dm.natDev}, false ${dm.natRel}, absent ${dm.natNone})`, dm.natDev === true && dm.natRel === false && dm.natNone === false);
+    check('the keydown listener was captured', dm.hasListener);
+    check(`F4 does nothing in release builds (web ${dm.relToggled}, desktop ${dm.relNatToggled})`, dm.relToggled === false && dm.relNatToggled === false);
+    check(`F4 toggles god mode with ?dev=1 (${dm.devOn} then ${dm.devOff})`, dm.devOn === true && dm.devOff === false);
+    check(`F4 toggles god mode in an unpackaged desktop build (${dm.natOn})`, dm.natOn === true);
+    check('GAME.godMode still works when set directly', dm.direct);
+  }
+
+  const gsrc = fs.readFileSync(path.join(root, 'js', 'game.js'), 'utf8');
+  const msrc = fs.readFileSync(path.join(root, 'electron', 'main.js'), 'utf8');
+  const psrc = fs.readFileSync(path.join(root, 'electron', 'preload.js'), 'utf8');
+  check("js/game.js guards the F4 branch with k === 'f4' && this.devMode()", /k === 'f4' && this\.devMode\(\)/.test(gsrc));
+  check("electron/main.js registers 'app:isDev' returning !app.isPackaged",
+    /ipcMain\.on\('app:isDev',\s*\(event\)\s*=>\s*\{\s*event\.returnValue = !app\.isPackaged;\s*\}\)/.test(msrc));
+  check("'app:isDev' is registered at module top level (not inside a window or ready callback)",
+    /^ipcMain\.on\('app:isDev'/m.test(msrc));
+  check("electron/preload.js exposes isDev from ipcRenderer.sendSync('app:isDev')",
+    /isDev:\s*ipcRenderer\.sendSync\('app:isDev'\)\s*===\s*true/.test(psrc));
 };

@@ -121,10 +121,14 @@ def entry_from_sidecar(sidecar, filename, path, actor, kind, rejected_seeds=None
     if kind == "god":
         entry["cultural_review"] = "pending — human cultural reviewer (QA-03)"
         entry["iconography_notes"] = iconography or ""
-    elif kind in ("boss",) + ENV_ASSET_KINDS and iconography:
+    elif kind in ("boss", "enemy") + ENV_ASSET_KINDS and iconography:
         # 05.7-02: iconography-corrected boss / env assets also await human cultural review.
+        # 05.7.1-12: new enemy sprites too.
         entry["cultural_review"] = "pending — human cultural reviewer (QA-03)"
         entry["iconography_notes"] = iconography
+    if cultural_check and kind in ("boss", "enemy"):
+        # 05.7.1-12: record the per-asset cultural check (QA-03 flags) for character atlases.
+        entry["cultural_check"] = cultural_check
     if superseded:
         entry["superseded"] = superseded
     if rejected_reasons and kind not in ENV_ASSET_KINDS:

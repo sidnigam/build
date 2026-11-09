@@ -134,5 +134,151 @@ module.exports = function ({ R, check, section, fs, path, root }) {
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   check('index.html loads js/heat.js right after js/meta.js', /<script src="js\/meta\.js"><\/script>\s*<script src="js\/heat\.js"><\/script>/.test(html));
 
+  // ================= combatant vows (Task 2) =================
+  R(`globalThis.__hv = {
+    // start a run with META.wins / META.heat set, then a clean combat room around the player
+    run(wins, sel, biome) {
+      META.wins = wins; META.heat = Object.assign({}, sel || {});
+      U.seed(9100);
+      GAME.godMode = false;
+      INPUT.ax = 0; INPUT.ay = 0; INPUT.lmb = false; INPUT.keys = {};
+      GAME.startRun();
+      if (biome) { GAME.biomeIdx = biome; GAME.biome = DATA.BIOMES[biome]; }
+      return GAME.player;
+    },
+    room() {
+      ROOMS.enterRoom('mudra');
+      GAME.state = 'combat'; GAME.bossRef = null; GAME.miniRef = null;
+      GAME.enemies = []; GAME.waves = []; GAME.spawnQueue = []; GAME.pillars = []; GAME.hazards = [];
+      GAME.pprojectiles = []; GAME.eprojectiles = []; GAME.zones = []; GAME.orbits = []; GAME.rings = [];
+      GAME.epools = [];
+      const P = GAME.player, A = GAME.arena;
+      P.x = A.x + A.w / 2; P.y = A.y + A.h / 2;
+      P.maxhp = 1e9; P.hp = 1e9; P.iframes = 0;
+      ENEMY_AI.reset(); ENEMY_TG.clear();
+      return P;
+    },
+    stats(wins, sel) {
+      __hv.run(wins, sel);
+      const e = new Enemy('rakshasa', 0, 0, 1);
+      const B = new Boss('tataka', 0, 0);
+      const M = new MiniBoss('subahu', 0, 0);
+      return { eHp: e.hp, eMax: e.maxhp, eDmg: e.dmg, eSpd: e.spd, eCd: e.cdMul,
+        bHp: B.hp, bMax: B.maxhp, bDmg: B.dmg, mHp: M.hp, mMax: M.maxhp, mDmg: M.dmg,
+        bAt: B.phaseAt(), mAt: M.phaseAt() };
+    },
+    tables(wins, sel) {
+      __hv.run(wins, sel);
+      const out = {};
+      for (const id of Object.keys(DATA.BOSSES)) { const B = new Boss(id, 0, 0); B.phase = 1; out[id] = { t1: B.moveTable(1), base: BOSS_MOVESETS[id][1], p2: BOSS_MOVESETS[id][2] }; }
+      for (const id of Object.keys(DATA.MINIBOSSES)) { const B = new MiniBoss(id, 0, 0); B.phase = 1; out[id] = { t1: B.moveTable(1), base: MINI_MOVESETS[id][1], p2: MINI_MOVESETS[id][2] }; }
+      return out;
+    },
+    // first volley size of a lone shooter of type id
+    volley(wins, sel, id) {
+      __hv.run(wins, sel); const P = __hv.room();
+      const e = new Enemy(id, P.x + 260, P.y, 1); e.spawnT = 0; e.t = 0.01; GAME.enemies.push(e);
+      for (let i = 0; i < 600; i++) {
+        P.x = GAME.arena.x + GAME.arena.w / 2; P.y = GAME.arena.y + GAME.arena.h / 2; P.iframes = 1;
+        GAME.hitstop = 0; GAME.update(1 / 60);
+        const n = GAME.eprojectiles.filter(p => p.owner === e).length;
+        if (n) return { n, speed: Math.hypot(GAME.eprojectiles[0].vx, GAME.eprojectiles[0].vy) };
+      }
+      return { n: 0, speed: 0 };
+    },
+  };`);
+
+  section('heat: enemy, boss and mini-boss scaling');
+  const n0 = R(`__hv.stats(1, {})`);
+  const h1 = R(`__hv.stats(1, { pain: 5, endurance: 2, haste: 2 })`);
+  const l1 = R(`__hv.stats(0, { pain: 5, endurance: 2, haste: 2, wardens: 3 })`);
+  const near = (a, b) => Math.abs(a - b) < 1e-9;
+  check(`pain 5 / endurance 2: Enemy dmg × 2 (${n0.eDmg} -> ${h1.eDmg}), hp × 1.3 (${n0.eHp} -> ${h1.eHp}, max ${h1.eMax})`,
+    near(h1.eDmg, n0.eDmg * 2) && near(h1.eHp, n0.eHp * 1.3) && near(h1.eMax, h1.eHp));
+  check(`Boss hp × 1.3 (${n0.bHp} -> ${h1.bHp}) and dmg × 2 (${n0.bDmg} -> ${h1.bDmg})`,
+    near(h1.bHp, n0.bHp * 1.3) && near(h1.bMax, h1.bHp) && near(h1.bDmg, n0.bDmg * 2));
+  check(`MiniBoss hp × 1.3 (${n0.mHp} -> ${h1.mHp}) and dmg × 2 after its own dmg 14 (${n0.mDmg} -> ${h1.mDmg})`,
+    near(h1.mHp, n0.mHp * 1.3) && near(h1.mMax, h1.mHp) && n0.mDmg === 14 && near(h1.mDmg, 28));
+  check(`haste 2: Enemy spd × 1.3 (${n0.eSpd} -> ${h1.eSpd}) and cdMul ÷ 1.3 (${n0.eCd} -> ${h1.eCd})`,
+    near(h1.eSpd, n0.eSpd * 1.3) && near(h1.eCd, n0.eCd / 1.3));
+  const lockBad = Object.keys(n0).filter(k => !near(n0[k], l1[k]));
+  check(`locked Heat (wins 0) with the same vows stored is neutral${lockBad.length ? ' — ' + lockBad.join(', ') : ''}`, lockBad.length === 0);
+
+  // haste never shortens a tell: 30 s mixed-roster sim, every armed wind >= ENEMY_TG.MIN[kind]
+  const hs = R(`(() => {
+    __hv.run(1, { haste: 2, pain: 5 }); const P = __hv.room();
+    const A = GAME.arena;
+    const ids = ['rakshasa', 'archer', 'naga', 'preta', 'kumbhipaka', 'nagaguard'].filter(id => DATA.ENEMIES[id]);
+    ids.forEach((id, i) => { const a = i / ids.length * Math.PI * 2; const e = new Enemy(id, P.x + Math.cos(a) * 240, P.y + Math.sin(a) * 200, 1); e.spawnT = 0; GAME.enemies.push(e); });
+    for (let i = 0; i < 1800; i++) {
+      P.x = A.x + A.w / 2 + Math.cos(i / 90) * 120; P.y = A.y + A.h / 2; P.hp = 1e9;
+      GAME.hitstop = 0; GAME.update(1 / 60);
+      for (const e of GAME.enemies) if (e.hp < e.maxhp) e.hp = e.maxhp;
+    }
+    const short = ENEMY_TG.windLog.filter(w => w.wind + 1e-9 < (ENEMY_TG.MIN[w.kind] || 0));
+    return { n: ENEMY_TG.windLog.length, short: short.slice(0, 3), viol: ENEMY_TG.violations.slice(0, 3) };
+  })()`);
+  check(`haste 2: ${hs.n} armed winds in a 30 s sim, none shorter than ENEMY_TG.MIN${hs.short.length ? ' — ' + J(hs.short) : ''}`, hs.n >= 10 && hs.short.length === 0);
+  check(`haste 2: no telegraph violations${hs.viol.length ? ' — ' + J(hs.viol) : ''}`, hs.viol.length === 0);
+
+  section('heat: wardens');
+  const tw = R(`__hv.tables(1, { wardens: 1 })`);
+  const tn = R(`__hv.tables(1, {})`);
+  const tl = R(`__hv.tables(0, { wardens: 3 })`);
+  for (const id of Object.keys(tw)) {
+    const { t1, base, p2 } = tw[id];
+    const added = t1.filter(m => !base.some(b => b[0] === m[0]));
+    const nonOpener = p2.filter(m => !base.some(b => b[0] === m[0]) && !(m[2] && m[2].opener));
+    const okPick = added.length === 1 && added[0][1] === 1 && p2.some(m => m[0] === added[0][0])
+      && (nonOpener.length ? added[0][0] === nonOpener[0][0] && !(added[0][2] && added[0][2].opener) : !(added[0][2] && added[0][2].opener));
+    check(`wardens 1: ${id} phase 1 gains one phase-2 technique at weight 1 (${added.map(m => m[0]).join(',') || 'none'}${nonOpener.length ? '' : ', opener fallback'})`,
+      okPick && t1.length === base.length + 1);
+    check(`neutral / locked: ${id} phase 1 table unchanged`, J(tn[id].t1) === J(base) && J(tl[id].t1) === J(base));
+  }
+  const w2 = R(`(() => {
+    __hv.run(1, { wardens: 2 });
+    const o = { chainBonus: GAME.heat.chainBonus, restMul: GAME.heat.restMul };
+    const B = new Boss('tataka', 0, 0); B.phase = 1;
+    const orig = B.startMove; B.startMove = function (id) { B.lastMove = id; };
+    const lens = {};
+    for (let i = 0; i < 400; i++) { B.chainLeft = 0; B.pickMove(); if (B.lastMove !== 'chase') lens[B.chainLeft + 1] = 1; }
+    B.startMove = orig;
+    o.lens = Object.keys(lens).map(Number).sort();
+    return o;
+  })()`);
+  check(`wardens 2: chainBonus 1 and restMul 0.7 (${w2.chainBonus}, ${w2.restMul})`, w2.chainBonus === 1 && w2.restMul === 0.7);
+  check(`wardens 2: phase-1 chains roll 2-4 links instead of 1-3 (${J(w2.lens)})`, J(w2.lens) === J([2, 3, 4]));
+  const w3 = R(`__hv.stats(1, { wardens: 3 })`);
+  check(`wardens 3: phaseAt +0.15 (Boss ${w3.bAt}, MiniBoss ${w3.mAt}); neutral ${n0.bAt}/${n0.mAt}; locked ${l1.bAt}/${l1.mAt}`,
+    near(w3.bAt, 0.65) && near(w3.mAt, 0.55) && n0.bAt === 0.5 && n0.mAt === 0.4 && l1.bAt === 0.5 && l1.mAt === 0.4);
+
+  section('heat: storms');
+  const st = R(`(() => {
+    const o = {};
+    const plan = () => ({
+      player: PROJ.planPattern({ x: 0, y: 0, r: 10 }, { aim: 'player', count: 3, spread: 0.6 }, { x: 100, y: 0 }).shots.length,
+      single: PROJ.planPattern({ x: 0, y: 0, r: 10 }, { aim: 'player', count: 1 }, { x: 100, y: 0 }).shots,
+      radial: PROJ.planPattern({ x: 0, y: 0, r: 10 }, { aim: 'radial', count: 4 }, { x: 100, y: 0 }).shots.length,
+      around: PROJ.planPattern({ x: 0, y: 0, r: 10 }, { aim: 'around', count: 3 }, { x: 100, y: 0 }).shots.length,
+    });
+    const spawnV = () => { GAME.eprojectiles = []; const p = PROJ.spawn('bolt', { x: 0, y: 0, vx: 100, vy: 50, dmg: 1 }); const q = PROJ.spawn('needle', { x: 0, y: 0, vx: 200, vy: 0, dmg: 1 }); return [p.vx, p.vy, q.vx]; };
+    __hv.run(1, { storms: 2 }); __hv.room(); o.h = plan(); o.hv = spawnV();
+    __hv.run(1, {}); __hv.room(); o.n = plan(); o.nv = spawnV();
+    __hv.run(0, { storms: 2 }); __hv.room(); o.l = plan(); o.lv = spawnV();
+    o.hSingleAngles = o.h.single.map(s => +Math.atan2(s.vy, s.vx).toFixed(3));
+    o.h.single = o.h.single.length; o.n.single = o.n.single.length; o.l.single = o.l.single.length;
+    return o;
+  })()`);
+  check(`storms 2: planPattern 'player' 3 -> ${st.h.player}, 'radial' 4 -> ${st.h.radial}; 'around' unchanged (${st.h.around})`,
+    st.h.player === 5 && st.h.radial === 6 && st.h.around === 3 && st.n.player === 3 && st.n.radial === 4);
+  check(`storms 2: a single aimed shot becomes a 3-shot fan (${J(st.hSingleAngles)})`, st.h.single === 3 && new Set(st.hSingleAngles).size === 3 && st.n.single === 1);
+  check(`storms 2: enemy projectile speed × 1.3 (${J(st.hv)} vs ${J(st.nv)})`, near(st.hv[0], 130) && near(st.hv[1], 65) && near(st.hv[2], 260) && J(st.nv) === J([100, 50, 200]));
+  check(`locked storms change nothing (${J(st.l)}, ${J(st.lv)})`, J(st.l) === J(st.n) && J(st.lv) === J(st.nv));
+  const va = R(`__hv.volley(1, { storms: 2 }, 'archer')`), vn = R(`__hv.volley(1, {}, 'archer')`), vl = R(`__hv.volley(0, { storms: 2 }, 'archer')`);
+  check(`storms 2: archers loose 1 + 2 shots per volley (${vn.n} -> ${va.n}, locked ${vl.n})`, vn.n === 1 && va.n === 3 && vl.n === 1);
+  check(`storms 2: archer shots fly × 1.3 (${vn.speed.toFixed(1)} -> ${va.speed.toFixed(1)})`, near(va.speed, vn.speed * 1.3));
+  const sa = R(`__hv.volley(1, { storms: 2 }, 'naga')`), sn = R(`__hv.volley(1, {}, 'naga')`);
+  check(`storms 2: spread shooters loose 3 + 2 (${sn.n} -> ${sa.n})`, sn.n === 3 && sa.n === 5);
+
   R(`META.wipe(); __hm.restore(__hm0)`);
 };

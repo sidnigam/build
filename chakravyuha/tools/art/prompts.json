@@ -405,7 +405,12 @@
       "rejected": {
         "0": "[flux] left forearm ends in a ragged stump with no hand (HX3 broken/maimed limb); banner held one-handed -> subject rewritten (both fists clearly wrapped around the pole)",
         "1": "[flux] crimson pennant floats in the air detached from the pole top (HX3 floating prop); otherwise good (horned tusked asura, both hands on the pole) -> subject rewritten (pennant tied by cords to the pole top, hanging along it); least-bad fallback"
-      }
+      },
+      "accepted_attempt": 2,
+      "rejected_reasons": [
+        "[flux] left forearm ends in a ragged stump with no hand (HX3 broken/maimed limb); banner held one-handed -> subject rewritten (both fists clearly wrapped around the pole)",
+        "[flux] crimson pennant floats in the air detached from the pole top (HX3 floating prop); otherwise good (horned tusked asura, both hands on the pole) -> subject rewritten (pennant tied by cords to the pole top, hanging along it); least-bad fallback"
+      ]
     },
     "brahmarakshasa": {
       "kind": "enemy",

@@ -4558,6 +4558,54 @@
         "75040": "[flux] reads as a Greek hoplite (Corinthian crested helmet, greaves) and a plain human rather than a danava; weak 1+5 ornament -> subject rewritten (asura features, ancient Indian cuirass/dhoti/helmet, throwing pose)",
         "75041": "[flux] CULTURAL: blue skin + yellow dhoti + tall gold crown-like helmet with a radiating halo-like arch read as Vishnu/Krishna iconography -> subject rewritten (charcoal-grey skin, maroon-brown wrap, low skullcap helmet)"
       }
+    },
+    {
+      "filename": "bannerman-atlas.png",
+      "path": "assets/sprites/enemies/bannerman-atlas.png",
+      "actor": "bannerman",
+      "kind": "enemy",
+      "animations": {
+        "idle": 1
+      },
+      "tool": "ComfyUI (local)",
+      "checkpoint": "flux1-schnell-Q4_K_S.gguf (FLUX.1 [schnell] by Black Forest Labs, GGUF Q4_K_S by city96, Apache-2.0) + t5-v1_1-xxl Q5_K_M GGUF (Apache-2.0) + CLIP-L (MIT) + FLUX ae VAE (Apache-2.0)",
+      "method": "txt2img",
+      "sampler": "euler",
+      "scheduler": "simple",
+      "steps": 4,
+      "cfg": 1.0,
+      "width": 896,
+      "height": 1152,
+      "seed": 75052,
+      "prompt": "Full-length figure from head to feet, three-quarter front pose: a burly horned and tusked asura standard-bearer in battle-worn bronze armour, holding a tall war-banner pole upright beside his body with both fists wrapped around the wooden pole. A plain tattered crimson cloth pennant is tied by cords to the very top of the pole and hangs down along it, attached to the pole. A small drum at the hip. Exactly two arms with two complete hands, a bare head with only the plain grey backdrop directly behind it. Hades-style painterly cel-shaded game character art with bold dark ink outlines, hand-painted textures, saturated vivid colours and strong coloured rim lighting, with Indian miniature-painting ornament: fine gold-leaf detail and flat patterned colour fields on the clothing and armour, crisp black contour lines. Three-quarter top-down game sprite view, a single character, the entire figure visible from head to feet, standing on a plain flat light-grey background that fills the rest of the image.",
+      "negative_prompt": "",
+      "rejected_seeds": [
+        75050,
+        75051
+      ],
+      "rejected_count": 2,
+      "post_processing": [
+        "rembg birefnet-general background removal",
+        "alpha despeckle + trim",
+        "bottom-aligned LANCZOS fit to 256x256 (margin 9)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 5 px, #140b08 a=235, 0.6px feather, under sprite",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
+      ],
+      "raw_image": "assets/sprites/_gen/enemies/bannerman/bannerman_s75052.png",
+      "gen_sidecar": "assets/sprites/_raw/enemies/bannerman/bannerman.gen.json",
+      "generated_date": "2026-11-09",
+      "recorded_date": "2026-11-09",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "05.7.1-12 bannerman, Flux schnell seed 75052 (attempt 2 of 3; 75050 rejected: left forearm ended in a handless stump; 75051 rejected: pennant floating detached from the pole; subject rewritten twice with positive anchors). Raw and finished idle Read at 256 and at game scale (scale_preview vs daitya). (a) burly horned asura standard-bearer, roaring, bronze-and-olive battle armour with gold studs, a small barrel drum at the hip, a tall wooden banner pole gripped in his left fist with a plain crimson pennant tied by cords at the top; (b) whole figure incl. pole; (c) one character; (d) no text, the pennant carries no emblem; (e) exactly two attached arms with complete gauntleted hands; HX3/HX4 pole and pennant attached and intact after the cutout; H2/H4 no gore; H3 modest; HX5 no halo/frame/border. Tusks are small/hidden by the beard (subject asked for tusks; horns carry the asura read). The tall pole makes the body smaller in the 256 frame, but it still reads at game scale.",
+      "cultural_review": "pending \u2014 human cultural reviewer (QA-03)",
+      "iconography_notes": "two arms; curved horns; bare forehead; plain crimson pennant with no emblem or sacred symbol; no halo, no crown, no sacred thread",
+      "cultural_check": "pending QA-03: asura standard-bearer, a non-deity antagonist; banner is plain (no dhvaja emblem of any deity)",
+      "rejected_reasons": {
+        "75050": "[flux] left forearm ends in a ragged stump with no hand (HX3 broken/maimed limb); banner held one-handed -> subject rewritten (both fists clearly wrapped around the pole)",
+        "75051": "[flux] crimson pennant floats in the air detached from the pole top (HX3 floating prop); otherwise good (horned tusked asura, both hands on the pole) -> subject rewritten (pennant tied by cords to the pole top, hanging along it); least-bad fallback"
+      }
     }
   ],
   "review_sheet": "assets/sprites/_review/contact-sheet.png",

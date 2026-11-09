@@ -1496,27 +1496,35 @@ class Enemy {
 // windLog: {boss, move, wind} recorded each time a damaging move finishes its wind-up.
 const BOSS_TG = { violations: [], windLog: [] };
 
+// Move selection (05.7.1-07, D-21): distance bands [close < 220 <= mid < 480 <= far] scale
+// in-band move weights x2 and out-of-band x0.3 ('any' unscaled); a camping player (3 s within
+// 60 px of one point, or within 90 px of a wall) doubles 'area' moves. Bosses string 1-3 (phase 1)
+// or 2-3 (phase 2) moves into a chain; links rest CHAIN_REST[phase] s instead of the move's rest.
+const BOSS_AI = { BANDS: [220, 480], IN_BAND: 2, OUT_BAND: 0.3, CAMP_R: 60, CAMP_T: 3, EDGE_R: 90, AREA_MUL: 2,
+  CHAIN_P1: [[1, 0.25], [2, 0.55], [3, 0.2]], CHAIN_P2: [[2, 0.55], [3, 0.45]],
+  CHAIN_REST: { 1: [0.28, 0.38], 2: [0.2, 0.28] } };
+
 // wind: telegraph seconds (0 = none); active: seconds in the active/resolution state;
 // dmg: whether this move can deal damage; activeState: state name override once armed.
 const BOSS_MOVE_DEFS = {
-  chase:    { wind: 0,    active: 2.2, dmg: false },
-  swipe:    { wind: 0.45, active: 0.15, dmg: true },
-  radial:   { wind: 0.7,  active: 0,   dmg: true },
-  spiral:   { wind: 0.6,  active: 2.2, dmg: true },
-  charge:   { wind: 0.6,  active: 0.8, dmg: true, activeState: 'charging' },
-  slam:     { wind: 1.1,  active: 0,   dmg: true },
-  summon:   { wind: 0.6,  active: 0,   dmg: false },
-  noose:    { wind: 0.6,  active: 1.6, dmg: true },
-  teleport: { wind: 0.4,  active: 0,   dmg: false },
+  chase:    { wind: 0,    active: 2.2, dmg: false, band: 'any', area: false },
+  swipe:    { wind: 0.45, active: 0.15, dmg: true, band: 'close', area: false },
+  radial:   { wind: 0.7,  active: 0,   dmg: true, band: 'mid', area: true },
+  spiral:   { wind: 0.6,  active: 2.2, dmg: true, band: 'any', area: true },
+  charge:   { wind: 0.6,  active: 0.8, dmg: true, activeState: 'charging', band: 'far', area: false },
+  slam:     { wind: 1.1,  active: 0,   dmg: true, band: 'any', area: true },
+  summon:   { wind: 0.6,  active: 0,   dmg: false, band: 'any', area: false },
+  noose:    { wind: 0.6,  active: 1.6, dmg: true, band: 'far', area: false },
+  teleport: { wind: 0.4,  active: 0,   dmg: false, band: 'far', area: false },
   // ---- phase-2 signature attacks (D-12), 2 per boss ----
-  leap:        { wind: 0.9, active: 0.25, dmg: true },  // tataka opener
-  maw:         { wind: 0.7, active: 0.2,  dmg: true },  // tataka
-  lamps:       { wind: 1.0, active: 0,    dmg: true },  // ahiravana opener
-  crossBeams:  { wind: 0.9, active: 0.35, dmg: true },  // ahiravana
-  quake:       { wind: 0.8, active: 1.8,  dmg: true },  // kumbhakarna opener
-  roar:        { wind: 0.8, active: 0.3,  dmg: true },  // kumbhakarna
-  ledger:      { wind: 1.0, active: 0.3,  dmg: true },  // yama opener — "The Ledger is Opened"
-  danda:       { wind: 0.8, active: 0.25, dmg: true },  // yama — "Danda of Judgment"
+  leap:        { wind: 0.9, active: 0.25, dmg: true, band: 'far', area: false },  // tataka opener
+  maw:         { wind: 0.7, active: 0.2,  dmg: true, band: 'close', area: false },  // tataka
+  lamps:       { wind: 1.0, active: 0,    dmg: true, band: 'any', area: true },  // ahiravana opener
+  crossBeams:  { wind: 0.9, active: 0.35, dmg: true, band: 'any', area: true },  // ahiravana
+  quake:       { wind: 0.8, active: 1.8,  dmg: true, band: 'close', area: true },  // kumbhakarna opener
+  roar:        { wind: 0.8, active: 0.3,  dmg: true, band: 'mid', area: false },  // kumbhakarna
+  ledger:      { wind: 1.0, active: 0.3,  dmg: true, band: 'any', area: true },  // yama opener — "The Ledger is Opened"
+  danda:       { wind: 0.8, active: 0.25, dmg: true, band: 'close', area: false },  // yama — "Danda of Judgment"
 };
 
 // [id, weight, overrides?] per phase. The first phase-2 entry flagged {opener:true} always
@@ -1803,19 +1811,72 @@ class Boss extends Enemy {
     }
   }
 
-  pickMove(depth = 0) {
-    const table = this.moveTable();
-    let moveId;
-    if (this.pendingOpener) {
-      moveId = this.pendingOpener;
-      this.pendingOpener = undefined;
-    } else {
-      const pick = U.weightedChoice(table.map(m => ({ m, w: m[1] })));
-      moveId = pick.m[0];
-      // avoid repeating the same move twice
-      if (moveId === this.lastMove && depth < 20 && U.chance(0.6)) return this.pickMove(depth + 1);
+  // ---- anti-camping (05.7.1-07): 12 samples x 0.25 s = 3 s of player positions ----
+  trackCamp(dt) {
+    const P = GAME.player;
+    if (!this.campHist) this.campHist = [];
+    this.campAcc = (this.campAcc || 0) + dt;
+    if (this.campAcc >= 0.25) {
+      this.campAcc -= 0.25;
+      this.campHist.push({ x: P.x, y: P.y });
+      if (this.campHist.length > 12) this.campHist.shift();
     }
-    this.startMove(moveId);
+  }
+  camping() {
+    const P = GAME.player, A = GAME.arena, R = BOSS_AI.EDGE_R;
+    if (A && (P.x < A.x + R || P.x > A.x + A.w - R || P.y < A.y + R || P.y > A.y + A.h - R)) return true;
+    const h = this.campHist || [];
+    const need = Math.round(BOSS_AI.CAMP_T / 0.25);
+    if (h.length < need) return false;
+    let mx = 0, my = 0;
+    for (const s of h) { mx += s.x; my += s.y; }
+    mx /= h.length; my /= h.length;
+    return h.every(s => U.dist(s.x, s.y, mx, my) <= BOSS_AI.CAMP_R);
+  }
+
+  // ---- move selection (05.7.1-07, D-21): strict no-repeat, distance bands, anti-camping,
+  // 2-3 move chains. A pending phase-2 opener always goes first and resets the chain. ----
+  logChain() {
+    if (this.chainLen > 0) {
+      if (!this.chainLog) this.chainLog = [];
+      this.chainLog.push({ phase: this.chainPhase, len: this.chainLen });
+      if (this.chainLog.length > 200) this.chainLog.shift();
+    }
+    this.chainLen = 0;
+  }
+  pickMove() {
+    const P = GAME.player, H = GAME.heat || {};
+    if (this.pendingOpener) {
+      const id = this.pendingOpener; this.pendingOpener = undefined;
+      this.logChain(); this.chainLeft = 0;
+      this.startMove(id);
+      return;
+    }
+    const midChain = this.chainLeft > 0;
+    if (!midChain) {
+      this.logChain();
+      const tbl = this.phase >= 2 ? BOSS_AI.CHAIN_P2 : BOSS_AI.CHAIN_P1;
+      this.chainLeft = U.weightedChoice(tbl.map(([n, w]) => ({ n, w }))).n - 1 + (H.chainBonus || 0);
+      this.chainPhase = this.phase;
+    } else this.chainLeft--;
+    const table = this.moveTable();
+    let cands = table.filter(m => m[0] !== this.lastMove);
+    if (!cands.length) cands = table;
+    // a chain continues with attacks: movement only ever opens (and so cancels) a chain
+    if (midChain && cands.some(m => m[0] !== 'chase')) cands = cands.filter(m => m[0] !== 'chase');
+    const d = U.dist(this.x, this.y, P.x, P.y);
+    const band = d < BOSS_AI.BANDS[0] ? 'close' : d < BOSS_AI.BANDS[1] ? 'mid' : 'far';
+    const camp = this.camping();
+    const pick = U.weightedChoice(cands.map(m => {
+      const def = this.moveDef(m[0]);
+      let w = m[1];
+      if (def.band && def.band !== 'any') w *= def.band === band ? BOSS_AI.IN_BAND : BOSS_AI.OUT_BAND;
+      if (camp && def.area) w *= BOSS_AI.AREA_MUL;
+      return { m, w };
+    }));
+    if (pick.m[0] === 'chase') { this.chainLeft = 0; this.chainLen = 0; }   // movement breaks a chain
+    else this.chainLen = (this.chainLen || 0) + 1;
+    this.startMove(pick.m[0]);
   }
 
   update(dt) {
@@ -1861,6 +1922,8 @@ class Boss extends Enemy {
 
     if (this.stun > 0) { clampToArena(this); return; }
 
+    this.trackCamp(dt);
+    const prevState = this.state;
     this.t -= dt;
     const dToP = U.dist(this.x, this.y, P.x, P.y);
     const aToP = U.angle(this.x, this.y, P.x, P.y);
@@ -2116,6 +2179,11 @@ class Boss extends Enemy {
       case 'rest':
         if (this.t <= 0) this.pickMove();
         break;
+    }
+
+    // chain link: a move that just ended mid-chain rests only CHAIN_REST[phase] s (Heat restMul)
+    if (prevState !== 'rest' && this.state === 'rest' && this.chainLeft > 0) {
+      this.t = Math.min(this.t, U.rand(...BOSS_AI.CHAIN_REST[Math.min(2, this.phase)]) * (GAME.heat && GAME.heat.restMul || 1));
     }
 
     clampToArena(this);

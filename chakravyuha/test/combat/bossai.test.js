@@ -13,8 +13,12 @@ module.exports = function ({ R, check, section }) {
 
   // Sandbox helpers: build a boss / mini-boss room directly, run pick distributions with a
   // stubbed startMove, and run real-update sims with telemetry.
+  // Every room() reseeds U deterministically (base + call counter) so the distribution and sim
+  // checks never flake; the margins were verified across several seed bases.
   R(`globalThis.__ba = {
+    seedBase: 7100, n: 0,
     room(id) {
+      U.seed(__ba.seedBase + (++__ba.n));
       GAME.startRun();
       GAME.heat = undefined;
       const P = GAME.player; P.maxhp = 1e9; P.hp = 1e9;
@@ -42,8 +46,9 @@ module.exports = function ({ R, check, section }) {
     picks(B, phase, n, prep) {
       B.phase = phase; B.pendingOpener = undefined; B.lastMove = undefined; B.chainLeft = 0;
       const rec = [];
+      rec.prev = [];
       const orig = B.startMove;
-      B.startMove = function (id) { rec.push(id); B.lastMove = id; };
+      B.startMove = function (id) { rec.prev.push(B.lastMove); rec.push(id); B.lastMove = id; };
       try { for (let i = 0; i < n; i++) { if (prep) prep(B, i); B.pickMove(); } }
       finally { B.startMove = orig; }
       return rec;
@@ -135,8 +140,10 @@ module.exports = function ({ R, check, section }) {
   }
 
   // ---------------- distance bands ----------------
-  // Share ratio >= 1.5x base is only reachable when the band's base share is <= 0.4 (a 0.6
-  // base share caps at 1/0.6 = 1.67x); above that the test checks the odds ratio instead.
+  // Strict no-repeat caps any single move at 50% of picks, so shares are measured only over
+  // picks whose previous move was outside the target set (every target move is a candidate),
+  // against the base-weight share over the same candidate sets. Share ratio >= 1.5x is only
+  // reachable when the base share is <= 0.4 (0.6 caps at 1.67x); above that the odds ratio is used.
   section('bossai: distance bands');
   for (const [band, dist] of [['close', 120], ['far', 700]]) {
     const fails = [], seen = [];
@@ -147,9 +154,15 @@ module.exports = function ({ R, check, section }) {
         B.camping = () => false;
         const rec = __ba.picks(B, ${ph}, 3000, () => { P.x = B.x - ${dist}; P.y = B.y; });
         delete B.camping;
-        let tw = 0, bw = 0; for (const k in W) { tw += W[k]; if (T[k].band === ${J(band)}) bw += W[k]; }
-        const hit = rec.filter(k => T[k].band === ${J(band)}).length;
-        return { base: bw / tw, share: hit / rec.length };
+        const inB = k => k && T[k].band === ${J(band)};
+        let n = 0, hit = 0, base = 0;
+        rec.forEach((k, i) => {
+          const prev = rec.prev[i];
+          if (inB(prev)) return;
+          let tw = 0, bw = 0; for (const c in W) if (c !== prev) { tw += W[c]; if (inB(c)) bw += W[c]; }
+          n++; base += bw / tw; if (inB(k)) hit++;
+        });
+        return { base: n ? base / n : 0, share: n ? hit / n : 0 };
       })()`);
       if (r.base <= 0 || r.base >= 1) continue;
       seen.push(`${id}p${ph}`);
@@ -209,9 +222,10 @@ module.exports = function ({ R, check, section }) {
         const place = () => { B.x = cx + 300; B.y = cy; P.x = cx; P.y = cy; };
         const still = Array.from({ length: 12 }, () => ({ x: cx, y: cy }));
         const circ = Array.from({ length: 12 }, (_, i) => ({ x: cx + Math.cos(i * 0.5) * 150, y: cy + Math.sin(i * 0.5) * 150 }));
-        const share = rec => rec.filter(k => T[k].area).length / rec.length;
-        const a = share(__ba.picks(B, ${ph}, 3000, () => { place(); B.campHist = still.slice(); }));
-        const b = share(__ba.picks(B, ${ph}, 3000, () => { place(); B.campHist = circ.slice(); }));
+        // conditional on the previous move not being an area move (see the bands note)
+        const share = rec => { let n = 0, hit = 0; rec.forEach((k, i) => { const p = rec.prev[i]; if (p && T[p].area) return; n++; if (T[k].area) hit++; }); return n ? hit / n : 0; };
+        const a = share(__ba.picks(B, ${ph}, 6000, () => { place(); B.campHist = still.slice(); }));
+        const b = share(__ba.picks(B, ${ph}, 6000, () => { place(); B.campHist = circ.slice(); }));
         const anyArea = Object.values(T).some(t => t.area), anyNon = Object.values(T).some(t => !t.area);
         return { camp: a, move: b, both: anyArea && anyNon };
       })()`);

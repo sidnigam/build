@@ -986,8 +986,12 @@ const PROJ = {
         marks.push({ type: 'circle', x: tx, y: ty, r: famR });
       }
     } else if (pt.aim === 'line') {
-      deco({ fam: 'beam', x: src.x, y: src.y, extra: { a: base, tell: pt.tell != null ? pt.tell : 0.1 } });
-      marks.push({ type: 'line', x: src.x, y: src.y, a: base, len: def.len, w: def.width });
+      // count/spread fan like 'player' (05.7.1-06): one beam and one line mark per angle
+      for (let i = 0; i < n; i++) {
+        const a = base + (n > 1 ? (i / (n - 1) - 0.5) * pt.spread : 0);
+        deco({ fam: 'beam', x: src.x, y: src.y, extra: { a, tell: pt.tell != null ? pt.tell : 0.1 } });
+        marks.push({ type: 'line', x: src.x, y: src.y, a, len: def.len, w: def.width });
+      }
     } else if (pt.aim === 'self') {
       deco({ fam, x: src.x, y: src.y, extra: { ox: src.x, oy: src.y, gapA: base + U.rand(-0.6, 0.6), gapArc: pt.gapArc || 0 } });
       marks.push({ type: 'ringMark', x: src.x, y: src.y, r: (src.r || 0) + 40, width: 10 });

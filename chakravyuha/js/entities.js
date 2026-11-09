@@ -1548,9 +1548,9 @@ const PHASE2_TITLES = {
 
 // ---------------- BOSS ----------------
 class Boss extends Enemy {
-  constructor(bossId, x, y) {
+  constructor(bossId, x, y, def = DATA.BOSSES[bossId]) {
     super('bhuta', x, y, 1); // base init, then override
-    const d = DATA.BOSSES[bossId];
+    const d = def;
     this.type = bossId; this.bossDef = d;
     this.boss = true;
     this.hp = d.hp; this.maxhp = d.hp;
@@ -1566,11 +1566,20 @@ class Boss extends Enemy {
     this.dmgCalls = 0;
   }
 
+  // ---- overridable hooks (05.7.1-06): MiniBoss (js/minibosses.js) swaps the move tables,
+  // the phase threshold/title and may add custom move states without touching Boss ----
+  moveTable(phase = this.phase) { return (BOSS_MOVESETS[this.type] || {})[phase] || []; }
+  moveDefBase(id) { return BOSS_MOVE_DEFS[id]; }
+  phaseAt() { return 0.5; }
+  phaseTitle() { return PHASE2_TITLES[this.type]; }
+  customInitWind() { return false; }
+  customWindTelegraph() { return false; }
+  customActive(dt, dToP, aToP, speedMul) { return false; }
+
   // ---- moveset data lookup ----
   moveDef(id) {
-    const base = BOSS_MOVE_DEFS[id] || {};
-    const table = BOSS_MOVESETS[this.type] && BOSS_MOVESETS[this.type][this.phase];
-    const entry = table && table.find(m => m[0] === id);
+    const base = this.moveDefBase(id) || {};
+    const entry = this.moveTable().find(m => m[0] === id);
     const overrides = (entry && entry[2]) ? entry[2] : {};
     return { ...base, ...overrides };
   }
@@ -1591,10 +1600,41 @@ class Boss extends Enemy {
     return p;
   }
 
+  // Generic data-driven pattern move (def.pattern -> PROJ.planPattern). Phase 2 adds one
+  // projectile to 'around' / 'radial' / 'player' patterns (enrage scaling).
+  patternFor(def) {
+    const pat = Object.assign({}, def.pattern);
+    if (this.phase === 2 && (pat.aim === 'around' || pat.aim === 'radial' || pat.aim === 'player')) {
+      pat.count = (pat.count || 1) + 1;
+    }
+    return pat;
+  }
+
+  // Fire the armed pattern's volleys (volley 0 uses the plan shown during the wind), then rest.
+  _runPattern(dt) {
+    const def = this.moveDef(this.curMove);
+    const pat = this.patternFor(def);
+    const vol = pat.volleys || 1;
+    const gap = pat.volleyGap || 0.15;
+    const elapsed = (def.active || 0) - this.t;
+    while (this.volley < vol && elapsed >= this.volley * gap) {
+      const plan = this.volley === 0 ? this.patPlan : PROJ.planPattern(this, pat, GAME.player);
+      for (const shot of plan.shots) {
+        this.shoot(shot.vx || 0, shot.vy || 0, this.dmg * (pat.dmgMul || 1), undefined, shot.x, shot.y, shot.fam,
+          Object.assign({}, pat.extra, shot.extra, pat.status ? { status: pat.status } : {}));
+      }
+      this.volley++;
+    }
+    if (this.volley >= vol && this.t <= 0) {
+      this.patPlan = null; this.armed = null;
+      this.state = 'rest'; this.t = def.rest != null ? def.rest : 0.7;
+    }
+  }
+
   // ---- move lifecycle (D-07, D-09) ----
   startMove(id) {
     this.moveSerial = (this.moveSerial || 0) + 1;
-    this.armed = null; this.telegraph = null; this.marks = []; this.slams = null;
+    this.armed = null; this.telegraph = null; this.marks = []; this.slams = null; this.patPlan = null;
     GAME.dangerZones = [];
     this.curMove = id; this.lastMove = id;
     this.struck = false;
@@ -1621,6 +1661,13 @@ class Boss extends Enemy {
 
   // set up one-time wind data (locked aim points, precomputed targets)
   initWind() {
+    if (this.customInitWind()) return;
+    const pdef = this.moveDef(this.curMove);
+    if (pdef.pattern) {
+      this.patPlan = PROJ.planPattern(this, this.patternFor(pdef), GAME.player);
+      this.marks = this.patPlan.marks; this.volley = 0;
+      return;
+    }
     const P = GAME.player;
     const aToP = U.angle(this.x, this.y, P.x, P.y);
     const A = GAME.arena;
@@ -1680,6 +1727,8 @@ class Boss extends Enemy {
 
   // update telegraph/marks each frame during a Wind state
   updateWindTelegraph() {
+    if (this.customWindTelegraph()) return;
+    if (this.moveDef(this.curMove).pattern) { this.marks = this.patPlan ? this.patPlan.marks : []; return; }
     const P = GAME.player;
     const aToP = U.angle(this.x, this.y, P.x, P.y);
     const dToP = U.dist(this.x, this.y, P.x, P.y);
@@ -1747,7 +1796,7 @@ class Boss extends Enemy {
   }
 
   pickMove(depth = 0) {
-    const table = BOSS_MOVESETS[this.type][this.phase];
+    const table = this.moveTable();
     let moveId;
     if (this.pendingOpener) {
       moveId = this.pendingOpener;
@@ -1774,7 +1823,7 @@ class Boss extends Enemy {
     if (this.dead) return;
 
     // phase 2 trigger (D-11): phaseShift beat, then a deterministic opener
-    if (this.phase === 1 && this.hp < this.maxhp * 0.5) {
+    if (this.phase === 1 && this.hp < this.maxhp * this.phaseAt()) {
       this.phase = 2;
       this.state = 'phaseShift'; this.t = 1.2;
       this.armed = null; this.telegraph = null; this.marks = []; this.slams = null;
@@ -1784,8 +1833,9 @@ class Boss extends Enemy {
       VFX.flash(0xfff0c0, 0.4, 0.25);
       VFX.hitstop(6);
       dmgText(this.x, this.y - this.r - 20, '!!', '#ff4430', 28);
-      UI.banner(PHASE2_TITLES[this.type], this.color);
-      const table2 = BOSS_MOVESETS[this.type][2] || [];
+      const title = this.phaseTitle();
+      if (title) UI.banner(title, this.color);
+      const table2 = this.moveTable(2);
       const openerEntry = table2.find(m => m[2] && m[2].opener);
       this.pendingOpener = openerEntry ? openerEntry[0] : undefined;
     }
@@ -1812,6 +1862,10 @@ class Boss extends Enemy {
       this.windT = (this.windT || 0) + dt;
       this.updateWindTelegraph();
       if (this.t <= 0) this.arm();
+    } else if (this.patPlan && this.state === this.curMove && this.moveDef(this.curMove).pattern) {
+      this._runPattern(dt);
+    } else if (this.customActive(dt, dToP, aToP, speedMul)) {
+      /* subclass-owned move state */
     } else switch (this.state) {
       case 'intro':
         if (this.t <= 0) this.pickMove();

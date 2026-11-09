@@ -427,7 +427,10 @@
       "flux_style": "style_1x5_positive_flux",
       "flux_base_seed": 75070,
       "flux_subject": "Full-length figure from head to feet: a river rakshasa with dark blue-green scaled skin, webbed clawed hands, a fin-like crest along the head, dripping water, standing ankle-deep in dark water. Exactly two arms, the fin crest is the only thing on the head, the plain grey backdrop directly behind it.",
-      "cultural_flag": "QA-03"
+      "cultural_flag": "QA-03",
+      "accepted_attempt": 0,
+      "rejected": {},
+      "rejected_reasons": []
     },
     "subahu": {
       "kind": "boss",

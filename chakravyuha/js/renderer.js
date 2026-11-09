@@ -1,6 +1,10 @@
 // js/renderer.js — CAMERA global (Phase 2: drives PixiJS worldContainer; ctx transform removed)
 // Phase 3: adds shake-intensity scaling + opt-out (VFX-02), kill-zoom punch and
 // directional kick (VFX-02), all reading SETTINGS at call time (no top-level ref).
+// Phase 05.7.1-08 (D-18/D-19): base + context zoom Z under the punch pulse p (z = Z·p):
+//   screen = z·(world − F) + Z·(F − S) + k     tz = Z·p
+//   tx = Z·(F.x − S.x) − z·F.x + k.x            (with Z = 1 this is exactly the 05.1 D-06 formula)
+// S is the world top-left of the unpunched view; the clamp/desired scroll use the VW/Z × VH/Z view.
 'use strict';
 
 const CAMERA = {
@@ -12,9 +16,12 @@ const CAMERA = {
   kx: 0, ky: 0,
 
   // ---- Phase 05.1: scroll/transform state (D-05) ----
-  sx: 0, sy: 0,               // world coord of the view's top-left, pre-shake, zoom 1
+  sx: 0, sy: 0,               // world coord of the view's top-left, pre-shake, unpunched (base zoom Z)
   tx: 0, ty: 0, tz: 1,        // last full transform: screen = world * tz + (tx, ty)
   VW: 1280, VH: 720,          // viewport size
+  // ---- 05.7.1-08 (D-18/D-19): base zoom (Z, eased) and its context target (ZT) ----
+  Z: 1, ZT: 1,
+  _tb: { x: 0, y: 0 },        // eased threat bias (world px) added to the look-ahead
 
   CFG: {
     FOLLOW_RATE: 6,       // tunable: exponential follow damping rate (1/s)
@@ -26,6 +33,13 @@ const CAMERA = {
     IND_INSET: { l: 28, r: 28, t: 96, b: 64 },  // tunable: off-screen indicator inset rect
     IND_SECTORS: 16,       // tunable: angular buckets for indicator clustering
     IND_MAX: 8,            // tunable: max indicator arrows shown at once
+    // 05.7.1-08: Hades-close base zoom per room context (D-18/D-19). Never below 1 (no blank margins).
+    ZOOM: { combat: 1.3, boss: 1.15, large: 1.2, rest: 1.4 },  // tunable
+    ZOOM_RATE: 3,          // tunable: exponential ease rate of Z toward ZT (1/s)
+    ZOOM_OVERRIDE: null,   // number pins the base zoom (tests / tooling); null = context zoom
+    THREAT_BIAS_MAX: 60,   // tunable: max lean toward winding/long-shot threats (px)
+    THREAT_BIAS_R: 900,    // tunable: threats farther than this from the player are ignored (px)
+    THREAT_RATE: 2,        // tunable: ease rate of the applied threat bias (1/s)
   },
 
   // D-13: 0..1 multiplier applied to GAME.shake and to the kick/punch systems.
@@ -109,11 +123,37 @@ const CAMERA = {
     return { x: this.VW / 2, y: (pad.t + this.VH - pad.b) / 2 };
   },
 
-  // D-07: clamp a desired scroll (dx,dy) to the world rect R, one axis at a time.
-  // If the world rect is narrower than the viewport on an axis, center it instead of clamping.
-  clampScroll(dx, dy, R) {
-    const loX = R.x, hiX = R.x + R.w - this.VW;
-    const loY = R.y, hiY = R.y + R.h - this.VH;
+  // 05.7.1-08 (D-19): the base zoom this room context wants. Hub / no player -> 1 (identity);
+  // boss or mini-boss room -> ZOOM.boss; rest rooms (sarovar/kubera) -> ZOOM.rest; combat ->
+  // ZOOM.combat (ZOOM.large for oversized arenas — inert until 05.7.3 per-room sizes). Never below
+  // the zoom at which the world rect still covers the viewport, and never below 1.
+  zoomTarget() {
+    const G = (typeof GAME !== 'undefined') ? GAME : null;
+    if (!G || !G.player || G.state === 'hub') return 1;
+    const C = this.CFG, Zc = C.ZOOM;
+    const D = (typeof DATA !== 'undefined' && DATA.ARENA) ? DATA.ARENA : null;
+    const A = G.arena || { w: this.VW, h: this.VH };
+    const R = this.worldRectFor(A, this.pad());
+    let t;
+    if (typeof C.ZOOM_OVERRIDE === 'number') t = C.ZOOM_OVERRIDE;
+    else {
+      const alive = b => !!b && !b.dead;
+      const restW = D && D.sizes && D.sizes.rest ? D.sizes.rest.w : 1180;
+      const combat = D && D.sizes && D.sizes.combat ? D.sizes.combat : { w: 2240, h: 1300 };
+      if (alive(G.bossRef) || alive(G.miniRef) || G.arenaKind === 'boss') t = Zc.boss;
+      else if (G.reward === 'sarovar' || G.reward === 'kubera' || G.arenaKind === 'rest' || A.w <= restW) t = Zc.rest;
+      else if (A.w * A.h > combat.w * combat.h * 1.05) t = Zc.large;
+      else t = Zc.combat;
+    }
+    return Math.max(1, this.VW / R.w, this.VH / R.h, t);
+  },
+
+  // D-07: clamp a desired scroll (dx,dy) to the world rect R, one axis at a time, for a view of
+  // VW/z × VH/z world px (05.7.1-08). If the world rect is narrower than the view on an axis,
+  // center it instead of clamping.
+  clampScroll(dx, dy, R, z = this.Z) {
+    const loX = R.x, hiX = R.x + R.w - this.VW / z;
+    const loY = R.y, hiY = R.y + R.h - this.VH / z;
     const x = loX > hiX ? (loX + hiX) / 2 : U.clamp(dx, loX, hiX);
     const y = loY > hiY ? (loY + hiY) / 2 : U.clamp(dy, loY, hiY);
     return { x, y };
@@ -131,22 +171,24 @@ const CAMERA = {
   },
 
   // D-08: desired (unclamped-then-clamped) scroll so that P + look-ahead sits at the screen anchor.
-  desiredScroll(P, aimW, move, R) {
+  // The anchor is in screen px, so at base zoom z it sits anchor/z world px from the view's top-left.
+  desiredScroll(P, aimW, move, R, z = this.Z, bias = null) {
     const la = this.lookAhead(P, aimW, move);
+    if (bias) { la.x += bias.x; la.y += bias.y; }
     const a = this.anchor();
-    return this.clampScroll(P.x + la.x - a.x, P.y + la.y - a.y, R);
+    return this.clampScroll(P.x + la.x - a.x / z, P.y + la.y - a.y / z, R, z);
   },
 
-  // D-06: pure transform derivation. screen = z*(world - F) + (F - S) + k.
+  // D-06 + 05.7.1-08: pure transform derivation. screen = z*(world - F) + Z*(F - S) + k, z = Z*p.
   // Does not store — call _store(this.xform()) to commit. shx/shy are extra jitter (e.g. bridge shake).
   xform(shx = 0, shy = 0) {
     const s = this.shakeScale();
-    const z = this.zoom;
+    const Z = this.Z, p = this.zoom, z = Z * p;
     const fx = this.fx, fy = this.fy;
     const kx = this.kx * s + shx, ky = this.ky * s + shy;
     const tz = z;
-    const tx = fx - z * fx - this.sx + kx;
-    const ty = fy - z * fy - this.sy + ky;
+    const tx = Z * (fx - this.sx) - z * fx + kx;
+    const ty = Z * (fy - this.sy) - z * fy + ky;
     return { tx, ty, tz };
   },
 
@@ -247,9 +289,10 @@ const CAMERA = {
   },
 
   // Shared desired-scroll computation for follow()/snap(): identity (0,0) in the hub or with no player.
+  // 05.7.1-08: hub / no player also forces the base zoom back to 1 (identity transform).
   _followTarget() {
     const G = (typeof GAME !== 'undefined') ? GAME : null;
-    if (!G || !G.player || G.state === 'hub') return null;
+    if (!G || !G.player || G.state === 'hub') { this.Z = this.ZT = 1; return null; }
     const P = G.player;
     const R = this.worldRectFor(G.arena, this.pad());
     const I = (typeof INPUT !== 'undefined') ? INPUT : { mx: P.x, my: P.y, ax: 0, ay: 0, keys: {}, bindings: null };
@@ -266,8 +309,14 @@ const CAMERA = {
   },
 
   // D-08: runs every real frame (GAME.frame()) with real dt — keeps animating during hitstop.
+  // 05.7.1-08: Z eases toward the context target first, so the desired scroll uses the current Z.
+  // Coming out of the hub (no follow target last frame) the zoom snaps instead of swooping.
   follow(dt) {
+    this.ZT = this.zoomTarget();
+    if (this._noTarget) this.Z = this.ZT;
+    else this.Z += (this.ZT - this.Z) * (1 - Math.exp(-this.CFG.ZOOM_RATE * dt));
     const D = this._followTarget();
+    this._noTarget = !D;
     if (!D) { this.sx = 0; this.sy = 0; this._store(this.xform()); return; }
     const dist = Math.hypot(D.x - this.sx, D.y - this.sy);
     if (dist > this.CFG.SNAP_DIST) {
@@ -282,7 +331,9 @@ const CAMERA = {
 
   // Called by ROOMS.enterRoom after the player is placed — room changes never swoop.
   snap() {
+    this.Z = this.ZT = this.zoomTarget();   // 05.7.1-08: room changes snap the zoom too (no swoop)
     const D = this._followTarget();
+    this._noTarget = !D;
     if (!D) { this.sx = 0; this.sy = 0; this._store(this.xform()); return; }
     this.sx = D.x; this.sy = D.y;
     this._store(this.xform());

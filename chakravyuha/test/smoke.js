@@ -2202,10 +2202,15 @@ globalThis.__arenaResults = {};
     && wr.x === -70 && wr.y === -116 && wr.w === 2480 && wr.h === 1610
     && GAME.arenaPad === DATA.ARENA.padBySize.combat;
 
-  // (b) sarovar room is legacy-size (rest) and the camera transform is exactly identity
+  // (b) sarovar room is legacy-size (rest). 05.7.1-08 (D-19 overrides the 05.1 "rest = identity"
+  // rule): the camera snaps to the rest zoom with the scroll clamped inside the world rect.
   ROOMS.enterRoom('sarovar');
   const A2 = GAME.arena;
-  R.sarovarRestIdentity = A2.w === 1180 && A2.h === 580 && CAMERA.tx === 0 && CAMERA.ty === 0 && CAMERA.tz === 1;
+  const wr2 = ROOMS.worldRect(), Z2 = CAMERA.Z;
+  R.sarovarRestZoom = A2.w === 1180 && A2.h === 580
+    && Math.abs(CAMERA.tz - CAMERA.CFG.ZOOM.rest) < 1e-9 && Math.abs(Z2 - CAMERA.CFG.ZOOM.rest) < 1e-9
+    && CAMERA.sx >= wr2.x - 1e-9 && CAMERA.sx <= wr2.x + wr2.w - CAMERA.VW / Z2 + 1e-9
+    && CAMERA.sy >= wr2.y - 1e-9 && CAMERA.sy <= wr2.y + wr2.h - CAMERA.VH / Z2 + 1e-9;
 
   // (c) boss room is 1600x960
   GAME.startRun();
@@ -2243,18 +2248,21 @@ globalThis.__arenaResults = {};
   // (f) after entering a combat room the camera scroll is clamped inside the (padded) world rect
   GAME.startRun();
   ROOMS.enterRoom('mudra');
-  R.cameraClampedOnEntry = CAMERA.sx >= -70 && CAMERA.sx <= 1130 && CAMERA.sy >= -116 && CAMERA.sy <= 774;
+  // 05.7.1-08: bounds follow the live base zoom (the view is VW/Z x VH/Z world px)
+  const wrE = ROOMS.worldRect(), ZE = CAMERA.Z;
+  R.cameraClampedOnEntry = ZE >= 1 && CAMERA.sx >= wrE.x - 1e-9 && CAMERA.sx <= wrE.x + wrE.w - CAMERA.VW / ZE + 1e-9
+    && CAMERA.sy >= wrE.y - 1e-9 && CAMERA.sy <= wrE.y + wrE.h - CAMERA.VH / ZE + 1e-9;
 
   ROOMS.setArena('rest');
 })();
 `, sandbox);
 const arn = vm.runInContext('__arenaResults', sandbox);
 check('ROOMS.setArena: first run room is a 2240x1300 combat arena; ROOMS.worldRect() is {-70,-116,2480,1610} (05.4 art padding), GAME.arenaPad exposed', arn.firstRoomCombat);
-check('ROOMS.setArena: sarovar room is legacy 1180x580; camera transform is exactly identity', arn.sarovarRestIdentity);
+check('ROOMS.setArena: sarovar room is legacy 1180x580; camera snaps to the rest zoom (D-19) with the scroll clamped', arn.sarovarRestZoom);
 check('ROOMS.setArena: boss room is 1600x960', arn.bossSize);
 check('ROOMS.setArena mutates GAME.arena in place (a held reference sees the new size)', arn.inPlaceMutation);
 check('hazards scale with arena size: fireVent count >=4 on average over 20 Naraka rooms; Vaitarani combat rooms get 2 river bands clear of spawn', arn.hazardScaling);
-check('CAMERA.snap() on room entry leaves the scroll clamped to the world rect', arn.cameraClampedOnEntry);
+check('CAMERA.snap() on room entry leaves the scroll clamped to the world rect at the live zoom (VW/Z x VH/Z view)', arn.cameraClampedOnEntry);
 
 vm.runInContext(`
 globalThis.__hazardNonCombatErrors = [];
@@ -3064,6 +3072,7 @@ globalThis.__camResults = {};
   const savedArena = Object.assign({}, GAME.arena);
   const savedWx = INPUT.wx, savedWy = INPUT.wy, savedAx = INPUT.ax, savedAy = INPUT.ay;
   SETTINGS.reset();
+  CAMERA.CFG.ZOOM_OVERRIDE = 1; CAMERA.Z = CAMERA.ZT = 1;   // 05.7.1-08: pin the base zoom — generic 05.1 Z=1 math
 
   // 1. worldRectFor
   {
@@ -3256,6 +3265,7 @@ globalThis.__camResults = {};
   CAMERA.sx = 0; CAMERA.sy = 0;
   CAMERA._store(CAMERA.xform());
   SETTINGS.reset();
+  CAMERA.CFG.ZOOM_OVERRIDE = null;   // 05.7.1-08: back to context zoom
 })();
 `, sandbox);
 const cam = vm.runInContext('__camResults', sandbox);
@@ -3302,6 +3312,7 @@ globalThis.__alignResults = {};
   const savedArena = Object.assign({}, GAME.arena), savedArenaPad = GAME.arenaPad;
 
   try {
+    CAMERA.CFG.ZOOM_OVERRIDE = 1; CAMERA.Z = CAMERA.ZT = 1;   // 05.7.1-08: pin the base zoom — generic 05.1 Z=1 math
     const wc = mk(), bs = mk(), rec = mkRecCtx();
     SPRITES.worldContainer = wc;
     SPRITES.bridgeSprite = bs;
@@ -3356,17 +3367,31 @@ globalThis.__alignResults = {};
     CAMERA._store(CAMERA.xform());
     SETTINGS.reset();
 
-    // Legacy (rest) arena in combat: follow() converges back to identity — bridge sprite untouched.
+    // Legacy (rest) arena in combat. 05.7.1-08 (D-19 overrides the 05.1 identity rule): follow()
+    // converges to the clamped rest-zoom transform, and the bridge sprite still counter-transforms.
+    CAMERA.CFG.ZOOM_OVERRIDE = null;
     GAME.state = 'combat';
     ROOMS.setArena('rest');
     GAME.player = { x: GAME.arena.x + 90, y: GAME.arena.y + GAME.arena.h / 2 };
     INPUT.wx = GAME.player.x; INPUT.wy = GAME.player.y; INPUT.ax = 0; INPUT.ay = 0;
     CAMERA.resetFx(); CAMERA.sx = 999; CAMERA.sy = 999;
-    for (let fr = 0; fr < 180; fr++) CAMERA.follow(1 / 60);
+    for (let fr = 0; fr < 600; fr++) CAMERA.follow(1 / 60);
     CAMERA.begin();
-    R.legacyIdentity = CAMERA.tx === 0 && CAMERA.ty === 0 && CAMERA.tz === 1
-      && wc.position.x === 0 && wc.position.y === 0 && wc.scale.x === 1
-      && bs.position.x === 0 && bs.position.y === 0 && bs.scale.x === 1 && bs.scale.y === 1;
+    {
+      const Zr = CAMERA.CFG.ZOOM.rest, wrR = ROOMS.worldRect();
+      const D = CAMERA._followTarget();
+      const cl = CAMERA.clampScroll(D.x, D.y, wrR, Zr);
+      const near = (p, q) => Math.abs(p - q) < 1e-6;
+      R.legacyRestZoom = near(CAMERA.tz, Zr) && near(CAMERA.Z, Zr)
+        && near(CAMERA.sx, cl.x) && near(CAMERA.sy, cl.y)
+        && CAMERA.sx >= wrR.x - 1e-6 && CAMERA.sx <= wrR.x + wrR.w - CAMERA.VW / Zr + 1e-6
+        && CAMERA.sy >= wrR.y - 1e-6 && CAMERA.sy <= wrR.y + wrR.h - CAMERA.VH / Zr + 1e-6
+        && near(CAMERA.tx, -Zr * CAMERA.sx) && near(CAMERA.ty, -Zr * CAMERA.sy)
+        && wc.position.x === CAMERA.tx && wc.position.y === CAMERA.ty && wc.scale.x === CAMERA.tz
+        && near(bs.position.x, -CAMERA.tx / CAMERA.tz) && near(bs.position.y, -CAMERA.ty / CAMERA.tz)
+        && near(bs.scale.x, 1 / CAMERA.tz) && near(bs.scale.y, 1 / CAMERA.tz);
+    }
+    CAMERA.CFG.ZOOM_OVERRIDE = 1; CAMERA.Z = CAMERA.ZT = 1;
 
     // coverFit: matches the old fixed-viewport formula, and cover-fits an expanded combat world rect.
     const legacyRect = { x: -30, y: -30, w: 1340, h: 780 };
@@ -3412,12 +3437,13 @@ globalThis.__alignResults = {};
     CAMERA.sx = 0; CAMERA.sy = 0;
     CAMERA._store(CAMERA.xform());
     SETTINGS.reset();
+    CAMERA.CFG.ZOOM_OVERRIDE = null;   // 05.7.1-08: back to context zoom
   }
 })();
 `, sandbox);
 const align = vm.runInContext('__alignResults', sandbox);
 check('camera/bridge alignment: Pixi mapping == bridge counter-transform mapping == CAMERA.worldToScreen, under identity/scroll/scroll+zoom+kick+shake', align.alignment);
-check('legacy (rest) arena in combat: CAMERA.follow() converges to exact identity; bridge sprite untouched (pos 0,0 scale 1)', align.legacyIdentity);
+check('legacy (rest) arena in combat: CAMERA.follow() converges to the clamped rest-zoom transform (D-19); bridge sprite counter-transform == (-tx/tz, -ty/tz, 1/tz)', align.legacyRestZoom);
 check('SPRITES.coverFit: matches the old fixed-viewport formula; cover-fits an expanded combat world rect', align.coverFit);
 check('GAME.render(): does not throw with mocked SPRITES, in combat and hub states'
   + (align.renderErr ? ' — ' + align.renderErr : ''), align.renderNoThrow);
@@ -3434,6 +3460,7 @@ globalThis.__aimResults = {};
   const savedEnemies = GAME.enemies;   // 05.2-01: aim-assist now scans GAME.enemies — keep it empty so it can't bend this exact-angle test
 
   try {
+    CAMERA.CFG.ZOOM_OVERRIDE = 1; CAMERA.Z = CAMERA.ZT = 1;   // 05.7.1-08: pin the base zoom — generic 05.1 Z=1 math
     INPUT.lmb = false;
     // 1/2. syncAim under a scrolled camera resolves screen mouse -> world aim target; Player.update aims at it.
     CAMERA.resetFx(); CAMERA.sx = 900; CAMERA.sy = 600; GAME.shake = 0; CAMERA.begin();
@@ -3482,6 +3509,7 @@ globalThis.__aimResults = {};
     PAD._aimAng = savedAimAng; PAD._prevButtons = savedPrevButtons; PAD._prevPressed = {};
     GAME.enemies = savedEnemies;
     CAMERA.resetFx(); CAMERA.sx = 0; CAMERA.sy = 0; CAMERA._store(CAMERA.xform());
+    CAMERA.CFG.ZOOM_OVERRIDE = null;   // 05.7.1-08: back to context zoom
   }
 })();
 `, sandbox);
@@ -3940,6 +3968,7 @@ globalThis.__cullResults = {};
   const savedWx = INPUT.wx, savedWy = INPUT.wy, savedAx = INPUT.ax, savedAy = INPUT.ay;
 
   try {
+    CAMERA.CFG.ZOOM_OVERRIDE = 1; CAMERA.Z = CAMERA.ZT = 1;   // 05.7.1-08: pin the base zoom — generic 05.1 Z=1 math
     GAME.startRun();
     GAME.biomeIdx = 0; GAME.biome = DATA.BIOMES[0];
     ROOMS.enterRoom('mudra');   // combat arena (2240x1300)
@@ -4079,6 +4108,8 @@ globalThis.__cullResults = {};
     if (typeof savedWy === 'undefined') delete INPUT.wy; else INPUT.wy = savedWy;
     CAMERA.resetFx();
     CAMERA.sx = 0; CAMERA.sy = 0;
+    CAMERA.CFG.ZOOM_OVERRIDE = null;   // 05.7.1-08: back to context zoom
+    CAMERA.Z = CAMERA.ZT = 1;
     CAMERA._store(CAMERA.xform());
   }
 })();
@@ -4116,6 +4147,7 @@ globalThis.__indResults = {};
   const savedCamSx = CAMERA.sx, savedCamSy = CAMERA.sy, savedDevice = INPUT.device;
 
   try {
+    CAMERA.CFG.ZOOM_OVERRIDE = 1; CAMERA.Z = CAMERA.ZT = 1;   // 05.7.1-08: pin the base zoom — generic 05.1 Z=1 math
     CAMERA.resetFx(); CAMERA.sx = 0; CAMERA.sy = 0; CAMERA._store(CAMERA.xform());   // identity transform — world == screen
     GAME.state = 'combat';
     const a = CAMERA.anchor();
@@ -4191,6 +4223,7 @@ globalThis.__indResults = {};
     INPUT.device = savedDevice;
     CAMERA.resetFx();
     CAMERA.sx = savedCamSx || 0; CAMERA.sy = savedCamSy || 0;
+    CAMERA.CFG.ZOOM_OVERRIDE = null;   // 05.7.1-08: back to context zoom
     CAMERA._store(CAMERA.xform());
   }
 })();

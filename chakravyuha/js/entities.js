@@ -45,6 +45,21 @@ function hitEnemy(e, base, src = 'attack', opts = {}) {
   const khandava = src === 'chain' && P.has('duo_khandava');
   if (khandava && e.burns.length > 0) dmg *= 1.5;
 
+  // 05.7.1-05 (D-05): the naga shield-guard's frontal guard soaks hits from within ±guardArc
+  // of its facing until it breaks (raw damage drains it)
+  if (e.def && e.def.ai === 'shield' && e.guardHp > 0 &&
+      Math.abs(U.angDiff(e.face != null ? e.face : 0, U.angle(e.x, e.y, P.x, P.y))) < e.def.guardArc) {
+    e.guardHp -= dmg;
+    dmg *= 1 - e.def.guardReduce;
+    VFX.emit('phit', e.x, e.y, e.face || 0, e.color);
+    if (e.guardHp <= 0) {
+      e.guardHp = 0;
+      VFX.emit('pblast', e.x, e.y, 0, e.color);
+      AUDIO.sfx('shield');
+      dmgText(e.x, e.y - e.r - 18, 'GUARD BROKEN', e.color, 13);
+    }
+  }
+
   // 05.7.1-05 (D-07): elite damage reduction — shielded blocks whole hits, armored halves them
   if (e.shieldHits > 0 && src !== 'burn') {
     e.shieldHits--;
@@ -934,6 +949,7 @@ class Enemy {
       }
     } else if (mods) { this.hp *= mods.hp || 1; this.maxhp = this.hp; this.dmg *= mods.dmg || 1; this.weak = true; }
     this.rallied = false;            // set each frame by ENEMY_AI.tick (rallying elites / banner aura)
+    if (d.guard) this.guardHp = d.guard * scale;   // 05.7.1-05: naga shield-guard frontal guard
     this.dead = false; this.boss = false;
     this.flash = 0; this.stun = 0; this.maya = 0; this.slowT = 0; this.slowF = 1;
     this.burns = [];
@@ -1170,6 +1186,117 @@ class Enemy {
             burst(this.x, this.y, this.color, 8, 120, 0.4);
           }
           this.t = 5;
+        }
+        break;
+      }
+
+      // ---- 05.7.1-05 (D-05): Naraka / Patala signature enemies ----
+      case 'swarm': {
+        // pishacha: orbit the player at 90-130 px, then dart in after a bite tell
+        if (this.orbA == null) {
+          this.orbA = U.angle(P.x, P.y, this.x, this.y);
+          this.orbDir = U.chance(0.5) ? 1 : -1;
+          this.orbR = U.rand(90, 130);
+        }
+        if (this.state === 'dartWind') {
+          if (this.t <= 0) { this.armAttack(); this.lungeA = aToP; this.state = 'dart'; this.t = 0.3; AUDIO.sfx('swing'); }
+          break;
+        }
+        if (this.state === 'dart') {
+          this.x += Math.cos(this.lungeA) * 420 * dt;
+          this.y += Math.sin(this.lungeA) * 420 * dt;
+          this.touchAttack(U.dist(this.x, this.y, P.x, P.y), dt, this.dmg);
+          if (this.t <= 0) {
+            this.endAttack(); this.state = 'idle'; this.t = U.rand(1.2, 2.0) * this.cdMul;
+            this.orbA = U.angle(P.x, P.y, this.x, this.y);
+          }
+          break;
+        }
+        const spd = this.curSpeed();
+        this.orbA += dt * Math.min(2.2, 0.9 * spd / this.orbR) * this.orbDir;
+        const tx = P.x + Math.cos(this.orbA) * this.orbR, ty = P.y + Math.sin(this.orbA) * this.orbR;
+        const d = U.dist(this.x, this.y, tx, ty);
+        if (d > 1e-6) { const st = Math.min(d, spd * dt); this.x += (tx - this.x) / d * st; this.y += (ty - this.y) / d * st; }
+        if (this.t <= 0 && dToP < this.orbR + 60 && ENEMY_AI.requestToken(this, 'bite')) {
+          this.state = 'dartWind';
+          this.windUp('bite', ENEMY_AI.windTime('bite', 0.25), { type: 'circle', r: this.r + 8 });
+        }
+        break;
+      }
+
+      case 'mortar':
+      case 'trapper': {
+        // kumbhipaka stoker: 3 burning mortars around the player. mayavi weaver: alternates root
+        // snares (mortar family) with a pair of slowing wisps. Every tell is a 'status' wind-up;
+        // a lob started from outside the view band gets +LONG_TELL_BONUS and the longShot flag.
+        const ER = DATA.WAVES.engageRange;
+        if (this.state === 'lob') {
+          if (this.t <= 0) {
+            this.armAttack();
+            if (this.lobKind === 'wisp') {
+              const ws = DATA.PROJECTILES.wisp.speed;
+              for (const off of [-0.4, 0.4]) this.fire('wisp', Math.cos(aToP + off) * ws, Math.sin(aToP + off) * ws, this.dmg);
+            } else if (this.lobKind === 'snare') {
+              for (const shot of this.plan.shots)
+                this.fire('mortar', 0, 0, this.dmg * 0.5, Object.assign({}, shot.extra, { flight: 0.9, r: 46, status: { type: 'root', dur: 1.0 } }));
+            } else {
+              for (const shot of this.plan.shots)
+                this.fire('mortar', 0, 0, this.dmg * (shot.dmgMul || 1), Object.assign({}, shot.extra, { pool: this.def.pool }));
+            }
+            this.marks = null; this.plan = null; this.longShot = false;
+            if (this.def.ai === 'trapper') this.trapAlt = !this.trapAlt;
+            this.endAttack(); this.state = 'idle';
+            this.t = (this.def.ai === 'trapper' ? U.rand(2.2, 3.0) : U.rand(2.4, 3.4)) * this.cdMul;
+          }
+          break;
+        }
+        ENEMY_AI.steer(this, dt);
+        if (this.t <= 0) {
+          if (dToP <= ER && ENEMY_AI.requestToken(this, 'ranged')) {
+            const long = !ENEMY_AI.inViewBand(this.x, this.y, P);
+            const bonus = long ? ENEMY_AI.CFG.LONG_TELL_BONUS : 0;
+            this.state = 'lob'; this.longShot = long;
+            if (this.def.ai === 'trapper' && this.trapAlt) {
+              this.lobKind = 'wisp';
+              this.windUp('status', ENEMY_AI.windTime('status', 0.45) + bonus, { type: 'circle', r: this.r + 14 });
+            } else {
+              const snare = this.def.ai === 'trapper';
+              this.lobKind = snare ? 'snare' : 'mortar';
+              this.plan = PROJ.planPattern(this, snare ? { fam: 'mortar', aim: 'around', count: 2, radius: 90 }
+                : { fam: 'mortar', aim: 'around', count: 3, radius: 110 }, P);
+              if (snare) for (const m of this.plan.marks) m.r = 46;
+              this.windUp('status', ENEMY_AI.windTime('status', 0.45) + bonus);
+              this.marks = this.plan.marks;
+            }
+          } else this.t = 0.3;
+        }
+        break;
+      }
+
+      case 'shield': {
+        // naga shield-guard: turns its frontal guard toward the player, thrusts after a line tell
+        if (this.face == null) this.face = aToP;
+        if (this.state === 'thrust') {
+          if (this.t <= 0) {
+            this.armAttack();
+            const ux = Math.cos(this.thrustA), uy = Math.sin(this.thrustA);
+            const rx = P.x - this.x, ry = P.y - this.y;
+            const along = rx * ux + ry * uy, across = Math.abs(-rx * uy + ry * ux);
+            if (along >= -P.r && along <= 120 + P.r && across < this.r + P.r) {
+              this.hurtPlayer(this.dmg, { status: { type: 'knock', force: 380 } });
+              P.meleeRetaliate(this);
+            }
+            GAME.rings.push({ x: this.x + ux * 60, y: this.y + uy * 60, r: 24, t: 0.15, color: this.color });
+            AUDIO.sfx('swing');
+            this.endAttack(); this.state = 'idle'; this.t = U.rand(1.4, 2.2) * this.cdMul;
+          }
+          break;
+        }
+        this.face += U.clamp(U.angDiff(this.face, aToP), -2.5 * dt, 2.5 * dt);
+        ENEMY_AI.steer(this, dt);
+        if (dToP < 120 && this.t <= 0 && ENEMY_AI.requestToken(this, 'melee')) {
+          this.state = 'thrust'; this.thrustA = this.face;
+          this.windUp('melee', ENEMY_AI.windTime('melee', 0.45), { type: 'line', a: this.thrustA, len: 120 });
         }
         break;
       }

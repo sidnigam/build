@@ -131,6 +131,15 @@ function drawOverlays(ctx, e, headY, feetY) {
     ctx.fillText('z z z', e.x + e.r * 0.5, headY - 8);
   }
 
+  // 05.7.1-05 (D-05): naga shield-guard's frontal guard arc while it holds
+  if (e.guardHp > 0 && e.def && e.def.guardArc) {
+    const midY = (headY + feetY) / 2, f = e.face || 0;
+    ctx.strokeStyle = '#d8fff0'; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.arc(e.x, midY, e.r + 5, f - e.def.guardArc, f + e.def.guardArc); ctx.stroke();
+    ctx.strokeStyle = e.color; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(e.x, midY, e.r + 5, f - e.def.guardArc, f + e.def.guardArc); ctx.stroke();
+  }
+
   // 05.7.1-05 (D-07): elite aura ring in the first modifier's colour (slow pulse unless
   // screenFlash is off), warded hex ring while the ward is up
   const elite = e.elite && e.elite.length ? e.elite : null;

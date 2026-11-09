@@ -200,6 +200,10 @@ DATA.KIT = {
 
 // ---------- ENEMIES ----------
 // ai: chase | lunge | shoot | spread | teleport | tank | charge | summon
+//     05.7.1-05 (D-05): swarm (pishacha) | mortar (kumbhipaka) | shield (nagaguard) | trapper (mayavi)
+//     | sniper (javelineer) | buffer (bannerman) | healer (brahmarakshasa) | burrow (jalarakshasa)
+// band: optional per-type [min, max] range band (overrides ENEMY_AI's role band); pack: units per
+// composeWave pick (cost is per unit); all new types are asuras/rakshasas/pishachas/nagas, never gods
 // role (05.7.1-04, ENEMY_AI): melee | heavy use the melee slot ring, ranged | support the ranged
 // ring; fam: projectile family the shooter fires (DATA.PROJECTILES)
 DATA.ENEMIES = {
@@ -219,6 +223,15 @@ DATA.ENEMIES = {
                color: '#e0a23c', cost: 4 },
   yatudhana: { id: 'yatudhana', role: 'support', name: 'Yatudhana Conjurer', ai: 'summon', hp: 72, spd: 75, r: 14, dmg: 8,
                color: '#ff9ad5', cost: 4 },
+  // ---- 05.7.1-05 (D-05): 2 signature enemies per biome (start values; plan 11 tunes) ----
+  pishacha:   { id: 'pishacha', name: 'Pishacha Swarm', ai: 'swarm', role: 'melee', hp: 14, spd: 210, r: 9, dmg: 6,
+                color: '#d9a066', cost: 0.5, pack: 5 },
+  kumbhipaka: { id: 'kumbhipaka', name: 'Kumbhipaka Stoker', ai: 'mortar', role: 'ranged', hp: 70, spd: 70, r: 16, dmg: 14,
+                color: '#ff8a3c', cost: 3, band: [300, 480], pool: { status: { type: 'burn', dps: 4, dur: 2 }, r: 50, dur: 3 } },
+  nagaguard:  { id: 'nagaguard', name: 'Naga Shield-Guard', ai: 'shield', role: 'melee', hp: 110, spd: 95, r: 17, dmg: 15,
+                color: '#2fbf8f', cost: 3, guard: 80, guardArc: 1.05, guardReduce: 0.85 },
+  mayavi:     { id: 'mayavi', name: 'Mayavi Weaver', ai: 'trapper', role: 'support', hp: 60, spd: 85, r: 14, dmg: 9,
+                color: '#b07dff', cost: 3, band: [280, 420] },
 };
 
 // ---------- WAVES (Phase 05.1: denser encounters, D-18/D-19) ----------
@@ -321,14 +334,14 @@ DATA.BIOMES = [
   {
     id: 'naraka', name: 'NARAKA', sub: 'The Iron City of Yama', rooms: 5,
     bg: '#160a0e', floor: '#241016', accent: '#ff5533', wall: '#3d1a20',
-    enemies: ['preta', 'rakshasa', 'archer'], boss: 'tataka', hazard: 'fireVent',
+    enemies: ['preta', 'rakshasa', 'archer', 'pishacha', 'kumbhipaka'], boss: 'tataka', hazard: 'fireVent',
     scale: 1.0, budget: [4, 9], droneHz: 110,
-    waves: { count: [3, 3], perWave: [4, 9], fodder: ['preta'], fodderShare: [0.85, 0.35], eliteShare: [0.1, 0.35] },
+    waves: { count: [3, 3], perWave: [4, 9], fodder: ['preta', 'pishacha'], fodderShare: [0.85, 0.35], eliteShare: [0.1, 0.35] },
   },
   {
     id: 'patala', name: 'PATALA', sub: 'Realm of the Serpent Kings', rooms: 6,
     bg: '#061412', floor: '#0b201c', accent: '#2ee6a8', wall: '#143830',
-    enemies: ['naga', 'vetala', 'archer', 'rakshasa'], boss: 'ahiravana', hazard: 'venomPool',
+    enemies: ['naga', 'vetala', 'archer', 'rakshasa', 'nagaguard', 'mayavi'], boss: 'ahiravana', hazard: 'venomPool',
     scale: 1.35, budget: [7, 12], droneHz: 98,
     waves: { count: [3, 4], perWave: [6, 11], fodder: ['preta', 'rakshasa'], fodderShare: [0.7, 0.3], eliteShare: [0.15, 0.5] },
   },

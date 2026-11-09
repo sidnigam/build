@@ -31,6 +31,7 @@ const ENEMY_AI = {
     SLOT_EDGE: 12,                                  // ranged slots sit this far inside the view band
     CLOSE_IN: 30,                                   // contact units close in once this near their slot ring
     CONTACT_AI: ['chase', 'tank'],                  // AIs whose damage is a contact bite
+    NO_SLOT_AI: ['swarm'],                          // 05.7.1-05: AIs that never take a ring slot
     SEP_PUSH: 220, VAR: [1.0, 1.3],
     PV_RATE: 8,                                     // player-velocity smoothing rate (1/s)
   },
@@ -46,13 +47,17 @@ const ENEMY_AI = {
   // ---- roles / rings ----
   role(e) { return (e && e.def && e.def.role) || null; },
   ringOf(e) {
+    if (e && e.def && this.CFG.NO_SLOT_AI.includes(e.def.ai)) return null;   // swarms orbit on their own
     const r = this.role(e);
     if (r === 'melee' || r === 'heavy') return 'melee';
     if (r === 'ranged' || r === 'support') return 'ranged';
     return null;
   },
   ringSize(ring) { return ring === 'melee' ? this.CFG.SLOTS_MELEE : this.CFG.SLOTS_RANGED; },
-  band(e) { return this.role(e) === 'support' ? this.CFG.SUPPORT_BAND : this.CFG.RANGED_BAND; },
+  band(e) {
+    if (e && e.def && e.def.band) return e.def.band;   // 05.7.1-05: per-type band (DATA.ENEMIES[*].band)
+    return this.role(e) === 'support' ? this.CFG.SUPPORT_BAND : this.CFG.RANGED_BAND;
+  },
   heading() { return Math.atan2(this.pv.y, this.pv.x); },
   cutK() { return U.clamp(Math.hypot(this.pv.x, this.pv.y) / 300, 0, 1); },
 

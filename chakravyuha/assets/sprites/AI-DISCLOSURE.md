@@ -27,7 +27,7 @@ All visual assets (sprites, backgrounds, god portraits, and the Phase 05.4 envir
 
 ## Scope
 
-The complete list of shipped AI Pre-Generated assets, enumerated from `PROVENANCE.json`: 13 character/boss atlases + 4 backgrounds + 6 god portraits + 17 env tiles + 4 env atlases = **44 shipped files** (the 4 env atlases pack 51 individually provenance-tracked env frames). `node tools/check-provenance.js` verifies this set.
+The complete list of shipped AI Pre-Generated assets, enumerated from `PROVENANCE.json`: 13 character/boss atlases + 12 Phase 05.7.1 character atlases (8 new enemies + 4 mini-bosses) + 4 backgrounds + 6 god portraits + 17 env tiles + 4 env atlases = **56 shipped files** (the 4 env atlases pack 51 individually provenance-tracked env frames). `node tools/check-provenance.js` verifies this set.
 
 **Player (1 atlas, idle only):**
 - `player-atlas.png` (Abhimanyu — idle, 4 frames; img2img from the approved reference)
@@ -37,6 +37,12 @@ The complete list of shipped AI Pre-Generated assets, enumerated from `PROVENANC
 
 **Enemies (8 atlases, single idle frame each):**
 - `preta-atlas.png`, `rakshasa-atlas.png`, `archer-atlas.png`, `naga-atlas.png`, `vetala-atlas.png`, `bhuta-atlas.png`, `daitya-atlas.png`, `yatudhana-atlas.png`
+
+**Phase 05.7.1 enemies (8 atlases, single idle frame each; see the Phase 05.7.1 section):**
+- `pishacha-atlas.png`, `kumbhipaka-atlas.png`, `nagaguard-atlas.png`, `mayavi-atlas.png`, `javelineer-atlas.png`, `bannerman-atlas.png`, `brahmarakshasa-atlas.png`, `jalarakshasa-atlas.png`
+
+**Phase 05.7.1 mini-bosses (4 atlases, idle + phase-2 each):**
+- `subahu-atlas.png`, `mahiravana-atlas.png`, `alambusha-atlas.png`, `maricha-atlas.png`
 
 **Biome backgrounds (4, 1280x720 each):**
 - `naraka-bg.png`, `patala-bg.png`, `ranabhoomi-bg.png`, `vaitarani-bg.png`
@@ -179,3 +185,29 @@ Nine assets were flagged in cultural/iconography review and regenerated in plan 
 Two shipped assets (Agni, Yama) were retouched after generation to remove a painted forehead mark. This is a deterministic cv2 inpaint of a small region, recorded in their `post_processing`. The 05.7-03/04 gap-closure attempts built a code-drawn overlay tool (`tools/art/prop_overlay.py`) and a masked img2img repair tool (`tools/art/guided_inpaint.py`); no overlay shipped in any final asset (Indra and Yama both NOT SHIPPED), so no shipped image contains code-drawn overlay content.
 
 Carried to Phase 7 QA-03 (non-blocking, from 05.7-VERIFICATION): the Naraka gate crossbeam reads slightly torii-like; the Naraka vent reads somewhat like a manhole cover and has a plus-shaped centre glow; the Ranabhoomi column's diya flame is small at game scale. Human cultural sign-off (QA-03) is still pending for every 05.7 asset.
+
+## Phase 05.7.1 new enemies and mini-bosses
+
+Plan 05.7.1-12 added sprites for the 8 new enemies and 4 mini-bosses. These are **new files** (12 atlases), not replacements.
+
+- **Model:** FLUX.1-schnell Q4_K_S GGUF (Apache-2.0) via local ComfyUI, txt2img, 896x1152, 4 steps, cfg 1.0, positive-only prompts (no negative prompt). Every prompt is `flux_subject + style_1x5_positive_flux`, the 05.7.4 art direction (style 1 Hades-like painterly cel-shaded + style 5 Indian-miniature ornament).
+- **Seeds:** fixed and recorded (`flux_base_seed` 75000-75070 for enemies, 75100-75130 for mini-bosses, + attempt). Cap of **3 attempts per subject**. Every rejected seed and its reason is in `PROVENANCE.json` and in `tools/art/prompts.json` (`rejected`).
+- **Post-processing:** rembg `birefnet-general` cutout, despeckle, trim, bottom-aligned fit to 256 px (enemies) / 384 px (mini-bosses, kept under the GPU-memory budget), unsharp mask, baked 2-5 px ink outline, atlas packing. Mini-boss phase-2 frames are the deterministic `ember` post-process (`tools/art/phase2_variant.py`), not a separate generation.
+- **One retouch:** Maricha's shipped frame had a painted forehead mark removed by deterministic cv2 inpaint (`tools/art/retouch_mark.py --cool`). This is the same method used for Agni and Yama in 05.7-02, and it is recorded in the entry's `post_processing`.
+- **Self-reviewed, QA-03 pending:** every entry carries `cultural_review: pending (QA-03)`, `iconography_notes` and a `cultural_check`. All 12 are opponents (asuras, rakshasas, pishachas, a naga warrior). None carries divine iconography. The naga has one small hood.
+
+| Atlas | Seed (attempt) | Rejected | Status |
+|---|---|---|---|
+| pishacha (enemy) | 75000 (0) | - | SHIPPED, QA-03 flag |
+| kumbhipaka (enemy) | 75011 (1) | 75010: floating fire-pot, forehead dot | SHIPPED |
+| nagaguard (enemy) | 75022 (2) | 75020, 75021: human legs beside the tail, extra staff | SHIPPED |
+| mayavi (enemy) | 75030 (0) | - | SHIPPED |
+| javelineer (enemy) | 75042 (2) | 75040: Greek hoplite; 75041: Vishnu/Krishna-like colouring + halo-like arch | SHIPPED **FLAGGED** (dark helmet crest to be confirmed as armour, not a halo) |
+| bannerman (enemy) | 75052 (2) | 75050: handless stump; 75051: floating pennant | SHIPPED |
+| brahmarakshasa (enemy) | 75060 (0) | - | SHIPPED, QA-03 flag (no sacred thread or forehead marks drawn) |
+| jalarakshasa (enemy) | 75070 (0) | - | SHIPPED, QA-03 flag |
+| subahu (mini-boss) | 75100 (0) | - | SHIPPED, QA-03 flag |
+| mahiravana (mini-boss) | 75112 (2) | 75110, 75111: trishula-like staff finials, forehead marks, three hands | SHIPPED, QA-03 flag (no staff; tiny lily motif on the robe) |
+| alambusha (mini-boss) | 75120 (0) | - | SHIPPED, QA-03 flag |
+| maricha (mini-boss) | 75132 (2) | 75130, 75131: tilak-like forehead marks | SHIPPED **FLAGGED** (forehead mark retouched out; reviewer to confirm the gold palette + ring-grip blades read as non-divine) |
+

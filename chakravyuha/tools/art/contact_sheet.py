@@ -38,8 +38,14 @@ TEXT_COLOR = (230, 220, 210, 255)
 DIM_TEXT = (160, 150, 145, 255)
 PAD = 24
 
-BOSS_KEYS = ["tataka", "ahiravana", "kumbhakarna", "yama"]
-ENEMY_KEYS = ["preta", "rakshasa", "archer", "naga", "vetala", "bhuta", "daitya", "yatudhana"]
+BOSS_KEYS_LEGACY = ["tataka", "ahiravana", "kumbhakarna", "yama"]
+ENEMY_KEYS_LEGACY = ["preta", "rakshasa", "archer", "naga", "vetala", "bhuta", "daitya", "yatudhana"]
+# 05.7.1-12: 8 new enemies + 4 mini-bosses (Flux, 1+5 direction).
+MINI_KEYS = ["subahu", "mahiravana", "alambusha", "maricha"]
+ENEMY_KEYS_NEW = ["pishacha", "kumbhipaka", "nagaguard", "mayavi", "javelineer", "bannerman",
+                  "brahmarakshasa", "jalarakshasa"]
+BOSS_KEYS = BOSS_KEYS_LEGACY + MINI_KEYS
+ENEMY_KEYS = ENEMY_KEYS_LEGACY + ENEMY_KEYS_NEW
 BIOME_KEYS = ["naraka", "patala", "ranabhoomi", "vaitarani"]
 
 # Fallback r values (from 02-11-PLAN interfaces), used if js/data.js regex parse fails.
@@ -47,6 +53,9 @@ FALLBACK_R = {
     "preta": 11, "rakshasa": 15, "archer": 13, "naga": 14, "vetala": 13,
     "bhuta": 21, "daitya": 19, "yatudhana": 14,
     "tataka": 34, "ahiravana": 30, "kumbhakarna": 46, "yama": 36,
+    "pishacha": 9, "kumbhipaka": 16, "nagaguard": 17, "mayavi": 14, "javelineer": 14,
+    "bannerman": 16, "brahmarakshasa": 15, "jalarakshasa": 16,
+    "subahu": 24, "mahiravana": 24, "alambusha": 24, "maricha": 22,
 }
 
 
@@ -137,7 +146,7 @@ def main():
 
     width = 1420
     # Compute a generous height; we crop/trim at the end.
-    height = 3400
+    height = 4600
     canvas = Image.new("RGBA", (width, height), BG_COLOR)
     draw = ImageDraw.Draw(canvas)
 
@@ -197,44 +206,45 @@ def main():
 
     # (d) In-game scale strip
     y = section_header(draw, PAD, y, "In-game scale strip (height = r*4 px, over naraka-bg)", f_header)
-    strip_w, strip_h = 1280, 200
-    naraka_path = os.path.join(SPRITES, "biomes", "naraka-bg.png")
-    if os.path.exists(naraka_path):
-        bg = Image.open(naraka_path).convert("RGB")
-        bg = bg.crop((0, 0, min(strip_w, bg.width), min(strip_h, bg.height)))
-        if bg.size != (strip_w, strip_h):
-            bg = bg.resize((strip_w, strip_h), Image.LANCZOS)
-        # Darken/tint like the in-game floor dimming.
-        arr = np.array(bg).astype(np.float32)
-        arr = arr * 0.55
-        arr[:, :, 2] = np.clip(arr[:, :, 2] * 1.05, 0, 255)
-        strip = Image.fromarray(arr.astype(np.uint8), "RGB").convert("RGBA")
-    else:
-        strip = Image.new("RGBA", (strip_w, strip_h), (30, 20, 25, 255))
+    strip_groups = [ENEMY_KEYS_LEGACY + BOSS_KEYS_LEGACY, ENEMY_KEYS_NEW + MINI_KEYS]
+    for all_keys in strip_groups:
+        strip_w, strip_h = 1280, 200
+        naraka_path = os.path.join(SPRITES, "biomes", "naraka-bg.png")
+        if os.path.exists(naraka_path):
+            bg = Image.open(naraka_path).convert("RGB")
+            bg = bg.crop((0, 0, min(strip_w, bg.width), min(strip_h, bg.height)))
+            if bg.size != (strip_w, strip_h):
+                bg = bg.resize((strip_w, strip_h), Image.LANCZOS)
+            # Darken/tint like the in-game floor dimming.
+            arr = np.array(bg).astype(np.float32)
+            arr = arr * 0.55
+            arr[:, :, 2] = np.clip(arr[:, :, 2] * 1.05, 0, 255)
+            strip = Image.fromarray(arr.astype(np.uint8), "RGB").convert("RGBA")
+        else:
+            strip = Image.new("RGBA", (strip_w, strip_h), (30, 20, 25, 255))
 
-    baseline = strip_h - 30
-    cursor_x = 10
-    label_positions = []
-    all_keys = ENEMY_KEYS + BOSS_KEYS
-    for key in all_keys:
-        kind_dir = "bosses" if key in BOSS_KEYS else "enemies"
-        img = load_rgba(os.path.join(SPRITES, "_raw", kind_dir, key, f"{key}_idle_0.png"))
-        if img is None:
-            continue
-        r = r_values.get(key, 15)
-        target_h = max(8, r * 4)
-        scale = target_h / img.height
-        target_w = max(1, round(img.width * scale))
-        resized = img.resize((target_w, target_h), Image.LANCZOS)
-        px = cursor_x
-        py = baseline - target_h
-        strip.alpha_composite(resized, (px, py))
-        label_positions.append((px, key))
-        cursor_x += target_w + 14
-    canvas.alpha_composite(strip, (PAD, y))
-    for px, key in label_positions:
-        draw.text((PAD + px, y + strip_h + 4), key, font=f_label, fill=DIM_TEXT)
-    y += strip_h + 24 + 40
+        baseline = strip_h - 30
+        cursor_x = 10
+        label_positions = []
+        for key in all_keys:
+            kind_dir = "bosses" if key in BOSS_KEYS else "enemies"
+            img = load_rgba(os.path.join(SPRITES, "_raw", kind_dir, key, f"{key}_idle_0.png"))
+            if img is None:
+                continue
+            r = r_values.get(key, 15)
+            target_h = max(8, r * 4)
+            scale = target_h / img.height
+            target_w = max(1, round(img.width * scale))
+            resized = img.resize((target_w, target_h), Image.LANCZOS)
+            px = cursor_x
+            py = baseline - target_h
+            strip.alpha_composite(resized, (px, py))
+            label_positions.append((px, key))
+            cursor_x += max(target_w, len(key) * 7) + 14  # 05.7.1-12: room for the label
+        canvas.alpha_composite(strip, (PAD, y))
+        for px, key in label_positions:
+            draw.text((PAD + px, y + strip_h + 4), key, font=f_label, fill=DIM_TEXT)
+        y += strip_h + 24 + 40
 
     # (e) Biomes
     y = section_header(draw, PAD, y, "Biomes (320x180 thumbnails)", f_header)

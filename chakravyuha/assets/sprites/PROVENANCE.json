@@ -4742,6 +4742,57 @@
         "75110": "[flux] three hands (two stacked on the staff + one at the side, HX3); CULTURAL: lamp-top crescent prongs around the flame form a trishula-like three-point silhouette, plus a jewel point on the forehead plate -> subject rewritten (single round clay lamp bowl, one hand on the staff, smooth bare forehead)",
         "75111": "[flux] CULTURAL (same root cause as attempt 0): red vertical mark painted on the forehead; staff head became a three-point fleur-de-lis/trident finial (trishula-like); lamp moved to the belt buckle; hands fixed -> subject rewritten (staff removed: hand-held hanging lamp on a chain; low cloth hood covers the brow)"
       }
+    },
+    {
+      "filename": "maricha-atlas.png",
+      "path": "assets/sprites/bosses/maricha-atlas.png",
+      "actor": "maricha",
+      "kind": "boss",
+      "animations": {
+        "idle": 1,
+        "phase2": 1
+      },
+      "tool": "ComfyUI (local)",
+      "checkpoint": "flux1-schnell-Q4_K_S.gguf (FLUX.1 [schnell] by Black Forest Labs, GGUF Q4_K_S by city96, Apache-2.0) + t5-v1_1-xxl Q5_K_M GGUF (Apache-2.0) + CLIP-L (MIT) + FLUX ae VAE (Apache-2.0)",
+      "method": "txt2img",
+      "sampler": "euler",
+      "scheduler": "simple",
+      "steps": 4,
+      "cfg": 1.0,
+      "width": 896,
+      "height": 1152,
+      "seed": 75132,
+      "prompt": "Full-length figure from head to feet: a slender rakshasa illusionist with shimmering golden skin like a heat mirage, small golden deer antlers, pointed ears, a plain dark cloth headband wrapped low across his whole forehead just above the eyes, a sly smile, a cloak patterned with golden deer spots, holding in each hand one curved golden sickle-blade with a ring grip, at his sides. Exactly two arms, the plain grey backdrop directly behind the head. Hades-style painterly cel-shaded game character art with bold dark ink outlines, hand-painted textures, saturated vivid colours and strong coloured rim lighting, with Indian miniature-painting ornament: fine gold-leaf detail and flat patterned colour fields on the clothing and armour, crisp black contour lines. Three-quarter top-down game sprite view, a single character, the entire figure visible from head to feet, standing on a plain flat light-grey background that fills the rest of the image.",
+      "negative_prompt": "",
+      "rejected_seeds": [
+        75130,
+        75131
+      ],
+      "rejected_count": 2,
+      "post_processing": [
+        "retouch: tools/art/retouch_mark.py --cool cv2 Telea inpaint of a painted green V forehead mark (box 398,238,426,262 on the 896x1152 raw, mask 0.026%)",
+        "rembg birefnet-general background removal",
+        "alpha despeckle + trim",
+        "bottom-aligned LANCZOS fit to 384x384 (margin 8)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 4 px, #140b08 a=235, 0.6px feather, under sprite",
+        "phase2: tools/art/phase2_variant.py --mode ember --scale 2",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
+      ],
+      "raw_image": "assets/sprites/_gen/bosses/maricha/maricha_s75132.png",
+      "gen_sidecar": "assets/sprites/_raw/bosses/maricha/maricha.gen.json",
+      "generated_date": "2026-11-09",
+      "recorded_date": "2026-11-09",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "FLAGGED: 05.7.1-12 maricha (mini-boss), Flux schnell seed 75132 (attempt 2 of 3, the 3-attempt cap). All three attempts painted a forehead mark despite positive-anchor rewrites (75130 red brow marks, 75131 dark V urdhva-pundra-like mark, 75132 small green V below a headband). Shipped as least-bad after a deterministic retouch (tools/art/retouch_mark.py --cool, the same cv2 inpaint used for Agni/Yama in 05.7-02) removed the green V; the finished idle and phase2 frames show a clean forehead. Raw, retouched raw, finished idle and ember phase2 Read, plus game scale (scale_preview vs yama). (a) slender golden-skinned rakshasa illusionist with small golden deer antlers (Maricha's golden-deer guise), pointed ears, sly grin, plain dark headband, olive scarf and deer-spot patterned wrap, a curved golden sickle-blade with a ring grip in each hand; (b) whole figure; (c) one character; (d) no text; (e) exactly two attached arms; HX4 both blades intact after the cutout; H2/H4 no gore; H3 modest; H6 no glyphs; HX5 no halo/frame/border; blades are open crescents, not discs (no Sudarshana-chakra read). Gold palette does not read as a deity (no crown, no halo, no blue/yellow Vaishnava colouring, horned/antlered rakshasa face). A 2 px dark dot remained after the retouch on the raw; it is sub-pixel at 384 px.",
+      "cultural_review": "pending \u2014 human cultural reviewer (QA-03)",
+      "iconography_notes": "two arms; deer antlers + pointed ears (rakshasa in golden-deer guise); plain dark headband (not a crown); forehead mark removed by retouch, clean in the shipped frames; no halo, no third eye, no sacred thread; crescent ring-grip sickle-blades, NOT chakra discs",
+      "cultural_check": "pending QA-03 (FLAGGED): Maricha = Ramayana rakshasa, son of Tataka (confidence MEDIUM-HIGH); Flux repeatedly painted tilak-like forehead marks (all rejected); the shipped frame is retouched clean; reviewer to confirm the golden palette + ring-grip blades do not read as divine",
+      "rejected_reasons": {
+        "75130": "[flux] CULTURAL: red marks painted on the forehead between the brows read as a tilak; otherwise good (golden mirage skin, deer antlers, deer-spot cloak, two plain hoop-blades) -> subject rewritten (smooth clean unpainted forehead and face, keep antlers + plain hoops)",
+        "75131": "[flux] CULTURAL (same root cause as attempt 0): dark V-shaped mark painted between the brows reads as a Vaishnava urdhva-pundra tilak; antlers, golden skin, cloak and ring-grip sickle-blades good -> subject rewritten (plain dark headband covering the forehead)"
+      }
     }
   ],
   "review_sheet": "assets/sprites/_review/contact-sheet.png",

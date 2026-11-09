@@ -511,7 +511,18 @@
       "rejected": {
         "0": "[flux] CULTURAL: red marks painted on the forehead between the brows read as a tilak; otherwise good (golden mirage skin, deer antlers, deer-spot cloak, two plain hoop-blades) -> subject rewritten (smooth clean unpainted forehead and face, keep antlers + plain hoops)",
         "1": "[flux] CULTURAL (same root cause as attempt 0): dark V-shaped mark painted between the brows reads as a Vaishnava urdhva-pundra tilak; antlers, golden skin, cloak and ring-grip sickle-blades good -> subject rewritten (plain dark headband covering the forehead)"
-      }
+      },
+      "retouch": {
+        "tool": "tools/art/retouch_mark.py",
+        "args": "--box 398,238,426,262 --dilate 4 --cool",
+        "reason": "Flux painted a forehead mark in 3/3 attempts (red, dark V, green V); green V on attempt 2 removed by deterministic cv2 Telea inpaint",
+        "mask_frac": 0.00026
+      },
+      "accepted_attempt": 2,
+      "rejected_reasons": [
+        "[flux] CULTURAL: red marks painted on the forehead between the brows read as a tilak; otherwise good (golden mirage skin, deer antlers, deer-spot cloak, two plain hoop-blades) -> subject rewritten (smooth clean unpainted forehead and face, keep antlers + plain hoops)",
+        "[flux] CULTURAL (same root cause as attempt 0): dark V-shaped mark painted between the brows reads as a Vaishnava urdhva-pundra tilak; antlers, golden skin, cloak and ring-grip sickle-blades good -> subject rewritten (plain dark headband covering the forehead)"
+      ]
     }
   },
   "checkpoint": "sd_xl_base_1.0.safetensors",

@@ -132,6 +132,8 @@ const ENEMY_AI = {
       e.slotT = U.rand(C.REPICK[0], C.REPICK[1]);
     }
 
+    this._rally(list);
+
     // separation: O(n²) over living non-boss enemies
     const live = [];
     for (const e of list) if (!e.dead && !e.boss) live.push(e);
@@ -149,6 +151,25 @@ const ENEMY_AI = {
         const push = Math.min(C.SEP_PUSH * dt, rr - d) / 2;
         a.x -= dx * push; a.y -= dy * push;
         b.x += dx * push; b.y += dy * push;
+      }
+    }
+  },
+
+  // 05.7.1-05 (D-07): rallying elites buff the damage of living allies within their radius
+  // (flags are recomputed from scratch every tick, so a dead rallier's buff ends at once)
+  _rally(list) {
+    const M = DATA.ELITE_MODS;
+    const src = [];
+    for (const e of list) {
+      if (e.dead || e.boss) continue;
+      e.rallied = false;
+      if (e.elite && e.elite.includes('rallying')) src.push({ e, r: M.rallying.r });
+    }
+    if (!src.length) return;
+    for (const e of list) {
+      if (e.dead || e.boss) continue;
+      for (const s of src) {
+        if (s.e !== e && U.dist(s.e.x, s.e.y, e.x, e.y) <= s.r) { e.rallied = true; break; }
       }
     }
   },

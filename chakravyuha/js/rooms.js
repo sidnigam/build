@@ -207,15 +207,28 @@ const ROOMS = {
     };
   },
 
-  // Pure: budget -> array of { id, weak }. opts = { fodderShare, eliteShare } (both default 0 — the
-  // legacy numeric spawnWave(n) path passes fodderShare:0 so no weak units are ever produced).
+  // 05.7.1-05 (D-07): `DATA.WAVES.eliteMods[bi]` distinct DATA.ELITE_MODS keys for an elite in
+  // biome index bi (1 in biomes 0-1, 2 in biomes 2-3).
+  rollEliteMods(bi) {
+    const n = (DATA.WAVES.eliteMods && DATA.WAVES.eliteMods[bi]) || 1;
+    return U.shuffle(Object.keys(DATA.ELITE_MODS)).slice(0, n);
+  },
+
+  // Pure: budget -> array of { id, weak, elite? }. opts = { fodderShare, eliteShare } (both default
+  // 0 — the legacy numeric spawnWave(n) path passes fodderShare:0 so no weak units are produced).
+  // 05.7.1-05: elites are any biome type bought at cost × DATA.WAVES.eliteMult (the old
+  // cost >= eliteCost filter meant Naraka/Patala could never afford one); `pack` types (the
+  // pishacha swarm) push def.pack copies per regular/fodder pick at cost × pack. Elites are single.
   composeWave(budget, biome, opts = {}) {
     const W = DATA.WAVES;
     const fodderShare = opts.fodderShare ?? 0;
     const eliteShare = opts.eliteShare ?? 0;
     const fodderIds = (biome.waves && biome.waves.fodder) || [];
-    const weakCost = id => DATA.ENEMIES[id].cost * W.weak.cost;
+    const packOf = id => Math.max(1, DATA.ENEMIES[id].pack | 0);
+    const cost = id => DATA.ENEMIES[id].cost * packOf(id);
+    const weakCost = id => cost(id) * W.weak.cost;
     const units = [];
+    const push = (id, weak) => { for (let k = 0; k < packOf(id); k++) units.push({ id, weak }); };
 
     // 1. fodder (weak units), spending a fodderShare slice of the budget
     let fb = budget * fodderShare;
@@ -225,7 +238,7 @@ const ROOMS = {
         const pool = fodderIds.filter(id => weakCost(id) <= fb);
         if (!pool.length) break;
         const id = U.choice(pool);
-        units.push({ id, weak: true });
+        push(id, true);
         fb -= weakCost(id);
       }
     }
@@ -235,31 +248,31 @@ const ROOMS = {
     let eb = rest * eliteShare;
     let rb = rest - eb;
 
-    // 3. elites
+    // 3. elites: any biome type at cost × eliteMult, each with rolled modifiers
     {
-      const eliteIds = biome.enemies.filter(id => DATA.ENEMIES[id].cost >= W.eliteCost);
+      const bi = Math.max(0, DATA.BIOMES.indexOf(biome));
+      const eCost = id => DATA.ENEMIES[id].cost * W.eliteMult;
       let guard = 0;
       while (guard++ < 60) {
-        const pool = eliteIds.filter(id => DATA.ENEMIES[id].cost <= eb);
+        const pool = biome.enemies.filter(id => eCost(id) <= eb);
         if (!pool.length) break;
         const id = U.choice(pool);
-        units.push({ id, weak: false });
-        eb -= DATA.ENEMIES[id].cost;
+        units.push({ id, weak: false, elite: this.rollEliteMods(bi) });
+        eb -= eCost(id);
       }
       rb += eb; // leftover elite budget carried into regulars
     }
 
-    // 4. regulars (fall back to the whole biome roster when it has no sub-elite-cost enemies)
+    // 4. regulars: the whole biome roster
     {
-      let regularIds = biome.enemies.filter(id => DATA.ENEMIES[id].cost < W.eliteCost);
-      if (!regularIds.length) regularIds = biome.enemies.slice();
+      const regularIds = biome.enemies.slice();
       let guard = 0;
       while (guard++ < 60) {
-        const pool = regularIds.filter(id => DATA.ENEMIES[id].cost <= rb);
+        const pool = regularIds.filter(id => cost(id) <= rb);
         if (!pool.length) break;
         const id = U.choice(pool);
-        units.push({ id, weak: false });
-        rb -= DATA.ENEMIES[id].cost;
+        push(id, false);
+        rb -= cost(id);
       }
     }
 
@@ -271,24 +284,24 @@ const ROOMS = {
         const pool = fodderIds.filter(id => weakCost(id) <= rb);
         if (!pool.length) break;
         const id = U.choice(pool);
-        units.push({ id, weak: true });
+        push(id, true);
         rb -= weakCost(id);
       }
     } else if (rb > 0) {
       let guard = 0;
       while (rb > 0 && guard++ < 60) {
-        const pool = biome.enemies.filter(id => DATA.ENEMIES[id].cost <= Math.max(rb, 1));
+        const pool = biome.enemies.filter(id => cost(id) <= Math.max(rb, 1));
         if (!pool.length) break;
         const id = U.choice(pool);
-        units.push({ id, weak: false });
-        rb -= DATA.ENEMIES[id].cost;
+        push(id, false);
+        rb -= cost(id);
       }
     }
 
     // 6. guarantee non-empty
     if (!units.length) {
-      const cheapest = biome.enemies.slice().sort((a, b) => DATA.ENEMIES[a].cost - DATA.ENEMIES[b].cost)[0];
-      units.push({ id: cheapest, weak: false });
+      const cheapest = biome.enemies.slice().sort((a, b) => cost(a) - cost(b))[0];
+      push(cheapest, false);
     }
 
     return units;
@@ -372,7 +385,10 @@ const ROOMS = {
         const u = now[i++];
         const def = DATA.ENEMIES[u.id];
         const pos = this.placeUnit(def, center.x, center.y);
-        GAME.enemies.push(new Enemy(u.id, pos.x, pos.y, GAME.biome.scale, u.weak ? W.weak : null));
+        // 05.7.1-05 (D-07): elites spawn with their rolled modifiers
+        const mods = u.weak ? W.weak : (u.elite && u.elite.length ? { elite: u.elite } : null);
+        if (mods && mods.elite) GAME.lastEliteSpawnAt = GAME.runTime;   // hook for the 05.7.2 score
+        GAME.enemies.push(new Enemy(u.id, pos.x, pos.y, GAME.biome.scale, mods));
         spawned++;
       }
     }

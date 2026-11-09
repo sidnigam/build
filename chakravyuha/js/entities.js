@@ -45,6 +45,24 @@ function hitEnemy(e, base, src = 'attack', opts = {}) {
   const khandava = src === 'chain' && P.has('duo_khandava');
   if (khandava && e.burns.length > 0) dmg *= 1.5;
 
+  // 05.7.1-05 (D-07): elite damage reduction — shielded blocks whole hits, armored halves them
+  if (e.shieldHits > 0 && src !== 'burn') {
+    e.shieldHits--;
+    dmgText(e.x, e.y - e.r - 6, 'BLOCK', DATA.ELITE_MODS.shielded.color, 14);
+    VFX.emit('phit', e.x, e.y, 0, DATA.ELITE_MODS.shielded.color);
+    AUDIO.sfx('shield');
+    return 0;
+  }
+  if (e.armor > 0) {
+    e.armor -= dmg;
+    dmg *= 1 - DATA.ELITE_MODS.armored.reduce;
+    if (e.armor <= 0) {
+      e.armor = 0;
+      VFX.emit('pblast', e.x, e.y, 0, DATA.ELITE_MODS.armored.color);
+      AUDIO.sfx('shield');
+    }
+  }
+
   e.hp -= dmg;
   e.flash = 0.1;
   const hitAngle = U.angle(P.x, P.y, e.x, e.y);
@@ -99,6 +117,9 @@ function hitEnemy(e, base, src = 'attack', opts = {}) {
   return dmg;
 }
 
+// 05.7.1-05: knockback is skipped for bosses and for armored elites while their armor holds
+function canKnock(e) { return !e.boss && !(e.armor > 0); }
+
 function applyBurn(e, dps) {
   if (e.burns.length >= 3) e.burns.shift();
   e.burns.push({ dps, t: 3 });
@@ -146,12 +167,40 @@ function killEnemy(e) {
       enemyShot(e.x, e.y, Math.cos(a) * 220, Math.sin(a) * 220, e.dmg * 0.6, '#8a93b8');
     }
   }
+  if (e.elite) eliteDeath(e);
   // coins
   let coins = e.boss ? U.randInt(8, 12) : (U.chance(0.55) ? U.randInt(1, 3) : 0);
   for (let i = 0; i < coins; i++) {
     GAME.pickups.push({ x: e.x + U.rand(-14, 14), y: e.y + U.rand(-14, 14),
       type: 'mudra', val: U.randInt(2, 5), t: 12,
       vx: U.rand(-60, 60), vy: U.rand(-60, 60) });
+  }
+}
+
+// 05.7.1-05 (D-07): elite on-death effects. Vampiric heals nearby allies, splitting leaves weak
+// copies (never past the alive cap), explosive leaves a telegraphed mortar (fuse >= 0.6 s).
+function eliteDeath(e) {
+  const M = DATA.ELITE_MODS;
+  if (e.elite.includes('vampiric')) {
+    for (const o of GAME.enemies) {
+      if (o === e || o.dead || o.boss || U.dist(e.x, e.y, o.x, o.y) > M.vampiric.deathR) continue;
+      o.hp = Math.min(o.maxhp, o.hp + o.maxhp * M.vampiric.deathHeal);
+      GAME.rings.push({ x: o.x, y: o.y, r: o.r + 8, t: 0.3, color: M.vampiric.color });
+    }
+  }
+  if (e.elite.includes('splitting')) {
+    const scale = (GAME.biome && GAME.biome.scale) || 1;
+    for (let i = 0; i < M.splitting.copies && ROOMS.aliveCount() < DATA.WAVES.maxAlive; i++) {
+      const c = new Enemy(e.type, e.x + U.rand(-20, 20), e.y + U.rand(-20, 20), scale, DATA.WAVES.weak);
+      c.spawnT = 0.2;
+      clampToArena(c);
+      GAME.enemies.push(c);
+    }
+    burst(e.x, e.y, M.splitting.color, 10, 160, 0.4);
+  }
+  if (e.elite.includes('explosive')) {
+    PROJ.spawn('mortar', { x: e.x, y: e.y, dmg: e.dmg * M.explosive.dmgMul, r: M.explosive.r,
+      color: M.explosive.color, extra: { tx: e.x, ty: e.y, flight: M.explosive.fuse } });
   }
 }
 
@@ -434,7 +483,7 @@ class Player {
         const along = rx * ux + ry * uy, across = -rx * uy + ry * ux;
         if (along >= 0 && along <= ch.len && Math.abs(across) < ch.width / 2 + e.r) {
           hitEnemy(e, dmg, 'attack', { finisher: true, charged: true });
-          if (!e.boss && !e.dead) { e.kx += ux * kb; e.ky += uy * kb; }
+          if (canKnock(e) && !e.dead) { e.kx += ux * kb; e.ky += uy * kb; }
         }
       }
       this.swing = { a, t: 0.16, range: ch.len, arc: 0.3 };
@@ -450,7 +499,7 @@ class Player {
           if (!e.boss && !e.dead) {
             e.stun = Math.max(e.stun, ch.stun);
             const ka = U.angle(this.x, this.y, e.x, e.y);
-            e.kx += Math.cos(ka) * 360; e.ky += Math.sin(ka) * 360;
+            if (canKnock(e)) { e.kx += Math.cos(ka) * 360; e.ky += Math.sin(ka) * 360; }
           }
         }
       }
@@ -490,7 +539,7 @@ class Player {
       if (d < w.range + e.r && Math.abs(U.angDiff(this.aim, U.angle(this.x, this.y, e.x, e.y))) < arc / 2) {
         struck.add(e);
         hitEnemy(e, dmg, 'attack', isFinisher ? { finisher: true } : undefined);
-        if (!e.boss) {
+        if (canKnock(e)) {
           const a = U.angle(this.x, this.y, e.x, e.y);
           e.kx += Math.cos(a) * kb; e.ky += Math.sin(a) * kb;
         }
@@ -506,7 +555,7 @@ class Player {
         if (e.dead || struck.has(e)) continue;
         if (U.dist(this.x, this.y, e.x, e.y) < reach + e.r) {
           hitEnemy(e, dmg * fin.mult, 'attack', { finisher: true });
-          if (!e.boss && !e.dead) {
+          if (canKnock(e) && !e.dead) {
             const a = U.angle(this.x, this.y, e.x, e.y);
             e.kx += Math.cos(a) * kb * 0.5; e.ky += Math.sin(a) * kb * 0.5;
           }
@@ -544,7 +593,7 @@ class Player {
         const d = U.dist(this.x, this.y, e.x, e.y);
         if (d < ds.range + e.r && Math.abs(U.angDiff(a, U.angle(this.x, this.y, e.x, e.y))) < ds.arc / 2) {
           hitEnemy(e, w.combo[0] * ds.mult, 'attack', { dashStrike: true });
-          if (!e.boss) {
+          if (canKnock(e)) {
             const ka = U.angle(this.x, this.y, e.x, e.y);
             e.kx += Math.cos(ka) * kb; e.ky += Math.sin(ka) * kb;
           }
@@ -601,7 +650,7 @@ class Player {
         if (!e.boss && !e.dead) {
           e.stun = Math.max(e.stun, ds.stun);
           const a = U.angle(this.x, this.y, e.x, e.y);
-          e.kx += Math.cos(a) * 300; e.ky += Math.sin(a) * 300;
+          if (canKnock(e)) { e.kx += Math.cos(a) * 300; e.ky += Math.sin(a) * 300; }
         }
       }
     }
@@ -682,7 +731,7 @@ class Player {
         if (U.dist(this.x, this.y, e.x, e.y) < radius + e.r) {
           hitEnemy(e, sp.dmg, 'special');
           if (sp.stun) e.stun = Math.max(e.stun, sp.stun);
-          if (!e.boss) {
+          if (canKnock(e)) {
             const a = U.angle(this.x, this.y, e.x, e.y);
             e.kx += Math.cos(a) * 300; e.ky += Math.sin(a) * 300;
           }
@@ -869,8 +918,22 @@ class Enemy {
     this.dmg = d.dmg * Math.sqrt(scale);
     // Phase 05.1 (WAVE-01, D-18): weakened "fodder" instances — a mods object multiplies hp/dmg
     // (typically DATA.WAVES.weak) and flags the unit as weak; without mods, behavior is unchanged.
-    if (mods) { this.hp *= mods.hp || 1; this.maxhp = this.hp; this.dmg *= mods.dmg || 1; this.weak = true; }
     this.spd = d.spd; this.color = d.color;
+    this.cdMul = 1;                  // 05.7.1-05: post-attack cooldown multiplier (hasty elites)
+    if (mods && mods.elite) {
+      // 05.7.1-05 (D-07): elite — tougher, bigger, carrying 1-2 DATA.ELITE_MODS
+      const E = DATA.WAVES.elite, M = DATA.ELITE_MODS;
+      this.hp *= E.hp; this.maxhp = this.hp; this.dmg *= E.dmg;
+      this.r = Math.round(this.r * E.rMul);
+      this.elite = mods.elite.slice();
+      for (const m of this.elite) {
+        if (m === 'armored') this.armor = this.maxhp * M.armored.armorFrac;
+        else if (m === 'shielded') this.shieldHits = M.shielded.hits;
+        else if (m === 'hasty') { this.spd *= M.hasty.spd; this.cdMul = M.hasty.cd; }
+        else if (m === 'warded') { this.wardT = 0; this.wardCycle = U.rand(0, M.warded.every); }
+      }
+    } else if (mods) { this.hp *= mods.hp || 1; this.maxhp = this.hp; this.dmg *= mods.dmg || 1; this.weak = true; }
+    this.rallied = false;            // set each frame by ENEMY_AI.tick (rallying elites / banner aura)
     this.dead = false; this.boss = false;
     this.flash = 0; this.stun = 0; this.maya = 0; this.slowT = 0; this.slowF = 1;
     this.burns = [];
@@ -893,16 +956,27 @@ class Enemy {
 
   // ---- telegraph invariant helpers (05.7.1-04, mirror Boss.strike/hurtPlayer/shoot) ----
   // Every damaging enemy attack goes through these two. Using them unarmed logs a violation.
+  // 05.7.1-05: outgoing damage multiplier — rallied by a rallying elite or a standard-bearer
+  dmgMul() { return this.rallied ? DATA.ELITE_MODS.rallying.dmg : 1; }
+  isElite(mod) { return !!(this.elite && this.elite.includes(mod)); }
+  // vampiric elites heal a share of the damage their landed hits deal
+  lifesteal(amount) {
+    if (!this.isElite('vampiric') || this.dead) return;
+    this.hp = Math.min(this.maxhp, this.hp + amount * DATA.ELITE_MODS.vampiric.lifesteal);
+  }
   hurtPlayer(amount, opts) {
     if (!this.armedAtk) ENEMY_TG.violations.push(this.type + ':unarmedHit');
-    return GAME.player.takeDamage(amount, this.x, this.y, opts);
+    const dmg = amount * this.dmgMul();
+    const landed = GAME.player.takeDamage(dmg, this.x, this.y, opts);
+    if (landed) this.lifesteal(dmg);
+    return landed;
   }
   fire(fam, vx, vy, dmg, extra) {
     if (!this.armedAtk) ENEMY_TG.violations.push(this.type + ':unarmedFire');
     ENEMY_TG.fireLog.push({ type: this.type, inView: ENEMY_AI.inViewBand(this.x, this.y, GAME.player) });
     if (ENEMY_TG.fireLog.length > 500) ENEMY_TG.fireLog.shift();
     // non-bolt families keep their own data colour so each family reads distinctly (D-09)
-    return enemyShot(this.x, this.y, vx, vy, dmg, fam === 'bolt' ? this.color : undefined, 6, fam,
+    return enemyShot(this.x, this.y, vx, vy, dmg * this.dmgMul(), fam === 'bolt' ? this.color : undefined, 6, fam,
       Object.assign({ owner: this }, extra));
   }
   // Start a wind-up of `kind` (ENEMY_TG.MIN key) lasting `secs`; windT accrues in update().
@@ -930,6 +1004,12 @@ class Enemy {
     U.cool(this, 'flash', dt); U.cool(this, 'stun', dt);
     U.cool(this, 'maya', dt); U.cool(this, 'slowT', dt);
     if (this.spawnT > 0) { this.spawnT -= dt; return; }
+    // 05.7.1-05: warded elites reflect player attack projectiles for `on` s every `every` s
+    if (this.wardCycle != null) {
+      const Wd = DATA.ELITE_MODS.warded;
+      this.wardCycle += dt;
+      this.wardT = (this.wardCycle % Wd.every) < Wd.on ? 1 : 0;
+    }
 
     // burn ticks
     for (const b of this.burns) {
@@ -971,7 +1051,7 @@ class Enemy {
           this.x += Math.cos(this.lungeA) * 560 * dt;
           this.y += Math.sin(this.lungeA) * 560 * dt;
           this.touchAttack(U.dist(this.x, this.y, P.x, P.y), dt, this.dmg);
-          if (this.t <= 0) { this.endAttack(); this.state = 'idle'; this.t = U.rand(1.2, 2); }
+          if (this.t <= 0) { this.endAttack(); this.state = 'idle'; this.t = U.rand(1.2, 2) * this.cdMul; }
         }
         break;
 
@@ -987,7 +1067,7 @@ class Enemy {
             this.armAttack();
             const ps = this.def.projSpeed;
             this.fire(this.def.fam || 'bolt', Math.cos(this.aimA) * ps, Math.sin(this.aimA) * ps, this.dmg);
-            this.endAttack(); this.state = 'idle'; this.t = U.rand(1.6, 2.6);
+            this.endAttack(); this.state = 'idle'; this.t = U.rand(1.6, 2.6) * this.cdMul;
           }
           break;
         }
@@ -1012,7 +1092,7 @@ class Enemy {
             const ps = this.def.projSpeed;
             for (const off of [-0.3, 0, 0.3])
               this.fire(this.def.fam || 'bolt', Math.cos(this.aimA + off) * ps, Math.sin(this.aimA + off) * ps, this.dmg);
-            this.endAttack(); this.state = 'idle'; this.t = U.rand(2, 3.2);
+            this.endAttack(); this.state = 'idle'; this.t = U.rand(2, 3.2) * this.cdMul;
           }
           break;
         }
@@ -1045,7 +1125,7 @@ class Enemy {
             if (U.dist(this.x, this.y, P.x, P.y) < 60) { this.hurtPlayer(this.dmg); P.meleeRetaliate(this); }
             GAME.rings.push({ x: this.x, y: this.y, r: 46, t: 0.2, color: this.color });
             this.endAttack();
-            this.state = 'idle'; this.t = U.rand(1.8, 2.8);
+            this.state = 'idle'; this.t = U.rand(1.8, 2.8) * this.cdMul;
           }
         }
         break;
@@ -1073,7 +1153,7 @@ class Enemy {
           const A = GAME.arena;
           if (this.x < A.x + this.r || this.x > A.x + A.w - this.r ||
               this.y < A.y + this.r || this.y > A.y + A.h - this.r) this.t = 0;
-          if (this.t <= 0) { this.endAttack(); this.state = 'idle'; this.t = U.rand(1.5, 2.5); }
+          if (this.t <= 0) { this.endAttack(); this.state = 'idle'; this.t = U.rand(1.5, 2.5) * this.cdMul; }
         }
         break;
 
@@ -1108,7 +1188,7 @@ class Enemy {
       if (inReach && this.atkT <= 0) {
         this.hurtPlayer(dmg);
         P.meleeRetaliate(this);
-        this.atkT = 0.8;
+        this.atkT = 0.8 * this.cdMul;
       }
       return;
     }
@@ -1126,7 +1206,7 @@ class Enemy {
       this.hurtPlayer(this.biteDmg != null ? this.biteDmg : this.dmg);
       P.meleeRetaliate(this);
     }
-    this.atkT = 0.8;
+    this.atkT = 0.8 * this.cdMul;
     this.endAttack();
     this.state = 'idle';
   }

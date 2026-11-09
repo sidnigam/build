@@ -131,13 +131,64 @@ function drawOverlays(ctx, e, headY, feetY) {
     ctx.fillText('z z z', e.x + e.r * 0.5, headY - 8);
   }
 
-  // hp bar for damaged non-boss enemies
-  if (!e.boss && e.hp < e.maxhp) {
+  // 05.7.1-05 (D-07): elite aura ring in the first modifier's colour (slow pulse unless
+  // screenFlash is off), warded hex ring while the ward is up
+  const elite = e.elite && e.elite.length ? e.elite : null;
+  const M = typeof DATA !== 'undefined' ? DATA.ELITE_MODS : null;
+  if (elite && M) {
+    const c0 = (M[elite[0]] && M[elite[0]].color) || '#ffffff';
+    const calm = typeof SETTINGS !== 'undefined' && SETTINGS.get('screenFlash') === false;
+    const midY = (headY + feetY) / 2;
+    ctx.globalAlpha = calm ? 0.8 : 0.65 + 0.3 * Math.sin(GAME.time * 3);
+    ctx.strokeStyle = c0 + '99'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(e.x, midY, e.r + 6, 0, U.TAU); ctx.stroke();
+    if (elite.length > 1 && M[elite[1]]) {
+      ctx.strokeStyle = M[elite[1]].color + '99'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(e.x, midY, e.r + 10, 0, U.TAU); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    if (e.wardT > 0) {
+      ctx.strokeStyle = M.warded.color; ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let k = 0; k <= 6; k++) {
+        const a = (k / 6) * U.TAU + GAME.time * 0.8, rr = e.r + 14;
+        const x = e.x + Math.cos(a) * rr, y = midY + Math.sin(a) * rr;
+        if (k === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+  }
+
+  // hp bar for damaged non-boss enemies (elites always show theirs)
+  const showBar = !e.boss && (e.hp < e.maxhp || elite);
+  if (showBar) {
     const w = e.r * 2;
     ctx.fillStyle = 'rgba(0,0,0,0.5)';
     ctx.fillRect(e.x - w / 2, feetY + 4, w, 4);
     ctx.fillStyle = '#ff5566';
     ctx.fillRect(e.x - w / 2, feetY + 4, w * U.clamp(e.hp / e.maxhp, 0, 1), 4);
+  }
+  if (elite && M) {
+    const w = e.r * 2;
+    // armor bar (grey, above the hp bar) while the armor holds
+    if (e.armor > 0 && e.maxhp > 0) {
+      const full = e.maxhp * M.armored.armorFrac;
+      ctx.fillStyle = M.armored.color;
+      ctx.fillRect(e.x - w / 2, feetY + 1, w * U.clamp(e.armor / full, 0, 1), 3);
+    }
+    // shield pips
+    if (e.shieldHits > 0) {
+      ctx.fillStyle = M.shielded.color;
+      for (let i = 0; i < e.shieldHits; i++) {
+        ctx.beginPath(); ctx.arc(e.x - (e.shieldHits - 1) * 4 + i * 8, headY - 4, 3, 0, U.TAU); ctx.fill();
+      }
+    }
+    // name tag under the bar
+    ctx.fillStyle = (M[elite[0]] && M[elite[0]].color) || '#ffffff';
+    ctx.font = '10px Georgia';
+    const tag = elite.map(m => (M[m] ? M[m].name : m)).join(' · ');
+    const tw = ctx.measureText ? (ctx.measureText(tag).width || tag.length * 5) : tag.length * 5;
+    ctx.fillText(tag, e.x - tw / 2, feetY + 18);
   }
 
   ctx.globalAlpha = 1;
@@ -621,6 +672,9 @@ const PROJ = {
             landed = P.takeDamage(p.dmg, f[0], f[1], p.status ? { status: p.status } : undefined);
           }
           p.hitP = true;
+          // 05.7.1-05 (D-07): a vampiric elite heals from its landed projectiles too
+          if (landed && p.owner && p.owner.elite && p.owner.elite.includes('vampiric') && !p.owner.dead)
+            p.owner.lifesteal(p.dmg);
           if (landed && def.hitFx && !B.ownFx) VFX.emit(def.hitFx, P.x, P.y, Math.atan2(p.vy, p.vx), p.color);
           if (B.onContact) B.onContact(p, def);
           else if (B.point) p.t = 0;   // point families die on contact whether or not it landed

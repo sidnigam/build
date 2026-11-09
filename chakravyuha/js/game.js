@@ -314,8 +314,17 @@ const GAME = {
         if (e.dead || p.hitSet.has(e) || e.spawnT > 0) continue;
         if (U.dist(p.x, p.y, e.x, e.y) < e.r + p.r) {
           p.hitSet.add(e);
+          // 05.7.1-05 (D-07): a warded elite inside its ward window turns player attack shots
+          // back at the player as a needle (cast astras and specials pass through the ward)
+          if (e.wardT > 0 && p.src === 'attack') {
+            p.t = 0;
+            const ra = U.angle(e.x, e.y, this.player.x, this.player.y), Wd = DATA.ELITE_MODS.warded;
+            enemyShot(e.x, e.y, Math.cos(ra) * 520, Math.sin(ra) * 520, p.dmg * Wd.reflect, Wd.color, 6, 'needle', { owner: e });
+            VFX.emit('phit', p.x, p.y, ra, Wd.color);
+            break;
+          }
           hitEnemy(e, p.dmg, p.src, p.opts);
-          if (p.kb && !e.boss && !e.dead) {         // 05.7.1-03: gandiva perfect-release knockback
+          if (p.kb && canKnock(e) && !e.dead) {         // 05.7.1-03: gandiva perfect-release knockback
             const ka = Math.atan2(p.vy, p.vx);
             e.kx += Math.cos(ka) * p.kb; e.ky += Math.sin(ka) * p.kb;
           }

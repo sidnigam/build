@@ -231,6 +231,26 @@ DATA.WAVES = {
   engageRange: 640, eliteCost: 3,
   spawnGrace: 0.45,                      // 05.7.1-04 (D-02): spawn-in grace (was 0.6)
   engageDelay: [0.2, 0.8],               // first attack timer range after spawning (was 0.3-1.2)
+  // 05.7.1-05 (D-07): elites are ANY biome type bought at cost × eliteMult (eliteCost is legacy,
+  // nothing reads it for elite purchases any more) and carry eliteMods[biomeIdx] DATA.ELITE_MODS
+  eliteMult: 1.8,
+  elite: { hp: 1.6, dmg: 1.15, rMul: 1.1 },
+  eliteMods: [1, 1, 2, 2],
+};
+
+// ---------- ELITE MODIFIERS (Phase 05.7.1, D-07) — tunable ----------
+// Colours are full #rrggbb (renderers append alpha). Effects live in js/entities.js (ctor,
+// hitEnemy, killEnemy, hurtPlayer), js/ai.js (rallying), js/combat.js (vampiric projectiles,
+// overlays) and js/game.js (warded reflect).
+DATA.ELITE_MODS = {
+  armored:   { name: 'Armored',   color: '#b8c0cc', armorFrac: 0.6, reduce: 0.5 },
+  hasty:     { name: 'Hasty',     color: '#ffe066', spd: 1.3, cd: 0.75 },
+  vampiric:  { name: 'Vampiric',  color: '#e0304a', lifesteal: 0.3, deathHeal: 0.25, deathR: 180 },
+  splitting: { name: 'Splitting', color: '#7dff5a', copies: 2 },
+  shielded:  { name: 'Shielded',  color: '#5cb8ff', hits: 2 },
+  explosive: { name: 'Explosive', color: '#ff7a2a', fuse: 0.6, r: 90, dmgMul: 1.2 },
+  warded:    { name: 'Warded',    color: '#b48aff', on: 3, every: 8, reflect: 0.5 },
+  rallying:  { name: 'Rallying',  color: '#ffd34d', r: 220, dmg: 1.2 },
 };
 
 // ---------- PLAYER STATUSES (Phase 05.7.1, D-10/D-11) ----------
@@ -303,28 +323,28 @@ DATA.BIOMES = [
     bg: '#160a0e', floor: '#241016', accent: '#ff5533', wall: '#3d1a20',
     enemies: ['preta', 'rakshasa', 'archer'], boss: 'tataka', hazard: 'fireVent',
     scale: 1.0, budget: [4, 9], droneHz: 110,
-    waves: { count: [3, 3], perWave: [4, 9], fodder: ['preta'], fodderShare: [0.85, 0.35], eliteShare: [0, 0.15] },
+    waves: { count: [3, 3], perWave: [4, 9], fodder: ['preta'], fodderShare: [0.85, 0.35], eliteShare: [0.1, 0.35] },
   },
   {
     id: 'patala', name: 'PATALA', sub: 'Realm of the Serpent Kings', rooms: 6,
     bg: '#061412', floor: '#0b201c', accent: '#2ee6a8', wall: '#143830',
     enemies: ['naga', 'vetala', 'archer', 'rakshasa'], boss: 'ahiravana', hazard: 'venomPool',
     scale: 1.35, budget: [7, 12], droneHz: 98,
-    waves: { count: [3, 4], perWave: [6, 11], fodder: ['preta', 'rakshasa'], fodderShare: [0.7, 0.3], eliteShare: [0.1, 0.3] },
+    waves: { count: [3, 4], perWave: [6, 11], fodder: ['preta', 'rakshasa'], fodderShare: [0.7, 0.3], eliteShare: [0.15, 0.5] },
   },
   {
     id: 'ranabhoomi', name: 'RANABHOOMI', sub: 'Field of the Fallen Warriors', rooms: 6,
     bg: '#171107', floor: '#241b0d', accent: '#ffcf5c', wall: '#403018',
     enemies: ['daitya', 'bhuta', 'yatudhana', 'vetala'], boss: 'kumbhakarna', hazard: 'arrowVolley',
     scale: 1.8, budget: [9, 15], droneHz: 123,
-    waves: { count: [3, 4], perWave: [8, 14], fodder: ['preta', 'rakshasa'], fodderShare: [0.6, 0.25], eliteShare: [0.2, 0.45] },
+    waves: { count: [3, 4], perWave: [8, 14], fodder: ['preta', 'rakshasa'], fodderShare: [0.6, 0.25], eliteShare: [0.25, 0.6] },
   },
   {
     id: 'vaitarani', name: 'VAITARANI', sub: 'The River Between Worlds', rooms: 2,
     bg: '#0a0e16', floor: '#121828', accent: '#9fb8ff', wall: '#222c4a',
     enemies: ['preta', 'rakshasa', 'naga', 'vetala', 'bhuta', 'daitya'], boss: 'yama', hazard: 'riverCurrent',
     scale: 2.1, budget: [12, 16], droneHz: 82,
-    waves: { count: [4, 4], perWave: [10, 15], fodder: ['preta'], fodderShare: [0.45, 0.25], eliteShare: [0.3, 0.45] },
+    waves: { count: [4, 4], perWave: [10, 15], fodder: ['preta'], fodderShare: [0.45, 0.25], eliteShare: [0.35, 0.5] },
   },
 ];
 

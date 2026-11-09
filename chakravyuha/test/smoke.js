@@ -3401,9 +3401,10 @@ globalThis.__waveResults = {};
         units += wave.length;
         for (const u of wave) {
           const def = DATA.ENEMIES[u.id];
-          threat += def.hp * biome.scale * (u.weak ? 0.5 : 1);
+          // 05.7.1-05: elites are flagged by composeWave (u.elite), not inferred from cost
+          threat += def.hp * biome.scale * (u.weak ? 0.5 : 1) * (u.elite ? DATA.WAVES.elite.hp : 1);
           if (u.weak) weak++;
-          if (def.cost >= DATA.WAVES.eliteCost) elite++;
+          if (u.elite && u.elite.length) elite++;
         }
       }
     }

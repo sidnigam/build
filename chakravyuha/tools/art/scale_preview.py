@@ -49,6 +49,26 @@ ACTOR_KIND = {
     "vetala": "enemy", "bhuta": "enemy", "daitya": "enemy", "yatudhana": "enemy",
     "tataka": "boss", "ahiravana": "boss", "kumbhakarna": "boss", "yama": "boss",
 }
+# 05.7.1-12: new actors (no "old" frame) are previewed LEFT = a committed same-biome reference
+# actor at its own r, RIGHT = the new actor at its r, for outline-weight/style comparison.
+NEW_ACTORS = {
+    # key: (home biome, r, kind, reference actor)
+    "pishacha": ("naraka", 9, "enemy", "preta"),
+    "kumbhipaka": ("naraka", 16, "enemy", "bhuta"),
+    "nagaguard": ("patala", 17, "enemy", "naga"),
+    "mayavi": ("patala", 14, "enemy", "vetala"),
+    "javelineer": ("ranabhoomi", 14, "enemy", "archer"),
+    "bannerman": ("ranabhoomi", 16, "enemy", "daitya"),
+    "brahmarakshasa": ("vaitarani", 15, "enemy", "yatudhana"),
+    "jalarakshasa": ("vaitarani", 16, "enemy", "yatudhana"),
+    "subahu": ("naraka", 24, "boss", "tataka"),
+    "mahiravana": ("patala", 24, "boss", "ahiravana"),
+    "alambusha": ("ranabhoomi", 24, "boss", "kumbhakarna"),
+    "maricha": ("vaitarani", 22, "boss", "yama"),
+}
+REFERENCE_ACTOR = {}
+for _k, (_b, _r, _kind, _ref) in NEW_ACTORS.items():
+    HOME_BIOME[_k], ACTOR_R[_k], ACTOR_KIND[_k], REFERENCE_ACTOR[_k] = _b, _r, _kind, _ref
 KIND_DIR = {"player": "player", "enemy": "enemies", "boss": "bosses"}
 ZOOM_ACTORS = {"player", "preta", "tataka"}
 
@@ -105,7 +125,10 @@ def build_actor_panel(actor, old_dir, out_dir):
     biome = HOME_BIOME[actor]
     # old_dir mirrors _raw/<kind>/<actor>/<file> under old_dir/_raw/...
     kind = ACTOR_KIND[actor]
-    if kind == "player":
+    ref = REFERENCE_ACTOR.get(actor)
+    if ref:
+        old_frame_path = raw_frame(RAW_DIR, ref)
+    elif kind == "player":
         old_frame_path = old_dir / "_raw" / "player" / "player_idle_0.png"
     else:
         old_frame_path = old_dir / "_raw" / KIND_DIR[kind] / actor / f"{actor}_idle_0.png"
@@ -121,11 +144,13 @@ def build_actor_panel(actor, old_dir, out_dir):
     rows = []
     for dpr, label in ((1, "res1"), (2, "res2")):
         target_h = max(8, r * 4 * dpr)
-        old_s = downscale_to_height(old_img, target_h)
+        ref_h = max(8, ACTOR_R[ref] * 4 * dpr) if ref else target_h
+        old_s = downscale_to_height(old_img, ref_h)
         new_s = downscale_to_height(new_img, target_h)
         row_w = old_s.size[0] + new_s.size[0] + 4
-        floor_bg = floor_crop(biome, row_w, target_h)
-        grey_bg = Image.new("RGBA", (row_w, target_h), (110, 110, 110, 255))
+        row_h = max(target_h, ref_h)
+        floor_bg = floor_crop(biome, row_w, row_h)
+        grey_bg = Image.new("RGBA", (row_w, row_h), (110, 110, 110, 255))
         rows.append((label, paste_pair(floor_bg, old_s, new_s), paste_pair(grey_bg, old_s, new_s)))
 
     width = max(r[1].size[0] for r in rows)

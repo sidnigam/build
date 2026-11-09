@@ -185,7 +185,7 @@ function killEnemy(e) {
   }
   if (e.elite) eliteDeath(e);
   // coins
-  let coins = e.boss ? U.randInt(8, 12) : (U.chance(0.55) ? U.randInt(1, 3) : 0);
+  let coins = e.mini ? U.randInt(4, 6) : e.boss ? U.randInt(8, 12) : (U.chance(0.55) ? U.randInt(1, 3) : 0);
   for (let i = 0; i < coins; i++) {
     GAME.pickups.push({ x: e.x + U.rand(-14, 14), y: e.y + U.rand(-14, 14),
       type: 'mudra', val: U.randInt(2, 5), t: 12,

@@ -418,6 +418,8 @@ const ROOMS = {
   doorOptions() {
     // roomIdx is 1-based; after the biome's final combat room, only the boss gate remains
     if (GAME.roomIdx >= GAME.biome.rooms) return [DATA.REWARDS.boss];
+    // 05.7.1-06 (D-08): the biome's mini-boss room sits at a fixed mid-biome slot, alone
+    if (GAME.biome.miniRoom && GAME.roomIdx + 1 === GAME.biome.miniRoom) return [DATA.REWARDS.miniboss];
 
     const P = GAME.player;
     const opts = [];
@@ -452,12 +454,12 @@ const ROOMS = {
     G.enemies = []; G.eprojectiles = []; G.epools = []; G.pprojectiles = [];
     G.pickups = []; G.zones = []; G.orbits = []; G.rings = [];
     G.bolts = []; G.dangerZones = []; G.doors = []; G.hazards = [];
-    G.nooseT = 0; G.bossRewarded = false;
+    G.nooseT = 0; G.bossRewarded = false; G.miniRef = null;
     G.spawnQueue = []; G.lastWaveSize = 0; G.dripT = 0; G.waveDelay = 0;
     ENEMY_AI.reset();   // 05.7.1-04: tokens and slots never carry across rooms
 
     // D-02: size the arena for this room kind BEFORE the player is placed.
-    const kind = rewardId === 'boss' ? 'boss' : (rewardId === 'sarovar' || rewardId === 'kubera') ? 'rest' : 'combat';
+    const kind = (rewardId === 'boss' || rewardId === 'miniboss') ? 'boss' : (rewardId === 'sarovar' || rewardId === 'kubera') ? 'rest' : 'combat';
     this.setArena(kind);
 
     const P = G.player;
@@ -475,6 +477,23 @@ const ROOMS = {
       G.bossRef = boss;
       G.waves = [];
       UI.bossIntro(boss.bossDef);
+      G.state = 'combat';
+      return;
+    }
+
+    // 05.7.1-06 (D-08): mini-boss room. Open boss-size arena, no hazards, no waves; the champion
+    // lives on GAME.miniRef and NEVER on GAME.bossRef (biome progression, boss HUD/music/rumble
+    // and death-screen copy all key off bossRef). Clears through the normal room-clear logic.
+    if (rewardId === 'miniboss') {
+      G.bossRef = null;
+      G.roomIdx++;
+      G.totalRooms++;
+      this.buildArena(true);
+      const B = new MiniBoss(G.biome.mini, G.arena.x + G.arena.w * 0.7, G.arena.y + G.arena.h / 2);
+      G.enemies.push(B);
+      G.miniRef = B;
+      G.waves = [];
+      UI.bossIntro(B.bossDef);
       G.state = 'combat';
       return;
     }
@@ -540,6 +559,11 @@ const ROOMS = {
         break;
       case 'amrit': UI.offerAmrit(); break;
       case 'first': UI.offerBoon(); break; // guaranteed first-room boon
+      case 'miniboss':   // 05.7.1-06: the champion's reward — mudra plus a Rare-or-better boon
+        P.mudra += 60; AUDIO.sfx('coin');
+        UI.banner('+60 MUDRA — THE CHAMPION FALLS', '#ff9a3c');
+        UI.offerBoon(undefined, { minRarity: 1 });
+        break;
     }
     this.openDoors();
   },

@@ -8,7 +8,8 @@ const UI = {
   DEVANAGARI: {
     gods:   { hanuman: 'हनुमान', agni: 'अग्नि', indra: 'इन्द्र', vayu: 'वायु', krishna: 'कृष्ण', durga: 'दुर्गा' },
     biomes: { naraka: 'नरक', patala: 'पाताल', ranabhoomi: 'रणभूमि', vaitarani: 'वैतरणी' },
-    bosses: { tataka: 'ताटका', ahiravana: 'अहिरावण', kumbhakarna: 'कुम्भकर्ण', yama: 'यम धर्मराज' },
+    bosses: { tataka: 'ताटका', ahiravana: 'अहिरावण', kumbhakarna: 'कुम्भकर्ण', yama: 'यम धर्मराज',
+              subahu: 'सुबाहु', mahiravana: 'महिरावण', alambusha: 'अलम्बुष', maricha: 'मारीच' },
     amrit: 'अमृत',
   },
 
@@ -119,7 +120,8 @@ const UI = {
     return 0;
   },
 
-  offerBoon(forceGod) {
+  // opts.minRarity (05.7.1-06): floor for every card's rolled rarity (mini-boss reward = Rare+)
+  offerBoon(forceGod, opts = {}) {
     const god = forceGod || this.pickGod();
     if (!god) { // everything owned: amrit fallback
       if (GAME.player.allBoons().some(b => b.rarity < 2)) return this.offerAmrit();
@@ -140,7 +142,7 @@ const UI = {
     const cards = this.el('boon-cards');
     cards.innerHTML = '';
     for (const def of pool) {
-      const rarity = this.rollRarity();
+      const rarity = Math.max(opts.minRarity || 0, this.rollRarity());
       const R = DATA.RARITIES[rarity];
       const v = def.base * R.mult;
       const card = document.createElement('div');

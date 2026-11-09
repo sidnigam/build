@@ -29,6 +29,7 @@ const GAME = {
   reward: null, waves: [], waveDelay: 0,
   spawnQueue: [], lastWaveSize: 0, dripT: 0,   // Phase 05.1 (WAVE-02/03): overlapping waves + alive-cap drip queue
   kills: 0, bossRef: null, bossRewarded: false, bossHurtT: 0,
+  miniRef: null,          // 05.7.1-06: live mini-boss (never also bossRef); hook for the 05.7.2 score
   shopSeenThisBiome: false, nooseT: 0, prePause: null,
 
   // world arrays
@@ -71,6 +72,7 @@ const GAME = {
         { key: 'player', path: 'assets/sprites/player/player-atlas.json' },
         ...Object.keys(DATA.ENEMIES).map(k => ({ key: k, path: `assets/sprites/enemies/${k}-atlas.json` })),
         ...Object.keys(DATA.BOSSES).map(k => ({ key: k, path: `assets/sprites/bosses/${k}-atlas.json` })),
+        ...Object.keys(DATA.MINIBOSSES).map(k => ({ key: k, path: `assets/sprites/bosses/${k}-atlas.json` })),   // 05.7.1-06
       ];
       SPRITES.load(manifest);
       SPRITES.loadTextures(DATA.BIOMES.map(b => ({ key: SPRITES.bgKeyFor(b), path: SPRITES.bgPathFor(b) })));   // biome backgrounds (02-10); missing -> primitive bg
@@ -225,6 +227,7 @@ const GAME = {
   // other three (rakshasa/asura) bosses keep 'THE WARDEN'. Falls back to 'THE WARDEN' if a
   // boss entry has no label.
   roomLabel() {
+    if (this.miniRef && !this.miniRef.dead) return this.miniRef.bossDef.label || 'THE CHAMPION';
     if (this.bossRef) {
       const d = DATA.BOSSES[this.bossRef.type];
       return (d && d.label) || 'THE WARDEN';
@@ -1467,6 +1470,28 @@ const GAME = {
       ctx.font = 'bold 13px Georgia';
       ctx.textAlign = 'center';
       ctx.fillText(`${B.bossDef.name} — ${B.bossDef.sub}`, this.W / 2, y - 10);
+      ctx.textAlign = 'left';
+    }
+
+    // mini-boss bar (05.7.1-06): smaller than the boss bar, same slot; never drawn with a boss
+    if (this.miniRef && !this.miniRef.dead && !this.bossRef) {
+      const B = this.miniRef;
+      const w = 360, x = (this.W - w) / 2, y = this.H - 40;
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.fillRect(x - 3, y - 3, w + 6, 18);
+      ctx.fillStyle = B.color;
+      const hb = U.clamp(B.hp / B.maxhp, 0, 1);
+      ctx.fillRect(x, y, w * hb, 12);
+      if (this.bossHurtT > 0) {
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.fillRect(x, y, w * hb, 12);
+      }
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+      ctx.strokeRect(x - 3, y - 3, w + 6, 18);
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 12px Georgia';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${B.bossDef.name} — ${B.bossDef.sub}`, this.W / 2, y - 9);
       ctx.textAlign = 'left';
     }
 

@@ -364,28 +364,28 @@ DATA.MINIBOSSES = {
 // ---------- BIOMES ----------
 DATA.BIOMES = [
   {
-    id: 'naraka', name: 'NARAKA', sub: 'The Iron City of Yama', rooms: 5,
+    id: 'naraka', name: 'NARAKA', sub: 'The Iron City of Yama', rooms: 4, miniRoom: 3, mini: 'subahu',
     bg: '#160a0e', floor: '#241016', accent: '#ff5533', wall: '#3d1a20',
     enemies: ['preta', 'rakshasa', 'archer', 'pishacha', 'kumbhipaka'], boss: 'tataka', hazard: 'fireVent',
     scale: 1.0, budget: [4, 9], droneHz: 110,
     waves: { count: [3, 3], perWave: [4, 9], fodder: ['preta', 'pishacha'], fodderShare: [0.85, 0.35], eliteShare: [0.1, 0.35] },
   },
   {
-    id: 'patala', name: 'PATALA', sub: 'Realm of the Serpent Kings', rooms: 6,
+    id: 'patala', name: 'PATALA', sub: 'Realm of the Serpent Kings', rooms: 5, miniRoom: 3, mini: 'mahiravana',
     bg: '#061412', floor: '#0b201c', accent: '#2ee6a8', wall: '#143830',
     enemies: ['naga', 'vetala', 'archer', 'rakshasa', 'nagaguard', 'mayavi'], boss: 'ahiravana', hazard: 'venomPool',
     scale: 1.35, budget: [7, 12], droneHz: 98,
     waves: { count: [3, 4], perWave: [6, 11], fodder: ['preta', 'rakshasa'], fodderShare: [0.7, 0.3], eliteShare: [0.15, 0.5] },
   },
   {
-    id: 'ranabhoomi', name: 'RANABHOOMI', sub: 'Field of the Fallen Warriors', rooms: 6,
+    id: 'ranabhoomi', name: 'RANABHOOMI', sub: 'Field of the Fallen Warriors', rooms: 5, miniRoom: 3, mini: 'alambusha',
     bg: '#171107', floor: '#241b0d', accent: '#ffcf5c', wall: '#403018',
     enemies: ['daitya', 'bhuta', 'yatudhana', 'vetala', 'javelineer', 'bannerman'], boss: 'kumbhakarna', hazard: 'arrowVolley',
     scale: 1.8, budget: [9, 15], droneHz: 123,
     waves: { count: [3, 4], perWave: [8, 14], fodder: ['preta', 'rakshasa'], fodderShare: [0.6, 0.25], eliteShare: [0.25, 0.6] },
   },
   {
-    id: 'vaitarani', name: 'VAITARANI', sub: 'The River Between Worlds', rooms: 2,
+    id: 'vaitarani', name: 'VAITARANI', sub: 'The River Between Worlds', rooms: 3, miniRoom: 2, mini: 'maricha',
     bg: '#0a0e16', floor: '#121828', accent: '#9fb8ff', wall: '#222c4a',
     enemies: ['preta', 'rakshasa', 'naga', 'vetala', 'bhuta', 'daitya', 'brahmarakshasa', 'jalarakshasa'], boss: 'yama', hazard: 'riverCurrent',
     scale: 2.1, budget: [12, 16], droneHz: 82,
@@ -512,6 +512,7 @@ DATA.REWARDS = {
   sarovar:{ id: 'sarovar',name: 'Sacred Pool',   sym: '☽', color: '#7fdcb7', w: 8 },
   kubera: { id: 'kubera', name: "Kubera's Wares",sym: '⚖', color: '#ffa94d', w: 8 },
   boss:   { id: 'boss',   name: 'The Warden',    sym: '☠', color: '#ff4430', w: 0 },
+  miniboss: { id: 'miniboss', name: 'The Champion', sym: '⚔', color: '#ff9a3c', w: 0 },   // 05.7.1-06: biome.miniRoom only
 };
 
 // ---------- KUBERA SHOP ----------

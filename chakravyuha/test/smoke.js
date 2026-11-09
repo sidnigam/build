@@ -633,11 +633,11 @@ check('data: boons/meta/biomes consistent' + (dataErrors.length ? ' — ' + data
 // exercising boss move scripts for a while before killing them.
 vm.runInContext(`
 globalThis.simulateRun = function(opts = {}) {
-  const log = { states: new Set(), bosses: new Set(), bossMoves: new Set(), boons: 0, frames: 0, errors: [] };
+  const log = { states: new Set(), bosses: new Set(), minis: new Set(), bossMoves: new Set(), boons: 0, frames: 0, errors: [] };
   GAME.startRun();
   const P = GAME.player;
   if (opts.godMode) { P.maxhp = 1e9; P.hp = 1e9; }
-  let bossClock = 0;
+  let bossClock = 0, lastBoss = null;
   let frame = 0;
   const DT = 1 / 60;
   while (frame++ < 300000) {
@@ -657,7 +657,9 @@ globalThis.simulateRun = function(opts = {}) {
         if (living.length) {
           const boss = living.find(e => e.boss);
           if (boss) {
-            log.bosses.add(boss.type);
+            // 05.7.1-06: mini-bosses are boss-flagged too, but only biome bosses count as bosses
+            if (!boss.mini) log.bosses.add(boss.type); else log.minis.add(boss.type);
+            if (boss !== lastBoss) { lastBoss = boss; bossClock = 0; }
             log.bossMoves.add(boss.type + ':' + boss.state);
             bossClock += DT;
             // let the boss act for 20 sim-seconds before bursting it down
@@ -712,6 +714,7 @@ const r1 = vm.runInContext('simulateRun({ godMode: true })', sandbox);
 check('no runtime errors' + (r1.errors.length ? ' — ' + r1.errors[0] : ''), r1.errors.length === 0);
 check(`reaches victory (final=${r1.final}, biome=${r1.biome}, frames=${r1.frames})`, r1.final === 'victory');
 check(`fights all 4 bosses (${[...r1.bosses].join(', ')})`, r1.bosses.size === 4);
+check(`fights all 4 mini-bosses (${[...r1.minis].join(', ')})`, r1.minis.size === 4);
 check(`boons picked along the way (${r1.boons})`, r1.boons >= 6);
 const moves = [...r1.bossMoves].map(String);
 check(`boss move variety (${moves.length} state pairs)`, moves.length >= 10);
@@ -1257,6 +1260,7 @@ console.log(`  (stress run took ${stressMs}ms wall clock)`);
 check('stress run: no runtime errors' + (rs.errors.length ? ' — ' + rs.errors[0] : ''), rs.errors.length === 0);
 check(`stress run: reaches victory (final=${rs.final})`, rs.final === 'victory');
 check(`stress run: fights all 4 bosses (${[...rs.bosses].join(', ')})`, rs.bosses.size === 4);
+check(`stress run: fights all 4 mini-bosses (${[...rs.minis].join(', ')})`, rs.minis.size === 4);
 check('stress run: VFX.pool.length === CAP (no growth under sustained saturation)',
   vm.runInContext('VFX.pool.length === VFX.CAP', sandbox) === true);
 check('stress run: VFX.stats().peak <= CAP', vm.runInContext('VFX.stats().peak <= VFX.CAP', sandbox) === true);

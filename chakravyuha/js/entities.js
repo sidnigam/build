@@ -949,6 +949,13 @@ class Enemy {
         else if (m === 'warded') { this.wardT = 0; this.wardCycle = U.rand(0, M.warded.every); }
       }
     } else if (mods) { this.hp *= mods.hp || 1; this.maxhp = this.hp; this.dmg *= mods.dmg || 1; this.weak = true; }
+    // 05.7.1-09 (D-04): Vows of Tapas — life, damage and haste. Haste shortens movement and
+    // recovery only; wind-up / telegraph durations are never scaled (ENEMY_TG.MIN holds).
+    const H = (typeof GAME !== 'undefined') ? GAME.heat : null;
+    if (H) {
+      this.hp *= H.enemyHp; this.maxhp = this.hp; this.dmg *= H.enemyDmg;
+      this.spd *= H.haste; this.cdMul = (this.cdMul || 1) / H.haste;
+    }
     this.rallied = false;            // set each frame by ENEMY_AI.tick (rallying elites / banner aura)
     if (d.guard) this.guardHp = d.guard * scale;   // 05.7.1-05: naga shield-guard frontal guard
     this.dead = false; this.boss = false;
@@ -1084,7 +1091,12 @@ class Enemy {
             this.aimA = aToP;
             this.armAttack();
             const ps = this.def.projSpeed;
-            this.fire(this.def.fam || 'bolt', Math.cos(this.aimA) * ps, Math.sin(this.aimA) * ps, this.dmg);
+            // 05.7.1-09 (Vow of Storms): 1 + projExtra shots in a ±0.12 rad-step fan around the aim
+            const nx = 1 + ((GAME.heat && GAME.heat.projExtra) || 0);
+            for (let k = 0; k < nx; k++) {
+              const a = this.aimA + (k - (nx - 1) / 2) * 0.12;
+              this.fire(this.def.fam || 'bolt', Math.cos(a) * ps, Math.sin(a) * ps, this.dmg);
+            }
             this.endAttack(); this.state = 'idle'; this.t = U.rand(1.6, 2.6) * this.cdMul;
           }
           break;
@@ -1108,7 +1120,10 @@ class Enemy {
             this.aimA = aToP;
             this.armAttack();
             const ps = this.def.projSpeed;
-            for (const off of [-0.3, 0, 0.3])
+            // 05.7.1-09 (Vow of Storms): 3 + projExtra shots across the same ±0.3 rad arc
+            const px = (GAME.heat && GAME.heat.projExtra) || 0;
+            const offs = px ? Array.from({ length: 3 + px }, (_, k) => -0.3 + 0.6 * k / (2 + px)) : [-0.3, 0, 0.3];
+            for (const off of offs)
               this.fire(this.def.fam || 'bolt', Math.cos(this.aimA + off) * ps, Math.sin(this.aimA + off) * ps, this.dmg);
             this.endAttack(); this.state = 'idle'; this.t = U.rand(2, 3.2) * this.cdMul;
           }
@@ -1591,13 +1606,36 @@ class Boss extends Enemy {
     this.armed = null;
     this.marks = [];
     this.dmgCalls = 0;
+    // 05.7.1-09: Vows of Pain / Endurance (the Enemy base ctor's scaling was overwritten above)
+    if (GAME.heat) { this.hp *= GAME.heat.enemyHp; this.maxhp = this.hp; this.dmg *= GAME.heat.enemyDmg; }
   }
 
   // ---- overridable hooks (05.7.1-06): MiniBoss (js/minibosses.js) swaps the move tables,
   // the phase threshold/title and may add custom move states without touching Boss ----
-  moveTable(phase = this.phase) { return (BOSS_MOVESETS[this.type] || {})[phase] || []; }
+  moveTable(phase = this.phase) {
+    const sets = BOSS_MOVESETS[this.type] || {};
+    return phase === 1 ? this.heatMoveTable(sets[1] || [], sets[2] || []) : (sets[phase] || []);
+  }
   moveDefBase(id) { return BOSS_MOVE_DEFS[id]; }
-  phaseAt() { return 0.5; }
+  phaseAt() { return 0.5 + ((GAME.heat && GAME.heat.phaseAtBonus) || 0); }
+  // 05.7.1-09 (Vow of the Wardens, rank 1): phase 1 also knows the first phase-2 technique that is
+  // neither in phase 1 nor the opener, at weight 1. When phase 2 holds no such move (some
+  // champions only add their enrage opener), the opener itself is lent, without its opener flag;
+  // the deterministic phase-2 opener still fires first. Cached per instance.
+  heatMoveTable(base, phase2) {
+    if (!(GAME.heat && GAME.heat.extraMoves)) return base;
+    if (this._heatTable && this._heatTable.base === base) return this._heatTable.t;
+    const fresh = phase2.filter(m => !base.some(b => b[0] === m[0]));
+    const pick = fresh.find(m => !(m[2] && m[2].opener)) || fresh[0];
+    let t = base;
+    if (pick) {
+      const ov = pick[2] ? Object.assign({}, pick[2]) : null;
+      if (ov) delete ov.opener;
+      t = base.concat([ov && Object.keys(ov).length ? [pick[0], 1, ov] : [pick[0], 1]]);
+    }
+    this._heatTable = { base, t };
+    return t;
+  }
   phaseTitle() { return PHASE2_TITLES[this.type]; }
   customInitWind() { return false; }
   customWindTelegraph() { return false; }

@@ -43,9 +43,13 @@ class MiniBoss extends Boss {
   constructor(id, x, y) {
     super(id, x, y, DATA.MINIBOSSES[id]);
     this.mini = true; this.asleep = false; this.dmg = 14; this.state = 'intro'; this.t = 0.8;
+    if (GAME.heat) this.dmg *= GAME.heat.enemyDmg;   // 05.7.1-09: after the dmg 14 override (hp scaled in Boss)
   }
-  moveTable(phase = this.phase) { return (MINI_MOVESETS[this.type] || {})[phase] || []; }
+  moveTable(phase = this.phase) {
+    const sets = MINI_MOVESETS[this.type] || {};
+    return phase === 1 ? this.heatMoveTable(sets[1] || [], sets[2] || []) : (sets[phase] || []);
+  }
   moveDefBase(id) { return MINI_MOVE_DEFS[id] || BOSS_MOVE_DEFS[id]; }
-  phaseAt() { return 0.4; }
+  phaseAt() { return 0.4 + ((GAME.heat && GAME.heat.phaseAtBonus) || 0); }
   phaseTitle() { return this.bossDef.enrageTitle; }
 }

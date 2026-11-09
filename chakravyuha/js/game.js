@@ -180,6 +180,7 @@ const GAME = {
     this.lodged = [];
     CAMERA.resetFx();
     META.runs++; META.save();
+    HEAT.beginRun();             // 05.7.1-09 (D-04): freeze this run's vows into GAME.heat before any room spawns
     ROOMS.enterBiome(0);
   },
 

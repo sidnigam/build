@@ -516,6 +516,9 @@ const PROJ = {
       if (n >= def.perShooterCap) return null;
     }
     if (!PROJ._makeRoom()) return null;
+    // 05.7.1-09 (Vow of Storms): every enemy projectile flies projSpeed × faster
+    const sp = (GAME.heat && GAME.heat.projSpeed) || 1;
+    if (sp !== 1) o = Object.assign({}, o, { vx: (o.vx || 0) * sp, vy: (o.vy || 0) * sp });
     let p;
     if (fam === 'bolt' && !o.extra) {
       // legacy shape: exactly today's {x, y, vx, vy, dmg, color, r, t: 4} + bookkeeping fields
@@ -966,7 +969,11 @@ const PROJ = {
     const marks = [], shots = [];
     const deco = (s) => { s.dmgMul = pt.dmgMul; if (pt.status) s.status = pt.status; shots.push(s); };
     const base = U.angle(src.x, src.y, tgt.x, tgt.y);
-    const n = Math.max(1, pt.count | 0);
+    // 05.7.1-09 (Vow of Storms): 'player' and 'radial' patterns gain projExtra shots; a single
+    // aimed shot opens into a fan with ±0.12 rad steps so the extra shots never stack
+    const px = (pt.aim === 'player' || pt.aim === 'radial') ? ((GAME.heat && GAME.heat.projExtra) || 0) : 0;
+    const n = Math.max(1, pt.count | 0) + px;
+    if (px && pt.aim === 'player' && !pt.spread) pt.spread = 0.12 * (n - 1);
     if (pt.aim === 'radial') {
       for (let i = 0; i < n; i++) {
         const a = (i / n) * U.TAU + (pt.offset || 0);

@@ -326,7 +326,10 @@ module.exports = function ({ R, check, section }) {
     check(`${id}: first phase-2 move is the opener even mid-chain (${r.opener}; got ${r.cur}, chainLeft ${r.chainLeft})`,
       r.cur === r.opener && r.chainLeft === 0);
   }
-  check('GAME.heat is undefined in a fresh run (Heat hook inert until plan 09)', R(`(GAME.startRun(), GAME.heat === undefined)`));
+  // 05.7.1-09: startRun now freezes HEAT.effects into GAME.heat; with no vows (or Heat locked) the
+  // boss hooks stay inert: no extra chain links and an unscaled chain rest.
+  check('a fresh run with no vows has inert boss Heat hooks (chainBonus 0, restMul 1)',
+    R(`(META.heat = {}, GAME.startRun(), !!GAME.heat && GAME.heat.chainBonus === 0 && GAME.heat.restMul === 1 && GAME.heat.extraMoves === false)`));
 
   // ================= Task 2: +2 new moves per boss (D-22) =================
   section('bossai: new boss moves — data and tables');

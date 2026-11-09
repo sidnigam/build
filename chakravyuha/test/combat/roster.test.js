@@ -2,7 +2,7 @@
 // ENEMY_AI / ENEMY_TG helpers. Data, per-enemy behaviour, the telegraph invariant, the
 // long-shot rule and the non-deity naming rule.
 'use strict';
-module.exports = function ({ R, check }) {
+module.exports = function ({ R, sandbox, check, harness }) {
   const DT = 1 / 60;
   R(`globalThis.__ro = {
     boot(biome) {
@@ -64,9 +64,8 @@ module.exports = function ({ R, check }) {
   const REVERED_NAGA = /(Shesha|Vasuki|Takshaka|Kaliya)/i;
   const ORIGINAL = ['preta', 'rakshasa', 'archer', 'naga', 'vetala', 'bhuta', 'daitya', 'yatudhana'];
 
-  // which biomes are implemented so far (Task 2 = naraka + patala, Task 3 = all four)
   const present = R(`Object.keys(DATA.ENEMIES)`);
-  const biomes = Object.keys(NEW).filter(b => NEW[b].some(id => present.includes(id)) || b === 'naraka' || b === 'patala');
+  const biomes = Object.keys(NEW);
 
   // ---- data ----
   for (const b of biomes) {
@@ -220,13 +219,186 @@ module.exports = function ({ R, check }) {
   check(`mayavi: the stationary player gets rooted and slowed`, mv.rooted && mv.slowed);
   check(`mayavi: every attack has a 'status' tell >= 0.40 s (${mv.n} tells, min ${mv.minWind.toFixed(3)})`, mv.n > 0 && mv.allStatus);
 
+  {
+    // ---- danava javelineer: long band, locked line tell, beam; elite stun; long-shot rule ----
+    const jv = R(`(() => {
+      const P = __ro.boot(2); U.seed(51);
+      const A = GAME.arena; const hx = A.x + A.w / 2, hy = A.y + A.h / 2;
+      __ro.hold(P, hx, hy);
+      const js = [0, 2.2, -2.2].map(a => __ro.spawn('javelineer', Math.cos(a) * 500, Math.sin(a) * 500));
+      let inB = 0, n = 0;
+      for (let f = 0; f < 10 * 60; f++) {
+        __ro.hold(P, hx, hy); P.hp = 1e9; GAME.hitstop = 0; GAME.update(${DT});
+        if (f >= 3 * 60) for (const j of js) if (j.state === 'idle') { n++; const d = U.dist(j.x, j.y, hx, hy); if (d >= 380 && d <= 640) inB++; }
+      }
+      const res = { frac: n ? inB / n : 0 };
+      for (const [tag, dx, dy, mods] of [['in', 430, 0, null], ['long', 0, -520, null], ['elite', 430, 0, { elite: ['hasty'] }]]) {
+        const P2 = __ro.boot(2); U.seed(52);
+        const x0 = P2.x, y0 = P2.y;
+        const e = __ro.spawn('javelineer', dx, dy, mods); e.t = 0;
+        let wind = null, tg = null, longDuring = false, beam = null, aimMoved = false;
+        for (let f = 0; f < 150 && !beam; f++) {
+          __ro.hold(P2, x0, y0); GAME.hitstop = 0;
+          if (wind) { P2.x = x0 + 40; }               // player sidesteps during the tell: aim stays locked
+          GAME.update(${DT});
+          if (e.windKind && !e.armedAtk) {
+            if (!wind) wind = { kind: e.windKind, total: e.windTotal, a: e.telegraph ? e.telegraph.a : null };
+            tg = e.telegraph ? { type: e.telegraph.type, len: e.telegraph.len, w: e.telegraph.w, a: e.telegraph.a } : tg;
+            if (e.telegraph && wind.a != null && Math.abs(e.telegraph.a - wind.a) > 1e-9) aimMoved = true;
+            if (e.longShot) longDuring = true;
+          }
+          beam = GAME.eprojectiles.find(p => p.fam === 'beam' && p.owner === e) || null;
+        }
+        res[tag] = { wind, tg, longDuring, aimMoved, longAfter: !!e.longShot,
+          beam: beam ? { tell: beam.tell, a: beam.a, status: beam.status ? beam.status.type : null, dur: beam.status ? beam.status.dur : 0 } : null };
+      }
+      return res;
+    })()`);
+    check(`javelineer: keeps 420-600 px (${(jv.frac * 100).toFixed(0)}% of idle frames in [380, 640])`, jv.frac >= 0.7);
+    check(`javelineer: winds 'beam' >= 0.70 s (${jv.in.wind ? jv.in.wind.total.toFixed(3) : '-'}) with a locked line telegraph (len 900, w 14), then fires a beam (tell 0.1)`,
+      !!jv.in.wind && jv.in.wind.kind === 'beam' && jv.in.wind.total >= 0.7 - 1e-6 && jv.in.tg && jv.in.tg.type === 'line' &&
+      jv.in.tg.len === 900 && jv.in.tg.w === 14 && !jv.in.aimMoved && !!jv.in.beam && Math.abs(jv.in.beam.tell - 0.1) < 1e-9 &&
+      Math.abs(jv.in.beam.a - jv.in.wind.a) < 1e-9 && !jv.in.beam.status && !jv.in.longDuring);
+    check(`javelineer: elite winds 'stun' (still >= 0.7 s: ${jv.elite.wind ? jv.elite.wind.total.toFixed(3) : '-'}) and its beam stuns 0.4 s`,
+      !!jv.elite.wind && jv.elite.wind.kind === 'stun' && jv.elite.wind.total >= 0.7 - 1e-6 && !!jv.elite.beam &&
+      jv.elite.beam.status === 'stun' && jv.elite.beam.dur === 0.4);
+    check(`javelineer: from outside the view band +0.3 s tell (${jv.long.wind ? jv.long.wind.total.toFixed(3) : '-'} >= 1.0) and longShot during the wind only`,
+      !!jv.long.wind && jv.long.wind.total >= 0.7 + 0.3 - 1e-6 && jv.long.longDuring && !jv.long.longAfter && !!jv.long.beam);
+
+    // ---- asura standard-bearer: aura, no damage, hangs back ----
+    const bn = R(`(() => {
+      const P = __ro.boot(2);
+      const b = __ro.spawn('bannerman', 400, 0);
+      const near = __ro.spawn('rakshasa', 250, 100), far = __ro.spawn('rakshasa', -300, 0);
+      ENEMY_AI.tick(${DT});
+      const out = { near: near.dmgMul(), nearSpd: near.curSpeed() / near.spd, far: far.dmgMul(), farSpd: far.curSpeed() / far.spd,
+        self: b.dmgMul() };
+      killEnemy(b); ENEMY_AI.tick(${DT});
+      out.after = near.dmgMul(); out.afterSpd = near.curSpeed() / near.spd;
+      // band
+      const P2 = __ro.boot(2); U.seed(53);
+      const A = GAME.arena; const hx = A.x + A.w / 2, hy = A.y + A.h / 2;
+      __ro.hold(P2, hx, hy);
+      const bm = __ro.spawn('bannerman', 450, 0);
+      __ro.spawn('rakshasa', 150, 0); __ro.spawn('preta', 120, 60);
+      let inB = 0, n = 0;
+      for (let f = 0; f < 8 * 60; f++) {
+        __ro.hold(P2, hx, hy); P2.hp = 1e9; GAME.hitstop = 0; GAME.update(${DT});
+        if (f >= 2 * 60) { n++; const d = U.dist(bm.x, bm.y, hx, hy); if (d >= 260 && d <= 540) inB++; }
+      }
+      out.frac = n ? inB / n : 0;
+      return out;
+    })()`);
+    check(`bannerman: allies within 240 px are rallied (dmgMul ${bn.near}) and ×1.15 speed (${bn.nearSpd.toFixed(3)}); far ones not (${bn.far}, ${bn.farSpd})`,
+      bn.near === 1.2 && Math.abs(bn.nearSpd - 1.15) < 1e-9 && bn.far === 1 && bn.farSpd === 1);
+    check('bannerman: the aura ends when it dies', bn.after === 1 && bn.afterSpd === 1);
+    check(`bannerman: keeps 300-500 px from the player (${(bn.frac * 100).toFixed(0)}% of frames in [260, 540])`, bn.frac >= 0.7);
+
+    // ---- brahmarakshasa: heals allies, slow orb after a ranged tell ----
+    const br = R(`(() => {
+      const P = __ro.boot(3); U.seed(54);
+      const hx = P.x, hy = P.y;
+      const h = __ro.spawn('brahmarakshasa', 330, 0); h.t = 99;
+      const hurt = __ro.spawn('rakshasa', 330, 120), ok = __ro.spawn('rakshasa', 330, -120);
+      hurt.update = function () {}; ok.update = function () {};
+      hurt.hp = hurt.maxhp * 0.4; ok.hp = ok.maxhp * 0.9;
+      h.hp = h.maxhp * 0.1;
+      const h0 = h.hp, pHp = P.hp; let bolts = 0, rings = 0, at = -1;
+      for (let f = 0; f < 5 * 60 && at < 0; f++) {
+        __ro.hold(P, hx, hy); GAME.hitstop = 0;
+        const nb = GAME.bolts.length, nr = GAME.rings.length;
+        GAME.update(${DT});
+        if (hurt.hp > hurt.maxhp * 0.4 + 1e-9) { at = (f + 1) * ${DT}; bolts = GAME.bolts.length - nb; rings = GAME.rings.length - nr; }
+        h.t = 99;
+      }
+      const heal = Math.abs(hurt.hp - hurt.maxhp * 0.6) < 1e-6 && Math.abs(ok.hp - ok.maxhp * 0.9) < 1e-9 && h.hp === h0 && P.hp === pHp;
+      // orb
+      __ro.boot(3); U.seed(55);
+      const P2 = GAME.player, x2 = P2.x, y2 = P2.y;
+      const o = __ro.spawn('brahmarakshasa', 330, 0); o.t = 0;
+      let orb = null, sawCircle = false;
+      for (let f = 0; f < 120 && !orb; f++) {
+        __ro.hold(P2, x2, y2); GAME.hitstop = 0; GAME.update(${DT});
+        if (o.windKind === 'ranged' && o.telegraph && o.telegraph.type === 'circle') sawCircle = true;
+        orb = GAME.eprojectiles.find(p => p.fam === 'orb' && p.owner === o) || null;
+      }
+      const w = ENEMY_TG.windLog.filter(x => x.type === 'brahmarakshasa');
+      return { heal, at, bolts, rings, orb: !!orb, spd: orb ? Math.hypot(orb.vx, orb.vy) : 0, knock: orb && orb.status ? orb.status.type : null,
+        sawCircle, wind: w.length ? w[0].wind : 0, kind: w.length ? w[0].kind : '' };
+    })()`);
+    check(`brahmarakshasa: heals the lowest-percent ally within 260 px by 20% max hp (at ${br.at.toFixed(2)} s <= 4.2), never itself or the player`,
+      br.heal && br.at > 0 && br.at <= 4.2);
+    check(`brahmarakshasa: the heal is visible (beam ${br.bolts}, ring ${br.rings})`, br.bolts > 0 && br.rings > 0);
+    check(`brahmarakshasa: a slow knockback orb (${br.spd.toFixed(0)} px/s) after a >= 0.45 s 'ranged' circle tell (${br.wind.toFixed(3)})`,
+      br.orb && Math.abs(br.spd - 140) < 1e-6 && br.knock === 'knock' && br.sawCircle && br.kind === 'ranged' && br.wind >= 0.45 - 1e-6);
+
+    // ---- jala-rakshasa: submerge, untargetable, emerge tell, ring ----
+    const jr = R(`(() => {
+      const P = __ro.boot(3); U.seed(56);
+      const hx = P.x, hy = P.y;
+      const e = __ro.spawn('jalarakshasa', 260, 0); e.t = 0;
+      let subAt = -1, windAt = -1, emergedAt = -1, immune = true, pass = true, meleeSkip = true, circle = false, ring = null;
+      let hp0 = P.hp, hit = false, knocked = false, f = 0;
+      const crit = META.critChance; META.critChance = () => 0;
+      for (; f < 6 * 60 && emergedAt < 0; f++) {
+        __ro.hold(P, hx, hy); P.iframes = 0; GAME.hitstop = 0;
+        GAME.update(${DT});
+        const t = (f + 1) * ${DT};
+        if (e.submerged && subAt < 0) subAt = t;
+        if (e.submerged) {
+          const h = e.hp;
+          if (hitEnemy(e, 50, 'attack') !== 0 || e.hp !== h) immune = false;
+          const shot = { x: e.x - 3, y: e.y, vx: 300, vy: 0, dmg: 10, r: 5, t: 1, pierce: false, src: 'attack', color: '#ffffff', hitSet: new Set() };
+          GAME.pprojectiles.push(shot);
+          const before = e.hp;
+          GAME.update(0.001);
+          if (shot.hitSet.has(e) || e.hp !== before) pass = false;
+          GAME.pprojectiles = GAME.pprojectiles.filter(p => p !== shot);
+          // a melee swing at it does nothing
+          INPUT.wx = e.x; INPUT.wy = e.y; P.aim = U.angle(P.x, P.y, e.x, e.y);
+          const sx = P.x, sy = P.y; P.x = e.x - 40; P.y = e.y;
+          const bh = e.hp; e.kx = 0; e.ky = 0; P.atkCd = 0; P.meleeAttack();
+          if (e.hp !== bh || e.kx !== 0) meleeSkip = false;
+          P.x = sx; P.y = sy;
+        }
+        if (e.state === 'emergeWind') {
+          if (windAt < 0) windAt = t;
+          if (e.telegraph && e.telegraph.type === 'circle' && e.telegraph.r === 70) circle = true;
+        }
+        if (subAt > 0 && !e.submerged && emergedAt < 0) emergedAt = t;
+      }
+      META.critChance = crit;
+      // let the emerge resolve
+      for (let k = 0; k < 10; k++) { __ro.hold(P, hx, hy); GAME.hitstop = 0; GAME.update(${DT}); }
+      ring = GAME.eprojectiles.find(p => p.fam === 'ring' && p.owner === e) || null;
+      const w = ENEMY_TG.windLog.filter(x => x.type === 'jalarakshasa');
+      return { subAt, windAt, emergedAt, immune, pass, meleeSkip, circle, ring: !!ring,
+        hit: P.hp < hp0, wind: w.length ? w[0].wind : 0, kind: w.length ? w[0].kind : '' };
+    })()`);
+    check(`jalarakshasa: submerges and dives <= 2.5 s before its emerge tell (dive ${(jr.windAt - jr.subAt).toFixed(2)} s)`,
+      jr.subAt > 0 && jr.windAt > 0 && jr.windAt - jr.subAt <= 2.5 + 2 / 60);
+    check('jalarakshasa: while submerged hitEnemy returns 0, player projectiles pass through and melee skips it',
+      jr.immune && jr.pass && jr.meleeSkip);
+    check(`jalarakshasa: emerges after a >= 0.6 s 'melee' tell with a 70 px circle (${jr.wind.toFixed(3)} s), damages the player and spawns a ring`,
+      jr.circle && jr.kind === 'melee' && jr.wind >= 0.6 - 1e-6 && jr.emergedAt > jr.windAt && jr.hit && jr.ring);
+
+    // a submerged enemy draws only a ripple (no body, no hp bar) on both paths
+    R(`__ro.boot(3); globalThis.__sub = __ro.spawn('jalarakshasa', 200, 0); __sub.submerged = true; __sub.hp = __sub.maxhp * 0.5;`);
+    const rec = harness.recordingCtx();
+    sandbox.__rec = rec.ctx;
+    R(`__sub.draw(__rec)`);
+    const body = rec.ops.some(o => o.op === 'fill' && String(o.fill).toLowerCase() === R(`DATA.ENEMIES.jalarakshasa.color`));
+    const bar = rec.ops.some(o => o.op === 'fillRect' && o.fill === '#ff5566');
+    const ripple = rec.ops.some(o => o.op === 'ellipse');
+    check('jalarakshasa: submerged it draws only a ripple (no body, no hp bar)', ripple && !body && !bar);
+  }
+
   // ---- 30 s solo sims ----
   const ATTACKERS = ['pishacha', 'kumbhipaka', 'nagaguard', 'mayavi', 'javelineer', 'brahmarakshasa', 'jalarakshasa'];
   for (const b of biomes) {
     for (const id of NEW[b]) {
-      if (!present.includes(id)) continue;
       const s = R(`(() => { U.seed(${40 + BIOME_IDX[b] * 2 + NEW[b].indexOf(id)}); return __ro.solo('${id}', ${BIOME_IDX[b]}, 30); })()`);
-      const dmgOk = ATTACKERS.includes(id) ? s.hits > 0 : true;
+      const dmgOk = ATTACKERS.includes(id) ? s.hits > 0 : s.hits === 0;
       check(`${id}: 30 s alone vs a stationary player — no throw, ${s.hits} damaging hits, ${s.winds} tells (${s.kinds.join('/')}), ${s.nViol} ENEMY_TG violations`
         + (s.threw ? ' — threw ' + s.threw : '') + (s.nViol ? ' — ' + s.viol.join(', ') : ''),
         !s.threw && dmgOk && s.nViol === 0);
@@ -234,7 +406,7 @@ module.exports = function ({ R, check }) {
   }
 
   // ---- roster shape (all four biomes once Task 3 lands) ----
-  if (Object.keys(NEW).every(b => NEW[b].every(id => present.includes(id)))) {
+  {
     const rs = R(`DATA.BIOMES.map(b => b.enemies.filter(id => ${JSON.stringify(ORIGINAL)}.indexOf(id) < 0))`);
     check(`every biome has exactly 2 ids not in the original 8 (${rs.map(x => x.join('+')).join(', ')})`,
       rs.length === 4 && rs.every(x => x.length === 2) &&

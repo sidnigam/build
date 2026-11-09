@@ -133,7 +133,9 @@ def build_prompt(prompts, key, ckpt_profile=None):
         profile = resolve_profile(prompts, key, entry, kind, ckpt_profile)
         if profile and profile.get("graph") == "flux_gguf" and kind in ("boss", "enemy"):
             flux_subject = entry.get("flux_subject") or entry["subject"]
-            pos = f"{flux_subject} {prompts['boss_style_positive_flux']}"
+            # 05.7.1-12: per-subject style clause override (e.g. style_1x5_positive_flux).
+            style = prompts[entry["flux_style"]] if entry.get("flux_style") else prompts["boss_style_positive_flux"]
+            pos = f"{flux_subject} {style}"
             neg = ""
             width, height = prompts.get("boss_size_flux") or prompts["character_size"]
         else:

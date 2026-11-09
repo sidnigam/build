@@ -304,6 +304,149 @@
       "no_mirror": true,
       "flux_subject": "A half-body bust portrait cropped tight at the waist, of Goddess Durga, a serene mother goddess, compassionate face, golden skin, a slender pointed gold tiara, with nothing but her own dark hair behind her. Four arms rise from each shoulder, eight arms total, fanned symmetrically like a wheel; seven hands hold a trident, discus, sword, bow, conch, lotus and mace, her front right hand raised palm-out in blessing. She wears a red blouse and the top of a red sari with a gold border, with gold jewellery. At the frame's lower edge, her lion's head and mane peek into view. Crimson red, gold and lion tawny.",
       "flux_base_seed": 71550
+    },
+    "pishacha": {
+      "kind": "enemy",
+      "subject": "Full-length figure from head to feet: a pishacha, a small hunched flesh-eating ghoul of Indian folklore, wiry ash-grey and ochre skin, sunken glowing amber eyes, long clawed fingers, a tattered dark loincloth, crouched ready to pounce. Exactly two arms, a bare head with only the plain grey backdrop directly behind it.",
+      "palette": "ash-grey and ochre",
+      "out_size": 256,
+      "base_seed": 75000,
+      "checkpoint_profile": "flux1_schnell_q4ks",
+      "flux_style": "style_1x5_positive_flux",
+      "flux_base_seed": 75000,
+      "flux_subject": "Full-length figure from head to feet: a pishacha, a small hunched flesh-eating ghoul of Indian folklore, wiry ash-grey and ochre skin, sunken glowing amber eyes, long clawed fingers, a tattered dark loincloth, crouched ready to pounce. Exactly two arms, a bare head with only the plain grey backdrop directly behind it.",
+      "cultural_flag": "QA-03"
+    },
+    "kumbhipaka": {
+      "kind": "enemy",
+      "subject": "Full-length figure from head to feet: a stocky horned asura stoker of the underworld cauldrons, soot-black skin with ember-orange glow, iron arm-bands, carrying a smoking clay fire-pot on a short chain in one hand. Exactly two arms, short curved horns on a bare head with only the plain grey backdrop directly behind it.",
+      "palette": "soot-black and ember-orange",
+      "out_size": 256,
+      "base_seed": 75010,
+      "checkpoint_profile": "flux1_schnell_q4ks",
+      "flux_style": "style_1x5_positive_flux",
+      "flux_base_seed": 75010,
+      "flux_subject": "Full-length figure from head to feet: a stocky horned asura stoker of the underworld cauldrons, soot-black skin with ember-orange glow, iron arm-bands, carrying a smoking clay fire-pot on a short chain in one hand. Exactly two arms, short curved horns on a bare head with only the plain grey backdrop directly behind it."
+    },
+    "nagaguard": {
+      "kind": "enemy",
+      "subject": "Full-length figure from head to feet: a naga warrior with a human upper body and one long coiled green serpent tail instead of legs, green scale armour, a single small cobra-hood crest at the back of the head, holding a tall oval bronze shield and a short spear. Exactly two arms, a single human head under one small hood, the plain grey backdrop directly behind it.",
+      "palette": "jade green and bronze",
+      "out_size": 256,
+      "base_seed": 75020,
+      "checkpoint_profile": "flux1_schnell_q4ks",
+      "flux_style": "style_1x5_positive_flux",
+      "flux_base_seed": 75020,
+      "flux_subject": "Full-length figure from head to feet: a naga warrior with a human upper body and one long coiled green serpent tail instead of legs, green scale armour, a single small cobra-hood crest at the back of the head, holding a tall oval bronze shield and a short spear. Exactly two arms, a single human head under one small hood, the plain grey backdrop directly behind it."
+    },
+    "mayavi": {
+      "kind": "enemy",
+      "subject": "Full-length figure from head to feet: a rakshasi sorceress-weaver, slender, violet and indigo robes, wild dark hair, glowing violet threads spun between her two hands like a web. Exactly two arms, a bare head with only the plain grey backdrop directly behind it.",
+      "palette": "violet and indigo",
+      "out_size": 256,
+      "base_seed": 75030,
+      "checkpoint_profile": "flux1_schnell_q4ks",
+      "flux_style": "style_1x5_positive_flux",
+      "flux_base_seed": 75030,
+      "flux_subject": "Full-length figure from head to feet: a rakshasi sorceress-weaver, slender, violet and indigo robes, wild dark hair, glowing violet threads spun between her two hands like a web. Exactly two arms, a bare head with only the plain grey backdrop directly behind it."
+    },
+    "javelineer": {
+      "kind": "enemy",
+      "subject": "Full-length figure from head to feet: a lean danava javelin thrower in bronze scale armour and a crested bronze helmet, a long barbed javelin raised over the shoulder ready to throw, sand-gold and dark bronze colours. Exactly two arms, a simple bronze helmet with only the plain grey backdrop directly behind it.",
+      "palette": "sand-gold and dark bronze",
+      "out_size": 256,
+      "base_seed": 75040,
+      "checkpoint_profile": "flux1_schnell_q4ks",
+      "flux_style": "style_1x5_positive_flux",
+      "flux_base_seed": 75040,
+      "flux_subject": "Full-length figure from head to feet: a lean danava javelin thrower in bronze scale armour and a crested bronze helmet, a long barbed javelin raised over the shoulder ready to throw, sand-gold and dark bronze colours. Exactly two arms, a simple bronze helmet with only the plain grey backdrop directly behind it."
+    },
+    "bannerman": {
+      "kind": "enemy",
+      "subject": "Full-length figure from head to feet: a burly tusked asura standard-bearer in battle-worn bronze armour, both hands gripping a tall war-banner pole with a plain tattered crimson-and-gold pennant, a small drum at the hip. Exactly two arms, a bare head with only the plain grey backdrop directly behind it.",
+      "palette": "amber, crimson and bronze",
+      "out_size": 256,
+      "base_seed": 75050,
+      "checkpoint_profile": "flux1_schnell_q4ks",
+      "flux_style": "style_1x5_positive_flux",
+      "flux_base_seed": 75050,
+      "flux_subject": "Full-length figure from head to feet: a burly tusked asura standard-bearer in battle-worn bronze armour, both hands gripping a tall war-banner pole with a plain tattered crimson-and-gold pennant, a small drum at the hip. Exactly two arms, a bare head with only the plain grey backdrop directly behind it."
+    },
+    "brahmarakshasa": {
+      "kind": "enemy",
+      "subject": "Full-length figure from head to feet: a gaunt restless scholar-ghost, pale blue-grey translucent skin, tattered plain white cloth, holding a cracked palm-leaf manuscript, wisps of pale blue spirit fire around the hands, sorrowful hollow eyes, a smooth bare forehead. Exactly two arms, a bare head with only the plain grey backdrop directly behind it.",
+      "palette": "pale blue-grey and white",
+      "out_size": 256,
+      "base_seed": 75060,
+      "checkpoint_profile": "flux1_schnell_q4ks",
+      "flux_style": "style_1x5_positive_flux",
+      "flux_base_seed": 75060,
+      "flux_subject": "Full-length figure from head to feet: a gaunt restless scholar-ghost, pale blue-grey translucent skin, tattered plain white cloth, holding a cracked palm-leaf manuscript, wisps of pale blue spirit fire around the hands, sorrowful hollow eyes, a smooth bare forehead. Exactly two arms, a bare head with only the plain grey backdrop directly behind it.",
+      "cultural_flag": "QA-03"
+    },
+    "jalarakshasa": {
+      "kind": "enemy",
+      "subject": "Full-length figure from head to feet: a river rakshasa with dark blue-green scaled skin, webbed clawed hands, a fin-like crest along the head, dripping water, standing ankle-deep in dark water. Exactly two arms, the fin crest is the only thing on the head, the plain grey backdrop directly behind it.",
+      "palette": "dark blue-green and river blue",
+      "out_size": 256,
+      "base_seed": 75070,
+      "checkpoint_profile": "flux1_schnell_q4ks",
+      "flux_style": "style_1x5_positive_flux",
+      "flux_base_seed": 75070,
+      "flux_subject": "Full-length figure from head to feet: a river rakshasa with dark blue-green scaled skin, webbed clawed hands, a fin-like crest along the head, dripping water, standing ankle-deep in dark water. Exactly two arms, the fin crest is the only thing on the head, the plain grey backdrop directly behind it.",
+      "cultural_flag": "QA-03"
+    },
+    "subahu": {
+      "kind": "boss",
+      "subject": "Full-length figure from head to feet: a young rakshasa warrior, muscular, ember-red skin with glowing orange cracks, small curved tusks, wild black hair, bronze armour, holding a flaming iron mace in both hands. Exactly two arms, a bare head with only the plain grey backdrop directly behind it.",
+      "palette": "ember-red and orange",
+      "out_size": 384,
+      "base_seed": 75100,
+      "checkpoint_profile": "flux1_schnell_q4ks",
+      "flux_style": "style_1x5_positive_flux",
+      "flux_base_seed": 75100,
+      "flux_subject": "Full-length figure from head to feet: a young rakshasa warrior, muscular, ember-red skin with glowing orange cracks, small curved tusks, wild black hair, bronze armour, holding a flaming iron mace in both hands. Exactly two arms, a bare head with only the plain grey backdrop directly behind it.",
+      "phase2_mode": "ember",
+      "cultural_flag": "QA-03"
+    },
+    "mahiravana": {
+      "kind": "boss",
+      "subject": "Full-length figure from head to feet: a rakshasa sorcerer of the underworld, sea-green skin, dark jade robes, a jewelled serpent-scale mantle, holding a tall staff topped with a burning oil lamp, sharp fangs. Exactly two arms, a bare head with only the plain grey backdrop directly behind it.",
+      "palette": "sea-green and dark jade",
+      "out_size": 384,
+      "base_seed": 75110,
+      "checkpoint_profile": "flux1_schnell_q4ks",
+      "flux_style": "style_1x5_positive_flux",
+      "flux_base_seed": 75110,
+      "flux_subject": "Full-length figure from head to feet: a rakshasa sorcerer of the underworld, sea-green skin, dark jade robes, a jewelled serpent-scale mantle, holding a tall staff topped with a burning oil lamp, sharp fangs. Exactly two arms, a bare head with only the plain grey backdrop directly behind it.",
+      "phase2_mode": "ember",
+      "cultural_flag": "QA-03"
+    },
+    "alambusha": {
+      "kind": "boss",
+      "subject": "Full-length figure from head to feet: a towering tusked rakshasa warrior, dark bronze skin, heavy dented war armour, holding a long spear, a war drum strapped to his back, fierce scowl. Exactly two arms, a bare head with only the plain grey backdrop directly behind it.",
+      "palette": "dark bronze and dull gold",
+      "out_size": 384,
+      "base_seed": 75120,
+      "checkpoint_profile": "flux1_schnell_q4ks",
+      "flux_style": "style_1x5_positive_flux",
+      "flux_base_seed": 75120,
+      "flux_subject": "Full-length figure from head to feet: a towering tusked rakshasa warrior, dark bronze skin, heavy dented war armour, holding a long spear, a war drum strapped to his back, fierce scowl. Exactly two arms, a bare head with only the plain grey backdrop directly behind it.",
+      "phase2_mode": "ember",
+      "cultural_flag": "QA-03"
+    },
+    "maricha": {
+      "kind": "boss",
+      "subject": "Full-length figure from head to feet: a slender rakshasa illusionist with shimmering golden skin like a heat mirage, a cloak patterned with golden deer spots, holding two golden ring-blades, sly smile. Exactly two arms, a bare head with only the plain grey backdrop directly behind it.",
+      "palette": "shimmering gold",
+      "out_size": 384,
+      "base_seed": 75130,
+      "checkpoint_profile": "flux1_schnell_q4ks",
+      "flux_style": "style_1x5_positive_flux",
+      "flux_base_seed": 75130,
+      "flux_subject": "Full-length figure from head to feet: a slender rakshasa illusionist with shimmering golden skin like a heat mirage, a cloak patterned with golden deer spots, holding two golden ring-blades, sly smile. Exactly two arms, a bare head with only the plain grey backdrop directly behind it.",
+      "phase2_mode": "ember",
+      "cultural_flag": "QA-03"
     }
   },
   "checkpoint": "sd_xl_base_1.0.safetensors",
@@ -1769,5 +1912,6 @@
     1152
   ],
   "boss_style_positive_flux": "Bold hand-painted 2D action-game character art with confident dark ink outlines, rich painterly detail, a strong readable silhouette and chunky heroic proportions, three-quarter top-down game sprite view, in the spirit of classical Indian temple murals. The entire figure is visible from head to feet, standing on the ground, centered, alone before a flat, even, medium-grey backdrop filling the whole image.",
-  "env_style_positive_flux": "Hades-inspired painterly game prop illustration, three-quarter top-down view, bold clean shapes, rich carved detail, a soft baked cast shadow, the whole object in frame and centered, alone on a flat, even, pale-grey background."
+  "env_style_positive_flux": "Hades-inspired painterly game prop illustration, three-quarter top-down view, bold clean shapes, rich carved detail, a soft baked cast shadow, the whole object in frame and centered, alone on a flat, even, pale-grey background.",
+  "style_1x5_positive_flux": "Hades-style painterly cel-shaded game character art with bold dark ink outlines, hand-painted textures, saturated vivid colours and strong coloured rim lighting, with Indian miniature-painting ornament: fine gold-leaf detail and flat patterned colour fields on the clothing and armour, crisp black contour lines. Three-quarter top-down game sprite view, a single character, the entire figure visible from head to feet, standing on a plain flat light-grey background that fills the rest of the image."
 }

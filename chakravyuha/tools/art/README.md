@@ -500,3 +500,28 @@ Notes: `realpha` deliberately re-blends guided_inpaint's already-blended output 
 the generated pixels carry an effective weight of M squared. This is intentional, harmless and seam-free (the
 result is still exactly the original wherever M = 0). Do not "fix" it into a hard cut, which would
 reintroduce the seam ring.
+
+## Phase 05.7.1 additions (new enemies + mini-bosses, 05.7.1-12)
+
+- **`flux_style` per-subject override.** A Flux boss/enemy entry may name a top-level style clause with
+  `"flux_style": "<prompts.json key>"`; its prompt becomes `flux_subject + prompts[flux_style]` instead of
+  `flux_subject + boss_style_positive_flux`. Entries without `flux_style` (every legacy subject) are
+  unchanged and their `--dry-run` output stays byte-identical.
+- **`style_1x5_positive_flux`** is the 05.7.4 art direction (style 1 Hades-like painterly cel-shaded +
+  style 5 Indian miniature ornament) on a flat light-grey backdrop. It deliberately avoids
+  "border"/"frame" words (style 5 tends to add decorative picture borders).
+- **12 subjects** (flux_base_seed in brackets): enemies pishacha (75000), kumbhipaka (75010), nagaguard
+  (75020), mayavi (75030), javelineer (75040), bannerman (75050), brahmarakshasa (75060), jalarakshasa
+  (75070); mini-bosses subahu (75100), mahiravana (75110), alambusha (75120), maricha (75130). Each also
+  carries `base_seed` = `flux_base_seed` (`seed_for` reads `base_seed` eagerly).
+- **Positive-only guards.** Each subject ends with a positive anchor ("Exactly two arms, a bare head with
+  only the plain grey backdrop directly behind it") instead of "no halo, no crown", so the dry-run LINT
+  stays clean; the naga keeps ONE small hood.
+- **Atlas rows.** `rebuild_atlases.py ACTOR_TABLE` has `src_only` rows for the 12 (enemies 256 px,
+  outline 5; mini-bosses 384 px, outline 4, `ember` phase 2). 384 instead of 512 keeps the projected
+  total under `MAX_TOTAL_GPU_MB`. `src_only` rows are built only with `--src KEY=PATH`.
+- **3-attempt cap** per subject (attempts 0..2), ONE GPU job at a time. A subject that fails review
+  3 times ships `FLAGGED:` if it passes every cultural guard, otherwise `"status": "NOT SHIPPED"` and the
+  primitive fallback stays.
+- **QA-03 flags** (`"cultural_flag": "QA-03"`): pishacha, brahmarakshasa, jalarakshasa, subahu,
+  mahiravana, alambusha, maricha.

@@ -91,6 +91,23 @@ ACTOR_TABLE = [
     {"key": "ahiravana", "kind": "boss", "r": 30, "size_old": 256, "size_new": 512, "outline": 5, "phase2": "ember"},
     {"key": "kumbhakarna", "kind": "boss", "r": 46, "size_old": 256, "size_new": 512, "outline": 4, "phase2": "ember"},
     {"key": "yama", "kind": "boss", "r": 36, "size_old": 256, "size_new": 512, "outline": 5, "phase2": "divine"},
+    # 05.7.1-12: 8 new enemies (05.7.1-05) + 4 mini-bosses (05.7.1-06), Flux 1+5 direction.
+    # Mini-bosses use size_new 384 (not 512): 4 x ~2.4 MB at 512 would push the projected
+    # total past MAX_TOTAL_GPU_MB (12.98 + ~2.7 enemies + ~9.7 = ~25.4 MB); at 384 it is ~21 MB.
+    # src_only: no recovered SDXL source exists; these rows are built only via --src KEY=PATH and
+    # are skipped by --legacy-check / --matte-preview / a full --build without a --src for them.
+    {"key": "pishacha", "kind": "enemy", "r": 9, "size_old": 128, "size_new": 256, "outline": 5, "phase2": None, "src_only": True},
+    {"key": "kumbhipaka", "kind": "enemy", "r": 16, "size_old": 128, "size_new": 256, "outline": 5, "phase2": None, "src_only": True},
+    {"key": "nagaguard", "kind": "enemy", "r": 17, "size_old": 128, "size_new": 256, "outline": 5, "phase2": None, "src_only": True},
+    {"key": "mayavi", "kind": "enemy", "r": 14, "size_old": 128, "size_new": 256, "outline": 5, "phase2": None, "src_only": True},
+    {"key": "javelineer", "kind": "enemy", "r": 14, "size_old": 128, "size_new": 256, "outline": 5, "phase2": None, "src_only": True},
+    {"key": "bannerman", "kind": "enemy", "r": 16, "size_old": 128, "size_new": 256, "outline": 5, "phase2": None, "src_only": True},
+    {"key": "brahmarakshasa", "kind": "enemy", "r": 15, "size_old": 128, "size_new": 256, "outline": 5, "phase2": None, "src_only": True},
+    {"key": "jalarakshasa", "kind": "enemy", "r": 16, "size_old": 128, "size_new": 256, "outline": 5, "phase2": None, "src_only": True},
+    {"key": "subahu", "kind": "boss", "r": 24, "size_old": 256, "size_new": 384, "outline": 4, "phase2": "ember", "src_only": True},
+    {"key": "mahiravana", "kind": "boss", "r": 24, "size_old": 256, "size_new": 384, "outline": 4, "phase2": "ember", "src_only": True},
+    {"key": "alambusha", "kind": "boss", "r": 24, "size_old": 256, "size_new": 384, "outline": 4, "phase2": "ember", "src_only": True},
+    {"key": "maricha", "kind": "boss", "r": 22, "size_old": 256, "size_new": 384, "outline": 4, "phase2": "ember", "src_only": True},
 ]
 ACTOR_BY_KEY = {a["key"]: a for a in ACTOR_TABLE}
 
@@ -228,6 +245,8 @@ def legacy_check():
 
     for actor in ACTOR_TABLE:
         key, kind = actor["key"], actor["kind"]
+        if actor.get("src_only") and key not in SRC_OVERRIDES:
+            continue
         frames = actor_frames(key, kind, recovered)
         per_frame = []
         normal_diffs, mirror_diffs = [], []
@@ -300,6 +319,8 @@ def matte_preview(only=None):
     actors = ACTOR_TABLE if not only else [a for a in ACTOR_TABLE if a["key"] in only]
     for actor in actors:
         key, kind, r = actor["key"], actor["kind"], actor["r"]
+        if actor.get("src_only") and key not in SRC_OVERRIDES:
+            continue
         frames = actor_frames(key, kind, recovered)
         _, src = frames[0]  # idle frame 0 is representative
         size_new = actor["size_new"]
@@ -586,6 +607,9 @@ def build(only=None):
     actors = ACTOR_TABLE if not only else [a for a in ACTOR_TABLE if a["key"] in only]
     results = []
     for actor in actors:
+        if actor.get("src_only") and actor["key"] not in SRC_OVERRIDES:
+            print(f"SKIP {actor['key']}: src_only actor without --src")
+            continue
         r = build_one(actor, legacy, {"recovered": recovered})
         if r is None:
             print(f"BUILD FAILED for {actor['key']}", file=sys.stderr)

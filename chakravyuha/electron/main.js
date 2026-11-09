@@ -83,6 +83,10 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
+// dev build flag for the renderer (05.7.1-10): only an unpackaged app may toggle F4 god mode.
+// Registered at module load, before any window exists, so the preload's sendSync never hangs.
+ipcMain.on('app:isDev', (event) => { event.returnValue = !app.isPackaged; });
+
 ipcMain.on('store:write', (event, name, json) => {
   try {
     const filePath = saveFilePath(name);

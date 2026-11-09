@@ -110,7 +110,7 @@ const GAME = {
         if (e.shiftKey) VFX.stress = !VFX.stress;
         else VFX.debug = !VFX.debug;
       }
-      if (k === 'f4') { // dev playtest: god mode (no damage)
+      if (k === 'f4' && this.devMode()) { // dev playtest: god mode (no damage); dev builds only (05.7.1-10)
         e.preventDefault();
         this.godMode = !this.godMode;
         UI.banner(this.godMode ? 'GOD MODE ON' : 'GOD MODE OFF', '#ffd76a');
@@ -156,6 +156,13 @@ const GAME = {
     on('btn-wipe', () => {
       if (confirm('Erase all progress? Chitragupta will be thrilled.')) { META.wipe(); UI.hub(); }
     });
+  },
+
+  // dev build (05.7.1-10): web with ?dev=1, or an unpackaged Electron app (preload isDev).
+  // Packaged/release builds return false, so F4 god mode cannot be toggled there.
+  devMode() {
+    return (typeof location !== 'undefined' && /[?&]dev=1(&|$)/.test(location.search || '')) ||
+      (typeof window !== 'undefined' && !!window.chakraNative && window.chakraNative.isDev === true);
   },
 
   playing() { return this.state === 'combat' || this.state === 'cleared'; },

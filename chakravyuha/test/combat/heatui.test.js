@@ -242,10 +242,10 @@ module.exports = function ({ check, section, harness, fs, path, root }) {
         window.chakraNative = { isDesktop: true }; o.natNone = GAME.devMode();
         delete window.chakraNative;
 
-        // F4 through the real keydown listener
-        const kd = (__winLs.keydown || [])[0];
-        o.hasListener = typeof kd === 'function';
-        const f4 = () => kd({ key: 'F4', shiftKey: false, preventDefault() {} });
+        // F4 through every captured window keydown listener, as a browser would dispatch it
+        const kds = (__winLs.keydown || []).slice();
+        o.hasListener = kds.length > 0 && kds.every(fn => typeof fn === 'function');
+        const f4 = () => { for (const fn of kds) fn({ key: 'F4', shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, repeat: false, preventDefault() {}, stopPropagation() {} }); };
         INPUT.keys = {};
         GAME.godMode = false;
         globalThis.location = { search: '' }; f4(); o.relToggled = GAME.godMode;

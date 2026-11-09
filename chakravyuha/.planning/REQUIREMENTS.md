@@ -87,7 +87,7 @@ Source: PROJECT.md + Research (STACK, FEATURES, ARCHITECTURE, PITFALLS)
 - [x] **COMBAT-11**: Hades cast: lodged astra, ammo 2, walk-over pickup, auto-return safety; all cast boons keep working; shorter special cooldowns, weavable
 - [x] **COMBAT-12**: Hit feel tuned through Phase 3 hooks only (hitstop weights, punch, kick, flash, VFX presets)
 - [x] **COMBAT-13**: Controller parity for every new input, including rebinding
-- [ ] **COMBAT-14**: 8 enemy + 4 mini-boss sprites in the 1+5 direction via the Flux pipeline; provenance complete
+- [x] **COMBAT-14**: 8 enemy + 4 mini-boss sprites in the 1+5 direction via the Flux pipeline; provenance complete
 - [x] **COMBAT-15**: Hades-like base difficulty, verified by a headless balance sim against a recorded baseline
 - [x] **COMBAT-16**: Opt-in Heat system ("Vows of Tapas"): unlocks after first clear, per-modifier ranks, Punya scaling, best Heat per weapon, persisted via META/STORE
 - [x] **COMBAT-17**: Boss move selection: weighted random, strict no-immediate-repeat, 2-3 move chains, distance bands and anti-camping, faster phase-2 chains; telegraph invariant intact
@@ -174,7 +174,7 @@ Source: PROJECT.md + Research (STACK, FEATURES, ARCHITECTURE, PITFALLS)
 | COMBAT-11 | Phase 5.7.1 | Complete |
 | COMBAT-12 | Phase 5.7.1 | Complete |
 | COMBAT-13 | Phase 5.7.1 | Complete |
-| COMBAT-14 | Phase 5.7.1 | Pending |
+| COMBAT-14 | Phase 5.7.1 | Complete |
 | COMBAT-15 | Phase 5.7.1 | Complete |
 | COMBAT-16 | Phase 5.7.1 | Complete |
 | COMBAT-17 | Phase 5.7.1 | Complete |

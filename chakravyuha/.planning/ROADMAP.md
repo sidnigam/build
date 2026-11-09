@@ -223,7 +223,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] 05.7.1-09-PLAN.md — Vows of Tapas (Heat) gameplay: DATA.HEAT, HEAT module, META persistence, all 12 vows wired into runs, Punya scaling + best Heat
 - [x] 05.7.1-10-PLAN.md — Vows of Tapas hub panel with pad navigation; F4 god mode gated to dev builds
 - [ ] 05.7.1-11-PLAN.md — Balance pass via the sim (bands vs baseline), perf check, human playtest checkpoint
-- [ ] 05.7.1-12-PLAN.md — Art: 8 enemy + 4 mini-boss sprites in the 1+5 direction via Flux, provenance (no gameplay dependents)
+- [x] 05.7.1-12-PLAN.md — Art: 8 enemy + 4 mini-boss sprites in the 1+5 direction via Flux, provenance (no gameplay dependents)
 
 ### Phase 05.7.2: Thrilling adaptive combat and boss theme (procedural score upgrade) (INSERTED)
 

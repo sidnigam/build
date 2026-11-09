@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Ready to execute
-stopped_at: Completed 05.7.1-10-PLAN.md
-last_updated: "2026-11-09T01:44:46.512Z"
+stopped_at: Completed 05.7.1-12-PLAN.md (plan 11 still in progress)
+last_updated: "2026-11-09T22:31:10.749Z"
 last_activity: 2026-11-09
 progress:
   total_phases: 18
   completed_phases: 11
   total_plans: 71
-  completed_plans: 56
+  completed_plans: 57
 ---
 
 # Project State
@@ -62,6 +62,7 @@ Plan: 11 of 12
 | Phase 05.7.1 P08 | 16min | 2 tasks | 5 files |
 | Phase 05.7.1 P09 | 18min | 3 tasks | 14 files |
 | Phase 05.7.1 P10 | 9min | 2 tasks | 7 files |
+| Phase 05.7.1 P12 | ~4h | 3 tasks | 60 files |
 
 ## Accumulated Context
 
@@ -115,6 +116,7 @@ Recent decisions affecting current work:
 - [Phase 05.7.1]: Hourglass chamber timer draws under the run clock (not y 22, which overlaps the biome title); expiry damage is tickDamage(5,'burn') per second
 - [Phase 05.7.1]: Vows panel header uses HEAT.total() (hub selection), not GAME.heatTotal; best-Heat labels derive from DATA.WEAPONS ids
 - [Phase 05.7.1]: F4 god mode gated by GAME.devMode(): exact ?dev=1 query param on web, chakraNative.isDev (main-process !app.isPackaged via sync 'app:isDev' IPC) on desktop
+- [Phase 05.7.1]: 05.7.1-12: mini-boss atlases at 384 px (GPU budget, total 19.94/24 MB); Flux cultural guards via positive anchors + covering the brow / removing the silhouette-producing object; maricha forehead mark retouched (retouch_mark --cool) and shipped FLAGGED; javelineer shipped FLAGGED
 
 ### Roadmap Evolution
 
@@ -161,7 +163,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-09T01:44:46.507Z
+Last session: 2026-11-09T22:31:10.745Z
 Last activity: 2026-11-09
-Stopped at: Completed 05.7.1-10-PLAN.md
+Stopped at: Completed 05.7.1-12-PLAN.md (plan 11 still in progress)
 Resume file: None

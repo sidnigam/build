@@ -4692,6 +4692,56 @@
       "cultural_review": "pending \u2014 human cultural reviewer (QA-03)",
       "iconography_notes": "two arms; horns + tusks (rakshasa); bare forehead; no halo, no third eye, no crown, no trishula (single-point spear), no sacred thread; war drum",
       "cultural_check": "pending QA-03 (flagged): Alambusha = Mahabharata rakshasa of the Kaurava host (confidence MEDIUM); non-deity antagonist, no divine iconography"
+    },
+    {
+      "filename": "mahiravana-atlas.png",
+      "path": "assets/sprites/bosses/mahiravana-atlas.png",
+      "actor": "mahiravana",
+      "kind": "boss",
+      "animations": {
+        "idle": 1,
+        "phase2": 1
+      },
+      "tool": "ComfyUI (local)",
+      "checkpoint": "flux1-schnell-Q4_K_S.gguf (FLUX.1 [schnell] by Black Forest Labs, GGUF Q4_K_S by city96, Apache-2.0) + t5-v1_1-xxl Q5_K_M GGUF (Apache-2.0) + CLIP-L (MIT) + FLUX ae VAE (Apache-2.0)",
+      "method": "txt2img",
+      "sampler": "euler",
+      "scheduler": "simple",
+      "steps": 4,
+      "cfg": 1.0,
+      "width": 896,
+      "height": 1152,
+      "seed": 75112,
+      "prompt": "Full-length figure from head to feet, three-quarter front pose: a rakshasa sorcerer of the underworld, sea-green skin, sharp fangs, a dark jade cloth hood pulled low over his brow with two curved dark horns rising through the hood, dark jade robes with gold patterned borders and a jewelled scale-patterned mantle over the shoulders. His right hand holds up a round bronze hanging oil lamp on a short chain, glowing with one small flame; his left hand is raised with fingers spread, casting a spell. Exactly two arms and two hands, the plain grey backdrop directly behind the head. Hades-style painterly cel-shaded game character art with bold dark ink outlines, hand-painted textures, saturated vivid colours and strong coloured rim lighting, with Indian miniature-painting ornament: fine gold-leaf detail and flat patterned colour fields on the clothing and armour, crisp black contour lines. Three-quarter top-down game sprite view, a single character, the entire figure visible from head to feet, standing on a plain flat light-grey background that fills the rest of the image.",
+      "negative_prompt": "",
+      "rejected_seeds": [
+        75110,
+        75111
+      ],
+      "rejected_count": 2,
+      "post_processing": [
+        "rembg birefnet-general background removal",
+        "alpha despeckle + trim",
+        "bottom-aligned LANCZOS fit to 384x384 (margin 8)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 4 px, #140b08 a=235, 0.6px feather, under sprite",
+        "phase2: tools/art/phase2_variant.py --mode ember --scale 2",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
+      ],
+      "raw_image": "assets/sprites/_gen/bosses/mahiravana/mahiravana_s75112.png",
+      "gen_sidecar": "assets/sprites/_raw/bosses/mahiravana/mahiravana.gen.json",
+      "generated_date": "2026-11-09",
+      "recorded_date": "2026-11-09",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "05.7.1-12 mahiravana (mini-boss), Flux schnell seed 75112 (attempt 2 of 3; 75110 rejected: three hands + trishula-like lamp-top prongs + forehead jewel point; 75111 rejected: red forehead mark + three-point fleur-de-lis staff finial; subject rewritten twice: staff removed in favour of a hand-held hanging lamp, low cloth hood covering the brow). Raw, finished idle and ember phase2 Read, plus game scale (scale_preview vs ahiravana). (a) sea-green fanged rakshasa sorcerer, dark jade hood with two curved horns rising through it, dark robes with gold-patterned borders and swirl-patterned mantle (1+5 ornament), a bronze hanging oil lamp with one flame held up in the right hand, left hand raised casting, a thin tail; (b) whole figure; (c) one character; (d) no text; (e) exactly two attached arms and two hands; HX4 lamp intact after cutout; H2/H4 menacing grin, no gore/skulls; H3 modest; H6 no glyphs; HX5 no halo/frame/border; brow covered (no forehead mark). Minor: a tiny three-lobed lily ornament on the robe's front panel, decorative and invisible at game scale (noted for QA-03). Phase2 ember glow readable.",
+      "cultural_review": "pending \u2014 human cultural reviewer (QA-03)",
+      "iconography_notes": "two arms, two hands; horns through a cloth hood; brow covered (no tilak/third eye); no staff/finial, so no trishula silhouette; no halo, no crown, no sacred thread, no multi-hood; hand-held hanging oil lamp; tiny decorative lily motif on the robe panel",
+      "cultural_check": "pending QA-03 (flagged): Mahiravana = regional Ramayana-variant rakshasa (Krittivasi; confidence LOW-MEDIUM; alternates Vatapi/Ilvala or Kirmira); attempts 75110/75111 rejected for trishula-like finials and forehead marks; shipped attempt has no staff and a covered brow; reviewer to confirm the small robe lily motif is neutral",
+      "rejected_reasons": {
+        "75110": "[flux] three hands (two stacked on the staff + one at the side, HX3); CULTURAL: lamp-top crescent prongs around the flame form a trishula-like three-point silhouette, plus a jewel point on the forehead plate -> subject rewritten (single round clay lamp bowl, one hand on the staff, smooth bare forehead)",
+        "75111": "[flux] CULTURAL (same root cause as attempt 0): red vertical mark painted on the forehead; staff head became a three-point fleur-de-lis/trident finial (trishula-like); lamp moved to the belt buckle; hands fixed -> subject rewritten (staff removed: hand-held hanging lamp on a chain; low cloth hood covers the brow)"
+      }
     }
   ],
   "review_sheet": "assets/sprites/_review/contact-sheet.png",

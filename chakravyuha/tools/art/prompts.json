@@ -460,19 +460,25 @@
     },
     "mahiravana": {
       "kind": "boss",
-      "subject": "Full-length figure from head to feet, three-quarter front pose: a rakshasa sorcerer of the underworld, sea-green skin, curved dark horns, sharp fangs, a smooth bare forehead, dark jade robes with gold patterned borders and a jewelled serpent-scale mantle over the shoulders. His right hand holds a tall plain wooden staff whose top is a single round clay oil-lamp bowl with one burning flame; his left hand hangs open at his side. Exactly two arms and two hands, the plain grey backdrop directly behind the head.",
+      "subject": "Full-length figure from head to feet, three-quarter front pose: a rakshasa sorcerer of the underworld, sea-green skin, sharp fangs, a dark jade cloth hood pulled low over his brow with two curved dark horns rising through the hood, dark jade robes with gold patterned borders and a jewelled scale-patterned mantle over the shoulders. His right hand holds up a round bronze hanging oil lamp on a short chain, glowing with one small flame; his left hand is raised with fingers spread, casting a spell. Exactly two arms and two hands, the plain grey backdrop directly behind the head.",
       "palette": "sea-green and dark jade",
       "out_size": 384,
       "base_seed": 75110,
       "checkpoint_profile": "flux1_schnell_q4ks",
       "flux_style": "style_1x5_positive_flux",
       "flux_base_seed": 75110,
-      "flux_subject": "Full-length figure from head to feet, three-quarter front pose: a rakshasa sorcerer of the underworld, sea-green skin, curved dark horns, sharp fangs, a smooth bare forehead, dark jade robes with gold patterned borders and a jewelled serpent-scale mantle over the shoulders. His right hand holds a tall plain wooden staff whose top is a single round clay oil-lamp bowl with one burning flame; his left hand hangs open at his side. Exactly two arms and two hands, the plain grey backdrop directly behind the head.",
+      "flux_subject": "Full-length figure from head to feet, three-quarter front pose: a rakshasa sorcerer of the underworld, sea-green skin, sharp fangs, a dark jade cloth hood pulled low over his brow with two curved dark horns rising through the hood, dark jade robes with gold patterned borders and a jewelled scale-patterned mantle over the shoulders. His right hand holds up a round bronze hanging oil lamp on a short chain, glowing with one small flame; his left hand is raised with fingers spread, casting a spell. Exactly two arms and two hands, the plain grey backdrop directly behind the head.",
       "phase2_mode": "ember",
       "cultural_flag": "QA-03",
       "rejected": {
-        "0": "[flux] three hands (two stacked on the staff + one at the side, HX3); CULTURAL: lamp-top crescent prongs around the flame form a trishula-like three-point silhouette, plus a jewel point on the forehead plate -> subject rewritten (single round clay lamp bowl, one hand on the staff, smooth bare forehead)"
-      }
+        "0": "[flux] three hands (two stacked on the staff + one at the side, HX3); CULTURAL: lamp-top crescent prongs around the flame form a trishula-like three-point silhouette, plus a jewel point on the forehead plate -> subject rewritten (single round clay lamp bowl, one hand on the staff, smooth bare forehead)",
+        "1": "[flux] CULTURAL (same root cause as attempt 0): red vertical mark painted on the forehead; staff head became a three-point fleur-de-lis/trident finial (trishula-like); lamp moved to the belt buckle; hands fixed -> subject rewritten (staff removed: hand-held hanging lamp on a chain; low cloth hood covers the brow)"
+      },
+      "accepted_attempt": 2,
+      "rejected_reasons": [
+        "[flux] three hands (two stacked on the staff + one at the side, HX3); CULTURAL: lamp-top crescent prongs around the flame form a trishula-like three-point silhouette, plus a jewel point on the forehead plate -> subject rewritten (single round clay lamp bowl, one hand on the staff, smooth bare forehead)",
+        "[flux] CULTURAL (same root cause as attempt 0): red vertical mark painted on the forehead; staff head became a three-point fleur-de-lis/trident finial (trishula-like); lamp moved to the belt buckle; hands fixed -> subject rewritten (staff removed: hand-held hanging lamp on a chain; low cloth hood covers the brow)"
+      ]
     },
     "alambusha": {
       "kind": "boss",
@@ -492,16 +498,20 @@
     },
     "maricha": {
       "kind": "boss",
-      "subject": "Full-length figure from head to feet: a slender rakshasa illusionist with shimmering golden skin like a heat mirage, a cloak patterned with golden deer spots, holding two golden ring-blades, sly smile. Exactly two arms, a bare head with only the plain grey backdrop directly behind it.",
+      "subject": "Full-length figure from head to feet: a slender rakshasa illusionist with shimmering golden skin like a heat mirage, small golden deer antlers, pointed ears, a plain dark cloth headband wrapped low across his whole forehead just above the eyes, a sly smile, a cloak patterned with golden deer spots, holding in each hand one curved golden sickle-blade with a ring grip, at his sides. Exactly two arms, the plain grey backdrop directly behind the head.",
       "palette": "shimmering gold",
       "out_size": 384,
       "base_seed": 75130,
       "checkpoint_profile": "flux1_schnell_q4ks",
       "flux_style": "style_1x5_positive_flux",
       "flux_base_seed": 75130,
-      "flux_subject": "Full-length figure from head to feet: a slender rakshasa illusionist with shimmering golden skin like a heat mirage, a cloak patterned with golden deer spots, holding two golden ring-blades, sly smile. Exactly two arms, a bare head with only the plain grey backdrop directly behind it.",
+      "flux_subject": "Full-length figure from head to feet: a slender rakshasa illusionist with shimmering golden skin like a heat mirage, small golden deer antlers, pointed ears, a plain dark cloth headband wrapped low across his whole forehead just above the eyes, a sly smile, a cloak patterned with golden deer spots, holding in each hand one curved golden sickle-blade with a ring grip, at his sides. Exactly two arms, the plain grey backdrop directly behind the head.",
       "phase2_mode": "ember",
-      "cultural_flag": "QA-03"
+      "cultural_flag": "QA-03",
+      "rejected": {
+        "0": "[flux] CULTURAL: red marks painted on the forehead between the brows read as a tilak; otherwise good (golden mirage skin, deer antlers, deer-spot cloak, two plain hoop-blades) -> subject rewritten (smooth clean unpainted forehead and face, keep antlers + plain hoops)",
+        "1": "[flux] CULTURAL (same root cause as attempt 0): dark V-shaped mark painted between the brows reads as a Vaishnava urdhva-pundra tilak; antlers, golden skin, cloak and ring-grip sickle-blades good -> subject rewritten (plain dark headband covering the forehead)"
+      }
     }
   },
   "checkpoint": "sd_xl_base_1.0.safetensors",

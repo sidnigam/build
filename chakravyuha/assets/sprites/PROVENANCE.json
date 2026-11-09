@@ -4380,6 +4380,54 @@
       "cultural_review": "pending \u2014 human cultural reviewer (QA-03)",
       "iconography_notes": "two arms; small curved horns; bare forehead; no halo, no crown, no third eye, no sacred thread, no weapon; generic petal-pattern gold medallion",
       "cultural_check": "pending QA-03: rakshasi sorceress (Mayavi = 'illusion-wielder'), a non-deity antagonist; no divine iconography"
+    },
+    {
+      "filename": "nagaguard-atlas.png",
+      "path": "assets/sprites/enemies/nagaguard-atlas.png",
+      "actor": "nagaguard",
+      "kind": "enemy",
+      "animations": {
+        "idle": 1
+      },
+      "tool": "ComfyUI (local)",
+      "checkpoint": "flux1-schnell-Q4_K_S.gguf (FLUX.1 [schnell] by Black Forest Labs, GGUF Q4_K_S by city96, Apache-2.0) + t5-v1_1-xxl Q5_K_M GGUF (Apache-2.0) + CLIP-L (MIT) + FLUX ae VAE (Apache-2.0)",
+      "method": "txt2img",
+      "sampler": "euler",
+      "scheduler": "simple",
+      "steps": 4,
+      "cfg": 1.0,
+      "width": 896,
+      "height": 1152,
+      "seed": 75022,
+      "prompt": "Full-length figure, facing the viewer in a three-quarter front pose: a naga serpent-man shaped like a merman, his muscular human torso joins at the hips directly into one thick green snake body that rises upright from big coiled snake loops resting on the ground, green scale armour on his chest, a human face, and a single small green cobra hood at the back of his neck. His left arm bears a tall narrow leaf-shaped bronze shield as tall as his torso; his right hand holds one short bronze-tipped spear upright. Exactly two arms, one head, the plain grey backdrop directly behind it. Hades-style painterly cel-shaded game character art with bold dark ink outlines, hand-painted textures, saturated vivid colours and strong coloured rim lighting, with Indian miniature-painting ornament: fine gold-leaf detail and flat patterned colour fields on the clothing and armour, crisp black contour lines. Three-quarter top-down game sprite view, a single character, the entire figure visible from head to feet, standing on a plain flat light-grey background that fills the rest of the image.",
+      "negative_prompt": "",
+      "rejected_seeds": [
+        75020,
+        75021
+      ],
+      "rejected_count": 2,
+      "post_processing": [
+        "rembg birefnet-general background removal",
+        "alpha despeckle + trim",
+        "bottom-aligned LANCZOS fit to 256x256 (margin 9)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 5 px, #140b08 a=235, 0.6px feather, under sprite",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
+      ],
+      "raw_image": "assets/sprites/_gen/enemies/nagaguard/nagaguard_s75022.png",
+      "gen_sidecar": "assets/sprites/_raw/enemies/nagaguard/nagaguard.gen.json",
+      "generated_date": "2026-11-09",
+      "recorded_date": "2026-11-09",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "05.7.1-12 nagaguard, Flux schnell seed 75022 (attempt 2 of 3; seeds 75020/75021 rejected for human legs beside the tail, back view, extra staff, round shield; subject rewritten twice with positive anchors, final 'merman' anchor fixed the anatomy). Raw and finished idle Read at 256 and at game scale (scale_preview vs naga). (a) naga serpent-man: human torso joining one thick green snake body at the hips, coiled loops on the ground, a single green scaled cobra-hood helm with one snake face, short bronze-tipped spear in the right hand, tall leaf/hex-shaped bronze-rimmed shield held in the left; (b) whole figure; (c) one character; (d) no text; (e) exactly two attached arms, one human head, no legs; HX3/HX4 spear and shield held and intact after the cutout; H2/H4 no gore; H3 modest; H6 shield motif is an abstract leaf/arrow design, no glyph or sacred symbol; HX5 no halo/frame/border. Style: painterly with gold trim; outline weight matches naga at game scale.",
+      "cultural_review": "pending \u2014 human cultural reviewer (QA-03)",
+      "iconography_notes": "ONE small cobra hood (single snake face), one human head, two arms; no multi-hooded canopy, no halo, no crown, no forehead marks, no sacred thread; spear + shield only",
+      "cultural_check": "pending QA-03: generic naga serpent-folk warrior (not Shesha/Vasuki/Takshaka/Kaliya), single small hood, no divine naga iconography",
+      "rejected_reasons": {
+        "75020": "[flux] back view; human legs plus a tail (tail must replace legs); second staff in the left hand (extra prop); round shield; cloth cowl instead of the small cobra hood -> subject rewritten (front pose, tail-below-waist, one spear, oval shield)",
+        "75021": "[flux] human legs again beside the serpent tail (same root cause as attempt 0: tail must replace legs); round shield; otherwise front pose, one spear, single scaled hood -> subject rewritten (merman anchor, torso joins snake body at the hips, leaf-shaped tall shield); least-bad fallback"
+      }
     }
   ],
   "review_sheet": "assets/sprites/_review/contact-sheet.png",

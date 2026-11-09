@@ -351,7 +351,12 @@
       "rejected": {
         "0": "[flux] back view; human legs plus a tail (tail must replace legs); second staff in the left hand (extra prop); round shield; cloth cowl instead of the small cobra hood -> subject rewritten (front pose, tail-below-waist, one spear, oval shield)",
         "1": "[flux] human legs again beside the serpent tail (same root cause as attempt 0: tail must replace legs); round shield; otherwise front pose, one spear, single scaled hood -> subject rewritten (merman anchor, torso joins snake body at the hips, leaf-shaped tall shield); least-bad fallback"
-      }
+      },
+      "accepted_attempt": 2,
+      "rejected_reasons": [
+        "[flux] back view; human legs plus a tail (tail must replace legs); second staff in the left hand (extra prop); round shield; cloth cowl instead of the small cobra hood -> subject rewritten (front pose, tail-below-waist, one spear, oval shield)",
+        "[flux] human legs again beside the serpent tail (same root cause as attempt 0: tail must replace legs); round shield; otherwise front pose, one spear, single scaled hood -> subject rewritten (merman anchor, torso joins snake body at the hips, leaf-shaped tall shield); least-bad fallback"
+      ]
     },
     "mayavi": {
       "kind": "enemy",

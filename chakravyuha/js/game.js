@@ -1532,12 +1532,14 @@ const GAME = {
     const items = [];
     for (const e of this.enemies) {
       if (e.dead) continue;
+      // 05.7.1-08 (D-18): an attack is coming (wind-up / long shot) -> its own pulsing threat arrow
+      if (CAMERA.isThreat(e)) { items.push({ x: e.x, y: e.y, kind: 'threat', color: '#ff4430', boss: !!e.boss }); continue; }
       items.push({ x: e.x, y: e.y, kind: e.boss ? 'boss' : 'enemy', color: e.boss ? e.color : '#ff5566' });
     }
     if (this.state === 'cleared') {
       for (const d of this.doors) items.push({ x: d.x, y: d.y, kind: 'door', color: d.reward.color, sym: d.reward.sym });
     }
-    // 05.7.1-03: off-view lodged astras (plan 08 gives the kind its own glyph)
+    // 05.7.1-03: off-view lodged astras (05.7.1-08: own ring + glyph, never clustered or dropped)
     for (const l of this.lodged) items.push({ x: l.x, y: l.y, kind: 'astra', color: '#ffd34d', sym: '◎' });
     return items;
   },
@@ -1564,10 +1566,36 @@ const GAME = {
   // renderIndicators(ctx) — CAM-06: draws CAMERA.clusterIndicators(indicatorItems()) on the HUD
   // bridge (screen space, inset clear of the HP panel/title/boss bar). Enemy arrows pulse gently and
   // show a count badge when clustered; door arrows show the reward glyph inside a colored ring.
+  // 05.7.1-08 (D-18): threat arrows are red, larger, carry a '!' and pulse fast (constant when
+  // screenFlash is off); lodged astras get a gold ring with the '◎' glyph, like a door marker.
   renderIndicators(ctx) {
     const arrows = CAMERA.clusterIndicators(this.indicatorItems());
     const alpha = 0.75 + 0.25 * Math.sin(this.time * 6);
+    const calm = typeof SETTINGS !== 'undefined' && SETTINGS.get('screenFlash') === false;
+    const threatAlpha = calm ? 1 : 0.6 + 0.4 * Math.sin(this.time * 10);
     for (const ar of arrows) {
+      if (ar.kind === 'threat') {
+        ctx.globalAlpha = threatAlpha;
+        this._drawIndicatorTriangle(ctx, ar.x, ar.y, ar.angle, 12, '#ff4430');
+        const ix = ar.x - Math.cos(ar.angle) * 16, iy = ar.y - Math.sin(ar.angle) * 16;
+        ctx.fillStyle = '#ff4430';
+        ctx.font = 'bold 16px Georgia';
+        ctx.textAlign = 'center';
+        ctx.fillText('!', ix, iy + 6);
+        continue;
+      }
+      if (ar.kind === 'astra') {
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = '#ffd34d'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(ar.x, ar.y, 11, 0, U.TAU); ctx.stroke();
+        ctx.fillStyle = '#ffd34d';
+        ctx.font = 'bold 12px Georgia';
+        ctx.textAlign = 'center';
+        ctx.fillText('◎', ar.x, ar.y + 4);
+        const tx = ar.x + Math.cos(ar.angle) * 15, ty = ar.y + Math.sin(ar.angle) * 15;
+        this._drawIndicatorTriangle(ctx, tx, ty, ar.angle, 7, '#ffd34d');
+        continue;
+      }
       if (ar.kind === 'door') {
         ctx.globalAlpha = 1;
         ctx.strokeStyle = ar.color; ctx.lineWidth = 2;

@@ -213,5 +213,147 @@ module.exports = function ({ R, sandbox, check, section, harness }) {
   })()`);
   check(`Pixi worldContainer == bridge counter-transform == worldToScreen at Z=${br.Z} with punch+kick (tz ${br.tz.toFixed(4)})`, br.ok && br.tz > br.Z);
 
-  R(`CAMERA.resetFx(); INPUT.ax = 0; INPUT.ay = 0;`);
+  // ---------------- threat bias ----------------
+  section('camera: threat bias');
+  const tb = R(`(() => {
+    const P = { x: 1000, y: 700 };
+    const idle = { x: 1500, y: 700 };
+    const wind = { x: 1500, y: 700, windKind: 'melee', armedAtk: false };
+    const armed = { x: 1500, y: 700, windKind: 'melee', armedAtk: true };
+    const longS = { x: 1000, y: 1300, longShot: true };
+    const far = { x: 2000, y: 700, windKind: 'ranged' };
+    const bossW = { x: 1000, y: 200, boss: true, state: 'chargeWind' };
+    const bossR = { x: 1000, y: 200, boss: true, state: 'rest' };
+    const near = { x: 1100, y: 700, windKind: 'melee' };
+    const dead = { x: 1500, y: 700, windKind: 'melee', dead: true };
+    const f = list => CAMERA.threatBias(P, list);
+    return {
+      none: f([]), idle: f([idle, armed, bossR, dead]), wind: f([wind]), long: f([longS]), far: f([far]),
+      boss: f([bossW]), near: f([near]), two: f([wind, bossW]),
+      max: CAMERA.CFG.THREAT_BIAS_MAX,
+    };
+  })()`);
+  const mag = v => Math.hypot(v.x, v.y);
+  check(`threatBias: zero with no / idle / armed / dead / non-winding-boss enemies (${J(tb.idle)})`,
+    tb.none.x === 0 && tb.none.y === 0 && tb.idle.x === 0 && tb.idle.y === 0);
+  check(`threatBias: a winding enemy 500 px right leans +x by THREAT_BIAS_MAX (${J(tb.wind)})`,
+    near(tb.wind.x, tb.max) && near(tb.wind.y, 0));
+  check(`threatBias: long shots and boss *Wind states count (long ${J(tb.long)}, boss ${J(tb.boss)})`,
+    near(tb.long.y, tb.max) && near(tb.boss.y, -tb.max));
+  check(`threatBias: threats beyond THREAT_BIAS_R are ignored (${J(tb.far)}); close ones scale 0.15·d (${tb.near.x.toFixed(2)})`,
+    tb.far.x === 0 && tb.far.y === 0 && near(tb.near.x, 15));
+  check(`threatBias: points at the centroid of all threats, |v| <= max (${J(tb.two)})`,
+    mag(tb.two) <= tb.max + 1e-9 && tb.two.x > 0 && tb.two.y < 0);
+
+  const lean = R(`(() => {
+    GAME.startRun(); ROOMS.enterRoom('mudra'); GAME.state = 'combat';
+    const P = GAME.player; P.x = GAME.arena.x + GAME.arena.w / 2; P.y = GAME.arena.y + GAME.arena.h / 2;
+    INPUT.wx = P.x; INPUT.wy = P.y; INPUT.ax = 0; INPUT.ay = 0;
+    GAME.enemies = [];
+    CAMERA.snap();
+    const s0 = { x: CAMERA.sx, y: CAMERA.sy };
+    const e = new Enemy('rakshasa', P.x + 600, P.y, 1); e.spawnT = 0; e.windKind = 'melee'; e.armedAtk = false;
+    GAME.enemies = [e];
+    CAMERA.follow(1 / 60);
+    const tb1 = Math.hypot(CAMERA._tb.x, CAMERA._tb.y);
+    for (let f = 0; f < 300; f++) CAMERA.follow(1 / 60);
+    const tb5 = { x: CAMERA._tb.x, y: CAMERA._tb.y };
+    const s5 = { x: CAMERA.sx, y: CAMERA.sy };
+    e.windKind = null;
+    for (let f = 0; f < 300; f++) CAMERA.follow(1 / 60);
+    const back = { x: CAMERA.sx, y: CAMERA.sy, tb: Math.hypot(CAMERA._tb.x, CAMERA._tb.y) };
+    e.windKind = 'melee'; for (let f = 0; f < 60; f++) CAMERA.follow(1 / 60);
+    CAMERA.snap();
+    const snapTb = Math.hypot(CAMERA._tb.x, CAMERA._tb.y);
+    GAME.enemies = [];
+    return { s0, s5, tb1, tb5, back, snapTb };
+  })()`);
+  check(`follow() eases the lean in slowly (first frame |tb| ${lean.tb1.toFixed(2)} px, 5 s ${lean.tb5.x.toFixed(2)} px) and shifts the scroll by it (${(lean.s5.x - lean.s0.x).toFixed(2)} px)`,
+    lean.tb1 > 0 && lean.tb1 < 3 && near(lean.tb5.x, 60, 0.1) && Math.abs(lean.s5.x - lean.s0.x - 60) < 0.5 && Math.abs(lean.s5.y - lean.s0.y) < 0.5);
+  check(`the lean eases back when the threat ends (scroll back within 0.5 px, |tb| ${lean.back.tb.toFixed(3)}); snap() drops it`,
+    Math.abs(lean.back.x - lean.s0.x) < 0.5 && Math.abs(lean.back.y - lean.s0.y) < 0.5 && lean.snapTb === 0);
+
+  // ---------------- threat / astra indicators ----------------
+  section('camera: threat and astra indicators');
+  const items = R(`(() => {
+    GAME.startRun(); ROOMS.enterRoom('mudra'); GAME.state = 'combat';
+    const P = GAME.player;
+    const mk = (type, dx, dy) => { const e = new Enemy(type, P.x + dx, P.y + dy, 1); e.spawnT = 0; return e; };
+    const idle = mk('rakshasa', 2000, 0);
+    const wind = mk('rakshasa', 0, 2000); wind.windKind = 'melee'; wind.armedAtk = false;
+    const armed = mk('rakshasa', -2000, 0); armed.windKind = 'melee'; armed.armedAtk = true;
+    const lng = mk('archer', 0, -2000); lng.longShot = true;
+    const boss = new Boss(GAME.biome.boss, P.x + 1500, P.y + 1500); boss.state = 'chargeWind';
+    const bossIdle = new Boss(GAME.biome.boss, P.x - 1500, P.y - 1500); bossIdle.state = 'rest';
+    GAME.enemies = [idle, wind, armed, lng, boss, bossIdle];
+    GAME.lodged = [{ x: P.x - 1800, y: P.y + 900, t: 8 }];
+    const it = GAME.indicatorItems();
+    return it.map(o => ({ kind: o.kind, color: o.color, boss: !!o.boss }));
+  })()`);
+  const kinds = items.map(o => o.kind);
+  check(`indicatorItems: idle -> enemy, winding / long shot / boss *Wind -> threat (#ff4430), armed -> enemy, idle boss -> boss, lodged -> astra (${J(kinds)})`,
+    J(kinds) === J(['enemy', 'threat', 'enemy', 'threat', 'threat', 'boss', 'astra'])
+      && items.filter(o => o.kind === 'threat').every(o => o.color === '#ff4430') && items[4].boss === true);
+
+  const cl2 = R(`(() => {
+    CAMERA.resetFx();
+    const P = GAME.player;
+    const a = CAMERA.anchor(), c = CAMERA.screenToWorld(a.x, a.y);
+    const list = [];
+    // 16 enemy sectors around the view, plus 3 threats and 2 astras: threats and astras must all survive IND_MAX
+    for (let i = 0; i < 16; i++) { const g = (i + 0.5) / 16 * Math.PI * 2 - Math.PI; list.push({ x: c.x + Math.cos(g) * 3000, y: c.y + Math.sin(g) * 3000, kind: 'enemy', color: '#ff5566' }); }
+    for (const g of [0.1, 1.7, -2.5]) list.push({ x: c.x + Math.cos(g) * 4000, y: c.y + Math.sin(g) * 4000, kind: 'threat', color: '#ff4430' });
+    list.push({ x: c.x + Math.cos(3.0) * 3000, y: c.y + Math.sin(3.0) * 3000, kind: 'boss', color: '#f0f' });   // own sector, not a threat's
+    for (const g of [0.9, -1.1]) list.push({ x: c.x + Math.cos(g) * 2500, y: c.y + Math.sin(g) * 2500, kind: 'astra', color: '#ffd34d', sym: '◎' });
+    const res = CAMERA.clusterIndicators(list, { max: 4 });
+    const res0 = CAMERA.clusterIndicators(list, { max: 0 });
+    return { kinds: res.map(o => o.kind), n: res.length, kinds0: res0.map(o => o.kind) };
+  })()`);
+  const cnt = (arr, k) => arr.filter(x => x === k).length;
+  check(`clusterIndicators(max 4): all 3 threats + both astras kept, threats sort before bosses/enemies (${J(cl2.kinds)})`,
+    J(cl2.kinds) === J(['astra', 'astra', 'threat', 'threat', 'threat', 'boss']));
+  check(`clusterIndicators(max 0): threats and astras are still never dropped (${J(cl2.kinds0)})`,
+    cnt(cl2.kinds0, 'threat') === 3 && cnt(cl2.kinds0, 'astra') === 2 && cl2.kinds0.length === 5);
+
+  const draw = flash => {
+    const rec = harness.recordingCtx();
+    sandbox.__rec = rec.ctx;
+    const r = R(`(() => {
+      SETTINGS.set('screenFlash', ${flash});
+      const P = GAME.player;
+      const e = new Enemy('rakshasa', P.x + 2500, P.y, 1); e.spawnT = 0; e.windKind = 'melee'; e.armedAtk = false;
+      GAME.enemies = [e];
+      GAME.lodged = [{ x: P.x - 2500, y: P.y, t: 8 }];
+      const alphas = [];
+      let err = null;
+      try {
+        for (const t of [0.05, 0.2, 0.37]) { GAME.time = t; GAME.renderIndicators(__rec); }
+      } catch (x) { err = String(x && x.stack || x).split('\\n')[0]; }
+      SETTINGS.reset();
+      return { err };
+    })()`);
+    const threatFills = rec.ops.filter(o => o.op === 'fill' && String(o.fill).toLowerCase() === '#ff4430');
+    const bang = rec.ops.filter(o => o.op === 'fillText' && o.args[0] === '!');
+    const ring = rec.ops.filter(o => o.op === 'arc' || o.op === 'stroke').some(o => o.op === 'stroke' && String(o.stroke).toLowerCase() === '#ffd34d');
+    const glyph = rec.ops.some(o => o.op === 'fillText' && o.args[0] === '◎');
+    const alphas = [...new Set(threatFills.map(o => o.alpha))];
+    return { err: r.err, threat: threatFills.length === 3, bang: bang.length === 3 && /16px/.test(bang[0].font), ring, glyph, alphas };
+  };
+  const on = draw(true), off = draw(false);
+  check(`renderIndicators: off-view threat draws a red triangle + bold 16px '!'; off-view astra a gold ring + '◎' (no throw${on.err ? ': ' + on.err : ''})`,
+    !on.err && on.threat && on.bang && on.ring && on.glyph);
+  check(`threat arrows pulse with screenFlash on (alphas ${J(on.alphas.map(a => +a.toFixed(3)))}) and hold alpha 1 with it off (${J(off.alphas)})`,
+    !off.err && on.alphas.length === 3 && on.alphas.every(a => a >= 0.2 - 1e-9 && a <= 1 + 1e-9) && off.alphas.length === 1 && off.alphas[0] === 1);
+
+  // ---------------- view band follows the real zoom (COMBAT-04) ----------------
+  section('camera: enemy view band');
+  const vb = R(`(() => { const b = ENEMY_AI.viewBand({ x: 0, y: 0 });
+    return { w: b.w, h: b.h, ew: 2 * (CAMERA.VW / (2 * CAMERA.CFG.ZOOM.combat) - ENEMY_AI.CFG.VIEW_MARGIN), eh: 2 * (CAMERA.VH / (2 * CAMERA.CFG.ZOOM.combat) - ENEMY_AI.CFG.VIEW_MARGIN) }; })()`);
+  check(`ENEMY_AI.viewBand(P).w === 2·(VW/(2·ZOOM.combat) − VIEW_MARGIN) (${vb.w.toFixed(2)} vs ${vb.ew.toFixed(2)}; h ${vb.h.toFixed(2)})`,
+    vb.w === vb.ew && vb.h === vb.eh);
+  const vb2 = R(`(() => { const z = CAMERA.CFG.ZOOM.combat; CAMERA.CFG.ZOOM.combat = 1.5; const w = ENEMY_AI.viewBand({ x: 0, y: 0 }).w; CAMERA.CFG.ZOOM.combat = z;
+    return { w, e: 2 * (CAMERA.VW / 3 - ENEMY_AI.CFG.VIEW_MARGIN) }; })()`);
+  check(`viewBand reads CAMERA.CFG.ZOOM.combat at call time (1.5 -> ${vb2.w.toFixed(2)})`, near(vb2.w, vb2.e));
+
+  R(`CAMERA.resetFx(); INPUT.ax = 0; INPUT.ay = 0; GAME.enemies = []; GAME.lodged = [];`);
 };

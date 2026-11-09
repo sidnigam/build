@@ -170,6 +170,36 @@ const CAMERA = {
     return { x: vx + mx * C.LOOK_MOVE, y: vy + my * C.LOOK_MOVE };
   },
 
+  // 05.7.1-08 (D-18): an enemy whose attack is coming — a regular enemy in its wind-up (windKind set,
+  // not yet armed), a boss/mini-boss in a *Wind state, or anything winding a long shot.
+  isThreat(e) {
+    if (!e || e.dead) return false;
+    if (e.longShot) return true;
+    if (e.windKind && !e.armedAtk) return true;
+    return !!e.boss && typeof e.state === 'string' && /Wind$/.test(e.state);
+  },
+
+  // 05.7.1-08 (D-18): pure. A small lean toward the centroid of threats within THREAT_BIAS_R of the
+  // player, |bias| = min(THREAT_BIAS_MAX, 0.15·distance); zero vector when nothing is winding.
+  threatBias(P, enemies) {
+    const C = this.CFG;
+    if (!P || !enemies || !enemies.length) return { x: 0, y: 0 };
+    let cx = 0, cy = 0, n = 0;
+    const r2 = C.THREAT_BIAS_R * C.THREAT_BIAS_R;
+    for (const e of enemies) {
+      if (!this.isThreat(e)) continue;
+      const dx = e.x - P.x, dy = e.y - P.y;
+      if (dx * dx + dy * dy > r2) continue;
+      cx += e.x; cy += e.y; n++;
+    }
+    if (!n) return { x: 0, y: 0 };
+    const vx = cx / n - P.x, vy = cy / n - P.y;
+    const d = Math.hypot(vx, vy);
+    if (d < 1e-9) return { x: 0, y: 0 };
+    const m = Math.min(C.THREAT_BIAS_MAX, d * 0.15);
+    return { x: vx / d * m, y: vy / d * m };
+  },
+
   // D-08: desired (unclamped-then-clamped) scroll so that P + look-ahead sits at the screen anchor.
   // The anchor is in screen px, so at base zoom z it sits anchor/z world px from the view's top-left.
   desiredScroll(P, aimW, move, R, z = this.Z, bias = null) {
@@ -247,7 +277,9 @@ const CAMERA = {
   },
 
   // D-16/D-17: bucket off-screen items into <= opts.max indicator arrows.
-  // items: [{x, y, kind: 'enemy'|'boss'|'door', color, sym}] (world coords).
+  // items: [{x, y, kind: 'enemy'|'boss'|'threat'|'door'|'astra', color, sym}] (world coords).
+  // 05.7.1-08 (D-18): doors and lodged astras pass through un-clustered; a bucket holding a threat
+  // reports kind 'threat', sorts first and is never dropped by the max truncation.
   clusterIndicators(items, opts = {}) {
     const sectors = opts.sectors ?? this.CFG.IND_SECTORS;
     const max = opts.max ?? this.CFG.IND_MAX;
@@ -258,42 +290,55 @@ const CAMERA = {
     for (const it of items) {
       const ep = this.edgePoint(it.x, it.y);
       if (!ep) continue;
-      if (it.kind === 'door') {
-        doors.push({ x: ep.x, y: ep.y, angle: ep.angle, count: 1, kind: 'door', color: it.color, sym: it.sym });
+      if (it.kind === 'door' || it.kind === 'astra') {
+        doors.push({ x: ep.x, y: ep.y, angle: ep.angle, count: 1, kind: it.kind, color: it.color, sym: it.sym });
         continue;
       }
       let sec = Math.floor(((ep.angle + Math.PI) / U.TAU) * sectors) % sectors;
       if (sec < 0) sec += sectors;
-      if (!buckets.has(sec)) buckets.set(sec, { items: [], hasBoss: false });
+      if (!buckets.has(sec)) buckets.set(sec, { items: [], hasBoss: false, hasThreat: false });
       const b = buckets.get(sec);
       b.items.push({ it, ep, dist: U.dist(it.x, it.y, cx, cy) });
-      if (it.kind === 'boss') b.hasBoss = true;
+      if (it.kind === 'boss' || it.boss) b.hasBoss = true;
+      if (it.kind === 'threat') b.hasThreat = true;
     }
     const bucketArr = [];
     for (const b of buckets.values()) {
       b.items.sort((p, q) => p.dist - q.dist);
-      const rep = b.items[0];
+      // a threat bucket points at its nearest threat, not at the nearest idle enemy
+      const rep = b.hasThreat ? b.items.find(o => o.it.kind === 'threat') : b.items[0];
       bucketArr.push({
         x: rep.ep.x, y: rep.ep.y, angle: rep.ep.angle, count: b.items.length,
-        kind: b.hasBoss ? 'boss' : rep.it.kind, color: rep.it.color, sym: rep.it.sym,
-        _dist: rep.dist, _hasBoss: b.hasBoss,
+        kind: b.hasThreat ? 'threat' : b.hasBoss ? 'boss' : rep.it.kind, color: rep.it.color, sym: rep.it.sym,
+        boss: b.hasBoss,
+        _dist: rep.dist, _hasBoss: b.hasBoss, _hasThreat: b.hasThreat,
       });
     }
     bucketArr.sort((p, q) => {
+      if (p._hasThreat !== q._hasThreat) return p._hasThreat ? -1 : 1;
       if (p._hasBoss !== q._hasBoss) return p._hasBoss ? -1 : 1;
       return p._dist - q._dist;
     });
-    const truncated = bucketArr.slice(0, Math.max(0, max));
-    const clean = arr => arr.map(o => { const { _dist, _hasBoss, ...rest } = o; return rest; });
+    const threats = bucketArr.filter(o => o._hasThreat);
+    const rest = bucketArr.filter(o => !o._hasThreat);
+    const truncated = [...threats, ...rest.slice(0, Math.max(0, max - threats.length))];
+    const clean = arr => arr.map(o => { const { _dist, _hasBoss, _hasThreat, ...r } = o; return r; });
     return [...clean(doors), ...clean(truncated)];
   },
 
   // Shared desired-scroll computation for follow()/snap(): identity (0,0) in the hub or with no player.
   // 05.7.1-08: hub / no player also forces the base zoom back to 1 (identity transform).
-  _followTarget() {
+  // With dt (from follow()), the applied threat bias eases toward threatBias() at THREAT_RATE in
+  // combat (toward 0 otherwise); without dt it is used as-is (snap() zeroes it first).
+  _followTarget(dt) {
     const G = (typeof GAME !== 'undefined') ? GAME : null;
-    if (!G || !G.player || G.state === 'hub') { this.Z = this.ZT = 1; return null; }
+    if (!G || !G.player || G.state === 'hub') { this.Z = this.ZT = 1; this._tb = { x: 0, y: 0 }; return null; }
     const P = G.player;
+    if (dt > 0) {
+      const tgt = G.state === 'combat' ? this.threatBias(P, G.enemies) : { x: 0, y: 0 };
+      const k = 1 - Math.exp(-this.CFG.THREAT_RATE * dt);
+      this._tb = { x: this._tb.x + (tgt.x - this._tb.x) * k, y: this._tb.y + (tgt.y - this._tb.y) * k };
+    }
     const R = this.worldRectFor(G.arena, this.pad());
     const I = (typeof INPUT !== 'undefined') ? INPUT : { mx: P.x, my: P.y, ax: 0, ay: 0, keys: {}, bindings: null };
     const aimW = (typeof I.wx === 'number' && typeof I.wy === 'number') ? { x: I.wx, y: I.wy } : { x: I.mx, y: I.my };
@@ -305,7 +350,7 @@ const CAMERA = {
       const mv = PAD.digitalMoveVector(I.keys, I.bindings);
       move = { x: mv.dx, y: mv.dy };
     }
-    return this.desiredScroll(P, aimW, move, R);
+    return this.desiredScroll(P, aimW, move, R, this.Z, this._tb);
   },
 
   // D-08: runs every real frame (GAME.frame()) with real dt — keeps animating during hitstop.
@@ -315,7 +360,7 @@ const CAMERA = {
     this.ZT = this.zoomTarget();
     if (this._noTarget) this.Z = this.ZT;
     else this.Z += (this.ZT - this.Z) * (1 - Math.exp(-this.CFG.ZOOM_RATE * dt));
-    const D = this._followTarget();
+    const D = this._followTarget(dt);
     this._noTarget = !D;
     if (!D) { this.sx = 0; this.sy = 0; this._store(this.xform()); return; }
     const dist = Math.hypot(D.x - this.sx, D.y - this.sy);
@@ -332,6 +377,7 @@ const CAMERA = {
   // Called by ROOMS.enterRoom after the player is placed — room changes never swoop.
   snap() {
     this.Z = this.ZT = this.zoomTarget();   // 05.7.1-08: room changes snap the zoom too (no swoop)
+    this._tb = { x: 0, y: 0 };              // and drop any threat lean from the previous room
     const D = this._followTarget();
     this._noTarget = !D;
     if (!D) { this.sx = 0; this.sy = 0; this._store(this.xform()); return; }

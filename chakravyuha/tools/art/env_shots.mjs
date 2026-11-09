@@ -175,8 +175,10 @@ async function main() {
       return JSON.stringify(f);
     })()`));
     // telegraph in the left third of the frame (not the centre 60% that shot_stats samples as
-    // "floor" — a translucent venom/fire fill there would be scored as floor, not as a telegraph)
-    await snapTo(focus.x + 420, focus.y);
+    // "floor" — a translucent venom/fire fill there would be scored as floor, not as a telegraph).
+    // 05.7.1-08: the camera is zoomed (CAMERA.Z, combat 1.3), so 420 *screen* px is 420 / Z world px.
+    const camZ = Number(await evalJs(`(typeof CAMERA !== 'undefined' && CAMERA.Z) || 1`)) || 1;
+    await snapTo(focus.x + 420 / camZ, focus.y);
     await sleep(150);
     await captureShot(`${biome}-combat.png`);
   }

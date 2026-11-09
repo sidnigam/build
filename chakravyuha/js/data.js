@@ -339,6 +339,28 @@ DATA.BOSSES = {
   },
 };
 
+// ---------- MINI-BOSSES (05.7.1-06, D-08) ----------
+// One asura/rakshasa champion per biome, fought in a fixed mid-biome room (biome.miniRoom).
+// Movesets live in js/minibosses.js (MINI_MOVESETS). Gods are never mini-bosses.
+DATA.MINIBOSSES = {
+  subahu:     { id: 'subahu', biome: 'naraka', name: 'SUBAHU', sub: 'Son of the Forest-Devourer', hp: 520, r: 24, color: '#ff7a3c',
+                label: 'THE CHAMPION', enrageTitle: 'THE EMBERS RISE',
+                intro: '"My mother guards the gate above. I guard the fire below. Neither of us lets a prince pass."',
+                lore: 'A son of Tataka who harried the sages of the forest until a young prince drove him off.' },
+  mahiravana: { id: 'mahiravana', biome: 'patala', name: 'MAHIRAVANA', sub: 'Gatekeeper of the Serpent Realm', hp: 820, r: 24, color: '#3fe0b0',
+                label: 'THE CHAMPION', enrageTitle: 'THE COILS TIGHTEN',
+                intro: '"My twin keeps the throne. I keep the door. You will not reach either."',
+                lore: 'In some regional tellings of the Ramayana, the twin of Ahiravana who kept the gate of Patala.' },
+  alambusha:  { id: 'alambusha', biome: 'ranabhoomi', name: 'ALAMBUSHA', sub: 'Rakshasa of the Kaurava Host', hp: 1250, r: 24, color: '#e0b050',
+                label: 'THE CHAMPION', enrageTitle: 'THE WAR-DRUMS QUICKEN',
+                intro: '"Son of Arjuna. I have waited on this field for you since the thirteenth day."',
+                lore: 'A rakshasa who fought for the Kauravas at Kurukshetra; some retellings say Abhimanyu bested him.' },
+  maricha:    { id: 'maricha', biome: 'vaitarani', name: 'MARICHA', sub: 'The Golden Mirage', hp: 1500, r: 22, color: '#ffd27a',
+                label: 'THE CHAMPION', enrageTitle: 'THE MIRAGE SHATTERS',
+                intro: '"I wore the shape of a golden deer once. Tonight I wear the shape of the river."',
+                lore: 'A son of Tataka and a master of illusion, who became the golden deer of the Ramayana.' },
+};
+
 // ---------- BIOMES ----------
 DATA.BIOMES = [
   {

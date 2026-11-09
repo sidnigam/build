@@ -163,6 +163,8 @@ module.exports = function ({ R, sandbox, check, section, harness, fs, path, root
     const bomb = R(`(() => {
       const B = __mb.room('maricha'); B.startMove('goldBombs');
       const targets = B.marks.map(m => [m.x, m.y]);
+      // step the player out of the way so no bomb bursts on contact before it reaches its mark
+      const A = GAME.arena; GAME.player.x = A.x + 30; GAME.player.y = A.y + 30;
       let f = 0; while (f++ < 200 && !(GAME.eprojectiles.some(p => p.fam === 'bomb' && p.fuseT != null))) __mb.step(1);
       __mb.step(40);
       const bs = GAME.eprojectiles.filter(p => p.fam === 'bomb' && p.owner === B);

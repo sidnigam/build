@@ -113,7 +113,7 @@ vm.createContext(sandbox);
 // reproduced and confirmed in isolation before this fix; loading gfx.js here, at the same relative
 // position as index.html, makes every later `typeof GFX` check in vfx.js (D-17's count()/ambient()
 // path, and the PRESETS.* -> GFX.pulse() hooks) actually exercise the real code, not a false pass.
-const files = ['utils.js', 'settings.js', 'renderer.js', 'sprites.js', 'vfx.js', 'gfx.js', 'audio.js', 'music.js', 'data.js', 'meta.js', 'combat.js', 'ai.js', 'entities.js', 'rooms.js', 'ui.js', 'game.js', 'storage.js', 'gamepad.js', 'glyphs.js', 'focus.js'];
+const files = ['utils.js', 'settings.js', 'renderer.js', 'sprites.js', 'vfx.js', 'gfx.js', 'audio.js', 'music.js', 'data.js', 'meta.js', 'combat.js', 'ai.js', 'entities.js', 'minibosses.js', 'rooms.js', 'ui.js', 'game.js', 'storage.js', 'gamepad.js', 'glyphs.js', 'focus.js'];
 for (const f of files) {
   const src = fs.readFileSync(path.join(__dirname, '..', 'js', f), 'utf8');
   vm.runInContext(src, sandbox, { filename: f });
@@ -1598,6 +1598,107 @@ for (const bossId of Object.keys(phaseTransitionResults)) {
   check(`${bossId}: opens phase 2 deterministically with its signature move (${r.openerId})`, r.openerSeen);
   check(`${bossId}: phase-2-only moves appear over 30s of play`, r.hasPhase2Only);
   check(`${bossId}: no new BOSS_TG violations during the phase transition`, r.newViolations === 0);
+}
+
+// ---------------- 05.7.1-06: mini-boss telegraphs (D-08, COMBAT-06) ----------------
+// Same invariant as the biome bosses: static data check over MINI_MOVESETS, a source scan of
+// js/minibosses.js, and a per-move harness that builds the mini-boss room directly.
+console.log('\n— mini-boss telegraphs: static + per-move harness (05.7.1) —');
+{
+  const miniStatic = vm.runInContext(`(() => {
+    const E = [];
+    for (const id of Object.keys(DATA.MINIBOSSES)) {
+      for (const ph of [1, 2]) {
+        const table = MINI_MOVESETS[id] && MINI_MOVESETS[id][ph];
+        if (!table || !table.length) { E.push(id + ' phase ' + ph + ' moveset empty/missing'); continue; }
+        for (const entry of table) {
+          const base = MINI_MOVE_DEFS[entry[0]] || BOSS_MOVE_DEFS[entry[0]];
+          if (!base) { E.push(id + ' phase ' + ph + ' unknown move ' + entry[0]); continue; }
+          const def = { ...base, ...(entry[2] || {}) };
+          if (def.dmg && def.wind < 0.4) E.push(id + ' phase ' + ph + ' move ' + entry[0] + ' wind too short (' + def.wind + ')');
+        }
+      }
+    }
+    return E;
+  })()`, sandbox);
+  check('mini-boss movesets: data integrity (known moves, damaging moves wind >= 0.4s)'
+    + (miniStatic.length ? ' — ' + miniStatic.join('; ') : ''), miniStatic.length === 0);
+
+  const msrc = fs.readFileSync(path.join(__dirname, '..', 'js', 'minibosses.js'), 'utf8');
+  check('mini-boss: js/minibosses.js has no takeDamage( / enemyShot( / touchAttack( calls',
+    !/takeDamage\(|enemyShot\(|touchAttack\(/.test(msrc));
+}
+vm.runInContext(`
+globalThis.__miniMove = function(id, phase, moveId) {
+  GAME.startRun();
+  const P = GAME.player;
+  P.maxhp = P.hp = 1e9;
+  const biomeIdx = DATA.BIOMES.findIndex(b => b.id === DATA.MINIBOSSES[id].biome);
+  GAME.biomeIdx = biomeIdx; GAME.biome = DATA.BIOMES[biomeIdx];
+  ROOMS.setArena('boss'); ROOMS.buildArena(true);
+  GAME.enemies = []; GAME.waves = []; GAME.spawnQueue = []; GAME.hazards = [];
+  const A = GAME.arena;
+  const B = new MiniBoss(id, A.x + A.w * 0.7, A.y + A.h / 2);
+  GAME.enemies.push(B); GAME.miniRef = B; GAME.bossRef = null;
+  GAME.state = 'combat';
+  B.state = 'rest'; B.t = 99;
+  if (phase === 2) { B.phase = 2; B.hp = B.maxhp * 0.35; }
+  const hits = [];
+  const origTakeDamage = P.takeDamage.bind(P);
+  P.takeDamage = function(amount, fx, fy, opts) {
+    hits.push({ state: B.state, armed: B.armed });
+    return origTakeDamage(amount, fx, fy, opts);
+  };
+  P.x = B.x - (B.r + 60); P.y = B.y;
+  const v0 = BOSS_TG.violations.length;
+  B.startMove(moveId);
+  const serial = B.moveSerial;
+  let wind = 0, drawErr = null, frames = 0;
+  const DT = 1 / 60;
+  while (frames++ < 360) {
+    for (const e of GAME.enemies) if (e !== B) e.dead = true;
+    P.iframes = 0; P.dashT = 0;
+    if (/Wind$/.test(B.state)) wind += DT;
+    GAME.update(DT);
+    try { B.draw(__ctx); GAME.renderBackground(__ctx); GAME.renderEffects(__ctx); }
+    catch (e) { drawErr = e.message; }
+    if (B.moveSerial !== serial || B.phase !== phase) break;
+  }
+  P.takeDamage = origTakeDamage;
+  return { wind, hits, dmgCalls: B.dmgCalls || 0, newViolations: BOSS_TG.violations.slice(v0),
+           def: B.moveDef(moveId), drawErr };
+};
+globalThis.__miniMoveResults = {};
+for (const id of Object.keys(DATA.MINIBOSSES)) {
+  __miniMoveResults[id] = {};
+  for (const phase of [1, 2]) {
+    const ids = MINI_MOVESETS[id][phase].map(m => m[0]);
+    if (ids.includes('chase') && !ids.includes('swipe')) ids.push('swipe');
+    const fails = [];
+    for (const moveId of ids) {
+      const res = __miniMove(id, phase, moveId);
+      if (res.drawErr) fails.push(moveId + ': draw error ' + res.drawErr);
+      if (res.newViolations.length) fails.push(moveId + ': ' + res.newViolations.length + ' violations');
+      if (DIRECT_DMG_MOVES.has(moveId) && !res.hits.every(h => h.armed)) fails.push(moveId + ': unarmed hit recorded');
+      if (res.def.dmg) {
+        if (res.wind < res.def.wind - 0.05) fails.push(moveId + ': wind ' + res.wind.toFixed(2) + ' < ' + res.def.wind);
+        if (res.dmgCalls <= 0) fails.push(moveId + ': dmgCalls=0');
+      }
+    }
+    __miniMoveResults[id][phase] = { ids, fails };
+  }
+}
+GAME.miniRef = null;
+`, sandbox);
+{
+  const miniMoveResults = vm.runInContext('__miniMoveResults', sandbox);
+  for (const id of Object.keys(miniMoveResults)) {
+    for (const phase of [1, 2]) {
+      const r = miniMoveResults[id][phase];
+      check(`mini-boss ${id} phase ${phase}: telegraph invariant holds for ${r.ids.join(',')}`
+        + (r.fails.length ? ' — ' + r.fails.join('; ') : ''), r.fails.length === 0);
+    }
+  }
 }
 
 // Global gate: zero violations across everything simulated so far (full runs + all harnesses).

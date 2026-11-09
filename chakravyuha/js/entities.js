@@ -1620,7 +1620,15 @@ class Boss extends Enemy {
     while (this.volley < vol && elapsed >= this.volley * gap) {
       const plan = this.volley === 0 ? this.patPlan : PROJ.planPattern(this, pat, GAME.player);
       for (const shot of plan.shots) {
-        this.shoot(shot.vx || 0, shot.vy || 0, this.dmg * (pat.dmgMul || 1), undefined, shot.x, shot.y, shot.fam,
+        let vx = shot.vx || 0, vy = shot.vy || 0;
+        // 'around' bombs carry only a target point: throw them so they arrive within the
+        // family's travel time and fuse on the marked circle, not on the caster
+        const fdef = DATA.PROJECTILES[shot.fam];
+        if (!vx && !vy && fdef && fdef.behavior === 'bomb' && shot.extra && shot.extra.tx != null) {
+          const tt = fdef.travel || 0.7;
+          vx = (shot.extra.tx - shot.x) / tt; vy = (shot.extra.ty - shot.y) / tt;
+        }
+        this.shoot(vx, vy, this.dmg * (pat.dmgMul || 1), undefined, shot.x, shot.y, shot.fam,
           Object.assign({}, pat.extra, shot.extra, pat.status ? { status: pat.status } : {}));
       }
       this.volley++;

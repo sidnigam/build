@@ -141,9 +141,11 @@ const GAME = {
     const on = (id, fn) => UI.el(id).addEventListener('click', () => { AUDIO.sfx('click'); fn(); });
     on('btn-begin', () => this.startRun());
     on('btn-shrine', () => UI.shrine());
+    on('btn-vows', () => UI.vows());
     on('btn-armory', () => UI.armory());
     on('btn-codex', () => UI.codex());
     on('btn-shrine-back', () => UI.hub());
+    on('btn-vows-back', () => UI.hub());
     on('btn-armory-back', () => UI.hub());
     on('btn-codex-back', () => UI.hub());
     on('btn-shop-close', () => UI.closeShop());

@@ -11,7 +11,7 @@ const FOCUS = {
   EXCLUDE_IDS: ['btn-wipe'],
   PANEL_BACK: {
     settings: 'btn-settings-back', ctest: 'btn-ctest-back', shop: 'btn-shop-close',
-    shrine: 'btn-shrine-back', armory: 'btn-armory-back', codex: 'btn-codex-back', pause: 'btn-resume',
+    shrine: 'btn-shrine-back', vows: 'btn-vows-back', armory: 'btn-armory-back', codex: 'btn-codex-back', pause: 'btn-resume',
   },
   SCROLLERS: { codex: 'codex-list', settings: 'settings', ctest: 'ctest' },
   PASSTHROUGH: ['ctest'],

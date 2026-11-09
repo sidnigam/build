@@ -118,6 +118,10 @@
   .pip { display: inline-block; width: 9px; height: 9px; border: 1px solid var(--gold);
     margin-right: 3px; transform: rotate(45deg); }
   .pip.full { background: var(--gold); }
+  /* Vows of Tapas (05.7.1-10) */
+  .vow-pips { margin-left: 8px; color: var(--gold); letter-spacing: 0.15em; }
+  .card.vow-card.sworn { border-color: #e0663a; }
+  .vows-best { display: block; margin-top: 4px; font-size: 0.8em; opacity: 0.75; }
 
   /* duo (two-god) boon cards — dual gradient border via --god / --god2 CSS vars */
   .card.duo { border-image: linear-gradient(135deg, var(--god, var(--gold)), var(--god2, var(--punya))) 1;
@@ -347,6 +351,7 @@
     <div class="menu-btns">
       <button id="btn-begin" class="primary">BEGIN THE ASCENT</button>
       <button id="btn-shrine">PATH OF DHARMA</button>
+      <button id="btn-vows">VOWS OF TAPAS</button>
       <button id="btn-armory">ARMORY</button>
       <button id="btn-codex">THE POTHI</button>
       <button id="btn-hub-settings">SETTINGS</button>
@@ -383,6 +388,15 @@
     <div class="currency-line" id="shrine-punya"></div>
     <div class="cards" id="shrine-cards"></div>
     <div class="back-row"><button id="btn-shrine-back">RETURN</button></div>
+  </div>
+
+  <!-- VOWS OF TAPAS (Heat, Phase 05.7.1) -->
+  <div id="vows" class="panel solid hidden">
+    <div class="panel-h">VOWS OF TAPAS</div>
+    <div class="panel-sub">Take on hardship by choice. Every vow kept earns greater merit.</div>
+    <div class="currency-line" id="vows-heat"></div>
+    <div class="cards" id="vows-cards"></div>
+    <div class="back-row"><button id="btn-vows-back">RETURN</button></div>
   </div>
 
   <!-- ARMORY -->

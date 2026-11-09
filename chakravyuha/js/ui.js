@@ -22,7 +22,7 @@ const UI = {
 
   // ---------- controller pad-hint footers (Phase 05.2 Plan 02, D-09) ----------
   PAD_HINTS: {
-    hub: null, boonpick: 'boon', shop: 'shop', shrine: 'menu', armory: 'menu',
+    hub: null, boonpick: 'boon', shop: 'shop', shrine: 'menu', vows: 'menu', armory: 'menu',
     codex: 'codex', death: 'continue', victory: 'continue', pause: 'pause', settings: 'settings',
     ctest: 'ctest',
   },
@@ -93,6 +93,9 @@ const UI = {
     if (META.wins > 0) s.push(`${META.wins} escape${META.wins > 1 ? 's' : ''}`);
     if (META.bestTime > 0) s.push(`best ${Math.floor(META.bestTime / 60)}:${String(Math.floor(META.bestTime % 60)).padStart(2, '0')}`);
     this.el('hub-stats').textContent = s.join('  ·  ');
+    // Vows of Tapas (05.7.1-10): the hub button appears after the first full clear
+    const vb = this.el('btn-vows');
+    if (vb) vb.style.display = HEAT.unlocked() ? '' : 'none';
     if (typeof GLYPHS !== 'undefined') GLYPHS.refresh(true);
     this.show('hub');
   },
@@ -578,6 +581,40 @@ const UI = {
       cards.appendChild(card);
     }
     this.show('shrine');
+  },
+
+  // ---------- Vows of Tapas (Heat, 05.7.1-10, D-04) ----------
+  // One card per DATA.HEAT.vows entry. Clicking cycles the rank 0 -> 1 -> ... -> ranks -> 0
+  // through HEAT.setRank (which saves), then re-renders. The header uses HEAT.total() (the hub
+  // selection), not GAME.heatTotal (the frozen value of the last run).
+  vows() {
+    this.hideAll();
+    const total = HEAT.total();
+    const b = META.bestHeat || {};
+    const best = Object.keys(DATA.WEAPONS)
+      .map(id => `${id.charAt(0).toUpperCase() + id.slice(1)} ${b[id] ?? '—'}`).join(' · ');
+    this.el('vows-heat').innerHTML = `Heat ${total} · Punya ×${(1 + DATA.HEAT.punyaPerHeat * total).toFixed(2)}`
+      + `<span class="vows-best">Best cleared — ${best}</span>`;
+    const cards = this.el('vows-cards');
+    cards.innerHTML = '';
+    for (const v of DATA.HEAT.vows) {
+      const rank = HEAT.rank(v.id);
+      const maxed = rank >= v.ranks;
+      const card = document.createElement('div');
+      card.className = 'card vow-card' + (rank ? ' sworn' : '');
+      card.style.cssText = '--god:#e0663a';
+      const pips = '●'.repeat(rank) + '○'.repeat(v.ranks - rank);
+      card.innerHTML = `<div class="card-name">${v.name} <span class="vow-pips">${pips}</span></div>
+        <div class="card-desc">${rank ? v.desc(rank) : 'Unsworn — ' + v.desc(1)}</div>
+        <div class="card-cost">${maxed ? 'max' : '+' + v.heat[rank] + ' heat'}</div>`;
+      card.onclick = () => {
+        HEAT.setRank(v.id, (rank + 1) % (v.ranks + 1));
+        AUDIO.sfx('click');
+        this.vows();
+      };
+      cards.appendChild(card);
+    }
+    this.show('vows');
   },
 
   // ---------- armory ----------

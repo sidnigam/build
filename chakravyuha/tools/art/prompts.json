@@ -453,7 +453,10 @@
       "flux_base_seed": 75100,
       "flux_subject": "Full-length figure from head to feet: a young rakshasa warrior, muscular, ember-red skin with glowing orange cracks, small curved tusks, wild black hair, bronze armour, holding a flaming iron mace in both hands. Exactly two arms, a bare head with only the plain grey backdrop directly behind it.",
       "phase2_mode": "ember",
-      "cultural_flag": "QA-03"
+      "cultural_flag": "QA-03",
+      "accepted_attempt": 0,
+      "rejected": {},
+      "rejected_reasons": []
     },
     "mahiravana": {
       "kind": "boss",

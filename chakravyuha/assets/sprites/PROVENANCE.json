@@ -4606,6 +4606,49 @@
         "75050": "[flux] left forearm ends in a ragged stump with no hand (HX3 broken/maimed limb); banner held one-handed -> subject rewritten (both fists clearly wrapped around the pole)",
         "75051": "[flux] crimson pennant floats in the air detached from the pole top (HX3 floating prop); otherwise good (horned tusked asura, both hands on the pole) -> subject rewritten (pennant tied by cords to the pole top, hanging along it); least-bad fallback"
       }
+    },
+    {
+      "filename": "subahu-atlas.png",
+      "path": "assets/sprites/bosses/subahu-atlas.png",
+      "actor": "subahu",
+      "kind": "boss",
+      "animations": {
+        "idle": 1,
+        "phase2": 1
+      },
+      "tool": "ComfyUI (local)",
+      "checkpoint": "flux1-schnell-Q4_K_S.gguf (FLUX.1 [schnell] by Black Forest Labs, GGUF Q4_K_S by city96, Apache-2.0) + t5-v1_1-xxl Q5_K_M GGUF (Apache-2.0) + CLIP-L (MIT) + FLUX ae VAE (Apache-2.0)",
+      "method": "txt2img",
+      "sampler": "euler",
+      "scheduler": "simple",
+      "steps": 4,
+      "cfg": 1.0,
+      "width": 896,
+      "height": 1152,
+      "seed": 75100,
+      "prompt": "Full-length figure from head to feet: a young rakshasa warrior, muscular, ember-red skin with glowing orange cracks, small curved tusks, wild black hair, bronze armour, holding a flaming iron mace in both hands. Exactly two arms, a bare head with only the plain grey backdrop directly behind it. Hades-style painterly cel-shaded game character art with bold dark ink outlines, hand-painted textures, saturated vivid colours and strong coloured rim lighting, with Indian miniature-painting ornament: fine gold-leaf detail and flat patterned colour fields on the clothing and armour, crisp black contour lines. Three-quarter top-down game sprite view, a single character, the entire figure visible from head to feet, standing on a plain flat light-grey background that fills the rest of the image.",
+      "negative_prompt": "",
+      "rejected_seeds": [],
+      "rejected_count": 0,
+      "post_processing": [
+        "rembg birefnet-general background removal",
+        "alpha despeckle + trim",
+        "bottom-aligned LANCZOS fit to 384x384 (margin 8)",
+        "color-bleed + UnsharpMask r=1.2 p=60 t=2 (RGB only)",
+        "baked outline: disk dilation 4 px, #140b08 a=235, 0.6px feather, under sprite",
+        "phase2: tools/art/phase2_variant.py --mode ember --scale 2",
+        "free-tex-packer-core via tools/pack-atlas.js (trim, 8px padding)"
+      ],
+      "raw_image": "assets/sprites/_gen/bosses/subahu/subahu_s75100.png",
+      "gen_sidecar": "assets/sprites/_raw/bosses/subahu/subahu.gen.json",
+      "generated_date": "2026-11-09",
+      "recorded_date": "2026-11-09",
+      "review_status": "provisional",
+      "review_note": "provisional \u2014 awaiting human art review",
+      "self_review": "05.7.1-12 subahu (mini-boss), Flux schnell seed 75100 (attempt 0, shipped first try), style_1x5_positive_flux, finished at 384 px (GPU budget). Raw, finished idle and ember phase2 Read, plus game scale (scale_preview vs tataka). (a) young ember-red rakshasa warrior with curved horns, small tusks, wild black hair, bronze pauldrons/bracers/greaves, a flaming iron war-hammer gripped in both hands; (b) whole figure; (c) one character; (d) no text; (e) exactly two attached arms; HX4 flaming hammer intact after the cutout; H2/H4 menacing but no gore/skulls; H3 modest; H6 belt-plate and loincloth motifs are abstract leaf patterns, no glyph; HX5 no halo/frame/border. Phase2 ember: red rim glow, readable, demonic-not-divine as intended for an asura. Style: closest to the 1+5 target (cel-shaded, bold ink, gold ornament).",
+      "cultural_review": "pending \u2014 human cultural reviewer (QA-03)",
+      "iconography_notes": "two arms; horns + tusks (rakshasa); bare forehead; no halo, no third eye, no crown, no trishula, no sacred thread; flaming iron hammer-mace",
+      "cultural_check": "pending QA-03 (flagged): Subahu = Ramayana rakshasa, son of Tataka (confidence MEDIUM-HIGH); non-deity antagonist, no divine iconography"
     }
   ],
   "review_sheet": "assets/sprites/_review/contact-sheet.png",

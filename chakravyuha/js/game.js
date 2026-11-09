@@ -311,7 +311,7 @@ const GAME = {
         VFX.emit('astraTrail', p.x, p.y);
       }
       for (const e of this.enemies) {
-        if (e.dead || p.hitSet.has(e) || e.spawnT > 0) continue;
+        if (e.dead || p.hitSet.has(e) || e.spawnT > 0 || e.submerged) continue;   // submerged: passes through
         if (U.dist(p.x, p.y, e.x, e.y) < e.r + p.r) {
           p.hitSet.add(e);
           // 05.7.1-05 (D-07): a warded elite inside its ward window turns player attack shots
@@ -881,6 +881,9 @@ const GAME = {
     for (const e of this.enemies) {
       if (e.dead) { if (e._pixiSprite) SPRITES.retireEntity(e); continue; }
       if (!CAMERA.visible(e.x, e.y, e.r * 3, 96)) { SPRITES.cullEntity(e); continue; }   // CAM-05: off-screen — hide sprite, keep tracked
+      // 05.7.1-05: a submerged enemy hides its sprite and shows only its tell + ripple
+      e._hidden = !!e.submerged;
+      if (e._hidden) { SPRITES.cullEntity(e); drawTelegraph(ctx, e); drawOverlays(ctx, e, e.y - e.r, e.y + e.r); continue; }
       if (SPRITES.has(e.type)) { this.renderSpriteExtras(ctx, e); SPRITES.drawEntity(e); }
       else e.draw(ctx);                              // D-11: silent fallback to primitive
     }

@@ -232,6 +232,16 @@ DATA.ENEMIES = {
                 color: '#2fbf8f', cost: 3, guard: 80, guardArc: 1.05, guardReduce: 0.85 },
   mayavi:     { id: 'mayavi', name: 'Mayavi Weaver', ai: 'trapper', role: 'support', hp: 60, spd: 85, r: 14, dmg: 9,
                 color: '#b07dff', cost: 3, band: [280, 420] },
+  // longRange: its slot sits mid-band without the view-band pull, so most of its shots are
+  // long shots (+LONG_TELL_BONUS, longShot flag); slotBack: extra px behind its ranged slot
+  javelineer:     { id: 'javelineer', name: 'Danava Javelineer', ai: 'sniper', role: 'ranged', hp: 55, spd: 80, r: 14, dmg: 22,
+                    color: '#e8c070', cost: 3, band: [420, 600], longRange: true },
+  bannerman:      { id: 'bannerman', name: 'Asura Standard-Bearer', ai: 'buffer', role: 'support', hp: 90, spd: 75, r: 16, dmg: 0,
+                    color: '#ffb347', cost: 3, band: [300, 500], slotBack: 60, aura: { r: 240, dmg: 1.2, spd: 1.15 } },
+  brahmarakshasa: { id: 'brahmarakshasa', name: 'Brahmarakshasa', ai: 'healer', role: 'support', hp: 85, spd: 70, r: 15, dmg: 12,
+                    color: '#c8d4ff', cost: 4, band: [280, 440], heal: { every: 4, r: 260, frac: 0.2 } },
+  jalarakshasa:   { id: 'jalarakshasa', name: 'Jala-Rakshasa', ai: 'burrow', role: 'melee', hp: 95, spd: 120, r: 16, dmg: 16,
+                    color: '#5a8fd0', cost: 3, dive: 2.5 },
 };
 
 // ---------- WAVES (Phase 05.1: denser encounters, D-18/D-19) ----------
@@ -348,14 +358,14 @@ DATA.BIOMES = [
   {
     id: 'ranabhoomi', name: 'RANABHOOMI', sub: 'Field of the Fallen Warriors', rooms: 6,
     bg: '#171107', floor: '#241b0d', accent: '#ffcf5c', wall: '#403018',
-    enemies: ['daitya', 'bhuta', 'yatudhana', 'vetala'], boss: 'kumbhakarna', hazard: 'arrowVolley',
+    enemies: ['daitya', 'bhuta', 'yatudhana', 'vetala', 'javelineer', 'bannerman'], boss: 'kumbhakarna', hazard: 'arrowVolley',
     scale: 1.8, budget: [9, 15], droneHz: 123,
     waves: { count: [3, 4], perWave: [8, 14], fodder: ['preta', 'rakshasa'], fodderShare: [0.6, 0.25], eliteShare: [0.25, 0.6] },
   },
   {
     id: 'vaitarani', name: 'VAITARANI', sub: 'The River Between Worlds', rooms: 2,
     bg: '#0a0e16', floor: '#121828', accent: '#9fb8ff', wall: '#222c4a',
-    enemies: ['preta', 'rakshasa', 'naga', 'vetala', 'bhuta', 'daitya'], boss: 'yama', hazard: 'riverCurrent',
+    enemies: ['preta', 'rakshasa', 'naga', 'vetala', 'bhuta', 'daitya', 'brahmarakshasa', 'jalarakshasa'], boss: 'yama', hazard: 'riverCurrent',
     scale: 2.1, budget: [12, 16], droneHz: 82,
     waves: { count: [4, 4], perWave: [10, 15], fodder: ['preta'], fodderShare: [0.45, 0.25], eliteShare: [0.35, 0.5] },
   },

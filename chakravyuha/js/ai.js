@@ -119,7 +119,7 @@ const ENEMY_AI = {
     // reclaim tokens from dead / removed holders and from enemies no longer in an attack
     for (const cat in this.holders) {
       for (const e of this.holders[cat]) {
-        if (!e || e.dead || !present.has(e) || (!e.windKind && !e.armedAtk)) { this.holders[cat].delete(e); if (e) e.tokenCat = null; }
+        if (!e || e.dead || !present.has(e) || (!e.windKind && !e.armedAtk && !e.holdToken)) { this.holders[cat].delete(e); if (e) e.tokenCat = null; }
       }
     }
     // drop slots of dead / removed enemies
@@ -141,7 +141,7 @@ const ENEMY_AI = {
 
     // separation: O(n²) over living non-boss enemies
     const live = [];
-    for (const e of list) if (!e.dead && !e.boss) live.push(e);
+    for (const e of list) if (!e.dead && !e.boss && !e.submerged) live.push(e);   // submerged units are underground
     for (let i = 0; i < live.length; i++) {
       const a = live[i];
       for (let j = i + 1; j < live.length; j++) {
@@ -160,34 +160,40 @@ const ENEMY_AI = {
     }
   },
 
-  // 05.7.1-05 (D-07): rallying elites buff the damage of living allies within their radius
-  // (flags are recomputed from scratch every tick, so a dead rallier's buff ends at once)
+  // 05.7.1-05 (D-05/D-07): rallying elites and asura standard-bearers buff living allies within
+  // their radius: rallied (×1.2 damage via Enemy.dmgMul) and, for banners, bannerSpd. Flags are
+  // recomputed from scratch every tick, so a dead source's buff ends at once.
   _rally(list) {
     const M = DATA.ELITE_MODS;
     const src = [];
     for (const e of list) {
       if (e.dead || e.boss) continue;
-      e.rallied = false;
-      if (e.elite && e.elite.includes('rallying')) src.push({ e, r: M.rallying.r });
+      e.rallied = false; e.bannerSpd = 1;
+      if (e.elite && e.elite.includes('rallying')) src.push({ e, r: M.rallying.r, spd: 1 });
+      if (e.def && e.def.ai === 'buffer' && e.def.aura && !(e.spawnT > 0)) src.push({ e, r: e.def.aura.r, spd: e.def.aura.spd });
     }
     if (!src.length) return;
     for (const e of list) {
       if (e.dead || e.boss) continue;
       for (const s of src) {
-        if (s.e !== e && U.dist(s.e.x, s.e.y, e.x, e.y) <= s.r) { e.rallied = true; break; }
+        if (s.e === e || U.dist(s.e.x, s.e.y, e.x, e.y) > s.r) continue;
+        e.rallied = true;
+        if (s.spd > e.bannerSpd) e.bannerSpd = s.spd;
       }
     }
   },
 
   _slotPos(ring, i, e, P) {
     const a = this.slotAngle(ring, i);
-    const rad = ring === 'melee' ? this.CFG.MELEE_R + (e.r || 0) : this._rangedR(e, a, P);
+    const rad = ring === 'melee' ? this.CFG.MELEE_R + (e.r || 0)
+      : this._rangedR(e, a, P) + ((e.def && e.def.slotBack) || 0);
     return { x: P.x + Math.cos(a) * rad, y: P.y + Math.sin(a) * rad, a };
   },
   // ranged slot radius: mid band, pulled inside the view band so slots are firing positions
   _rangedR(e, a, P) {
     const b = this.band(e);
     const mid = (b[0] + b[1]) / 2;
+    if (e && e.def && e.def.longRange) return mid;   // 05.7.1-05: snipers sit mid-band (long shots)
     const vb = this.viewBand(P);
     const hw = vb.w / 2, hh = vb.h / 2;
     const c = Math.abs(Math.cos(a)), s = Math.abs(Math.sin(a));
@@ -248,7 +254,7 @@ const ENEMY_AI = {
       if (dP < lo) {
         const ax = dP > 1e-6 ? (e.x - P.x) / dP : 1, ay = dP > 1e-6 ? (e.y - P.y) / dP : 0;
         e.x += ax * spd * dt; e.y += ay * spd * dt;
-      } else if (dP > b[1] || !this.inViewBand(e.x, e.y, P)) moveTo(sp.x, sp.y, spd);
+      } else if (dP > b[1] || (!(e.def && e.def.longRange) && !this.inViewBand(e.x, e.y, P))) moveTo(sp.x, sp.y, spd);
       else moveTo(sp.x, sp.y, spd * 0.6);
       return;
     }

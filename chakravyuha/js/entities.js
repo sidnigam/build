@@ -16,6 +16,7 @@ function dmgText(x, y, str, color = '#fff', size = 16) {
 // src: 'attack' | 'special' | 'cast' | 'dash' | 'burn' | 'chain' | 'thorns' | 'zone'
 function hitEnemy(e, base, src = 'attack', opts = {}) {
   if (!e || e.dead) return 0;
+  if (e.submerged) return 0;          // 05.7.1-05: a diving jala-rakshasa is untargetable
   const P = GAME.player;
   let dmg = base * META.bonusDamage();
 
@@ -493,7 +494,7 @@ class Player {
     if (ch.kind === 'thrust') {
       const dmg = w.combo[2] * ch.mult * k, kb = this.meleeKnockback(1.6);
       for (const e of GAME.enemies.slice()) {
-        if (e.dead) continue;
+        if (e.dead || e.submerged) continue;
         const rx = e.x - this.x, ry = e.y - this.y;
         const along = rx * ux + ry * uy, across = -rx * uy + ry * ux;
         if (along >= 0 && along <= ch.len && Math.abs(across) < ch.width / 2 + e.r) {
@@ -508,7 +509,7 @@ class Player {
     } else if (ch.kind === 'smash') {
       const dmg = w.combo[0] * ch.mult * k;
       for (const e of GAME.enemies.slice()) {
-        if (e.dead) continue;
+        if (e.dead || e.submerged) continue;
         if (U.dist(this.x, this.y, e.x, e.y) < ch.radius + e.r) {
           hitEnemy(e, dmg, 'attack', { finisher: true, charged: true });
           if (!e.boss && !e.dead) {
@@ -549,7 +550,7 @@ class Player {
     const kb = this.meleeKnockback(isFinisher ? 1.6 : 1);
     const struck = new Set();
     for (const e of GAME.enemies) {
-      if (e.dead) continue;
+      if (e.dead || e.submerged) continue;
       const d = U.dist(this.x, this.y, e.x, e.y);
       if (d < w.range + e.r && Math.abs(U.angDiff(this.aim, U.angle(this.x, this.y, e.x, e.y))) < arc / 2) {
         struck.add(e);
@@ -604,7 +605,7 @@ class Player {
       this.trail.push({ x: this.x, y: this.y, t: 0.25 });
       const kb = this.meleeKnockback(1);
       for (const e of GAME.enemies) {
-        if (e.dead) continue;
+        if (e.dead || e.submerged) continue;
         const d = U.dist(this.x, this.y, e.x, e.y);
         if (d < ds.range + e.r && Math.abs(U.angDiff(a, U.angle(this.x, this.y, e.x, e.y))) < ds.arc / 2) {
           hitEnemy(e, w.combo[0] * ds.mult, 'attack', { dashStrike: true });
@@ -659,7 +660,7 @@ class Player {
     VFX.emit('finisherRing', this.x, this.y, this.aim, '#ffcf5c');
     GAME.shake = Math.max(GAME.shake, 6);
     for (const e of GAME.enemies.slice()) {
-      if (e.dead) continue;
+      if (e.dead || e.submerged) continue;
       if (U.dist(this.x, this.y, e.x, e.y) < ds.radius + e.r) {
         hitEnemy(e, w.combo[0] * ds.mult, 'attack', { dashStrike: true });
         if (!e.boss && !e.dead) {
@@ -742,7 +743,7 @@ class Player {
       GAME.rings.push({ x: this.x, y: this.y, r: radius, t: 0.25, color: '#fff' });
       GAME.shake = Math.max(GAME.shake, 6);
       for (const e of GAME.enemies) {
-        if (e.dead) continue;
+        if (e.dead || e.submerged) continue;
         if (U.dist(this.x, this.y, e.x, e.y) < radius + e.r) {
           hitEnemy(e, sp.dmg, 'special');
           if (sp.stun) e.stun = Math.max(e.stun, sp.stun);
@@ -967,6 +968,7 @@ class Enemy {
   curSpeed() {
     let s = this.spd;
     if (this.slowT > 0) s *= this.slowF;
+    if (this.bannerSpd > 1) s *= this.bannerSpd;   // 05.7.1-05: standard-bearer aura
     return s;
   }
 
@@ -1010,7 +1012,7 @@ class Enemy {
   }
   // The attack resolved (or was aborted): disarm and hand the token back.
   endAttack() {
-    this.armedAtk = false; this.windKind = null;
+    this.armedAtk = false; this.windKind = null; this.holdToken = false;
     this.telegraph = null;
     ENEMY_AI.releaseToken(this);
   }
@@ -1273,6 +1275,125 @@ class Enemy {
         break;
       }
 
+      // ---- 05.7.1-05 (D-05): Ranabhoomi / Vaitarani signature enemies ----
+      case 'sniper': {
+        // danava javelineer: holds 420-600 px, locks its aim and winds a long line tell, then a beam.
+        // Elites wind 'stun' and their beam stuns; a throw from outside the view band is a long shot.
+        const ER = DATA.WAVES.engageRange;
+        if (this.state === 'aim') {
+          if (this.t <= 0) {
+            this.armAttack();
+            const extra = { a: this.aimA, tell: 0.1, w: 14 };
+            if (this.elite) extra.status = { type: 'stun', dur: 0.4 };
+            this.fire('beam', 0, 0, this.dmg, extra);
+            this.longShot = false;
+            this.endAttack(); this.state = 'idle'; this.t = U.rand(2.6, 3.6) * this.cdMul;
+          }
+          break;
+        }
+        ENEMY_AI.steer(this, dt);
+        if (this.t <= 0) {
+          if (dToP <= ER + 200 && ENEMY_AI.requestToken(this, 'ranged')) {
+            this.aimA = aToP;
+            const long = !ENEMY_AI.inViewBand(this.x, this.y, P);
+            this.state = 'aim'; this.longShot = long;
+            this.windUp(this.elite ? 'stun' : 'beam',
+              Math.max(ENEMY_AI.windTime('beam', 0.8), ENEMY_TG.MIN.beam) + (long ? ENEMY_AI.CFG.LONG_TELL_BONUS : 0),
+              { type: 'line', a: this.aimA, len: 900, w: 14 });
+          } else this.t = 0.3;
+        }
+        break;
+      }
+
+      case 'buffer':
+        // asura standard-bearer: no attack of its own; hangs back behind its allies (def.slotBack)
+        // while ENEMY_AI.tick applies its aura (rallied + bannerSpd) to allies in range
+        ENEMY_AI.steer(this, dt);
+        break;
+
+      case 'healer': {
+        // brahmarakshasa: mends the most-wounded ally nearby every heal.every s; slow orb attack
+        const H = this.def.heal, ER = DATA.WAVES.engageRange;
+        if (this.healT == null) this.healT = H.every;
+        this.healT -= dt;
+        if (this.healT <= 0) {
+          let best = null, bp = 1;
+          for (const o of GAME.enemies) {
+            if (o === this || o.dead || o.boss || o.spawnT > 0 || o.submerged || !(o.maxhp > 0)) continue;
+            if (U.dist(this.x, this.y, o.x, o.y) > H.r) continue;
+            const pc = o.hp / o.maxhp;
+            if (pc < bp - 1e-9) { bp = pc; best = o; }
+          }
+          if (best) {
+            best.hp = Math.min(best.maxhp, best.hp + best.maxhp * H.frac);
+            GAME.bolts.push({ x1: this.x, y1: this.y, x2: best.x, y2: best.y, t: 0.25 });
+            GAME.rings.push({ x: best.x, y: best.y, r: best.r + 10, t: 0.3, color: '#7dff5a' });
+            this.healT = H.every;
+          } else this.healT = 0.5;
+        }
+        if (this.state === 'cast') {
+          if (this.t <= 0) {
+            this.armAttack();
+            this.fire('orb', Math.cos(aToP) * 140, Math.sin(aToP) * 140, this.dmg);
+            this.longShot = false;
+            this.endAttack(); this.state = 'idle'; this.t = U.rand(2.6, 3.4) * this.cdMul;
+          }
+          break;
+        }
+        ENEMY_AI.steer(this, dt);
+        if (this.t <= 0) {
+          if (dToP <= ER && ENEMY_AI.requestToken(this, 'ranged')) {
+            const long = !ENEMY_AI.inViewBand(this.x, this.y, P);
+            this.state = 'cast'; this.longShot = long;
+            this.windUp('ranged', ENEMY_AI.windTime('ranged', 0.45) + (long ? ENEMY_AI.CFG.LONG_TELL_BONUS : 0),
+              { type: 'circle', r: this.r + 16 });
+          } else this.t = 0.3;
+        }
+        break;
+      }
+
+      case 'burrow': {
+        // jala-rakshasa: dives (untargetable) toward a point ahead of the player's heading, then
+        // emerges after a circle tell at the surfacing point: knockback hit + an expanding ring
+        if (this.state === 'dive') {
+          this.diveT -= dt;
+          const pv = ENEMY_AI.pv, sp = Math.hypot(pv.x, pv.y), A = GAME.arena, m = this.r + 20;
+          let tx = P.x, ty = P.y;
+          if (sp > 30) { tx += pv.x / sp * 80; ty += pv.y / sp * 80; }
+          tx = U.clamp(tx, A.x + m, A.x + A.w - m); ty = U.clamp(ty, A.y + m, A.y + A.h - m);
+          const d = U.dist(this.x, this.y, tx, ty);
+          if (d > 1e-6) { const st = Math.min(d, this.curSpeed() * 1.4 * dt); this.x += (tx - this.x) / d * st; this.y += (ty - this.y) / d * st; }
+          if (U.dist(this.x, this.y, tx, ty) <= 20 || this.diveT <= 0) {
+            this.state = 'emergeWind';
+            this.windUp('melee', ENEMY_AI.windTime('melee', 0.6), { type: 'circle', r: 70 });
+          }
+          break;
+        }
+        if (this.state === 'emergeWind') {
+          if (this.t <= 0) {
+            this.armAttack();
+            this.submerged = false;
+            if (U.dist(this.x, this.y, P.x, P.y) < 70 + P.r) {
+              this.hurtPlayer(this.dmg, { status: { type: 'knock', force: 420 } });
+              P.meleeRetaliate(this);
+            }
+            this.fire('ring', 0, 0, this.dmg * 0.6, { ox: this.x, oy: this.y, gapArc: 0 });
+            GAME.rings.push({ x: this.x, y: this.y, r: 70, t: 0.25, color: this.color });
+            GAME.shake = Math.max(GAME.shake, 4);
+            this.endAttack(); this.state = 'idle'; this.t = U.rand(2.5, 3.5) * this.cdMul;
+          }
+          break;
+        }
+        ENEMY_AI.steer(this, dt);
+        if (this.t <= 0 && ENEMY_AI.requestToken(this, 'melee')) {
+          // the token is held through the dive (holdToken) so tick() does not reclaim it
+          this.submerged = true; this.holdToken = true;
+          this.state = 'dive'; this.diveT = this.def.dive;
+          burst(this.x, this.y, this.color, 10, 140, 0.4);
+        }
+        break;
+      }
+
       case 'shield': {
         // naga shield-guard: turns its frontal guard toward the player, thrusts after a line tell
         if (this.face == null) this.face = aToP;
@@ -1350,6 +1471,8 @@ class Enemy {
     }
     // telegraph (shared with the sprite path — js/combat.js, 05.7.1-01)
     drawTelegraph(ctx, this);
+    // 05.7.1-05: a submerged jala-rakshasa shows only its ripple (drawn by drawOverlays)
+    if (this.submerged) { drawOverlays(ctx, this, this.y - this.r, this.y + this.r); return; }
 
     // body
     ctx.fillStyle = this.flash > 0 ? '#ffffff' : this.color;

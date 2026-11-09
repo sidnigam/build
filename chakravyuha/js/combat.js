@@ -26,7 +26,7 @@ function drawTelegraph(ctx, e) {
     ctx.globalAlpha = pulse;
     ctx.strokeStyle = '#ff4444'; ctx.fillStyle = 'rgba(255,68,68,0.12)'; ctx.lineWidth = 2;
     if (tg.type === 'line') {
-      const hw = e.boss ? e.r * 0.8 : e.r;
+      const hw = tg.w ? tg.w / 2 : (e.boss ? e.r * 0.8 : e.r);   // tg.w: explicit width (javelineer)
       const len = tg.len * frac;
       ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(tg.a);
       ctx.fillRect(0, -hw, len, hw * 2);
@@ -101,6 +101,33 @@ function drawTelegraph(ctx, e) {
  * One block per overlay — later plans add elite auras/tags and status pips here.
  */
 function drawOverlays(ctx, e, headY, feetY) {
+  // 05.7.1-05: a submerged (diving) enemy is only a ripple on the surface — nothing else
+  if (e.submerged) {
+    const ph = (GAME.time * 2) % 1;
+    ctx.strokeStyle = e.color; ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.7;
+    ctx.beginPath(); ctx.ellipse(e.x, feetY, e.r * (0.8 + ph * 0.8), e.r * (0.3 + ph * 0.3), 0, 0, U.TAU); ctx.stroke();
+    ctx.globalAlpha = 0.35;
+    ctx.beginPath(); ctx.ellipse(e.x, feetY, e.r * 1.6, e.r * 0.55, 0, 0, U.TAU); ctx.stroke();
+    ctx.globalAlpha = 1;
+    return;
+  }
+
+  // 05.7.1-05: asura standard-bearer — aura circle + a gold banner pole
+  if (e.def && e.def.ai === 'buffer' && e.def.aura && !(e.spawnT > 0)) {
+    ctx.globalAlpha = 0.35;
+    ctx.strokeStyle = '#ffd34d'; ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 6]);
+    ctx.beginPath(); ctx.arc(e.x, feetY, e.def.aura.r, 0, U.TAU); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+    const top = headY - 26, px = e.x + e.r * 0.6;
+    ctx.strokeStyle = '#ffd34d'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(px, feetY); ctx.lineTo(px, top); ctx.stroke();
+    ctx.fillStyle = '#ffb347';
+    ctx.beginPath(); ctx.moveTo(px, top); ctx.lineTo(px + 16, top + 6); ctx.lineTo(px, top + 12); ctx.closePath(); ctx.fill();
+  }
+
   // burn pips
   if (e.burns && e.burns.length) {
     ctx.fillStyle = '#ff7040';

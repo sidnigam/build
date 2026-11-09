@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Ready to execute
-stopped_at: Completed 05.7.1-06-PLAN.md
-last_updated: "2026-11-09T00:35:08.489Z"
+stopped_at: Completed 05.7.1-07-PLAN.md
+last_updated: "2026-11-09T00:50:08.055Z"
 last_activity: 2026-11-09
 progress:
   total_phases: 18
   completed_phases: 11
   total_plans: 71
-  completed_plans: 52
+  completed_plans: 53
 ---
 
 # Project State
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-06-17)
 ## Current Position
 
 Phase: 05.7.1 (hades-style-combat-depth-smarter-enemies-player-kit-difficulty-curve-boss-variety-tighter-arenas) — EXECUTING
-Plan: 7 of 12
+Plan: 8 of 12
 
 ## Performance Metrics
 
@@ -58,6 +58,7 @@ Plan: 7 of 12
 | Phase 05.7.1 P04 | 14min | 2 tasks | 10 files |
 | Phase 05.7.1 P05 | 20min | 3 tasks | 9 files |
 | Phase 05.7.1 P06 | 14min | 2 tasks | 11 files |
+| Phase 05.7.1 P07 | 13min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -100,6 +101,9 @@ Recent decisions affecting current work:
 - [Phase 05.7.1]: Mini-bosses = MiniBoss extends Boss (js/minibosses.js) over overridable Boss hooks (moveTable/moveDefBase/phaseAt/phaseTitle/custom*); generic def.pattern moves fire through PROJ.planPattern + guarded Boss.shoot; enrage at 40%
 - [Phase 05.7.1]: Mini-boss lives on GAME.miniRef, never GAME.bossRef; fixed mid-biome room (miniRoom 3/3/3/2 of 4/5/5/3 rooms) behind a single miniboss door; reward +60 mudra and UI.offerBoon(undefined, {minRarity: 1})
 - [Phase 05.7.1]: 05.7.2 hand-off: MUSIC.logic.snapshot excludes e.boss units, so a mini-boss room reads as calm until the score maps GAME.miniRef
+- [Phase 05.7.1]: Boss move selection (BOSS_AI): strict no-repeat, distance bands close<220<=mid<480<=far (x2 in / x0.3 out), area moves x2 vs a camping player (3 s within 60 px or within 90 px of a wall); chains 1-3 (p1) / 2-3 (p2) with 0.28-0.38 / 0.20-0.28 s link rests; chase never continues a chain; opener resets the chain
+- [Phase 05.7.1]: Heat hooks for plan 09: GAME.heat.chainBonus (extra chain links) and GAME.heat.restMul (chain-rest multiplier), inert while GAME.heat is undefined
+- [Phase 05.7.1]: +2 pattern moves per boss: tataka thornVolley/rootSnare, ahiravana lampWisps/serpentRing, kumbhakarna boulderOrbs/drumStun (stun ring, no knock), yama pasha/scales (judgments, comments only, no new strings); phase 1 gets one, phase 2 both
 
 ### Roadmap Evolution
 
@@ -146,7 +150,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-09T00:35:08.485Z
+Last session: 2026-11-09T00:50:08.051Z
 Last activity: 2026-11-09
-Stopped at: Completed 05.7.1-06-PLAN.md
+Stopped at: Completed 05.7.1-07-PLAN.md
 Resume file: None

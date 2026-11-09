@@ -75,7 +75,7 @@ Source: PROJECT.md + Research (STACK, FEATURES, ARCHITECTURE, PITFALLS)
 ### COMBAT — Hades-style combat depth (Phase 5.7.1, inserted 2026-11-08)
 
 - [x] **COMBAT-01**: Faster pace: player ~+15% speed, snappier recovery, faster enemy engage, overlapping waves under `maxAlive`, 45-75 s combat rooms, 25-35 min full run
-- [ ] **COMBAT-02**: Base zoom ~1.3x, context zoom (boss/large out, rest/shop in), punch composes on top, clamp/bridge correct at every zoom, off-view threats indicated
+- [x] **COMBAT-02**: Base zoom ~1.3x, context zoom (boss/large out, rest/shop in), punch composes on top, clamp/bridge correct at every zoom, off-view threats indicated
 - [x] **COMBAT-03**: 8 new regular enemy types (2 per biome), distinct roles, non-deity
 - [x] **COMBAT-04**: Smarter AI for all enemies: slots/surround, ranged spacing and repositioning, attack tokens, timing variance inside telegraphs, escape-route cutting, on-screen firing preference
 - [x] **COMBAT-05**: Elite modifiers (1-2 visible: aura, tint, tag) on the `eliteShare` curve, raised
@@ -162,7 +162,7 @@ Source: PROJECT.md + Research (STACK, FEATURES, ARCHITECTURE, PITFALLS)
 | CULT-03 | Phase 5.7 → 7 | Deferred to Phase 7 QA-03 (Indra vajra NOT SHIPPED; Kumbhakarna + Agni done) |
 | CULT-04 | Phase 5.7 | Complete (05.7-02) |
 | COMBAT-01 | Phase 5.7.1 | Complete |
-| COMBAT-02 | Phase 5.7.1 | Pending |
+| COMBAT-02 | Phase 5.7.1 | Complete |
 | COMBAT-03 | Phase 5.7.1 | Complete |
 | COMBAT-04 | Phase 5.7.1 | Complete |
 | COMBAT-05 | Phase 5.7.1 | Complete |

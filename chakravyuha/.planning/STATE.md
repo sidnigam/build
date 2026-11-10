@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Ready to execute
-stopped_at: Completed 05.7.1-12-PLAN.md (plan 11 still in progress)
+stopped_at: "05.7.1-11 paused at Task 3 human-verify playtest checkpoint (Tasks 1-2 committed 13272b6, 2ea3078; SUMMARY not written). All other 05.7.1 plans complete. Resume: playtest, then /gsd:execute-phase 05.7.1 (continuation writes 11-SUMMARY with charge preference, rename requests, pace decision a/b/c), then phase verification."
 last_updated: "2026-11-09T22:31:10.749Z"
 last_activity: 2026-11-09
 progress:
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-06-17)
 ## Current Position
 
 Phase: 05.7.1 (hades-style-combat-depth-smarter-enemies-player-kit-difficulty-curve-boss-variety-tighter-arenas) — EXECUTING
-Plan: 11 of 12
+Plan: 11 of 12 — paused at the Task 3 human playtest checkpoint (machine migration to Mac Studio, 2026-11-09). Open decisions for the playtest: hold-to-charge vs charge-on-special-hold; difficulty feel; QA-03 renames; pace gap (bot median room 13.35 s vs 45-75 s band — BANDS.roomGate=false; options a accept / b HP-economy gap plan / c other).
 
 ## Performance Metrics
 

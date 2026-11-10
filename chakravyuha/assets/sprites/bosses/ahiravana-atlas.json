@@ -1,0 +1,71 @@
+{
+  "frames": {
+    "ahiravana_phase2_0.png": {
+      "frame": {
+        "x": 8,
+        "y": 8,
+        "w": 503,
+        "h": 512
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 0,
+        "w": 503,
+        "h": 512
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 512
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "ahiravana_idle_0.png": {
+      "frame": {
+        "x": 8,
+        "y": 536,
+        "w": 431,
+        "h": 506
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 40,
+        "y": 3,
+        "w": 431,
+        "h": 506
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 512
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  },
+  "meta": {
+    "app": "http://github.com/odrick/free-tex-packer-core",
+    "version": "0.3.8",
+    "image": "ahiravana-atlas.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 519,
+      "h": 1050
+    },
+    "scale": 1
+  },
+  "animations": {
+    "idle": [
+      "ahiravana_idle_0.png"
+    ],
+    "phase2": [
+      "ahiravana_phase2_0.png"
+    ]
+  }
+}

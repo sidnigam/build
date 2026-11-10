@@ -1,0 +1,800 @@
+{
+  "version": 1,
+  "capturedAt": "2026-11-08T15:31:31.709Z",
+  "commit": "e39854c",
+  "note": "pre-05.7.1 tuning; never regenerate except with --force and a SUMMARY note",
+  "dt": 0.016667,
+  "meta": "zero",
+  "weapon": "khanda",
+  "quick": {
+    "maxSimMin": 10,
+    "seeds": {
+      "1": {
+        "seed": 1,
+        "outcome": "dead",
+        "biomeReached": 1,
+        "roomsEntered": 6,
+        "combatRoomTimesS": [
+          10.867,
+          9.483,
+          10.067,
+          11.95,
+          14.617
+        ],
+        "medianCombatRoomS": 10.867,
+        "bossTimesS": {},
+        "runTimeS": 82.7,
+        "dmgTaken": 100,
+        "dmgTakenPerMin": 72.551,
+        "hitsTaken": 11,
+        "dashesUsed": 13,
+        "stuckTeleports": 0,
+        "frames": 5387
+      },
+      "2": {
+        "seed": 2,
+        "outcome": "dead",
+        "biomeReached": 1,
+        "roomsEntered": 5,
+        "combatRoomTimesS": [
+          11.083,
+          10.183,
+          13.15,
+          13.2
+        ],
+        "medianCombatRoomS": 12.117,
+        "bossTimesS": {},
+        "runTimeS": 71.217,
+        "dmgTaken": 100,
+        "dmgTakenPerMin": 84.25,
+        "hitsTaken": 11,
+        "dashesUsed": 12,
+        "stuckTeleports": 0,
+        "frames": 4698
+      },
+      "3": {
+        "seed": 3,
+        "outcome": "dead",
+        "biomeReached": 2,
+        "roomsEntered": 7,
+        "combatRoomTimesS": [
+          9.983,
+          10.783,
+          12.533,
+          12.1,
+          13.867
+        ],
+        "medianCombatRoomS": 12.1,
+        "bossTimesS": {
+          "tataka": 10.8
+        },
+        "runTimeS": 101.367,
+        "dmgTaken": 125,
+        "dmgTakenPerMin": 73.989,
+        "hitsTaken": 15,
+        "dashesUsed": 22,
+        "stuckTeleports": 0,
+        "frames": 6677
+      }
+    },
+    "aggregate": {
+      "n": 3,
+      "outcomes": {
+        "dead": 3,
+        "victory": 0,
+        "timeout": 0
+      },
+      "medianBiomeReached": 1,
+      "medianCombatRoomS": 11.517,
+      "meanDmgTakenPerMin": 76.93,
+      "medianRunTimeS": 82.7
+    }
+  },
+  "full": {
+    "maxSimMin": 40,
+    "seeds": {
+      "1": {
+        "seed": 1,
+        "outcome": "dead",
+        "biomeReached": 1,
+        "roomsEntered": 6,
+        "combatRoomTimesS": [
+          10.867,
+          9.483,
+          10.067,
+          11.95,
+          14.617
+        ],
+        "medianCombatRoomS": 10.867,
+        "bossTimesS": {},
+        "runTimeS": 82.7,
+        "dmgTaken": 100,
+        "dmgTakenPerMin": 72.551,
+        "hitsTaken": 11,
+        "dashesUsed": 13,
+        "stuckTeleports": 0,
+        "frames": 5387
+      },
+      "2": {
+        "seed": 2,
+        "outcome": "dead",
+        "biomeReached": 1,
+        "roomsEntered": 5,
+        "combatRoomTimesS": [
+          11.083,
+          10.183,
+          13.15,
+          13.2
+        ],
+        "medianCombatRoomS": 12.117,
+        "bossTimesS": {},
+        "runTimeS": 71.217,
+        "dmgTaken": 100,
+        "dmgTakenPerMin": 84.25,
+        "hitsTaken": 11,
+        "dashesUsed": 12,
+        "stuckTeleports": 0,
+        "frames": 4698
+      },
+      "3": {
+        "seed": 3,
+        "outcome": "dead",
+        "biomeReached": 2,
+        "roomsEntered": 7,
+        "combatRoomTimesS": [
+          9.983,
+          10.783,
+          12.533,
+          12.1,
+          13.867
+        ],
+        "medianCombatRoomS": 12.1,
+        "bossTimesS": {
+          "tataka": 10.8
+        },
+        "runTimeS": 101.367,
+        "dmgTaken": 125,
+        "dmgTakenPerMin": 73.989,
+        "hitsTaken": 15,
+        "dashesUsed": 22,
+        "stuckTeleports": 0,
+        "frames": 6677
+      },
+      "4": {
+        "seed": 4,
+        "outcome": "dead",
+        "biomeReached": 1,
+        "roomsEntered": 5,
+        "combatRoomTimesS": [
+          8.3,
+          10.983,
+          13.683,
+          18.383
+        ],
+        "medianCombatRoomS": 12.333,
+        "bossTimesS": {},
+        "runTimeS": 81.867,
+        "dmgTaken": 100,
+        "dmgTakenPerMin": 73.29,
+        "hitsTaken": 11,
+        "dashesUsed": 15,
+        "stuckTeleports": 0,
+        "frames": 5372
+      },
+      "5": {
+        "seed": 5,
+        "outcome": "dead",
+        "biomeReached": 1,
+        "roomsEntered": 6,
+        "combatRoomTimesS": [
+          8.167,
+          8.65,
+          13.467,
+          15.567
+        ],
+        "medianCombatRoomS": 11.058,
+        "bossTimesS": {},
+        "runTimeS": 73.55,
+        "dmgTaken": 135,
+        "dmgTakenPerMin": 110.129,
+        "hitsTaken": 12,
+        "dashesUsed": 11,
+        "stuckTeleports": 0,
+        "frames": 4806
+      },
+      "6": {
+        "seed": 6,
+        "outcome": "dead",
+        "biomeReached": 3,
+        "roomsEntered": 16,
+        "combatRoomTimesS": [
+          12.7,
+          10.667,
+          12.733,
+          13.183,
+          12.4,
+          13.7,
+          18.667,
+          20.167,
+          13.283,
+          12.55
+        ],
+        "medianCombatRoomS": 12.958,
+        "bossTimesS": {
+          "tataka": 8.267,
+          "ahiravana": 12.867
+        },
+        "runTimeS": 222.95,
+        "dmgTaken": 287,
+        "dmgTakenPerMin": 77.237,
+        "hitsTaken": 30,
+        "dashesUsed": 64,
+        "stuckTeleports": 0,
+        "frames": 14618
+      },
+      "7": {
+        "seed": 7,
+        "outcome": "dead",
+        "biomeReached": 2,
+        "roomsEntered": 8,
+        "combatRoomTimesS": [
+          9.883,
+          10.417,
+          13.85,
+          14.933,
+          17.15
+        ],
+        "medianCombatRoomS": 13.85,
+        "bossTimesS": {
+          "tataka": 13.967
+        },
+        "runTimeS": 120.65,
+        "dmgTaken": 180,
+        "dmgTakenPerMin": 89.515,
+        "hitsTaken": 17,
+        "dashesUsed": 28,
+        "stuckTeleports": 0,
+        "frames": 7940
+      },
+      "8": {
+        "seed": 8,
+        "outcome": "dead",
+        "biomeReached": 2,
+        "roomsEntered": 9,
+        "combatRoomTimesS": [
+          9.733,
+          10.667,
+          16.083,
+          12.95,
+          13.817,
+          13.783
+        ],
+        "medianCombatRoomS": 13.367,
+        "bossTimesS": {
+          "tataka": 10.167
+        },
+        "runTimeS": 119.65,
+        "dmgTaken": 153,
+        "dmgTakenPerMin": 76.724,
+        "hitsTaken": 17,
+        "dashesUsed": 28,
+        "stuckTeleports": 0,
+        "frames": 7827
+      },
+      "9": {
+        "seed": 9,
+        "outcome": "dead",
+        "biomeReached": 1,
+        "roomsEntered": 6,
+        "combatRoomTimesS": [
+          10.883,
+          10.267,
+          11.017,
+          16.067,
+          14.95
+        ],
+        "medianCombatRoomS": 11.017,
+        "bossTimesS": {},
+        "runTimeS": 89.167,
+        "dmgTaken": 125,
+        "dmgTakenPerMin": 84.112,
+        "hitsTaken": 12,
+        "dashesUsed": 18,
+        "stuckTeleports": 0,
+        "frames": 5836
+      },
+      "10": {
+        "seed": 10,
+        "outcome": "dead",
+        "biomeReached": 2,
+        "roomsEntered": 10,
+        "combatRoomTimesS": [
+          11.55,
+          9.717,
+          15.467,
+          13.317,
+          20.3
+        ],
+        "medianCombatRoomS": 13.317,
+        "bossTimesS": {
+          "tataka": 11.333
+        },
+        "runTimeS": 135,
+        "dmgTaken": 222,
+        "dmgTakenPerMin": 98.667,
+        "hitsTaken": 23,
+        "dashesUsed": 33,
+        "stuckTeleports": 0,
+        "frames": 8880
+      },
+      "11": {
+        "seed": 11,
+        "outcome": "dead",
+        "biomeReached": 2,
+        "roomsEntered": 8,
+        "combatRoomTimesS": [
+          9.633,
+          10.933,
+          14.117,
+          17.133
+        ],
+        "medianCombatRoomS": 12.525,
+        "bossTimesS": {
+          "tataka": 13.733
+        },
+        "runTimeS": 103.7,
+        "dmgTaken": 154,
+        "dmgTakenPerMin": 89.103,
+        "hitsTaken": 15,
+        "dashesUsed": 20,
+        "stuckTeleports": 0,
+        "frames": 6759
+      },
+      "12": {
+        "seed": 12,
+        "outcome": "dead",
+        "biomeReached": 1,
+        "roomsEntered": 5,
+        "combatRoomTimesS": [
+          9.033,
+          12.983,
+          14.683
+        ],
+        "medianCombatRoomS": 12.983,
+        "bossTimesS": {},
+        "runTimeS": 62.35,
+        "dmgTaken": 100,
+        "dmgTakenPerMin": 96.231,
+        "hitsTaken": 10,
+        "dashesUsed": 15,
+        "stuckTeleports": 0,
+        "frames": 4105
+      },
+      "13": {
+        "seed": 13,
+        "outcome": "dead",
+        "biomeReached": 2,
+        "roomsEntered": 8,
+        "combatRoomTimesS": [
+          10.233,
+          10.833,
+          11.55,
+          16.067,
+          12.15,
+          13.567
+        ],
+        "medianCombatRoomS": 11.85,
+        "bossTimesS": {
+          "tataka": 10.183
+        },
+        "runTimeS": 117.383,
+        "dmgTaken": 156,
+        "dmgTakenPerMin": 79.739,
+        "hitsTaken": 15,
+        "dashesUsed": 26,
+        "stuckTeleports": 0,
+        "frames": 7715
+      },
+      "14": {
+        "seed": 14,
+        "outcome": "dead",
+        "biomeReached": 2,
+        "roomsEntered": 9,
+        "combatRoomTimesS": [
+          8.933,
+          12.683,
+          12.767,
+          12.683,
+          12.8,
+          14.85
+        ],
+        "medianCombatRoomS": 12.725,
+        "bossTimesS": {
+          "tataka": 13.617
+        },
+        "runTimeS": 130.433,
+        "dmgTaken": 191,
+        "dmgTakenPerMin": 87.861,
+        "hitsTaken": 19,
+        "dashesUsed": 34,
+        "stuckTeleports": 0,
+        "frames": 8564
+      },
+      "15": {
+        "seed": 15,
+        "outcome": "dead",
+        "biomeReached": 1,
+        "roomsEntered": 6,
+        "combatRoomTimesS": [
+          10.967,
+          17.167,
+          12.65,
+          19.783
+        ],
+        "medianCombatRoomS": 14.908,
+        "bossTimesS": {},
+        "runTimeS": 93.817,
+        "dmgTaken": 100,
+        "dmgTakenPerMin": 63.955,
+        "hitsTaken": 10,
+        "dashesUsed": 25,
+        "stuckTeleports": 0,
+        "frames": 6083
+      },
+      "16": {
+        "seed": 16,
+        "outcome": "dead",
+        "biomeReached": 2,
+        "roomsEntered": 7,
+        "combatRoomTimesS": [
+          9.717,
+          11.033,
+          12.483,
+          14.933
+        ],
+        "medianCombatRoomS": 11.758,
+        "bossTimesS": {
+          "tataka": 10.167
+        },
+        "runTimeS": 95.4,
+        "dmgTaken": 153,
+        "dmgTakenPerMin": 96.226,
+        "hitsTaken": 17,
+        "dashesUsed": 21,
+        "stuckTeleports": 0,
+        "frames": 6299
+      },
+      "17": {
+        "seed": 17,
+        "outcome": "dead",
+        "biomeReached": 1,
+        "roomsEntered": 6,
+        "combatRoomTimesS": [
+          8.217,
+          11.8,
+          14.667,
+          14.5,
+          15.733
+        ],
+        "medianCombatRoomS": 14.5,
+        "bossTimesS": {},
+        "runTimeS": 87.467,
+        "dmgTaken": 100,
+        "dmgTakenPerMin": 68.598,
+        "hitsTaken": 11,
+        "dashesUsed": 18,
+        "stuckTeleports": 0,
+        "frames": 5722
+      },
+      "18": {
+        "seed": 18,
+        "outcome": "dead",
+        "biomeReached": 1,
+        "roomsEntered": 6,
+        "combatRoomTimesS": [
+          9.267,
+          10.25,
+          14.017,
+          15.117,
+          15.783
+        ],
+        "medianCombatRoomS": 14.017,
+        "bossTimesS": {},
+        "runTimeS": 90.733,
+        "dmgTaken": 161,
+        "dmgTakenPerMin": 106.466,
+        "hitsTaken": 14,
+        "dashesUsed": 19,
+        "stuckTeleports": 0,
+        "frames": 6054
+      },
+      "19": {
+        "seed": 19,
+        "outcome": "dead",
+        "biomeReached": 2,
+        "roomsEntered": 8,
+        "combatRoomTimesS": [
+          8.05,
+          11.533,
+          11.817,
+          16.35,
+          13.217
+        ],
+        "medianCombatRoomS": 11.817,
+        "bossTimesS": {
+          "tataka": 12.2
+        },
+        "runTimeS": 101.9,
+        "dmgTaken": 143,
+        "dmgTakenPerMin": 84.2,
+        "hitsTaken": 14,
+        "dashesUsed": 21,
+        "stuckTeleports": 0,
+        "frames": 6742
+      },
+      "20": {
+        "seed": 20,
+        "outcome": "dead",
+        "biomeReached": 2,
+        "roomsEntered": 7,
+        "combatRoomTimesS": [
+          9.283,
+          9.917,
+          12.35,
+          13.733,
+          15.15
+        ],
+        "medianCombatRoomS": 12.35,
+        "bossTimesS": {
+          "tataka": 11.65
+        },
+        "runTimeS": 105.817,
+        "dmgTaken": 125,
+        "dmgTakenPerMin": 70.877,
+        "hitsTaken": 11,
+        "dashesUsed": 24,
+        "stuckTeleports": 0,
+        "frames": 7038
+      },
+      "21": {
+        "seed": 21,
+        "outcome": "dead",
+        "biomeReached": 1,
+        "roomsEntered": 6,
+        "combatRoomTimesS": [
+          10,
+          10.783,
+          11.817,
+          15.2
+        ],
+        "medianCombatRoomS": 11.3,
+        "bossTimesS": {},
+        "runTimeS": 81.117,
+        "dmgTaken": 100,
+        "dmgTakenPerMin": 73.968,
+        "hitsTaken": 8,
+        "dashesUsed": 17,
+        "stuckTeleports": 0,
+        "frames": 5254
+      },
+      "22": {
+        "seed": 22,
+        "outcome": "dead",
+        "biomeReached": 1,
+        "roomsEntered": 6,
+        "combatRoomTimesS": [
+          8.517,
+          10.467,
+          14.367,
+          14.733
+        ],
+        "medianCombatRoomS": 12.417,
+        "bossTimesS": {},
+        "runTimeS": 85.583,
+        "dmgTaken": 149,
+        "dmgTakenPerMin": 104.46,
+        "hitsTaken": 12,
+        "dashesUsed": 15,
+        "stuckTeleports": 0,
+        "frames": 5605
+      },
+      "23": {
+        "seed": 23,
+        "outcome": "dead",
+        "biomeReached": 2,
+        "roomsEntered": 7,
+        "combatRoomTimesS": [
+          10.367,
+          10.183,
+          12.917
+        ],
+        "medianCombatRoomS": 10.367,
+        "bossTimesS": {
+          "tataka": 15.683
+        },
+        "runTimeS": 83.317,
+        "dmgTaken": 160,
+        "dmgTakenPerMin": 115.223,
+        "hitsTaken": 15,
+        "dashesUsed": 15,
+        "stuckTeleports": 0,
+        "frames": 5485
+      },
+      "24": {
+        "seed": 24,
+        "outcome": "dead",
+        "biomeReached": 2,
+        "roomsEntered": 10,
+        "combatRoomTimesS": [
+          8.533,
+          11.117,
+          11.65,
+          11.35,
+          12.85,
+          17.267,
+          22.567
+        ],
+        "medianCombatRoomS": 11.65,
+        "bossTimesS": {
+          "tataka": 11.917
+        },
+        "runTimeS": 151.417,
+        "dmgTaken": 192,
+        "dmgTakenPerMin": 76.081,
+        "hitsTaken": 21,
+        "dashesUsed": 42,
+        "stuckTeleports": 0,
+        "frames": 9944
+      },
+      "25": {
+        "seed": 25,
+        "outcome": "dead",
+        "biomeReached": 2,
+        "roomsEntered": 8,
+        "combatRoomTimesS": [
+          10.933,
+          10.5,
+          12.983,
+          15.817,
+          14.133,
+          17.15
+        ],
+        "medianCombatRoomS": 13.558,
+        "bossTimesS": {
+          "tataka": 13.183
+        },
+        "runTimeS": 128.617,
+        "dmgTaken": 180,
+        "dmgTakenPerMin": 83.97,
+        "hitsTaken": 15,
+        "dashesUsed": 33,
+        "stuckTeleports": 0,
+        "frames": 8469
+      },
+      "26": {
+        "seed": 26,
+        "outcome": "dead",
+        "biomeReached": 1,
+        "roomsEntered": 6,
+        "combatRoomTimesS": [
+          11.783,
+          10.783,
+          12.083,
+          14.833,
+          10.783
+        ],
+        "medianCombatRoomS": 11.783,
+        "bossTimesS": {},
+        "runTimeS": 90.167,
+        "dmgTaken": 100,
+        "dmgTakenPerMin": 66.543,
+        "hitsTaken": 12,
+        "dashesUsed": 19,
+        "stuckTeleports": 0,
+        "frames": 5853
+      },
+      "27": {
+        "seed": 27,
+        "outcome": "dead",
+        "biomeReached": 2,
+        "roomsEntered": 8,
+        "combatRoomTimesS": [
+          8.567,
+          13.15,
+          16.633,
+          15.433,
+          14.267
+        ],
+        "medianCombatRoomS": 14.267,
+        "bossTimesS": {
+          "tataka": 12.267
+        },
+        "runTimeS": 104.667,
+        "dmgTaken": 153,
+        "dmgTakenPerMin": 87.707,
+        "hitsTaken": 14,
+        "dashesUsed": 25,
+        "stuckTeleports": 0,
+        "frames": 6925
+      },
+      "28": {
+        "seed": 28,
+        "outcome": "dead",
+        "biomeReached": 1,
+        "roomsEntered": 6,
+        "combatRoomTimesS": [
+          8.6,
+          10.117,
+          15.6,
+          15.533
+        ],
+        "medianCombatRoomS": 12.825,
+        "bossTimesS": {},
+        "runTimeS": 75.883,
+        "dmgTaken": 100,
+        "dmgTakenPerMin": 79.069,
+        "hitsTaken": 11,
+        "dashesUsed": 13,
+        "stuckTeleports": 0,
+        "frames": 4968
+      },
+      "29": {
+        "seed": 29,
+        "outcome": "dead",
+        "biomeReached": 1,
+        "roomsEntered": 6,
+        "combatRoomTimesS": [
+          9.483,
+          11.683,
+          12.25,
+          14.617
+        ],
+        "medianCombatRoomS": 11.967,
+        "bossTimesS": {},
+        "runTimeS": 78.85,
+        "dmgTaken": 125,
+        "dmgTakenPerMin": 95.117,
+        "hitsTaken": 12,
+        "dashesUsed": 17,
+        "stuckTeleports": 0,
+        "frames": 5166
+      },
+      "30": {
+        "seed": 30,
+        "outcome": "dead",
+        "biomeReached": 2,
+        "roomsEntered": 7,
+        "combatRoomTimesS": [
+          11.6,
+          12.133,
+          11.967,
+          12.983,
+          16.833
+        ],
+        "medianCombatRoomS": 12.133,
+        "bossTimesS": {
+          "tataka": 14.1
+        },
+        "runTimeS": 108.7,
+        "dmgTaken": 180,
+        "dmgTakenPerMin": 99.356,
+        "hitsTaken": 17,
+        "dashesUsed": 27,
+        "stuckTeleports": 0,
+        "frames": 7271
+      }
+    },
+    "aggregate": {
+      "n": 30,
+      "outcomes": {
+        "dead": 30,
+        "victory": 0,
+        "timeout": 0
+      },
+      "medianBiomeReached": 2,
+      "medianCombatRoomS": 12.55,
+      "meanDmgTakenPerMin": 85.507,
+      "medianRunTimeS": 94.608
+    }
+  }
+}

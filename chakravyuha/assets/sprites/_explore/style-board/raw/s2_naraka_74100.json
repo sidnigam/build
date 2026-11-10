@@ -1,0 +1,11 @@
+{
+ "prompt": "3D low-poly game scene, faceted flat-shaded polygons, stylized pre-rendered 3D look, clean stylized lighting with soft shadows, an empty combat arena in Yama's hells, Naraka: a wide square stone courtyard floor of dark basalt flagstones with glowing molten-orange cracks, framed at the back and sides by tall carved iron-black pillars and heavy chained walls, a few braziers of fire, hanging iron chains, a cauldron and a ring of skulls-free spiked railings as props, lava glow and ember light, red and orange palette with deep crimson shadows. Game camera: top-down three-quarter view looking down at roughly 45 degrees, the whole arena floor visible and centred with open empty floor in the middle, walls framing the edges, no characters, no people, no text, no UI.",
+ "seed": 74100,
+ "checkpoint": "flux1-schnell-Q4_K_S.gguf",
+ "size": [
+  1344,
+  768
+ ],
+ "steps": 4,
+ "date": "2026-11-07"
+}

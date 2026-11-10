@@ -1,0 +1,105 @@
+{
+  "graph": {
+    "4": {
+      "class_type": "CheckpointLoaderSimple",
+      "inputs": {
+        "ckpt_name": "dreamshaperXL_alpha2Xl10.safetensors"
+      }
+    },
+    "6": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "top-down orthographic view looking straight down at dark, muted, low-contrast deep teal-black underground stone with faint dim bioluminescent moss, seamless repeating texture, evenly scattered detail edge to edge, painted game arena floor texture, low contrast, no focal point, Hades-adjacent painterly illustration, dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation, no characters, no text",
+        "clip": [
+          "4",
+          1
+        ]
+      }
+    },
+    "7": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra",
+        "clip": [
+          "4",
+          1
+        ]
+      }
+    },
+    "5": {
+      "class_type": "EmptyLatentImage",
+      "inputs": {
+        "width": 1024,
+        "height": 1024,
+        "batch_size": 1
+      }
+    },
+    "3": {
+      "class_type": "KSampler",
+      "inputs": {
+        "seed": 62000,
+        "steps": 32,
+        "cfg": 7.0,
+        "sampler_name": "dpmpp_2m",
+        "scheduler": "karras",
+        "denoise": 1.0,
+        "model": [
+          "4",
+          0
+        ],
+        "positive": [
+          "6",
+          0
+        ],
+        "negative": [
+          "7",
+          0
+        ],
+        "latent_image": [
+          "5",
+          0
+        ]
+      }
+    },
+    "8": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "3",
+          0
+        ],
+        "vae": [
+          "4",
+          2
+        ]
+      }
+    },
+    "9": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "filename_prefix": "chakravyuha",
+        "images": [
+          "8",
+          0
+        ]
+      }
+    }
+  },
+  "params": {
+    "positive": "top-down orthographic view looking straight down at dark, muted, low-contrast deep teal-black underground stone with faint dim bioluminescent moss, seamless repeating texture, evenly scattered detail edge to edge, painted game arena floor texture, low contrast, no focal point, Hades-adjacent painterly illustration, dark muted deep teal-black and jade with dim antique gold and faint bioluminescent cyan accents, low saturation, no characters, no text",
+    "negative": "people, person, character, figure, face, creature, animal, corpse, body, skeleton, blood, gore, text, letters, watermark, signature, logo, 3d render, photo, photorealistic, blurry, frame, border, user interface, high contrast focal point, deity, god, goddess, idol, statue, murti, yantra, mandala, om symbol, swastika, trishula, trident, lotus, halo, inscription, bones, skull, collage, sprite sheet, multiple views, lowres, walls, buildings, doorway, horizon, sky, perspective view, radial pattern, circular emblem, mandala, yantra",
+    "seed": 62000,
+    "width": 1024,
+    "height": 1024,
+    "steps": 32,
+    "cfg": 7.0,
+    "sampler": "dpmpp_2m",
+    "scheduler": "karras",
+    "checkpoint": "dreamshaperXL_alpha2Xl10.safetensors",
+    "checkpoint_label": "dreamshaperXL_alpha2Xl10.safetensors (DreamShaper XL alpha2 (xl1.0) by Lykon, CreativeML OpenRAIL++-M)",
+    "checkpoint_profile": "dreamshaper_xl_alpha2"
+  },
+  "prompt_id": "87df1c5d-07ba-43a0-80ee-f8e446c640e1",
+  "comfyui_version": "0.35.0",
+  "generated_at": "2026-09-30T01:46:16Z"
+}

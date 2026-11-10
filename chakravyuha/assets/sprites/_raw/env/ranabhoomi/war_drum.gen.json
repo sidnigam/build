@@ -1,0 +1,127 @@
+{
+  "graph": {
+    "1": {
+      "class_type": "UnetLoaderGGUF",
+      "inputs": {
+        "unet_name": "flux1-schnell-Q4_K_S.gguf"
+      }
+    },
+    "2": {
+      "class_type": "DualCLIPLoaderGGUF",
+      "inputs": {
+        "clip_name1": "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+        "clip_name2": "clip_l.safetensors",
+        "type": "flux"
+      }
+    },
+    "3": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "A single large barrel-shaped ancient Indian war drum lying horizontally on a low carved wooden cradle stand: a long rounded wooden drum body with stretched pale hide drumheads at both ends, tight criss-cross leather lacing cords running the full length of the body from one drumhead to the other, two brass bands around the middle, and two curved wooden drumsticks resting across the top. Muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation. Hades-inspired painterly game prop illustration, three-quarter top-down view, bold clean shapes, rich carved detail, a soft baked cast shadow, the whole object in frame and centered, alone on a flat, even, pale-grey background.",
+        "clip": [
+          "2",
+          0
+        ]
+      }
+    },
+    "4": {
+      "class_type": "ConditioningZeroOut",
+      "inputs": {
+        "conditioning": [
+          "3",
+          0
+        ]
+      }
+    },
+    "5": {
+      "class_type": "EmptySD3LatentImage",
+      "inputs": {
+        "width": 1024,
+        "height": 1024,
+        "batch_size": 1
+      }
+    },
+    "6": {
+      "class_type": "KSampler",
+      "inputs": {
+        "seed": 63820,
+        "steps": 4,
+        "cfg": 1.0,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "denoise": 1.0,
+        "model": [
+          "1",
+          0
+        ],
+        "positive": [
+          "3",
+          0
+        ],
+        "negative": [
+          "4",
+          0
+        ],
+        "latent_image": [
+          "5",
+          0
+        ]
+      }
+    },
+    "7": {
+      "class_type": "VAELoader",
+      "inputs": {
+        "vae_name": "ae.safetensors"
+      }
+    },
+    "8": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "6",
+          0
+        ],
+        "vae": [
+          "7",
+          0
+        ]
+      }
+    },
+    "9": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "filename_prefix": "chakravyuha",
+        "images": [
+          "8",
+          0
+        ]
+      }
+    }
+  },
+  "params": {
+    "positive": "A single large barrel-shaped ancient Indian war drum lying horizontally on a low carved wooden cradle stand: a long rounded wooden drum body with stretched pale hide drumheads at both ends, tight criss-cross leather lacing cords running the full length of the body from one drumhead to the other, two brass bands around the middle, and two curved wooden drumsticks resting across the top. Muted desaturated tan, umber and dusty ochre with faded crimson cloth accents, low saturation. Hades-inspired painterly game prop illustration, three-quarter top-down view, bold clean shapes, rich carved detail, a soft baked cast shadow, the whole object in frame and centered, alone on a flat, even, pale-grey background.",
+    "negative": "",
+    "seed": 63820,
+    "width": 1024,
+    "height": 1024,
+    "steps": 4,
+    "cfg": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": "flux1-schnell-Q4_K_S.gguf",
+    "checkpoint_label": "flux1-schnell-Q4_K_S.gguf (FLUX.1 [schnell] by Black Forest Labs, GGUF Q4_K_S by city96, Apache-2.0) + t5-v1_1-xxl Q5_K_M GGUF (Apache-2.0) + CLIP-L (MIT) + FLUX ae VAE (Apache-2.0)",
+    "checkpoint_profile": "flux1_schnell_q4ks",
+    "graph_type": "flux_gguf",
+    "text_encoders": [
+      "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+      "clip_l.safetensors"
+    ],
+    "vae": "ae.safetensors",
+    "custom_nodes": {
+      "ComfyUI-GGUF": "6ea2651e7df66d7585f6ffee804b20e92fb38b8a"
+    }
+  },
+  "prompt_id": "738605c2-e40e-4ddb-8b31-d6f474512f3b",
+  "comfyui_version": "0.35.0",
+  "generated_at": "2026-11-07T05:43:52Z"
+}

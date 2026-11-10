@@ -1,0 +1,127 @@
+{
+  "graph": {
+    "1": {
+      "class_type": "UnetLoaderGGUF",
+      "inputs": {
+        "unet_name": "flux1-schnell-Q4_K_S.gguf"
+      }
+    },
+    "2": {
+      "class_type": "DualCLIPLoaderGGUF",
+      "inputs": {
+        "clip_name1": "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+        "clip_name2": "clip_l.safetensors",
+        "type": "flux"
+      }
+    },
+    "3": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "Full-length figure from head to feet: Kumbhakarna, a colossal rakshasa giant standing heavily with bent knees, a huge round belly and massive shoulders, a broad brutish leonine face with heavy-lidded sleepy eyes, short white tusks and a wild dark-gold mane. Warm golden-yellow skin everywhere, ornate bronze shoulder armour, bronze armbands, a round bronze belt plate and a brown loincloth. His right hand grips upright at his side a huge war club: a thick dark wooden club bound with iron bands and studded with blunt iron knobs, its heavy rounded head rising above his shoulder. Two arms. Golden-yellow ochre and bronze. Bold hand-painted 2D action-game character art with confident dark ink outlines, rich painterly detail, a strong readable silhouette and chunky heroic proportions, three-quarter top-down game sprite view, in the spirit of classical Indian temple murals. The entire figure is visible from head to feet, standing on the ground, centered, alone before a flat, even, medium-grey backdrop filling the whole image.",
+        "clip": [
+          "2",
+          0
+        ]
+      }
+    },
+    "4": {
+      "class_type": "ConditioningZeroOut",
+      "inputs": {
+        "conditioning": [
+          "3",
+          0
+        ]
+      }
+    },
+    "5": {
+      "class_type": "EmptySD3LatentImage",
+      "inputs": {
+        "width": 896,
+        "height": 1152,
+        "batch_size": 1
+      }
+    },
+    "6": {
+      "class_type": "KSampler",
+      "inputs": {
+        "seed": 52250,
+        "steps": 4,
+        "cfg": 1.0,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "denoise": 1.0,
+        "model": [
+          "1",
+          0
+        ],
+        "positive": [
+          "3",
+          0
+        ],
+        "negative": [
+          "4",
+          0
+        ],
+        "latent_image": [
+          "5",
+          0
+        ]
+      }
+    },
+    "7": {
+      "class_type": "VAELoader",
+      "inputs": {
+        "vae_name": "ae.safetensors"
+      }
+    },
+    "8": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "6",
+          0
+        ],
+        "vae": [
+          "7",
+          0
+        ]
+      }
+    },
+    "9": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "filename_prefix": "chakravyuha",
+        "images": [
+          "8",
+          0
+        ]
+      }
+    }
+  },
+  "params": {
+    "positive": "Full-length figure from head to feet: Kumbhakarna, a colossal rakshasa giant standing heavily with bent knees, a huge round belly and massive shoulders, a broad brutish leonine face with heavy-lidded sleepy eyes, short white tusks and a wild dark-gold mane. Warm golden-yellow skin everywhere, ornate bronze shoulder armour, bronze armbands, a round bronze belt plate and a brown loincloth. His right hand grips upright at his side a huge war club: a thick dark wooden club bound with iron bands and studded with blunt iron knobs, its heavy rounded head rising above his shoulder. Two arms. Golden-yellow ochre and bronze. Bold hand-painted 2D action-game character art with confident dark ink outlines, rich painterly detail, a strong readable silhouette and chunky heroic proportions, three-quarter top-down game sprite view, in the spirit of classical Indian temple murals. The entire figure is visible from head to feet, standing on the ground, centered, alone before a flat, even, medium-grey backdrop filling the whole image.",
+    "negative": "",
+    "seed": 52250,
+    "width": 896,
+    "height": 1152,
+    "steps": 4,
+    "cfg": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint": "flux1-schnell-Q4_K_S.gguf",
+    "checkpoint_label": "flux1-schnell-Q4_K_S.gguf (FLUX.1 [schnell] by Black Forest Labs, GGUF Q4_K_S by city96, Apache-2.0) + t5-v1_1-xxl Q5_K_M GGUF (Apache-2.0) + CLIP-L (MIT) + FLUX ae VAE (Apache-2.0)",
+    "checkpoint_profile": "flux1_schnell_q4ks",
+    "graph_type": "flux_gguf",
+    "text_encoders": [
+      "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+      "clip_l.safetensors"
+    ],
+    "vae": "ae.safetensors",
+    "custom_nodes": {
+      "ComfyUI-GGUF": "6ea2651e7df66d7585f6ffee804b20e92fb38b8a"
+    }
+  },
+  "prompt_id": "49818b4c-2490-4f8b-a294-59b68b1da3aa",
+  "comfyui_version": "0.35.0",
+  "generated_at": "2026-11-07T05:08:38Z"
+}

@@ -1,0 +1,45 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-09-13T16:50:46.786Z",
+  "phase": "02",
+  "phase_name": "asset-pipeline-sprite-system",
+  "phase_dir": ".planning/phases/02-asset-pipeline-sprite-system",
+  "plan": 4,
+  "task": 2,
+  "total_tasks": 2,
+  "status": "resolved",
+  "completed_tasks": [
+    {"id": "checkpoint-license", "name": "Confirm commercial-safe SDXL checkpoint license", "status": "done", "commit": "89ef48a"},
+    {"id": 1, "name": "Record confirmed checkpoint license in PROVENANCE.json", "status": "done", "commit": "89ef48a"},
+    {"id": "checkpoint-reference", "name": "Approve Abhimanyu reference sheet and lock workflow", "status": "done", "commit": "d90e7fc"},
+    {"id": 2, "name": "Generate player frames, pack the atlas, and record provenance", "status": "in_progress", "progress": "idle animation (4/4 frames) generated and committed (6bbe839); run/attack/dash not started; atlas not packed; PROVENANCE.json entry for player-atlas.png not yet written"}
+  ],
+  "remaining_tasks": [
+    {"id": "2a", "name": "Generate run animation frames (6 frames)", "status": "not_started", "note": "img2img-from-idle-base at denoise 0.35 does NOT produce real leg movement (tested, stays near-static); ControlNet+OpenPose was tried and failed on first attempt (pose ambiguous, outfit drifted badly to unrelated green toga/cape). Needs a working technique before generating."},
+    {"id": "2b", "name": "Generate attack animation frames (5 frames)", "status": "not_started"},
+    {"id": "2c", "name": "Generate dash animation frames (4 frames)", "status": "not_started"},
+    {"id": "2d", "name": "Pack all frames into player-atlas.png/json via tools/pack-atlas.js", "status": "not_started"},
+    {"id": "2e", "name": "Append PROVENANCE.json entry for player-atlas.png", "status": "not_started"},
+    {"id": "2f", "name": "Run tools/check-provenance.js and node test/smoke.js", "status": "not_started"},
+    {"id": "2g", "name": "Write 02-04-SUMMARY.md", "status": "not_started"}
+  ],
+  "blockers": [
+    {
+      "description": "No reliable technique yet for generating run/attack/dash frames (poses that differ significantly from the idle standing pose) while preserving character/outfit consistency",
+      "type": "technical",
+      "workaround": "Idle worked via img2img-from-locked-reference at denoise 0.35 (subtle pose variation only). Run needs real leg movement -- img2img up to denoise 0.65 failed to move legs meaningfully. ControlNet+OpenPose (installed: ~/ComfyUI/models/controlnet/openpose-sdxl.safetensors, xinsir SDXL OpenPose, 2.5GB) was tried once at strength 0.9 and failed badly: pose stayed ambiguous AND character drifted to a completely different outfit (green toga/cape, no sword, no dhoti). Untried next steps: lower ControlNet strength (~0.5-0.6), test ControlNet against the already-validated idle pose first to isolate whether the pipeline works at all before retrying a dynamic pose, or try the 'fresh txt2img pose anchor + low-denoise img2img variations off it' approach (same recipe as idle, just generate a NEW anchor image in a running pose via plain txt2img first, iterate until approved, then vary off that)."
+    }
+  ],
+  "human_actions_pending": [],
+  "decisions": [
+    {"decision": "Use local ComfyUI + SDXL 1.0 base (free, OpenRAIL++-M commercial-safe license) instead of Midjourney (no free tier, no API) or a paid image-gen API", "rationale": "Zero cost, already matches PROVENANCE.json's recorded checkpoint, Codex/cloud agents can't reach a local server anyway so generation had to happen in this session", "phase": "02"},
+    {"decision": "Abhimanyu's approved reference sheet does NOT depict the gilded eye-mask on the main figure", "rationale": "5 generation rounds + 1 inpaint attempt showed mask-presence and full-body/correct-limb framing consistently trading off against each other. Mask repurposed as a future gameplay mechanic instead (see SEED-001).", "phase": "02"},
+    {"decision": "Planted SEED-001: masked stealth/regen alt-stance with weaker/slower attacks, for Phase 4 (Gameplay Depth)", "rationale": "Turns the discarded mask art direction into new design scope rather than losing the idea", "phase": "02"},
+    {"decision": "img2img from a border-cropped version of the locked reference (assets/sprites/reference/_derived/abhimanyu-char-base.png), NOT fresh txt2img per frame, is the working technique for LOW-pose-change animation frames (idle)", "rationale": "Fresh txt2img per frame produced wildly inconsistent character/outfit/weapon (tested via a failed 2x2 grid 'sprite sheet in one image' attempt); low-denoise (0.35) img2img from the same base image preserved identity/outfit/sword near-perfectly across 4 frames", "phase": "02"},
+    {"decision": "Use rembg (u2net model) for background removal, not naive color-distance thresholding", "rationale": "The generated art has a subtle vignette/gradient background, not a flat color -- simple corner-color-distance thresholding left a visible halo/arch-shaped fringe around the character. rembg's semantic segmentation cleanly removed it with no fringe.", "phase": "02"},
+    {"decision": "Quit Codex (ChatGPT desktop app) mid-session", "rationale": "Found it still running in the background with its own .venv-imagegen Python env and a near-identical prompt file, hours after the original handoff -- risk of it silently overwriting the same asset file paths this session was actively writing/committing to. User confirmed quitting it; verified no processes remained; cleaned up its leftover .venv-imagegen and .tmp-abhimanyu-image-prompt.txt files.", "phase": "02"}
+  ],
+  "uncommitted_files": [],
+  "next_action": "Resolve the run/attack/dash generation technique blocker before generating more frames. Recommended first step: test ControlNet at lower strength (~0.5-0.6) against the ALREADY-VALIDATED idle pose skeleton (not a new pose) to isolate whether the ControlNet pipeline itself works correctly, before re-attempting a running pose. Local ComfyUI server should still be running at http://127.0.0.1:8188 (started via `cd ~/ComfyUI && source venv/bin/activate && python main.py` if it needs restarting -- check with `curl http://127.0.0.1:8188/system_stats`).",
+  "context_notes": "This session did a huge amount of infrastructure setup that does NOT need to be repeated: ComfyUI + SDXL 1.0 base installed and working locally on this M1 Pro/16GB Mac (~/ComfyUI, venv inside it), rembg installed in that same venv, ControlNet OpenPose SDXL model downloaded (~/ComfyUI/models/controlnet/openpose-sdxl.safetensors). The Abhimanyu reference sheet is locked and approved (assets/sprites/reference/abhimanyu-reference.png) with its generation recipe recorded in assets/sprites/comfyui-workflow.json. Idle animation (4 frames) is done and committed. The remaining player work (run/attack/dash + atlas packing + provenance) is where a fresh session should pick up -- start by fixing the pose-change technique, not by re-deriving any of the setup above. Useful reusable scripts are still on disk under the scratchpad directory from this session (may not persist across machine restarts) -- the important reusable pieces (openpose_render.py's draw_bodypose-style renderer, the img2img recipe, the rembg finishing script) should probably be copied into the repo's tools/ directory if this technique gets reused for enemies/bosses later, rather than re-written from scratch."
+}

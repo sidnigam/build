@@ -1,0 +1,497 @@
+// 05.7.1-07 (D-21, D-22, COMBAT-17/18): boss move selection. Weighted random picks with a strict
+// no-repeat, distance bands (close / mid / far), anti-camping (area moves when the player stands
+// still or hugs a wall), 2-3 move combo chains with short gaps (longer + faster in phase 2), and
+// +2 new moves per boss built on the 05.7.1-02 projectile families and statuses. The telegraph
+// invariant (BOSS_TG) and the deterministic phase-2 opener must survive all of it.
+'use strict';
+module.exports = function ({ R, check, section }) {
+  const J = JSON.stringify;
+
+  const has = R(`typeof BOSS_AI === 'object' && typeof Boss === 'function' && typeof Boss.prototype.camping === 'function'`);
+  check('BOSS_AI constants and Boss.camping() exist', has);
+  if (!has) return;
+
+  // Sandbox helpers: build a boss / mini-boss room directly, run pick distributions with a
+  // stubbed startMove, and run real-update sims with telemetry.
+  // Every room() reseeds U deterministically (base + call counter) so the distribution and sim
+  // checks never flake; the margins were verified across several seed bases.
+  R(`globalThis.__ba = {
+    seedBase: 7100, n: 0,
+    room(id) {
+      U.seed(__ba.seedBase + (++__ba.n));
+      GAME.startRun();
+      GAME.heat = undefined;
+      const P = GAME.player; P.maxhp = 1e9; P.hp = 1e9;
+      let B;
+      if (DATA.MINIBOSSES[id]) {
+        const bi = DATA.BIOMES.findIndex(b => b.id === DATA.MINIBOSSES[id].biome);
+        GAME.biomeIdx = bi; GAME.biome = DATA.BIOMES[bi];
+        ROOMS.setArena('boss'); ROOMS.buildArena(true);
+        GAME.enemies = []; GAME.eprojectiles = []; GAME.epools = []; GAME.waves = []; GAME.spawnQueue = [];
+        GAME.hazards = []; GAME.dangerZones = [];
+        const A = GAME.arena;
+        B = new MiniBoss(id, A.x + A.w * 0.7, A.y + A.h / 2);
+        GAME.enemies.push(B); GAME.miniRef = B; GAME.bossRef = null; GAME.state = 'combat';
+      } else {
+        const bi = DATA.BIOMES.findIndex(b => b.boss === id);
+        GAME.biomeIdx = bi; GAME.biome = DATA.BIOMES[bi];
+        ROOMS.enterRoom('boss');
+        B = GAME.bossRef;
+      }
+      B.asleep = false; B.state = 'rest'; B.t = 99; B.pendingOpener = undefined;
+      P.x = B.x - 220; P.y = B.y;
+      return B;
+    },
+    // n picks with startMove stubbed (records the id, sets lastMove)
+    picks(B, phase, n, prep) {
+      B.phase = phase; B.pendingOpener = undefined; B.lastMove = undefined; B.chainLeft = 0;
+      const rec = [];
+      rec.prev = [];
+      const orig = B.startMove;
+      B.startMove = function (id) { rec.prev.push(B.lastMove); rec.push(id); B.lastMove = id; };
+      try { for (let i = 0; i < n; i++) { if (prep) prep(B, i); B.pickMove(); } }
+      finally { B.startMove = orig; }
+      return rec;
+    },
+    weights(B, phase) {
+      const out = {};
+      for (const m of B.moveTable(phase)) out[m[0]] = m[1];
+      return out;
+    },
+    tags(B, phase) {
+      const out = {};
+      const save = B.phase; B.phase = phase;
+      for (const m of B.moveTable(phase)) { const d = B.moveDef(m[0]); out[m[0]] = { band: d.band, area: d.area, dmg: !!d.dmg }; }
+      B.phase = save;
+      return out;
+    },
+    // real-update sim: returns damaging-move gaps, chain lengths and violation delta
+    sim(id, phase, seconds) {
+      const B = __ba.room(id);
+      const P = GAME.player;
+      const A = GAME.arena;
+      if (phase === 2) { B.phase = 2; B.hp = B.maxhp * 0.45; }
+      B.state = 'rest'; B.t = 0.5; B.chainLeft = 0; B.chainLog = [];
+      const v0 = BOSS_TG.violations.length;
+      const DT = 1 / 60;
+      let now = 0, prevDmg = false, endT = null, prevState = B.state;
+      const gaps = [];
+      const origStart = B.startMove;
+      B.startMove = function (mid) {
+        const d = this.moveDef(mid);
+        if (d.dmg && prevDmg) gaps.push(now - (endT == null ? now : endT));
+        prevDmg = !!d.dmg; endT = null;
+        return origStart.call(this, mid);
+      };
+      const cx = A.x + A.w / 2, cy = A.y + A.h / 2;
+      const frames = Math.round(seconds / DT);
+      for (let f = 0; f < frames; f++) {
+        now += DT;
+        for (const e of GAME.enemies) if (e !== B) e.dead = true;
+        // the player circles the arena centre at 300 px/s (no camping), never dies
+        const a = now * 1.5;
+        P.x = cx + Math.cos(a) * 200; P.y = cy + Math.sin(a) * 200;
+        P.iframes = 0; P.dashT = 0; P.hp = P.maxhp;
+        if (P.st) { P.st.stunT = 0; P.st.rootT = 0; }
+        GAME.hitstop = 0;
+        GAME.update(DT);
+        if (B.state === 'rest' && prevState !== 'rest' && endT == null) endT = now;
+        prevState = B.state;
+        if (B.phase !== phase) break;
+      }
+      B.startMove = origStart;
+      return { gaps, chains: (B.chainLog || []).slice(), viol: BOSS_TG.violations.slice(v0), phase: B.phase };
+    },
+  };`);
+
+  const BOSSES = R(`Object.keys(DATA.BOSSES)`);
+  const MINIS = R(`Object.keys(DATA.MINIBOSSES)`);
+  const UNITS = BOSSES.concat(MINIS);
+
+  // ---------------- static tags ----------------
+  section('bossai: band / area tags');
+  const untagged = R(`(() => {
+    const E = [];
+    const BANDS = ['close', 'mid', 'far', 'any'];
+    for (const [src, defs] of [['BOSS', BOSS_MOVE_DEFS], ['MINI', MINI_MOVE_DEFS]]) {
+      for (const k of Object.keys(defs)) {
+        const d = defs[k];
+        if (!BANDS.includes(d.band)) E.push(src + ':' + k + ' band ' + d.band);
+        if (typeof d.area !== 'boolean') E.push(src + ':' + k + ' area ' + d.area);
+      }
+    }
+    return E;
+  })()`);
+  check('every BOSS_MOVE_DEFS / MINI_MOVE_DEFS entry has band (close|mid|far|any) and boolean area'
+    + (untagged.length ? ' — ' + untagged.join('; ') : ''), untagged.length === 0);
+
+  // ---------------- strict no-repeat ----------------
+  section('bossai: strict no-repeat');
+  {
+    const fails = [];
+    for (const id of UNITS) for (const ph of [1, 2]) {
+      const r = R(`(() => { const B = __ba.room(${J(id)}); const rec = __ba.picks(B, ${ph}, 500);
+        let rep = 0; for (let i = 1; i < rec.length; i++) if (rec[i] === rec[i - 1]) rep++;
+        return { rep, n: B.moveTable(${ph}).length, uniq: new Set(rec).size }; })()`);
+      if (r.n >= 2 && r.rep > 0) fails.push(`${id} p${ph}: ${r.rep} repeats`);
+      if (r.uniq < Math.min(r.n, 2)) fails.push(`${id} p${ph}: only ${r.uniq} distinct moves`);
+    }
+    check(`500 picks x ${UNITS.length} units x 2 phases: zero immediate repeats` + (fails.length ? ' — ' + fails.join('; ') : ''), fails.length === 0);
+  }
+
+  // ---------------- distance bands ----------------
+  // Strict no-repeat caps any single move at 50% of picks, so shares are measured only over
+  // picks whose previous move was outside the target set (every target move is a candidate),
+  // against the base-weight share over the same candidate sets. Share ratio >= 1.5x is only
+  // reachable when the base share is <= 0.4 (0.6 caps at 1.67x); above that the odds ratio is used.
+  section('bossai: distance bands');
+  for (const [band, dist] of [['close', 120], ['far', 700]]) {
+    const fails = [], seen = [];
+    for (const id of UNITS) for (const ph of [1, 2]) {
+      const r = R(`(() => {
+        const B = __ba.room(${J(id)}); const P = GAME.player;
+        const W = __ba.weights(B, ${ph}), T = __ba.tags(B, ${ph});
+        B.camping = () => false;
+        const rec = __ba.picks(B, ${ph}, 3000, () => { P.x = B.x - ${dist}; P.y = B.y; });
+        delete B.camping;
+        const inB = k => k && T[k].band === ${J(band)};
+        let n = 0, hit = 0, base = 0;
+        rec.forEach((k, i) => {
+          const prev = rec.prev[i];
+          if (inB(prev)) return;
+          let tw = 0, bw = 0; for (const c in W) if (c !== prev) { tw += W[c]; if (inB(c)) bw += W[c]; }
+          n++; base += bw / tw; if (inB(k)) hit++;
+        });
+        return { base: n ? base / n : 0, share: n ? hit / n : 0 };
+      })()`);
+      if (r.base <= 0 || r.base >= 1) continue;
+      seen.push(`${id}p${ph}`);
+      const ok = r.base <= 0.4 ? r.share >= 1.5 * r.base
+        : (r.share / (1 - r.share)) >= 1.5 * (r.base / (1 - r.base));
+      if (!ok) fails.push(`${id} p${ph}: share ${r.share.toFixed(3)} vs base ${r.base.toFixed(3)}`);
+    }
+    check(`player at ${dist} px: '${band}' moves picked >= 1.5x their base share (${seen.length} tables)`
+      + (fails.length ? ' — ' + fails.join('; ') : ''), fails.length === 0 && seen.length >= 4);
+  }
+
+  // ---------------- anti-camping ----------------
+  section('bossai: anti-camping');
+  {
+    const cmp = R(`(() => {
+      const B = __ba.room('tataka'); const P = GAME.player; const A = GAME.arena;
+      const cx = A.x + A.w / 2, cy = A.y + A.h / 2;
+      const res = {};
+      B.campHist = []; P.x = cx; P.y = cy;
+      res.empty = B.camping();
+      B.campHist = Array.from({ length: 12 }, (_, i) => ({ x: cx + (i % 3) * 8, y: cy - (i % 2) * 8 }));
+      res.still = B.camping();
+      B.campHist = Array.from({ length: 12 }, (_, i) => ({ x: cx + Math.cos(i * 0.5) * 150, y: cy + Math.sin(i * 0.5) * 150 }));
+      res.circle = B.camping();
+      P.x = A.x + 50; P.y = cy;
+      res.edge = B.camping();
+      P.x = cx; P.y = A.y + A.h - 40;
+      res.edgeS = B.camping();
+      return res;
+    })()`);
+    check(`camping(): false with < 12 samples away from walls (${cmp.empty})`, cmp.empty === false);
+    check(`camping(): true when 12 samples (3 s) sit within 60 px of their mean (${cmp.still})`, cmp.still === true);
+    check(`camping(): false while circling at 150 px radius (${cmp.circle})`, cmp.circle === false);
+    check(`camping(): true within 90 px of an arena wall (W ${cmp.edge}, S ${cmp.edgeS})`, cmp.edge === true && cmp.edgeS === true);
+
+    // real update: the tracker samples every 0.25 s
+    const live = R(`(() => {
+      const B = __ba.room('ahiravana'); const P = GAME.player; const A = GAME.arena;
+      const cx = A.x + A.w / 2, cy = A.y + A.h / 2;
+      B.x = cx + 300; B.y = cy; B.state = 'rest'; B.t = 99;
+      B.campHist = [];
+      let t = 0;
+      for (let f = 0; f < 200; f++) { t += 1 / 60; P.x = cx; P.y = cy; P.iframes = 0; GAME.update(1 / 60); B.t = 99; }
+      const still = B.camping(), n = B.campHist.length;
+      for (let f = 0; f < 200; f++) { t += 1 / 60; P.x = cx + Math.cos(t * 2) * 150; P.y = cy + Math.sin(t * 2) * 150; P.iframes = 0; GAME.update(1 / 60); B.t = 99; }
+      return { still, n, moving: B.camping(), n2: B.campHist.length };
+    })()`);
+    check(`live tracker: standing still 3.3 s -> camping (samples ${live.n})`, live.still === true && live.n === 12);
+    check(`live tracker: circling at 300 px/s -> not camping, history capped at 12 (${live.n2})`, live.moving === false && live.n2 === 12);
+
+    const fails = [], seen = [];
+    for (const id of UNITS) for (const ph of [1, 2]) {
+      const r = R(`(() => {
+        const B = __ba.room(${J(id)}); const P = GAME.player; const A = GAME.arena;
+        const cx = A.x + A.w / 2, cy = A.y + A.h / 2;
+        const T = __ba.tags(B, ${ph});
+        const place = () => { B.x = cx + 300; B.y = cy; P.x = cx; P.y = cy; };
+        const still = Array.from({ length: 12 }, () => ({ x: cx, y: cy }));
+        const circ = Array.from({ length: 12 }, (_, i) => ({ x: cx + Math.cos(i * 0.5) * 150, y: cy + Math.sin(i * 0.5) * 150 }));
+        // conditional on the previous move not being an area move (see the bands note)
+        const share = rec => { let n = 0, hit = 0; rec.forEach((k, i) => { const p = rec.prev[i]; if (p && T[p].area) return; n++; if (T[k].area) hit++; }); return n ? hit / n : 0; };
+        const a = share(__ba.picks(B, ${ph}, 6000, () => { place(); B.campHist = still.slice(); }));
+        const b = share(__ba.picks(B, ${ph}, 6000, () => { place(); B.campHist = circ.slice(); }));
+        const anyArea = Object.values(T).some(t => t.area), anyNon = Object.values(T).some(t => !t.area);
+        return { camp: a, move: b, both: anyArea && anyNon };
+      })()`);
+      if (!r.both) continue;
+      seen.push(`${id}p${ph}`);
+      const ok = r.move <= 0.4 ? r.camp >= 1.5 * r.move
+        : (r.camp / Math.max(1e-6, 1 - r.camp)) >= 1.5 * (r.move / (1 - r.move));
+      if (!ok) fails.push(`${id} p${ph}: camping ${r.camp.toFixed(3)} vs moving ${r.move.toFixed(3)}`);
+    }
+    check(`camping player: area moves picked >= 1.5x as often as vs a moving player (${seen.length} tables)`
+      + (fails.length ? ' — ' + fails.join('; ') : ''), fails.length === 0 && seen.length >= 8);
+  }
+
+  // ---------------- chains ----------------
+  section('bossai: combo chains');
+  {
+    const roll = R(`(() => {
+      const B = __ba.room('yama');
+      const out = { p1: {}, p2: {}, heat: {} };
+      const orig = B.startMove;
+      B.startMove = function (id) { B.lastMove = id; };
+      for (const [key, ph] of [['p1', 1], ['p2', 2]]) {
+        B.phase = ph;
+        for (let i = 0; i < 2000; i++) { B.chainLeft = 0; B.pickMove(); if (B.lastMove !== 'chase') out[key][B.chainLeft] = (out[key][B.chainLeft] || 0) + 1; }
+      }
+      GAME.heat = { chainBonus: 1, restMul: 0.5 };
+      B.phase = 2;
+      for (let i = 0; i < 500; i++) { B.chainLeft = 0; B.pickMove(); if (B.lastMove !== 'chase') out.heat[B.chainLeft] = (out.heat[B.chainLeft] || 0) + 1; }
+      GAME.heat = undefined;
+      B.startMove = orig;
+      return out;
+    })()`);
+    const keys = o => Object.keys(o).map(Number).sort();
+    check(`phase-1 chain roll: chainLeft in {0,1,2} (${J(roll.p1)})`, J(keys(roll.p1)) === J([0, 1, 2]));
+    check(`phase-2 chain roll: chainLeft in {1,2} (${J(roll.p2)})`, J(keys(roll.p2)) === J([1, 2]));
+    check(`GAME.heat.chainBonus 1 adds one link (${J(roll.heat)})`, J(keys(roll.heat)) === J([2, 3]));
+
+    // chain rest: shortened only while a chain continues; Heat restMul scales it; inert without heat
+    const rest = R(`(() => {
+      const out = {};
+      for (const [key, heat, ph, cl] of [['p1', undefined, 1, 1], ['p2', undefined, 2, 1], ['heat', { restMul: 0.5 }, 2, 1], ['end', undefined, 2, 0]]) {
+        const B = __ba.room('kumbhakarna');
+        B.phase = ph; GAME.heat = heat;
+        if (ph === 2) B.hp = B.maxhp * 0.45;
+        const ts = [];
+        for (let i = 0; i < 40; i++) {
+          B.startMove('radial'); B.chainLeft = cl;
+          let f = 0; while (f++ < 200 && B.state !== 'rest') { GAME.player.iframes = 0; GAME.update(1 / 60); }
+          ts.push(B.t);
+          B.state = 'rest'; B.t = 99;
+        }
+        GAME.heat = undefined;
+        out[key] = [Math.min(...ts), Math.max(...ts)];
+      }
+      return out;
+    })()`);
+    const inR = (r, lo, hi) => r[0] >= lo - 0.02 && r[1] <= hi + 0.001;
+    check(`phase-1 chain rest in [0.28, 0.38] s (${J(rest.p1.map(v => +v.toFixed(3)))})`, inR(rest.p1, 0.28, 0.38));
+    check(`phase-2 chain rest in [0.20, 0.28] s (${J(rest.p2.map(v => +v.toFixed(3)))})`, inR(rest.p2, 0.20, 0.28));
+    check(`GAME.heat.restMul 0.5 halves the chain rest (${J(rest.heat.map(v => +v.toFixed(3)))})`, inR(rest.heat, 0.10, 0.14));
+    check(`no chain link left -> the move's own rest (radial 0.8 s; got ${J(rest.end.map(v => +v.toFixed(3)))})`, rest.end[0] > 0.7);
+
+    const fails = [], viol = [];
+    for (const id of BOSSES) {
+      const s2 = R(`__ba.sim(${J(id)}, 2, 90)`);
+      const short = s2.gaps.filter(g => g <= 0.35).length;
+      const frac = s2.gaps.length ? short / s2.gaps.length : 0;
+      const lens = [...new Set(s2.chains.filter(c => c.phase === 2).map(c => c.len))].sort();
+      check(`${id} phase 2 (90 s sim): >= 50% of damaging-move gaps <= 0.35 s (${short}/${s2.gaps.length} = ${(frac * 100).toFixed(0)}%)`,
+        s2.gaps.length >= 10 && frac >= 0.5);
+      check(`${id} phase 2: chain lengths are 2 or 3 (${J(lens)}, ${s2.chains.length} chains)`,
+        s2.chains.length >= 5 && lens.every(n => n === 2 || n === 3));
+      const s1 = R(`__ba.sim(${J(id)}, 1, 90)`);
+      const c1 = s1.chains.filter(c => c.phase === 1);
+      const mean = c1.length ? c1.reduce((a, c) => a + c.len, 0) / c1.length : 0;
+      check(`${id} phase 1: mean chain length in [1.6, 2.4] (${mean.toFixed(2)} over ${c1.length} chains)`,
+        c1.length >= 5 && mean >= 1.6 && mean <= 2.4);
+      viol.push(...s2.viol, ...s1.viol);
+      if (s2.phase !== 2 || s1.phase !== 1) fails.push(id + ' changed phase mid-sim');
+    }
+    check('chain sims stay in their phase' + (fails.length ? ' — ' + fails.join('; ') : ''), fails.length === 0);
+    check(`chain sims: zero BOSS_TG violations (${viol.length})` + (viol.length ? ' — ' + viol.slice(0, 5).join(', ') : ''), viol.length === 0);
+  }
+
+  // ---------------- opener + heat inert ----------------
+  section('bossai: phase-2 opener and Heat hook');
+  for (const id of UNITS) {
+    const r = R(`(() => {
+      const B = __ba.room(${J(id)});
+      B.state = 'rest'; B.t = 0.01; B.chainLeft = 2;
+      GAME.player.iframes = 0; GAME.update(1 / 60);
+      B.hp = B.maxhp * 0.3;
+      let f = 0; while (f++ < 600 && B.phase === 1) { GAME.player.iframes = 0; GAME.update(1 / 60); }
+      f = 0; while (f++ < 600 && B.state === 'phaseShift') { GAME.player.iframes = 0; GAME.update(1 / 60); }
+      const opener = (B.moveTable(2).find(m => m[2] && m[2].opener) || [])[0];
+      return { opener, cur: B.curMove, chainLeft: B.chainLeft };
+    })()`);
+    check(`${id}: first phase-2 move is the opener even mid-chain (${r.opener}; got ${r.cur}, chainLeft ${r.chainLeft})`,
+      r.cur === r.opener && r.chainLeft === 0);
+  }
+  // 05.7.1-09: startRun now freezes HEAT.effects into GAME.heat; with no vows (or Heat locked) the
+  // boss hooks stay inert: no extra chain links and an unscaled chain rest.
+  check('a fresh run with no vows has inert boss Heat hooks (chainBonus 0, restMul 1)',
+    R(`(META.heat = {}, GAME.startRun(), !!GAME.heat && GAME.heat.chainBonus === 0 && GAME.heat.restMul === 1 && GAME.heat.extraMoves === false)`));
+
+  // ================= Task 2: +2 new moves per boss (D-22) =================
+  section('bossai: new boss moves — data and tables');
+  const NEW = { tataka: ['thornVolley', 'rootSnare'], ahiravana: ['lampWisps', 'serpentRing'],
+    kumbhakarna: ['boulderOrbs', 'drumStun'], yama: ['pasha', 'scales'] };
+  const OLD_P2 = { tataka: ['leap', 'maw', 'chase', 'radial', 'charge', 'summon'],
+    ahiravana: ['lamps', 'crossBeams', 'teleport', 'spiral', 'radial', 'summon'],
+    kumbhakarna: ['quake', 'roar', 'chase', 'slam', 'charge'],
+    yama: ['ledger', 'danda', 'noose', 'spiral', 'slam', 'summon'] };
+  const FAM = { thornVolley: 'needle', rootSnare: 'mortar', lampWisps: 'wisp', serpentRing: 'ring',
+    boulderOrbs: 'orb', drumStun: 'ring', pasha: 'coil', scales: 'beam' };
+  {
+    const defs = R(`(() => { const o = {}; for (const k of ${J(Object.keys(FAM))}) o[k] = BOSS_MOVE_DEFS[k] || null; return o; })()`);
+    for (const k of Object.keys(FAM)) {
+      const d = defs[k];
+      check(`BOSS_MOVE_DEFS.${k}: dmg, wind >= ${k === 'drumStun' ? 0.6 : 0.4}, pattern fam '${FAM[k]}', band/area tags`,
+        !!d && d.dmg === true && d.wind >= (k === 'drumStun' ? 0.6 : 0.4) && !!d.pattern && d.pattern.fam === FAM[k]
+        && ['close', 'mid', 'far', 'any'].includes(d.band) && typeof d.area === 'boolean');
+    }
+    const tbl = R(`(() => { const o = {}; for (const b of Object.keys(BOSS_MOVESETS)) o[b] = { 1: BOSS_MOVESETS[b][1].map(m => m[0]), 2: BOSS_MOVESETS[b][2].map(m => m[0]), op: (BOSS_MOVESETS[b][2].find(m => m[2] && m[2].opener) || [])[0] }; return o; })()`);
+    for (const b of Object.keys(NEW)) {
+      const t = tbl[b];
+      const in1 = NEW[b].filter(k => t[1].includes(k));
+      check(`${b} phase 1 has exactly one new move (${in1.join(',')})`, in1.length === 1);
+      check(`${b} phase 2 has both new moves and every earlier phase-2 move (${t[2].join(',')})`,
+        NEW[b].every(k => t[2].includes(k)) && OLD_P2[b].every(k => t[2].includes(k)));
+      check(`${b} phase-2 opener unchanged (${t.op})`, t.op === OLD_P2[b][0] && t[2][0] === OLD_P2[b][0]);
+      const only2 = t[2].filter(k => !t[1].includes(k));
+      check(`${b} phase 2 keeps >= 2 moves absent from phase 1 (${only2.join(',')})`, only2.length >= 2);
+    }
+  }
+
+  // force one move to completion (per-move harness style) and report what it fired
+  R(`__ba.force = function (bossId, phase, moveId, opts) {
+    opts = opts || {};
+    const B = __ba.room(bossId);
+    const P = GAME.player;
+    for (const e of GAME.enemies) if (e !== B) e.dead = true;
+    if (phase === 2) { B.phase = 2; B.hp = B.maxhp * 0.45; }
+    P.x = B.x - (opts.dist || 260); P.y = B.y;
+    const shots = []; let frame = 0; const frames = new Set();
+    const orig = B.shoot;
+    B.shoot = function () { const ex = arguments[7] || {}; shots.push({ fam: arguments[6] || 'bolt', status: ex.status || null }); frames.add(frame); return orig.apply(this, arguments); };
+    const v0 = BOSS_TG.violations.length;
+    B.startMove(moveId);
+    const marks = (B.marks || []).length;
+    while (frame++ < 600 && B.state !== 'rest') {
+      for (const e of GAME.enemies) if (e !== B) e.dead = true;
+      P.iframes = 99; GAME.hitstop = 0; GAME.update(1 / 60);
+    }
+    B.shoot = orig;
+    const projs = GAME.eprojectiles.filter(p => p.owner === B).map(p => ({ fam: p.fam, status: p.status, gapArc: p.gapArc || 0 }));
+    return { shots, volleys: frames.size, marks, projs, state: B.state, viol: BOSS_TG.violations.slice(v0) };
+  };`);
+
+  section('bossai: new boss moves — forced');
+  const st = (s, type) => s && (Array.isArray(s) ? s.some(x => x.type === type) : s.type === type);
+  const allViol = [];
+  {
+    const r = R(`__ba.force('tataka', 1, 'thornVolley')`); allViol.push(...r.viol);
+    const n = r.shots.filter(s => s.fam === 'needle').length;
+    check(`thornVolley: needle fans in 3 volleys (${n} needles over ${r.volleys} volleys, ${r.marks} marks)`,
+      r.shots.length > 0 && n === r.shots.length && r.volleys === 3 && n === 15 && r.marks > 0 && r.state === 'rest');
+    const r2 = R(`__ba.force('tataka', 2, 'thornVolley')`); allViol.push(...r2.viol);
+    check(`thornVolley phase 2: +1 needle per volley, capped at 6 (${r2.shots.length} over ${r2.volleys})`, r2.shots.length === 18 && r2.volleys === 3);
+  }
+  {
+    const r = R(`__ba.force('tataka', 2, 'rootSnare')`); allViol.push(...r.viol);
+    check(`rootSnare: mortars carrying a root status (${r.shots.length} shots, ${r.marks} marks)`,
+      r.shots.length >= 4 && r.shots.every(s => s.fam === 'mortar' && st(s.status, 'root')) && r.marks >= 4);
+  }
+  {
+    const r = R(`__ba.force('ahiravana', 1, 'lampWisps')`); allViol.push(...r.viol);
+    check(`lampWisps: radial wisps (${r.shots.length})`, r.shots.length === 4 && r.shots.every(s => s.fam === 'wisp'));
+  }
+  {
+    const r = R(`__ba.force('ahiravana', 2, 'serpentRing')`); allViol.push(...r.viol);
+    const ring = r.projs.find(p => p.fam === 'ring');
+    check(`serpentRing: a ring with poison and a dash gap (${J(ring)})`,
+      r.shots.length === 1 && r.shots[0].fam === 'ring' && st(r.shots[0].status, 'poison') && !!ring && ring.gapArc > 0);
+  }
+  {
+    const r = R(`__ba.force('kumbhakarna', 1, 'boulderOrbs')`); allViol.push(...r.viol);
+    check(`boulderOrbs: orbs (${r.shots.length})`, r.shots.length === 3 && r.shots.every(s => s.fam === 'orb'));
+  }
+  {
+    const r = R(`__ba.force('kumbhakarna', 2, 'drumStun')`); allViol.push(...r.viol);
+    check(`drumStun: a ring carrying stun and no knock (${J(r.shots[0] && r.shots[0].status)})`,
+      r.shots.length === 1 && r.shots[0].fam === 'ring' && st(r.shots[0].status, 'stun') && !st(r.shots[0].status, 'knock'));
+  }
+  {
+    const r = R(`__ba.force('yama', 1, 'pasha')`); allViol.push(...r.viol);
+    check(`pasha (The Pasha Binds): a coil carrying root + pull (${J(r.shots.map(s => s.status))})`,
+      r.shots.length >= 1 && r.shots.every(s => s.fam === 'coil' && st(s.status, 'root') && st(s.status, 'pull')));
+  }
+  {
+    const r = R(`__ba.force('yama', 2, 'scales')`); allViol.push(...r.viol);
+    check(`scales (The Scales Are Weighed): two beams per volley across 2 volleys (${r.shots.length} over ${r.volleys})`,
+      r.shots.length === 4 && r.volleys === 2 && r.shots.every(s => s.fam === 'beam'));
+  }
+
+  // drumStun lands on a standing (non-dashing) player: short stun, no knock from that hit
+  {
+    const r = R(`(() => {
+      const B = __ba.room('kumbhakarna'); const P = GAME.player;
+      B.phase = 2; B.hp = B.maxhp * 0.45;
+      P.x = B.x - 160; P.y = B.y;
+      const v0 = BOSS_TG.violations.length;
+      let hit = null;
+      const orig = P.takeDamage;
+      P.takeDamage = function (amt, fx, fy, o) {
+        const k0 = [this.st ? this.st.kx : 0, this.st ? this.st.ky : 0];
+        const landed = orig.call(this, amt, fx, fy, o);
+        if (landed && !hit && o && o.status) hit = { stunT: this.st.stunT, dk: Math.hypot(this.st.kx - k0[0], this.st.ky - k0[1]), status: o.status };
+        return landed;
+      };
+      B.startMove('drumStun');
+      let f = 0;
+      while (f++ < 400 && !hit) {
+        for (const e of GAME.enemies) if (e !== B) e.dead = true;
+        const ring = GAME.eprojectiles.find(p => p.owner === B && p.fam === 'ring');
+        if (ring) { const a = ring.gapA + Math.PI; P.x = B.x + Math.cos(a) * 160; P.y = B.y + Math.sin(a) * 160; }
+        P.iframes = 0; P.dashT = 0; GAME.hitstop = 0;
+        GAME.update(1 / 60);
+        if (B.state === 'rest') B.t = 99;
+      }
+      P.takeDamage = orig;
+      return { hit, viol: BOSS_TG.violations.slice(v0) };
+    })()`);
+    allViol.push(...r.viol);
+    check(`drumStun lands: 0 < stunT <= 0.6 and no knock velocity (${J(r.hit)})`,
+      !!r.hit && r.hit.stunT > 0 && r.hit.stunT <= 0.6 && r.hit.dk < 1e-6);
+  }
+  // pasha lands: rooted and pulled toward Yama
+  {
+    const r = R(`(() => {
+      const B = __ba.room('yama'); const P = GAME.player;
+      P.x = B.x - 300; P.y = B.y;
+      const v0 = BOSS_TG.violations.length;
+      let hit = null;
+      const orig = P.takeDamage;
+      P.takeDamage = function (amt, fx, fy, o) {
+        const k0 = [this.st ? this.st.kx : 0, this.st ? this.st.ky : 0];
+        const landed = orig.call(this, amt, fx, fy, o);
+        if (landed && !hit && o && o.status) hit = { rootT: this.st.rootT, dkx: this.st.kx - k0[0], bx: B.x - this.x };
+        return landed;
+      };
+      B.startMove('pasha');
+      let f = 0;
+      while (f++ < 400 && !hit) {
+        for (const e of GAME.enemies) if (e !== B) e.dead = true;
+        P.x = B.x - 300; P.y = B.y;
+        P.iframes = 0; P.dashT = 0; GAME.hitstop = 0;
+        GAME.update(1 / 60);
+        if (B.state === 'rest') B.t = 99;
+      }
+      P.takeDamage = orig;
+      return { hit, viol: BOSS_TG.violations.slice(v0) };
+    })()`);
+    allViol.push(...r.viol);
+    check(`pasha lands: rooted and pulled toward Yama (${J(r.hit)})`,
+      !!r.hit && r.hit.rootT > 0 && Math.sign(r.hit.dkx) === Math.sign(r.hit.bx) && r.hit.dkx !== 0);
+  }
+  check(`new boss moves: zero BOSS_TG violations (${allViol.length})` + (allViol.length ? ' — ' + allViol.slice(0, 5).join(', ') : ''), allViol.length === 0);
+};

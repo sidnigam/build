@@ -1,0 +1,149 @@
+{
+  "graph": {
+    "1": {
+      "class_type": "UnetLoaderGGUF",
+      "inputs": {
+        "unet_name": "flux1-schnell-Q4_K_S.gguf"
+      }
+    },
+    "2": {
+      "class_type": "DualCLIPLoaderGGUF",
+      "inputs": {
+        "clip_name1": "t5-v1_1-xxl-encoder-Q5_K_M.gguf",
+        "clip_name2": "clip_l.safetensors",
+        "type": "flux"
+      }
+    },
+    "3": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "A painted close-up of a regal young Indian king's chest and upper arm: a smooth deep indigo silk tunic, a broad white silk sash crossing the chest with ornate gold trim along its edges, a gold bead necklace and a jewelled gold collar at the neck, warm brown skin on the arm, bold hand-painted game art with confident dark ink outlines and soft warm rim light, a flat even medium-grey backdrop.",
+        "clip": [
+          "2",
+          0
+        ]
+      }
+    },
+    "4": {
+      "class_type": "ConditioningZeroOut",
+      "inputs": {
+        "conditioning": [
+          "3",
+          0
+        ]
+      }
+    },
+    "7": {
+      "class_type": "VAELoader",
+      "inputs": {
+        "vae_name": "ae.safetensors"
+      }
+    },
+    "10": {
+      "class_type": "LoadImage",
+      "inputs": {
+        "image": "gsd057x_repair-71270.png"
+      }
+    },
+    "11": {
+      "class_type": "LoadImageMask",
+      "inputs": {
+        "image": "gsd057x_repair-71270_mask.png",
+        "channel": "red"
+      }
+    },
+    "12": {
+      "class_type": "VAEEncode",
+      "inputs": {
+        "pixels": [
+          "10",
+          0
+        ],
+        "vae": [
+          "7",
+          0
+        ]
+      }
+    },
+    "13": {
+      "class_type": "SetLatentNoiseMask",
+      "inputs": {
+        "samples": [
+          "12",
+          0
+        ],
+        "mask": [
+          "11",
+          0
+        ]
+      }
+    },
+    "6": {
+      "class_type": "KSampler",
+      "inputs": {
+        "seed": 71270,
+        "steps": 4,
+        "cfg": 1.0,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "denoise": 0.65,
+        "model": [
+          "1",
+          0
+        ],
+        "positive": [
+          "3",
+          0
+        ],
+        "negative": [
+          "4",
+          0
+        ],
+        "latent_image": [
+          "13",
+          0
+        ]
+      }
+    },
+    "8": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "6",
+          0
+        ],
+        "vae": [
+          "7",
+          0
+        ]
+      }
+    },
+    "9": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "filename_prefix": "gsd057x",
+        "images": [
+          "8",
+          0
+        ]
+      }
+    }
+  },
+  "params": {
+    "prompt": "A painted close-up of a regal young Indian king's chest and upper arm: a smooth deep indigo silk tunic, a broad white silk sash crossing the chest with ornate gold trim along its edges, a gold bead necklace and a jewelled gold collar at the neck, warm brown skin on the arm, bold hand-painted game art with confident dark ink outlines and soft warm rim light, a flat even medium-grey backdrop.",
+    "seed": 71270,
+    "denoise": 0.65,
+    "steps": 4,
+    "cfg": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "checkpoint_label": "flux1-schnell-Q4_K_S.gguf (FLUX.1 [schnell] by Black Forest Labs, GGUF Q4_K_S by city96, Apache-2.0) + t5-v1_1-xxl Q5_K_M GGUF (Apache-2.0) + CLIP-L (MIT) + FLUX ae VAE (Apache-2.0)",
+    "method": "flux-masked-img2img (SetLatentNoiseMask)",
+    "grow": 6,
+    "feather": 3,
+    "mask_frac": 0.15748697916666668
+  },
+  "prompt_id": "085a6af0-1c96-47b3-bd93-3eec7dcdc913",
+  "comfyui_version": "0.35.0",
+  "generated_at": "2026-11-07T13:30:02Z"
+}

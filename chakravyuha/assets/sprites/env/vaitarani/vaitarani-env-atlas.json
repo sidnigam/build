@@ -1,0 +1,341 @@
+{
+  "frames": {
+    "vaitarani_gate_0.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 394,
+        "h": 504
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 394,
+        "h": 504
+      },
+      "sourceSize": {
+        "w": 402,
+        "h": 512
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "vaitarani_column_0.png": {
+      "frame": {
+        "x": 2,
+        "y": 510,
+        "w": 230,
+        "h": 440
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 230,
+        "h": 440
+      },
+      "sourceSize": {
+        "w": 238,
+        "h": 448
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "vaitarani_algae_patch_0.png": {
+      "frame": {
+        "x": 2,
+        "y": 954,
+        "w": 384,
+        "h": 384
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "vaitarani_stone_cracks_0.png": {
+      "frame": {
+        "x": 236,
+        "y": 510,
+        "w": 384,
+        "h": 384
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "vaitarani_water_puddle_0.png": {
+      "frame": {
+        "x": 400,
+        "y": 2,
+        "w": 384,
+        "h": 384
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 384,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "vaitarani_moored_boat_0.png": {
+      "frame": {
+        "x": 2,
+        "y": 1342,
+        "w": 147,
+        "h": 376
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 147,
+        "h": 376
+      },
+      "sourceSize": {
+        "w": 155,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "vaitarani_rope_coil_0.png": {
+      "frame": {
+        "x": 2,
+        "y": 1722,
+        "w": 376,
+        "h": 254
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 376,
+        "h": 254
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 262
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "vaitarani_mooring_post_0.png": {
+      "frame": {
+        "x": 153,
+        "y": 1342,
+        "w": 109,
+        "h": 376
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 109,
+        "h": 376
+      },
+      "sourceSize": {
+        "w": 117,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "vaitarani_stone_marker_0.png": {
+      "frame": {
+        "x": 266,
+        "y": 1342,
+        "w": 65,
+        "h": 376
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 65,
+        "h": 376
+      },
+      "sourceSize": {
+        "w": 73,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "vaitarani_reeds_0.png": {
+      "frame": {
+        "x": 335,
+        "y": 1342,
+        "w": 376,
+        "h": 355
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 376,
+        "h": 355
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 363
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "vaitarani_floating_diyas_0.png": {
+      "frame": {
+        "x": 382,
+        "y": 1701,
+        "w": 376,
+        "h": 341
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 376,
+        "h": 341
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 349
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "vaitarani_driftwood_0.png": {
+      "frame": {
+        "x": 390,
+        "y": 898,
+        "w": 376,
+        "h": 348
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 4,
+        "w": 376,
+        "h": 348
+      },
+      "sourceSize": {
+        "w": 384,
+        "h": 356
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  },
+  "meta": {
+    "app": "http://github.com/odrick/free-tex-packer-core",
+    "version": "0.3.8",
+    "image": "vaitarani-env-atlas.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 786,
+      "h": 2044
+    },
+    "scale": 1
+  },
+  "animations": {
+    "algae_patch": [
+      "vaitarani_algae_patch_0.png"
+    ],
+    "column": [
+      "vaitarani_column_0.png"
+    ],
+    "driftwood": [
+      "vaitarani_driftwood_0.png"
+    ],
+    "floating_diyas": [
+      "vaitarani_floating_diyas_0.png"
+    ],
+    "gate": [
+      "vaitarani_gate_0.png"
+    ],
+    "moored_boat": [
+      "vaitarani_moored_boat_0.png"
+    ],
+    "mooring_post": [
+      "vaitarani_mooring_post_0.png"
+    ],
+    "reeds": [
+      "vaitarani_reeds_0.png"
+    ],
+    "rope_coil": [
+      "vaitarani_rope_coil_0.png"
+    ],
+    "stone_cracks": [
+      "vaitarani_stone_cracks_0.png"
+    ],
+    "stone_marker": [
+      "vaitarani_stone_marker_0.png"
+    ],
+    "water_puddle": [
+      "vaitarani_water_puddle_0.png"
+    ]
+  }
+}

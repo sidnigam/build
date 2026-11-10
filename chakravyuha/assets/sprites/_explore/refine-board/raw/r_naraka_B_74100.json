@@ -1,0 +1,12 @@
+{
+ "prompt": "Hades-style painterly cel-shaded game art with bold dark ink outlines and saturated rim lighting, blended with Indian miniature painting ornament: a wide decorative patterned border band running around the arena edge like a miniature-painting frame, carved motif walls and pillars, fine gold leaf detailing, an arena in Yama's hells, Naraka: The floor is calm, even, low-contrast, mid-dark flagstone with soft painted variation and no glowing cracks. deep violet and indigo stone floor, crimson and gold patterned border band, tall carved indigo pillars, small ember braziers as accents, violet shadows with warm ember rim light. Game camera: top-down three-quarter view looking down at roughly 45 degrees, the whole arena floor visible and centred, open empty bare floor in the middle, walls framing the edges, an empty arena without characters, people, text or UI.",
+ "seed": 74100,
+ "checkpoint": "flux1-schnell-Q4_K_S.gguf",
+ "size": [
+  1344,
+  768
+ ],
+ "steps": 4,
+ "date": "2026-11-08",
+ "seconds": 446
+}

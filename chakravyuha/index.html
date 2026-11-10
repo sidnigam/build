@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHAKRAVYUHA — an Indian-mythology action roguelite</title>
+<meta name="description" content="Play as Abhimanyu and fight your way out of Yama's realm. A Hades-inspired action roguelite drawn from the Ramayana and Mahabharata. Free, open source, in your browser.">
+<style>
+  :root {
+    --gold: #ffd34d; --ash: #cfcfcf; --punya: #c77dff;
+    --bg: #0b0710; --panel: rgba(14, 9, 20, 0.96);
+    --gold-deep: #a87b1d; --gold-soft: rgba(255, 211, 77, 0.35);
+    --hanuman: #ff8c42; --agni: #ff4430; --indra: #ffd34d;
+    --vayu: #7fdcb7; --krishna: #5c7cff; --durga: #e84a8a;
+    --r-common: #cfcfcf; --r-rare: #5cb8ff; --r-epic: #c77dff;
+    --sp-xs: 4px; --sp-sm: 8px; --sp-md: 16px; --sp-lg: 24px;
+    --sp-xl: 32px; --sp-2xl: 48px; --sp-3xl: 64px;
+    --font-dev: 'Noto Serif Devanagari', 'Kohinoor Devanagari', 'Nirmala UI', 'Mangal', 'Devanagari MT', serif;
+    /* inline-SVG Indian-motif flourishes: monochrome art used as CSS masks (tinted via background-color)
+       or, for -gold variants, baked-in-color art used directly as background-image */
+    --svg-corner: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><g fill='%23000'><path d='M0 0 Q10 2 12 12 Q2 10 0 0 Z'/><path d='M0 0 Q17 4 20 20 Q4 17 0 0 Z' opacity='0.65'/><path d='M0 0 Q23 8 28 28 Q8 23 0 0 Z' opacity='0.35'/><circle cx='5' cy='5' r='2.4'/></g></svg>");
+    --svg-corner-tr: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><g fill='%23000' transform='scale(-1,1) translate(-32,0)'><path d='M0 0 Q10 2 12 12 Q2 10 0 0 Z'/><path d='M0 0 Q17 4 20 20 Q4 17 0 0 Z' opacity='0.65'/><path d='M0 0 Q23 8 28 28 Q8 23 0 0 Z' opacity='0.35'/><circle cx='5' cy='5' r='2.4'/></g></svg>");
+    --svg-corner-bl: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><g fill='%23000' transform='scale(1,-1) translate(0,-32)'><path d='M0 0 Q10 2 12 12 Q2 10 0 0 Z'/><path d='M0 0 Q17 4 20 20 Q4 17 0 0 Z' opacity='0.65'/><path d='M0 0 Q23 8 28 28 Q8 23 0 0 Z' opacity='0.35'/><circle cx='5' cy='5' r='2.4'/></g></svg>");
+    --svg-corner-br: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><g fill='%23000' transform='scale(-1,-1) translate(-32,-32)'><path d='M0 0 Q10 2 12 12 Q2 10 0 0 Z'/><path d='M0 0 Q17 4 20 20 Q4 17 0 0 Z' opacity='0.65'/><path d='M0 0 Q23 8 28 28 Q8 23 0 0 Z' opacity='0.35'/><circle cx='5' cy='5' r='2.4'/></g></svg>");
+    --svg-rule: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 12'><g fill='none' stroke='%23000' stroke-width='1'><path d='M0 6 H58'/><path d='M102 6 H160'/></g><g fill='%23000'><path d='M80 1 L87 6 L80 11 L73 6 Z'/><circle cx='64' cy='6' r='1.6'/><circle cx='96' cy='6' r='1.6'/><circle cx='58' cy='6' r='1'/><circle cx='102' cy='6' r='1'/></g></svg>");
+    --svg-mandala: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><g fill='none' stroke='%23000' stroke-width='1'><circle cx='32' cy='32' r='30'/><circle cx='32' cy='32' r='22'/></g><g fill='%23000'><circle cx='32' cy='32' r='6'/><g transform='translate(32,32)'><path d='M0,-26 Q6,-14 0,-4 Q-6,-14 0,-26 Z'/><path d='M0,-26 Q6,-14 0,-4 Q-6,-14 0,-26 Z' transform='rotate(45)'/><path d='M0,-26 Q6,-14 0,-4 Q-6,-14 0,-26 Z' transform='rotate(90)'/><path d='M0,-26 Q6,-14 0,-4 Q-6,-14 0,-26 Z' transform='rotate(135)'/><path d='M0,-26 Q6,-14 0,-4 Q-6,-14 0,-26 Z' transform='rotate(180)'/><path d='M0,-26 Q6,-14 0,-4 Q-6,-14 0,-26 Z' transform='rotate(225)'/><path d='M0,-26 Q6,-14 0,-4 Q-6,-14 0,-26 Z' transform='rotate(270)'/><path d='M0,-26 Q6,-14 0,-4 Q-6,-14 0,-26 Z' transform='rotate(315)'/></g></g></svg>");
+    --svg-toran: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 10'><g fill='%23000'><path d='M0 0 Q6 10 12 0 Q18 10 24 0 Z'/><circle cx='6' cy='2.2' r='1.1'/><circle cx='18' cy='2.2' r='1.1'/></g></svg>");
+    --svg-toran-gold: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 10'><g fill='%23a87b1d'><path d='M0 0 Q6 10 12 0 Q18 10 24 0 Z'/><circle cx='6' cy='2.2' r='1.1'/><circle cx='18' cy='2.2' r='1.1'/></g></svg>");
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; background: #050308; overflow: hidden;
+    font-family: Georgia, 'Times New Roman', 'Noto Serif', serif; }
+
+  #wrap { position: relative; width: 100vw; height: 100vh;
+    display: flex; align-items: center; justify-content: center; }
+  #stage { position: relative; aspect-ratio: 16 / 9; width: min(100vw, calc(100vh * 16 / 9)); }
+  canvas#game { width: 100%; height: 100%; display: block; cursor: none; background: var(--bg); }
+
+  /* ---------- overlay panels ---------- */
+  .panel { position: absolute; inset: 0; z-index: 10; display: flex;
+    flex-direction: column; align-items: center; justify-content: center;
+    background: rgba(5, 3, 8, 0.72); color: var(--ash); text-align: center; }
+  .panel.solid { background-color: var(--panel);
+    background-image: var(--svg-toran-gold), var(--svg-toran-gold);
+    background-repeat: repeat-x, repeat-x;
+    background-position: top left, bottom left;
+    background-size: 24px 10px, 24px 10px;
+    box-shadow: inset 0 0 48px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(255, 211, 77, 0.12); }
+  .hidden { display: none !important; }
+
+  h1.title { font-size: clamp(38px, 6vw, 72px); letter-spacing: 0.18em; color: var(--gold);
+    text-shadow: 0 0 30px rgba(255, 211, 77, 0.4); font-weight: normal; }
+  .title-dev { font-size: clamp(16px, 2vw, 24px); color: var(--punya); letter-spacing: 0.4em; margin-top: 2px; }
+  .tagline { margin-top: 10px; font-style: italic; opacity: 0.8; font-size: 15px; }
+
+  .menu-btns { margin-top: 34px; display: flex; flex-direction: column; gap: 12px; position: relative; }
+  button { position: relative; font-family: inherit; font-size: 17px; letter-spacing: 0.12em; padding: 11px 38px;
+    background: transparent; color: var(--ash); border: 1px solid rgba(255, 211, 77, 0.45);
+    cursor: pointer; transition: all 0.15s; }
+  button::before, button::after { content: ''; position: absolute; top: 3px; width: 8px; height: 8px;
+    -webkit-mask-image: var(--svg-corner); mask-image: var(--svg-corner);
+    -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+    background: var(--gold-soft); opacity: 0.7; pointer-events: none; }
+  button::before { left: 3px; }
+  button::after { right: 3px; transform: scaleX(-1); }
+  button:hover { background: rgba(255, 211, 77, 0.12); color: var(--gold); border-color: var(--gold); }
+  button:hover::before, button:hover::after { background: var(--gold); opacity: 1; }
+  button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  button.primary { color: var(--gold); border-color: var(--gold); font-size: 20px;
+    background-image: linear-gradient(var(--gold-soft), var(--gold-soft));
+    background-repeat: no-repeat; background-position: bottom center; background-size: 70% 1px; }
+  button.danger { border-color: rgba(255, 85, 102, 0.4); font-size: 12px; opacity: 0.6; }
+  button.danger:hover { color: #ff5566; border-color: #ff5566; background: rgba(255,85,102,0.08); }
+  button.danger::before, button.danger::after { display: none; }
+
+  .hub-currency { color: var(--punya); font-size: 18px; margin-top: 18px; }
+  .narada { max-width: 620px; margin-top: 26px; font-style: italic; line-height: 1.6;
+    color: #b9a3d8; font-size: 15px; }
+  .hub-stats { margin-top: 14px; font-size: 13px; opacity: 0.55; }
+  .controls-hint { position: absolute; bottom: 18px; font-size: 13px; opacity: 0.55; line-height: 1.7; }
+
+  /* ---------- cards (boons, shop, shrine, armory) ---------- */
+  .cards { display: flex; gap: 18px; margin-top: 26px; flex-wrap: wrap; justify-content: center;
+    max-width: 1100px; }
+  .card { position: relative; isolation: isolate; width: 250px; padding: 18px; border: 2px solid var(--rarity, #555);
+    background: linear-gradient(to bottom, color-mix(in srgb, var(--god, #2a1a10) 10%, #0a0610), rgba(10, 6, 16, 0.95));
+    box-shadow: inset 0 0 0 1px rgba(255, 211, 77, 0.18), inset 0 0 24px rgba(0, 0, 0, 0.6);
+    cursor: pointer; text-align: left; transition: transform 0.12s, box-shadow 0.12s; }
+  .card::before { content: ''; position: absolute; inset: 4px; z-index: -1; pointer-events: none;
+    background: var(--god, var(--gold)); opacity: 0.9;
+    -webkit-mask-image: var(--svg-corner), var(--svg-corner-tr), var(--svg-corner-bl), var(--svg-corner-br);
+    mask-image: var(--svg-corner), var(--svg-corner-tr), var(--svg-corner-bl), var(--svg-corner-br);
+    -webkit-mask-position: top left, top right, bottom left, bottom right;
+    mask-position: top left, top right, bottom left, bottom right;
+    -webkit-mask-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
+    mask-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
+    -webkit-mask-size: 22px 22px; mask-size: 22px 22px; }
+  .card::after { content: ''; position: absolute; right: 0; bottom: 0; width: 72px; height: 72px; z-index: -1;
+    pointer-events: none; background: var(--god, var(--gold)); opacity: 0.07;
+    -webkit-mask-image: var(--svg-mandala); mask-image: var(--svg-mandala);
+    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-size: contain; mask-size: contain; }
+  .card:hover { transform: translateY(-4px);
+    box-shadow: 0 6px 24px color-mix(in srgb, var(--god, var(--gold)) 35%, transparent); }
+  .card.disabled { opacity: 0.45; cursor: not-allowed; }
+  .card.disabled:hover { transform: none; box-shadow: none; }
+  .card.maxed { border-color: var(--gold); cursor: default; outline: 1px solid var(--gold); outline-offset: 3px; }
+  .card.selected { border-color: var(--gold); box-shadow: 0 0 18px rgba(255, 211, 77, 0.25);
+    outline: 1px solid var(--gold); outline-offset: 3px; }
+  .card.locked { opacity: 0.7; }
+  .card:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+  .card-rarity { font-size: 11px; letter-spacing: 0.2em; margin-bottom: 6px; padding-bottom: var(--sp-xs);
+    border-bottom: 1px solid var(--rarity, #555); color: var(--rarity, inherit); }
+  .card-name { font-size: 18px; margin-bottom: 8px; }
+  .card-desc { font-size: 13.5px; line-height: 1.5; color: #c9c2d8; }
+  .card-lore { font-size: 12px; font-style: italic; opacity: 0.55; margin-top: 8px; line-height: 1.4; }
+  .card-cost { margin-top: 10px; color: var(--gold); font-size: 14px; letter-spacing: 0.1em; }
+  .pips { margin-left: 8px; }
+  .pip { display: inline-block; width: 9px; height: 9px; border: 1px solid var(--gold);
+    margin-right: 3px; transform: rotate(45deg); }
+  .pip.full { background: var(--gold); }
+  /* Vows of Tapas (05.7.1-10) */
+  .vow-pips { margin-left: 8px; color: var(--gold); letter-spacing: 0.15em; }
+  .card.vow-card.sworn { border-color: #e0663a; }
+  .vows-best { display: block; margin-top: 4px; font-size: 0.8em; opacity: 0.75; }
+
+  /* duo (two-god) boon cards — dual gradient border via --god / --god2 CSS vars */
+  .card.duo { border-image: linear-gradient(135deg, var(--god, var(--gold)), var(--god2, var(--punya))) 1;
+    border-width: 2px; border-style: solid; }
+  .card.duo::before { background: linear-gradient(135deg, var(--god, var(--gold)), var(--god2, var(--punya))); }
+  .card.duo::after { background: linear-gradient(135deg, var(--god, var(--gold)), var(--god2, var(--punya))); opacity: 0.1; }
+
+  .rarity-1 { box-shadow: inset 0 0 0 1px rgba(255, 211, 77, 0.18), inset 0 0 24px rgba(0, 0, 0, 0.6),
+    0 0 14px color-mix(in srgb, var(--r-rare) 30%, transparent); }
+  .rarity-2 {
+    background-image: linear-gradient(115deg, transparent 35%, rgba(199, 125, 255, 0.4) 50%, transparent 65%),
+      linear-gradient(to bottom, color-mix(in srgb, var(--god, #2a1a10) 10%, #0a0610), rgba(10, 6, 16, 0.95));
+    background-size: 300% 300%, 100% 100%;
+    background-position: 0% 0%, 0 0;
+    box-shadow: inset 0 0 0 1px rgba(255, 211, 77, 0.18), inset 0 0 24px rgba(0, 0, 0, 0.6),
+      0 0 18px color-mix(in srgb, var(--r-epic) 35%, transparent); }
+  @media (prefers-reduced-motion: no-preference) {
+    .rarity-2 { animation: epicShimmer 4s ease-in-out infinite; }
+    @keyframes epicShimmer {
+      0%, 100% { background-position: 0% 0%, 0 0; }
+      50% { background-position: 100% 100%, 0 0; }
+    }
+  }
+
+  /* boon god header */
+  #boon-god { display: flex; gap: 18px; align-items: center; max-width: 760px; text-align: left; }
+  .god-sym { font-size: 52px; border: 1px solid var(--gold-soft); border-radius: 50%; padding: var(--sp-sm);
+    background: radial-gradient(circle, rgba(255, 211, 77, 0.12), transparent 70%); line-height: 1; }
+  .god-name { font-size: 30px; letter-spacing: 0.12em; }
+  .god-dev { font-family: var(--font-dev); font-size: 18px; letter-spacing: 0.05em;
+    color: var(--god, var(--gold)); opacity: 0.85; }
+  .god-title { font-size: 13px; letter-spacing: 0.18em; opacity: 0.7; margin-top: 2px; }
+  .god-greet { font-style: italic; margin-top: 8px; color: #d8cfe8; font-size: 14.5px; }
+
+  .panel-h { font-size: 30px; color: var(--gold); letter-spacing: 0.2em; }
+  .panel-h::before, .panel-h::after { content: ''; display: inline-block; width: 80px; height: 10px;
+    -webkit-mask-image: var(--svg-rule); mask-image: var(--svg-rule);
+    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-size: contain; mask-size: contain;
+    background: var(--gold); margin: 0 var(--sp-md); vertical-align: middle; }
+  .panel-h::after { transform: scaleX(-1); }
+  .panel-sub { margin-top: 6px; font-size: 14px; opacity: 0.65; font-style: italic; }
+  #shop .panel-sub::before, #shrine .panel-sub::before, #armory .panel-sub::before, #codex .panel-sub::before {
+    display: block; font-family: var(--font-dev); font-size: 15px; color: var(--gold); opacity: 0.75;
+    margin-top: var(--sp-xs); }
+  #shop .panel-sub::before { content: 'कुबेर का भंडार'; }
+  #shrine .panel-sub::before { content: 'धर्म मार्ग'; color: var(--punya); }
+  #armory .panel-sub::before { content: 'शस्त्रागार'; }
+  #codex .panel-sub::before { content: 'पोथी'; }
+  #pause .menu-btns::before { content: 'विराम'; display: block; font-family: var(--font-dev); font-size: 15px;
+    color: var(--gold); opacity: 0.75; margin-bottom: var(--sp-xs); text-align: center; }
+  .currency-line { margin-top: 12px; color: var(--punya); font-size: 17px; }
+  .back-row { margin-top: 30px; }
+
+  /* codex */
+  #codex-list { margin-top: 22px; max-width: 780px; max-height: 62vh; overflow-y: auto;
+    text-align: left; padding: 0 24px; }
+  .codex-entry { margin-bottom: 22px; }
+  .codex-t { color: var(--gold); font-size: 18px; }
+  .codex-s { font-size: 12px; color: var(--punya); font-style: italic; letter-spacing: 0.06em; }
+  .codex-d { margin-top: 6px; font-size: 14px; line-height: 1.65; color: #c9c2d8; }
+  #codex-list::-webkit-scrollbar { width: 8px; }
+  #codex-list::-webkit-scrollbar-thumb { background: rgba(255,211,77,0.3); }
+
+  /* death / victory */
+  .death-h { font-size: 54px; color: #ff5566; letter-spacing: 0.3em; text-shadow: 0 0 40px rgba(255,85,102,0.4); }
+  .death-h::after { content: 'वीरगति'; display: block; font-family: var(--font-dev); font-size: 18px;
+    letter-spacing: 0.1em; color: #b9a3d8; margin-top: var(--sp-sm); }
+  .victory-h { font-size: 50px; color: var(--gold); letter-spacing: 0.24em; text-shadow: 0 0 40px rgba(255,211,77,0.5); }
+  .victory-h::after { content: 'विजय'; display: block; font-family: var(--font-dev); font-size: 18px;
+    letter-spacing: 0.1em; color: var(--gold); opacity: 0.85; margin-top: var(--sp-sm); }
+  .death-line { max-width: 640px; margin-top: 22px; font-style: italic; color: #b9a3d8; line-height: 1.7; font-size: 16px; }
+  .run-stats { margin-top: 26px; width: 360px; }
+  .rs-title { color: var(--gold); letter-spacing: 0.2em; font-size: 15px; margin-bottom: 14px; }
+  .rs-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.08); }
+
+  /* transient text */
+  #banner { position: absolute; top: 17%; left: 0; right: 0; z-index: 8; text-align: center;
+    font-size: 26px; letter-spacing: 0.25em; pointer-events: none;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.8); animation: bannerIn 2.2s ease-out forwards; }
+  @keyframes bannerIn {
+    0% { opacity: 0; transform: translateY(14px); }
+    12% { opacity: 1; transform: translateY(0); }
+    78% { opacity: 1; } 100% { opacity: 0; } }
+  #biome-title, #boss-intro { position: absolute; top: 30%; left: 0; right: 0; z-index: 8;
+    text-align: center; pointer-events: none; animation: bannerIn 2.8s ease-out forwards; }
+  #boss-intro { animation-duration: 4.2s; }
+  .bt-name { font-size: 56px; letter-spacing: 0.35em; text-shadow: 0 0 40px currentColor; }
+  .bt-name::after { content: ''; display: block; width: 240px; height: 12px; margin: var(--sp-sm) auto 0;
+    -webkit-mask-image: var(--svg-rule); mask-image: var(--svg-rule);
+    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-size: contain; mask-size: contain;
+    background: currentColor; }
+  .bt-dev { font-family: var(--font-dev); font-size: 22px; letter-spacing: 0.15em; opacity: 0.8;
+    margin-top: var(--sp-xs); }
+  .bt-sub { font-size: 16px; letter-spacing: 0.3em; opacity: 0.75; margin-top: 6px; color: #cfcfcf; }
+  .bt-quote { font-size: 16px; font-style: italic; margin-top: 16px; color: #d8cfe8;
+    max-width: 700px; margin-left: auto; margin-right: auto; }
+
+  .foot { position: absolute; bottom: 8px; right: 14px; z-index: 5; font-size: 11px;
+    opacity: 0.35; color: var(--ash); }
+
+  .a11y { margin-top: 26px; display: flex; flex-direction: column; gap: 8px;
+    font-size: 14px; letter-spacing: 0.08em; color: #e8dcc0; }
+  .a11y-h { color: var(--gold); font-size: 13px; letter-spacing: 0.2em; }
+  .a11y label { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .a11y input[type=range] { width: 160px; }
+</style>
+<style id="settings-css">
+  .settings-row { display: flex; justify-content: space-between; align-items: center;
+    width: 360px; margin: 8px 0; gap: 16px; color: var(--ash); font-size: 14px; letter-spacing: 0.06em; }
+  #settings-rebind-list .settings-row { font-size: 13px; }
+</style>
+<style id="gods-css">
+  #boonpick.has-portrait { padding-left: 34%; }
+  #boonpick.has-portrait .god-sym { display: none; }
+  #boonpick.has-portrait .card { width: 220px; }
+
+  #god-portrait-wrap { position: absolute; left: 0; bottom: 0; width: 34%; height: 96%; pointer-events: none; z-index: 0; }
+  #boonpick > :not(#god-portrait-wrap) { position: relative; z-index: 1; }
+
+  #god-aura { position: absolute; left: 50%; top: 28%; width: 80%; aspect-ratio: 1; transform: translate(-50%, -50%);
+    background: radial-gradient(circle, color-mix(in srgb, var(--god, var(--gold)) 45%, transparent) 0%, transparent 65%); }
+  #god-aura::after { content: ''; position: absolute; inset: 0; mask: var(--svg-mandala) center / contain no-repeat;
+    -webkit-mask: var(--svg-mandala) center / contain no-repeat; background: var(--god, var(--gold)); opacity: .18; }
+
+  #god-portrait { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); max-height: 100%; max-width: 100%;
+    object-fit: contain; filter: drop-shadow(0 0 18px color-mix(in srgb, var(--god) 40%, transparent)); }
+  #god-portrait-2 { position: absolute; top: 0; right: 0; width: 96px; height: 96px; border-radius: 50%; object-fit: cover;
+    object-position: top; border: 2px solid var(--god2, var(--gold)); }
+
+  #god-portrait-wrap.enter { animation: godIn .45s ease-out both; }
+  @keyframes godIn { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: none; } }
+
+  @media (prefers-reduced-motion: no-preference) {
+    #god-portrait { animation: godBob 4s ease-in-out infinite alternate; }
+    @keyframes godBob { from { transform: translateX(-50%) translateY(0); } to { transform: translateX(-50%) translateY(-6px); } }
+    #god-aura::after { animation: auraSpin 60s linear infinite; }
+    @keyframes auraSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  }
+
+  #god-dialogue { position: relative; max-width: 720px; width: 100%; margin-top: var(--sp-md); padding: 14px 44px 14px 18px;
+    text-align: left; background: rgba(10,6,16,.9); border: 1px solid var(--gold-soft); border-left: 3px solid var(--god, var(--gold));
+    min-height: 64px; cursor: pointer; }
+  .dlg-beat { font-size: 15.5px; line-height: 1.55; color: #e8e0f2; margin-top: 6px; }
+  .dlg-speaker { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--god, var(--gold)); display: block; }
+  .dlg-beat.abhimanyu { color: #cfe3ff; font-style: italic; padding-left: 18px; }
+  .dlg-beat.abhimanyu .dlg-speaker { color: #9fb8ff; }
+  #god-dialogue-skip { position: absolute; top: 6px; right: 6px; padding: 2px 9px; font-size: 13px; }
+  #god-dialogue-hint { display: block; margin-top: 8px; font-size: 11.5px; opacity: .65; letter-spacing: .04em; }
+
+  .cards.awaiting .card { opacity: .4; pointer-events: none; transform: none; }
+  .cards .card { transition: opacity .25s, transform .12s, box-shadow .12s; }
+
+  .codex-gods { margin-bottom: 28px; }
+  .codex-god { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 18px; }
+  .codex-god-thumb { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; object-position: top;
+    border: 2px solid var(--god, var(--gold)); flex: none; background: #140c1c; }
+  .codex-god-sym { width: 64px; height: 64px; font-size: 32px; display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; border: 1px solid var(--gold-soft); flex: none; }
+  .codex-god.unmet { opacity: .45; }
+  .codex-god-dev { font-family: var(--font-dev); color: var(--god, var(--gold)); font-size: 14px; }
+</style>
+<style id="controller-css">
+  .glyph { display: inline-flex; align-items: center; justify-content: center; min-width: 1.5em; height: 1.5em;
+    padding: 0 .35em; border: 1px solid var(--gold-soft); border-radius: 4px; background: rgba(10, 6, 16, .85);
+    font-family: 'Segoe UI Symbol', 'Apple Symbols', 'Noto Sans Symbols 2', Georgia; font-size: .85em;
+    color: var(--ash); vertical-align: middle; }
+  .glyph.g-face { border-radius: 50%; font-weight: bold; }
+  .glyph.g-cross { color: #7ea6ff; }
+  .glyph.g-circle { color: #ff6b6b; }
+  .glyph.g-square { color: #ff8fd0; }
+  .glyph.g-triangle { color: #3fd6a0; }
+  .glyph-sep { opacity: .5; margin: 0 .2em; }
+
+  body.pad-mode .pad-focus { outline: 2px solid var(--gold); outline-offset: 3px;
+    box-shadow: 0 0 0 4px rgba(255, 211, 77, .18), 0 0 18px rgba(255, 211, 77, .45); }
+  body.pad-mode .card.pad-focus { transform: translateY(-4px); }
+  body.pad-mode button.pad-focus { background: rgba(255, 211, 77, .12); color: var(--gold); border-color: var(--gold); }
+  body.pad-mode .pad-focus::before, body.pad-mode .pad-focus::after { background: var(--gold); opacity: 1; }
+
+  #settings { justify-content: flex-start; overflow-y: auto; padding: 36px 0; }
+
+  .pad-hint { display: none; margin-top: 18px; font-size: 13px; opacity: .8; letter-spacing: .06em; }
+  body.pad-mode .pad-hint { display: block; }
+
+  .settings-h { margin: 18px 0 6px; color: var(--gold); font-size: 13px; letter-spacing: .2em; }
+  #settings-pad-rebind-list .settings-row button { min-width: 140px; }
+
+  #ctest { justify-content: flex-start; overflow-y: auto; padding: 32px 0; }
+  .ctest-row { display: flex; gap: 40px; align-items: center; margin-top: 18px; }
+  .ctest-stick { position: relative; width: 120px; height: 120px; border: 1px solid var(--gold-soft); border-radius: 50%; }
+  .ctest-dz { position: absolute; left: 50%; top: 50%; width: 20%; height: 20%; margin: -10% 0 0 -10%;
+    border: 1px dashed var(--gold-soft); border-radius: 50%; }
+  .ctest-dot { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%;
+    background: var(--gold); left: 50%; top: 50%; }
+  .ctest-trigs { display: flex; flex-direction: column; gap: 14px; }
+  .ctest-trig { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .ctest-bar { width: 160px; height: 10px; border: 1px solid var(--gold-soft); }
+  .ctest-fill { height: 100%; width: 0; background: var(--gold); }
+  .ctest-buttons { display: grid; grid-template-columns: repeat(6, auto); gap: 10px 16px; margin-top: 18px; }
+  .ctest-btn { opacity: .35; font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .ctest-btn.on { opacity: 1; }
+  .ctest-btn.on .glyph { box-shadow: 0 0 10px rgba(255,211,77,.7); }
+  .ctest-hold { width: 240px; height: 4px; margin-top: 8px; background: rgba(255,255,255,.08); }
+  .ctest-help { max-width: 640px; margin-top: 16px; text-align: left; font-size: 13.5px; line-height: 1.6; color: #d8cfe8; }
+  .ctest-help ol { padding-left: 20px; }
+  .ctest-help li { margin-bottom: 8px; }
+  .ctest-warn { color: #ff8c42; font-size: 13px; }
+  .ctest-id { font-size: 12px; opacity: .6; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div id="wrap"><div id="stage">
+  <canvas id="game" width="1280" height="720"></canvas>
+
+  <!-- transient text layers -->
+  <div id="banner" class="hidden"></div>
+  <div id="biome-title" class="hidden"></div>
+  <div id="boss-intro" class="hidden"></div>
+
+  <!-- HUB : the Banyan at the Edge of Worlds -->
+  <div id="hub" class="panel hidden">
+    <h1 class="title">CHAKRAVYUHA</h1>
+    <div class="title-dev">चक्रव्यूह</div>
+    <div class="tagline">You learned the way in before you were born. Now learn the way out.</div>
+    <div class="hub-currency" id="hub-punya"></div>
+    <div class="menu-btns">
+      <button id="btn-begin" class="primary">BEGIN THE ASCENT</button>
+      <button id="btn-shrine">PATH OF DHARMA</button>
+      <button id="btn-vows">VOWS OF TAPAS</button>
+      <button id="btn-armory">ARMORY</button>
+      <button id="btn-codex">THE POTHI</button>
+      <button id="btn-hub-settings">SETTINGS</button>
+    </div>
+    <div class="narada" id="hub-narada"></div>
+    <div class="hub-stats" id="hub-stats"></div>
+    <div class="controls-hint">
+      <span id="hub-controls-text" data-glyph-hint="hub">WASD move · mouse aim · LMB attack · E / RMB special · Q astra · SPACE dash · ESC pause · M mute</span>
+      <br><button id="btn-wipe" class="danger">erase save</button>
+    </div>
+  </div>
+
+  <!-- BOON PICK -->
+  <div id="boonpick" class="panel hidden">
+    <div id="god-portrait-wrap" class="hidden"><div id="god-aura"></div><img id="god-portrait" alt=""><img id="god-portrait-2" class="hidden" alt=""></div>
+    <div id="boon-god"></div>
+    <div id="god-dialogue" class="hidden"><div id="god-dialogue-lines"></div><button id="god-dialogue-skip" title="Skip">✕</button><span id="god-dialogue-hint" class="hidden"></span></div>
+    <div class="cards" id="boon-cards"></div>
+  </div>
+
+  <!-- KUBERA SHOP -->
+  <div id="shop" class="panel hidden">
+    <div class="panel-h">KUBERA'S WARES</div>
+    <div class="panel-sub">"Everything has a price, prince. Even down here. Especially down here."</div>
+    <div class="currency-line" id="shop-mudra"></div>
+    <div class="cards" id="shop-cards"></div>
+    <div class="back-row"><button id="btn-shop-close">LEAVE</button></div>
+  </div>
+
+  <!-- PATH OF DHARMA (meta upgrades) -->
+  <div id="shrine" class="panel solid hidden">
+    <div class="panel-h">THE PATH OF DHARMA</div>
+    <div class="panel-sub">Merit carried out of death, spent on what endures.</div>
+    <div class="currency-line" id="shrine-punya"></div>
+    <div class="cards" id="shrine-cards"></div>
+    <div class="back-row"><button id="btn-shrine-back">RETURN</button></div>
+  </div>
+
+  <!-- VOWS OF TAPAS (Heat, Phase 05.7.1) -->
+  <div id="vows" class="panel solid hidden">
+    <div class="panel-h">VOWS OF TAPAS</div>
+    <div class="panel-sub">Take on hardship by choice. Every vow kept earns greater merit.</div>
+    <div class="currency-line" id="vows-heat"></div>
+    <div class="cards" id="vows-cards"></div>
+    <div class="back-row"><button id="btn-vows-back">RETURN</button></div>
+  </div>
+
+  <!-- ARMORY -->
+  <div id="armory" class="panel solid hidden">
+    <div class="panel-h">THE ARMORY</div>
+    <div class="panel-sub">Weapons of the great war, waiting under the banyan.</div>
+    <div class="currency-line" id="armory-punya"></div>
+    <div class="cards" id="armory-cards"></div>
+    <div class="back-row"><button id="btn-armory-back">RETURN</button></div>
+  </div>
+
+  <!-- CODEX -->
+  <div id="codex" class="panel solid hidden">
+    <div class="panel-h">THE POTHI</div>
+    <div class="panel-sub">A palm-leaf book of everything this place remembers.</div>
+    <div id="codex-list"></div>
+    <div class="back-row"><button id="btn-codex-back">RETURN</button></div>
+  </div>
+
+  <!-- DEATH -->
+  <div id="death" class="panel hidden">
+    <div class="death-h" id="death-h">SLAIN</div>
+    <div class="death-line" id="death-line"></div>
+    <div class="run-stats" id="death-stats"></div>
+    <div class="back-row"><button id="btn-death-continue" class="primary">RETURN TO THE BANYAN</button></div>
+  </div>
+
+  <!-- VICTORY -->
+  <div id="victory" class="panel hidden">
+    <div class="victory-h">THE WHEEL IS BROKEN</div>
+    <div class="death-line" id="victory-line"></div>
+    <div class="run-stats" id="victory-stats"></div>
+    <div class="back-row"><button id="btn-victory-continue" class="primary">RETURN TO THE BANYAN</button></div>
+  </div>
+
+  <!-- PAUSE -->
+  <div id="pause" class="panel hidden">
+    <div class="panel-h">PAUSED</div>
+    <div class="menu-btns">
+      <button id="btn-resume" class="primary">RESUME</button>
+      <button id="btn-pause-settings">SETTINGS</button>
+      <button id="btn-quitrun">ABANDON THE ASCENT</button>
+    </div>
+    <div class="a11y">
+      <div class="a11y-h">ACCESSIBILITY</div>
+      <label><input type="checkbox" id="set-screenShake"> Screen shake &amp; camera punch</label>
+      <label>Shake intensity <input type="range" id="set-shakeIntensity" min="0" max="100" step="5"></label>
+      <label><input type="checkbox" id="set-screenFlash"> Screen flash</label>
+      <label><input type="checkbox" id="set-hitstop"> Hitstop (freeze frames)</label>
+      <label><input type="checkbox" id="set-reducedParticles"> Reduced particles</label>
+    </div>
+  </div>
+
+  <!-- SETTINGS (Phase 5 Plan 3) -->
+  <div id="settings" class="panel solid hidden">
+    <div class="panel-h">SETTINGS</div>
+    <div class="settings-row"><label>Master Volume</label><input type="range" id="settings-master" min="0" max="100"></div>
+    <div class="settings-row"><label>Music Volume</label><input type="range" id="settings-music" min="0" max="100"></div>
+    <div class="settings-row"><label>SFX Volume</label><input type="range" id="settings-sfx" min="0" max="100"></div>
+    <div class="settings-row"><label>Fullscreen</label><button id="settings-fullscreen">TOGGLE</button></div>
+    <div class="settings-row"><label>Resolution</label>
+      <select id="settings-resolution">
+        <option value="auto">Auto</option><option value="1280x720">1280x720</option>
+        <option value="1600x900">1600x900</option><option value="1920x1080">1920x1080</option>
+      </select>
+    </div>
+    <div class="settings-row"><label>Graphics Quality</label><select id="settings-graphics"><option value="auto">Auto</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div>
+    <div class="settings-row"><label>Screen Shake</label><input type="checkbox" id="settings-shake"></div>
+    <div class="settings-row"><label>Screen Flash</label><input type="checkbox" id="settings-flash"></div>
+    <div class="settings-h">CONTROLLER</div>
+    <div class="settings-row"><label>Rumble</label><input type="checkbox" id="settings-rumble"></div>
+    <div class="settings-row"><label>Rumble Intensity</label><input type="range" id="settings-rumble-intensity" min="0" max="100"></div>
+    <div class="settings-row"><label>Aim Assist (controller)</label><input type="checkbox" id="settings-aimassist"></div>
+    <div id="settings-pad-rebind-list"></div>
+    <div class="settings-row"><button id="settings-pad-reset">RESET CONTROLLER BUTTONS</button><button id="btn-settings-ctest">CONTROLLER TEST</button></div>
+    <div class="settings-h">KEYBOARD</div>
+    <div id="settings-rebind-list"></div>
+    <div class="back-row"><button id="btn-settings-back">BACK</button></div>
+  </div>
+
+  <!-- CONTROLLER TEST (Phase 05.2 Plan 04, D-15) -->
+  <div id="ctest" class="panel solid hidden">
+    <div class="panel-h">CONTROLLER TEST</div>
+    <div class="panel-sub" id="ctest-status">No controller detected</div>
+    <div class="ctest-id" id="ctest-id"></div>
+    <div class="ctest-warn" id="ctest-warn"></div>
+    <div class="ctest-row">
+      <div class="ctest-stick" id="ctest-lstick"><div class="ctest-dz"></div><div class="ctest-dot" id="ctest-ldot"></div><span>L</span></div>
+      <div class="ctest-trigs">
+        <div class="ctest-trig"><span>L2</span><div class="ctest-bar"><div class="ctest-fill" id="ctest-lt-fill"></div></div><span id="ctest-lt-val">0.00</span></div>
+        <div class="ctest-trig"><span>R2</span><div class="ctest-bar"><div class="ctest-fill" id="ctest-rt-fill"></div></div><span id="ctest-rt-val">0.00</span></div>
+      </div>
+      <div class="ctest-stick" id="ctest-rstick"><div class="ctest-dz"></div><div class="ctest-dot" id="ctest-rdot"></div><span>R</span></div>
+    </div>
+    <div class="ctest-buttons" id="ctest-buttons"></div>
+    <div class="settings-row"><label id="ctest-rumble-status">Rumble: unknown</label><button id="btn-ctest-rumble">TEST RUMBLE</button></div>
+    <div class="ctest-hold"><div class="ctest-fill" id="ctest-hold-fill"></div></div>
+    <div class="ctest-help" id="ctest-help">
+      <ol>
+        <li><b>USB:</b> connect with a data-capable USB-C cable, then press the <b>PS</b> button.</li>
+        <li><b>Bluetooth pairing:</b> with the controller off, hold <b>Create + PS</b> for ~3–5 s until the light bar flashes rapidly.
+          macOS: System Settings &rarr; Bluetooth &rarr; "DualSense Wireless Controller" &rarr; Connect.
+          Windows: Settings &rarr; Bluetooth &amp; devices &rarr; Add device &rarr; Bluetooth &rarr; "Wireless Controller".</li>
+        <li>Focus the game window and <b>press any button</b> — browsers only expose a controller after a button press.</li>
+        <li>If Steam is running with PlayStation Configuration Support, Steam Input may present the pad as an Xbox controller (Xbox glyphs appear) — expected; quit Steam or disable it for the browser test.</li>
+        <li>macOS: the PS button opens the system game overlay/Launchpad by default (System Settings &rarr; Game Controllers). The game never uses the PS button.</li>
+        <li>Rumble may be unavailable for DualSense depending on OS/browser version — this screen reports it.</li>
+      </ol>
+    </div>
+    <div class="back-row"><button id="btn-ctest-back">BACK</button></div>
+  </div>
+
+  <div class="foot">open source · built with canvas &amp; vanilla js</div>
+</div></div>
+
+<script src="vendor/pixi.min.js"></script>
+<script src="vendor/pixi-filters.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/renderer.js"></script>
+<script src="js/sprites.js"></script>
+<script src="js/vfx.js"></script>
+<script src="js/gfx.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/music.js"></script>
+<script src="js/data.js"></script>
+<script src="js/meta.js"></script>
+<script src="js/heat.js"></script>
+<script src="js/dialogue.js"></script>
+<script src="js/combat.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/entities.js"></script>
+<script src="js/minibosses.js"></script>
+<script src="js/rooms.js"></script>
+<script src="js/environment.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/game.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/gamepad.js"></script>
+<script src="js/glyphs.js"></script>
+<script src="js/focus.js"></script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+# REQUIREMENTS — Chakravyuha v1.0
+
+Generated: 2026-06-17
+Source: PROJECT.md + Research (STACK, FEATURES, ARCHITECTURE, PITFALLS)
+
+---
+
+## v1 Requirements
+
+### RENDER — Rendering Foundation
+
+- [x] **RENDER-01**: Render abstraction layer with camera system and named draw passes (background, entities, effects, UI) — no visual change to gameplay, smoke tests stay green
+- [x] **RENDER-02**: Asset loader that loads sprite sheets from disk with graceful fallback to primitive shapes if asset missing
+- [x] **RENDER-03**: Sprite manager with per-actor frame animation support (frame index, frame timing, loop/once modes)
+
+### ART — Visual Assets
+
+- [x] **ART-01**: Player sprite — Abhimanyu with at least 4 animation states (idle, run/walk, attack, dash) generated via AI tools with provenance log
+- [x] **ART-02**: Enemy sprites — each distinct enemy archetype has a unique sprite (minimum 6 variants across biomes)
+- [x] **ART-03**: Boss sprites — all 4 bosses (Tataka, Ahiravana, Kumbhakarna, Yama) have large illustrated sprites with a phase-2 variant
+- [x] **ART-04**: Environmental art — biome-specific background and floor tile sets for all 4 biomes (Naraka, Patala, Ranabhoomi, Vaitarani)
+- [x] **ART-05**: UI art — styled boon card art, HUD elements, and overlay panels with Indian visual motifs
+- [x] **ART-06**: AI provenance log — every generated asset has a record of prompt, model, and post-processing steps (IP defensibility + Steam AI survey)
+
+### VFX — Visual Effects & Combat Feel
+
+- [x] **VFX-01**: Particle system with object pooling — hit sparks, astra trails, death bursts, environmental ambiance
+- [x] **VFX-02**: Camera shake system with adjustable intensity and opt-out accessibility toggle in settings
+- [x] **VFX-03**: Hitstop (freeze frame) on significant impacts — 3–8 frame pause on heavy hits and kills
+- [x] **VFX-04**: Screen flash on player damage/death with opt-out accessibility toggle
+- [x] **VFX-05**: Biome-specific ambient particles (embers in Naraka, mist in Vaitarani, etc.)
+
+### GAMEPLAY — Game Depth
+
+- [x] **GAME-01**: Boon pool expanded to minimum 24 total boons — at least 4 boons per god (Hanuman, Krishna, Agni, Indra, Vayu, Durga)
+- [x] **GAME-02**: At least 3 Duo Boon synergy combinations — named synergies unlocked by holding 2 specific god boons
+- [x] **GAME-03**: Room layout variety — at least 3 distinct procedural layout templates per biome (12 total new templates)
+- [x] **GAME-04**: Environmental hazards — at least 1 unique biome hazard per biome (spike traps, lava pools, river currents, etc.)
+- [x] **GAME-05**: Multi-phase bosses — all 4 bosses have at least 2 distinct phases with changed behavior at health threshold
+- [x] **GAME-06**: Boss telegraphing — all boss attacks have a visible wind-up (animation anticipation frame or indicator) before dealing damage
+
+### PLATFORM — Desktop & Input
+
+- [x] **PLAT-01**: Electron desktop app producing Windows (.exe installer) and macOS (.dmg) binaries from the existing HTML5 game
+- [x] **PLAT-02**: Input abstraction layer supporting keyboard, mouse, and gamepad as interchangeable input sources
+- [x] **PLAT-03**: Full gamepad support — all actions bindable to controller buttons, analog stick for movement, works on Steam Deck
+- [x] **PLAT-04**: Save migration — localStorage data migrated to JSON file in Electron `app.getPath('userData')` before Steam Cloud phase
+- [x] **PLAT-05**: Settings menu — volume (music/SFX), fullscreen toggle, resolution options, control rebinding, screen-shake toggle, screen-flash toggle
+
+### STEAM — Steam Integration
+
+- [ ] **STEAM-01**: Steamworks SDK integrated via steamworks.js in Electron main process with contextBridge to renderer
+- [ ] **STEAM-02**: Steam achievements — minimum 15 achievements covering weapons, biomes, bosses, meta milestones
+- [ ] **STEAM-03**: Steam Cloud Auto-Cloud syncing the userData save file across devices
+- [ ] **STEAM-04**: Steam overlay functional on Windows; macOS overlay validated (fallback to steamworks-ffi-node if broken)
+- [ ] **STEAM-05**: Steam store page assets — capsule art at current Steam sizes (header 920×430, small 462×174, main 1232×706, vertical 748×896, library 600×900, library hero 3840×1240, logo), 6+ screenshots, store description, short description (sizes corrected 2026-10-19 per 07-RESEARCH)
+
+### QA — Quality & Launch Gates
+
+- [ ] **QA-01**: GitHub Actions CI/CD — signed Windows + macOS binaries produced automatically on every git tag push
+- [ ] **QA-02**: Anonymous opt-in telemetry — single POST on run end recording weapon, biome reached, boons taken, run time
+- [ ] **QA-03**: Cultural review sign-off — 2–3 reviewers with Hindu mythology knowledge approve art and narrative tone before store page goes live
+- [x] **QA-04**: Steam AI Content Survey completed correctly for all AI-generated visual assets
+- [ ] **QA-05**: Steam Deck Verified checklist passed — controller-complete, glyphs correct, minimum 9px font at 1280×800, functional default framerate
+
+---
+
+### CULTURAL — Reverence & Iconography (Phase 5.7, inserted 2026-10-19)
+
+- [x] **CULT-01**: Yama's encounter is framed as a Trial of Dharma in all player-facing text — no hostile/enemy framing of a deity
+- [ ] **CULT-02**: Yama's boss sprite shows traditional iconography (dark/green-hued skin, danda + pasha, buffalo motif) and does not read as Vishnu/Krishna
+- [ ] **CULT-03**: Kumbhakarna carries a club/mace (no trident); Agni portrait has no Vaishnava tilak; Indra holds a classic double-ended vajra
+- [x] **CULT-04**: Naraka gate reads as an Indian torana/temple gateway; vent-grate hazard skin reads as a carved stone/iron vent
+
+### COMBAT — Hades-style combat depth (Phase 5.7.1, inserted 2026-11-08)
+
+- [x] **COMBAT-01**: Faster pace: player ~+15% speed, snappier recovery, faster enemy engage, overlapping waves under `maxAlive`, 45-75 s combat rooms, 25-35 min full run
+- [x] **COMBAT-02**: Base zoom ~1.3x, context zoom (boss/large out, rest/shop in), punch composes on top, clamp/bridge correct at every zoom, off-view threats indicated
+- [x] **COMBAT-03**: 8 new regular enemy types (2 per biome), distinct roles, non-deity
+- [x] **COMBAT-04**: Smarter AI for all enemies: slots/surround, ranged spacing and repositioning, attack tokens, timing variance inside telegraphs, escape-route cutting, on-screen firing preference
+- [x] **COMBAT-05**: Elite modifiers (1-2 visible: aura, tint, tag) on the `eliteShare` curve, raised
+- [x] **COMBAT-06**: 4 mini-bosses (one per biome, fixed mid-biome room, symbol door, guaranteed boon+ reward, own moveset, ≥0.4 s telegraphs, enrage)
+- [x] **COMBAT-07**: 8-10 data-driven projectile families (`DATA.PROJECTILES`), each with shape, colour, trail, hit VFX, SFX
+- [x] **COMBAT-08**: Player statuses: stun (DR + immunity), slow/root (dash breaks root), burn/poison DoT, knockback/pull; each with pip/icon, tint, particles, HUD read; respects accessibility toggles; dash i-frames avoid them
+- [x] **COMBAT-09**: Dash-strike per weapon inside a ~0.2 s window; boons apply
+- [x] **COMBAT-10**: Dash cancels recovery; hold/charged variant per weapon; distinct finishers; no branching trees
+- [x] **COMBAT-11**: Hades cast: lodged astra, ammo 2, walk-over pickup, auto-return safety; all cast boons keep working; shorter special cooldowns, weavable
+- [x] **COMBAT-12**: Hit feel tuned through Phase 3 hooks only (hitstop weights, punch, kick, flash, VFX presets)
+- [x] **COMBAT-13**: Controller parity for every new input, including rebinding
+- [x] **COMBAT-14**: 8 enemy + 4 mini-boss sprites in the 1+5 direction via the Flux pipeline; provenance complete
+- [x] **COMBAT-15**: Hades-like base difficulty, verified by a headless balance sim against a recorded baseline
+- [x] **COMBAT-16**: Opt-in Heat system ("Vows of Tapas"): unlocks after first clear, per-modifier ranks, Punya scaling, best Heat per weapon, persisted via META/STORE
+- [x] **COMBAT-17**: Boss move selection: weighted random, strict no-immediate-repeat, 2-3 move chains, distance bands and anti-camping, faster phase-2 chains; telegraph invariant intact
+- [x] **COMBAT-18**: +2 new moves per boss using new projectile families and statuses; Yama moves framed as judgments
+- [x] **COMBAT-19**: Smoke stays green; new headless balance and AI tests; reverence lint covers new strings
+
+## v2 Requirements (deferred)
+
+- Nintendo Switch port — requires Nintendo dev license, separate native build; plan after Steam ships
+- Linux Steam build — add if wishlist demand warrants it after launch
+- Full engine migration (Godot/Unity) — revisit as a Switch-port prerequisite decision
+- Mobile (iOS/Android) — different control paradigm; post-Steam
+- Multiplayer — co-op or PvP; significant architecture change
+- Procedurally generated room layouts — hand-crafted variety ships faster and balances easier
+- macOS hardened-runtime Steamworks entitlement hardening — ship unsigned for beta, harden before launch
+- Trailer video — produce once screenshot quality is proven
+
+---
+
+## Out of Scope
+
+- Linux Steam build — low demand signal, add post-launch if warranted
+- DRM (Steam DRM wrapper) — ship DRM-free; Steam's DRM doesn't meaningfully deter pirates and adds support overhead
+- Commissioned art — budget constraint; AI-generated assets only this milestone
+- Localization (non-English) — defer; Hindi/Tamil localization is high value but out of scope for v1
+- Custom soundtrack (composed) — existing synthesized WebAudio stays; real composition is post-Steam if revenue allows
+- Speedrun mode / leaderboards — nice-to-have; defer to post-launch
+
+---
+
+## Traceability
+
+| REQ-ID | Phase | Status |
+|--------|-------|--------|
+| RENDER-01 | Phase 1 | Complete |
+| RENDER-02 | Phase 2 | Complete |
+| RENDER-03 | Phase 2 | Complete |
+| ART-01 | Phase 2 | Complete (human verify pending) |
+| ART-02 | Phase 2 | Complete (human verify pending) |
+| ART-03 | Phase 2 | Complete (human verify pending) |
+| ART-04 | Phase 2 | Complete (human verify pending) |
+| ART-05 | Phase 2 | Complete (human verify pending) |
+| ART-06 | Phase 2 | Complete |
+| VFX-01 | Phase 3 | Complete (human verify pending) |
+| VFX-02 | Phase 3 | Complete (human verify pending) |
+| VFX-03 | Phase 3 | Complete (human verify pending) |
+| VFX-04 | Phase 3 | Complete (human verify pending) |
+| VFX-05 | Phase 3 | Complete (human verify pending) |
+| GAME-01 | Phase 4 | Complete (human verify pending) |
+| GAME-02 | Phase 4 | Complete (human verify pending) |
+| GAME-03 | Phase 4 | Complete (human verify pending) |
+| GAME-04 | Phase 4 | Complete (human verify pending) |
+| GAME-05 | Phase 4 | Complete (human verify pending) |
+| GAME-06 | Phase 4 | Complete (human verify pending) |
+| PLAT-01 | Phase 5 | Complete (human verify pending) |
+| PLAT-02 | Phase 5 | Complete (human verify pending) |
+| PLAT-03 | Phase 5 | Complete (human verify pending) |
+| PLAT-04 | Phase 5 | Complete (human verify pending) |
+| PLAT-05 | Phase 5 | Complete (human verify pending) |
+| STEAM-01 | Phase 6 | Pending |
+| STEAM-02 | Phase 6 | Pending |
+| STEAM-03 | Phase 6 | Pending |
+| STEAM-04 | Phase 6 | Pending |
+| STEAM-05 | Phase 7 | Pending |
+| QA-01 | Phase 7 | Pending |
+| QA-02 | Phase 7 | Pending |
+| QA-03 | Phase 7 | Pending |
+| QA-04 | Phase 2 | Complete |
+| QA-05 | Phase 7 | Pending |
+| CULT-01 | Phase 5.7 | Complete (05.7-01) |
+| CULT-02 | Phase 5.7 → 7 | Deferred to Phase 7 QA-03 (05.7-04 NOT SHIPPED) |
+| CULT-03 | Phase 5.7 → 7 | Deferred to Phase 7 QA-03 (Indra vajra NOT SHIPPED; Kumbhakarna + Agni done) |
+| CULT-04 | Phase 5.7 | Complete (05.7-02) |
+| COMBAT-01 | Phase 5.7.1 | Complete |
+| COMBAT-02 | Phase 5.7.1 | Complete |
+| COMBAT-03 | Phase 5.7.1 | Complete |
+| COMBAT-04 | Phase 5.7.1 | Complete |
+| COMBAT-05 | Phase 5.7.1 | Complete |
+| COMBAT-06 | Phase 5.7.1 | Complete |
+| COMBAT-07 | Phase 5.7.1 | Complete |
+| COMBAT-08 | Phase 5.7.1 | Complete |
+| COMBAT-09 | Phase 5.7.1 | Complete |
+| COMBAT-10 | Phase 5.7.1 | Complete |
+| COMBAT-11 | Phase 5.7.1 | Complete |
+| COMBAT-12 | Phase 5.7.1 | Complete |
+| COMBAT-13 | Phase 5.7.1 | Complete |
+| COMBAT-14 | Phase 5.7.1 | Complete |
+| COMBAT-15 | Phase 5.7.1 | Complete |
+| COMBAT-16 | Phase 5.7.1 | Complete |
+| COMBAT-17 | Phase 5.7.1 | Complete |
+| COMBAT-18 | Phase 5.7.1 | Complete |
+| COMBAT-19 | Phase 5.7.1 | Complete |

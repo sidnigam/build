@@ -1,0 +1,44 @@
+{
+  "frames": {
+    "bannerman_idle_0.png": {
+      "frame": {
+        "x": 8,
+        "y": 8,
+        "w": 138,
+        "h": 250
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 59,
+        "y": 3,
+        "w": 138,
+        "h": 250
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 256
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  },
+  "meta": {
+    "app": "http://github.com/odrick/free-tex-packer-core",
+    "version": "0.3.8",
+    "image": "bannerman-atlas.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 154,
+      "h": 266
+    },
+    "scale": 1
+  },
+  "animations": {
+    "idle": [
+      "bannerman_idle_0.png"
+    ]
+  }
+}
